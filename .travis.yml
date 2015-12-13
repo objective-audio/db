@@ -1,0 +1,10 @@
+language: objective-c
+osx_image: xcode7.1
+branches:
+  only:
+    - master
+notifications:
+  email: false
+script:
+  - xcodebuild -project db_test/db_test.xcodeproj -scheme db_mac_tests -configuration Debug OBJROOT=build -sdk macosx clean test
+ 
