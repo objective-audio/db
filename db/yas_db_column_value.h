@@ -84,9 +84,9 @@ namespace db {
         ~column_value();
 
         column_value(const column_value &) = delete;
-        column_value(column_value &&);
+        column_value(column_value &&) noexcept;
         column_value &operator=(const column_value &) = delete;
-        column_value &operator=(column_value &&);
+        column_value &operator=(column_value &&) noexcept;
 
         value_type type() const;
 
@@ -103,5 +103,8 @@ namespace db {
 
     using column_vector = std::vector<column_value>;
     using column_map = std::unordered_map<std::string, column_value>;
+
+    static_assert(std::is_nothrow_move_constructible<column_value>::value == true,
+                  "column_value is nothrow move constructible");
 }
 }

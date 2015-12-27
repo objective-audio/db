@@ -79,11 +79,11 @@ db::column_value::column_value(const void *const data_ptr, size_t const size, db
 
 db::column_value::~column_value() = default;
 
-db::column_value::column_value(column_value &&rhs) : _impl(std::move(rhs._impl)) {
+db::column_value::column_value(column_value &&rhs) noexcept : _impl(std::move_if_noexcept(rhs._impl)) {
 }
 
-db::column_value &db::column_value::operator=(column_value &&rhs) {
-    _impl = std::move(rhs._impl);
+db::column_value &db::column_value::operator=(column_value &&rhs) noexcept {
+    _impl = std::move_if_noexcept(rhs._impl);
     return *this;
 }
 
