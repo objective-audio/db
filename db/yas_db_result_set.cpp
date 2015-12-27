@@ -7,6 +7,7 @@
 #include "yas_db_database.h"
 #include "yas_db_result_set.h"
 #include "yas_db_statement.h"
+#include "yas_each_index.h"
 #include "yas_stl_utils.h"
 
 using namespace yas;
@@ -58,7 +59,7 @@ class db::result_set::impl : public base::impl {
         if (_column_name_to_index_map.empty()) {
             auto *const stmt = _statement.stmt().value();
             int column_count = sqlite3_column_count(stmt);
-            for (int idx = 0; idx < column_count; ++idx) {
+            for (auto &idx : each_index<int>{column_count}) {
                 _column_name_to_index_map.insert(std::make_pair(to_lower(sqlite3_column_name(stmt, idx)), idx));
             }
         }
@@ -192,7 +193,7 @@ db::column_map db::result_set::column_map() const {
     db::column_map map;
     map.reserve(column_count);
 
-    for (int idx = 0; idx < column_count; ++idx) {
+    for (auto &idx : each_index<int>{column_count}) {
         map.insert(std::make_pair(sqlite3_column_name(stmt, idx), column_value(idx)));
     }
 

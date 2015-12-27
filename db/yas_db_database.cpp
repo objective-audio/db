@@ -8,6 +8,7 @@
 #include "yas_db_database.h"
 #include "yas_db_result_set.h"
 #include "yas_db_statement.h"
+#include "yas_each_index.h"
 #include "yas_stl_utils.h"
 
 using namespace yas;
@@ -337,8 +338,8 @@ class db::database::impl : public base::impl {
             if (db::_databases.count(database_id)) {
                 if (auto database = db::_databases.at(database_id).lock()) {
                     std::unordered_map<std::string, db::column_value> map;
-                    for (int i = 0; i < columns; ++i) {
-                        map.insert(std::make_pair(names[i], db::column_value{values[i]}));
+                    for (auto &idx : each_index<int>{columns}) {
+                        map.insert(std::make_pair(names[idx], db::column_value{values[idx]}));
                     }
 
                     if (auto &callback = database.callback_for_execute_statements()) {
