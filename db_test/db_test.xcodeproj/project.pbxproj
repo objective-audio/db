@@ -21,6 +21,7 @@
 		B6A285EC1C2A4D5800EC7945 /* yas_cf_utils.mm in Sources */ = {isa = PBXBuildFile; fileRef = B6A285EB1C2A4D5800EC7945 /* yas_cf_utils.mm */; };
 		B6A285EF1C2A9C8C00EC7945 /* yas_db_test_utils.mm in Sources */ = {isa = PBXBuildFile; fileRef = B6A285EE1C2A9C8C00EC7945 /* yas_db_test_utils.mm */; };
 		B6A285F11C2A9D3D00EC7945 /* yas_db_result_set_tests.mm in Sources */ = {isa = PBXBuildFile; fileRef = B6A285F01C2A9D3D00EC7945 /* yas_db_result_set_tests.mm */; };
+		B6F3DAA11C2FEDA800F9EFEC /* yas_result_code_tests.mm in Sources */ = {isa = PBXBuildFile; fileRef = B6F3DAA01C2FEDA800F9EFEC /* yas_result_code_tests.mm */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -62,6 +63,7 @@
 		B6E0F15C1C1D66A80033AC60 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		B6F3DA9E1C2F910C00F9EFEC /* yas_each_index_private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_each_index_private.h; sourceTree = "<group>"; };
 		B6F3DA9F1C2F910C00F9EFEC /* yas_each_index.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_each_index.h; sourceTree = "<group>"; };
+		B6F3DAA01C2FEDA800F9EFEC /* yas_result_code_tests.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = yas_result_code_tests.mm; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -130,6 +132,7 @@
 				B62CED8F1C2A33640047B6DE /* yas_db_statement_tests.mm */,
 				B6A285E71C2A475500EC7945 /* yas_db_database_tests.mm */,
 				B6A285F01C2A9D3D00EC7945 /* yas_db_result_set_tests.mm */,
+				B6F3DAA01C2FEDA800F9EFEC /* yas_result_code_tests.mm */,
 			);
 			path = db_mac_tests;
 			sourceTree = "<group>";
@@ -232,6 +235,7 @@
 				B69543CD1C2036EA009DF7F9 /* yas_base.cpp in Sources */,
 				B69543B41C1E5945009DF7F9 /* yas_db_statement.cpp in Sources */,
 				B6A285EF1C2A9C8C00EC7945 /* yas_db_test_utils.mm in Sources */,
+				B6F3DAA11C2FEDA800F9EFEC /* yas_result_code_tests.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

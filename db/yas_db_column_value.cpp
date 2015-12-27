@@ -106,3 +106,44 @@ template db::float64::type const &db::column_value::value<db::float64>() const;
 template db::string::type const &db::column_value::value<db::string>() const;
 template db::blob::type const &db::column_value::value<db::blob>() const;
 template db::null::type const &db::column_value::value<db::null>() const;
+
+#pragma mark -
+
+std::string yas::to_string(const db::value_type &value_type) {
+    switch (value_type) {
+        case db::value_type::int64:
+            return "int64";
+        case db::value_type::float64:
+            return "float64";
+        case db::value_type::string:
+            return "string";
+        case db::value_type::blob:
+            return "blob";
+        case db::value_type::null:
+            return "null";
+    }
+}
+
+std::string yas::to_string(const db::column_value &column_value) {
+    std::string result = "type='" + to_string(column_value.type()) + "' value='";
+    switch (column_value.type()) {
+        case db::value_type::int64:
+            result += std::to_string(column_value.value<db::int64>());
+            break;
+        case db::value_type::float64:
+            result += std::to_string(column_value.value<db::float64>());
+            break;
+        case db::value_type::string:
+            result += column_value.value<db::string>();
+            break;
+        case db::value_type::blob:
+            result += "data' size='";
+            result += std::to_string(column_value.value<db::blob>().size());
+            break;
+        case db::value_type::null:
+            result += "null";
+            break;
+    }
+    result += "'";
+    return result;
+}

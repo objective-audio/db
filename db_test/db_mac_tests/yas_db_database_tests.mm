@@ -151,6 +151,66 @@
     XCTAssertFalse(result_set.next());
 }
 
+- (void)test_execute_query_with_vector {
+    yas::db::database db = [yas_db_test_utils create_test_database];
+    db.open();
+
+    XCTAssertTrue(db.execute_update("create table test_table (field_a);"));
+
+    yas::db::column_vector arguments_1;
+    arguments_1.emplace_back(yas::db::column_value{"value_a"});
+    XCTAssertTrue(db.execute_update("insert into test_table(field_a) values(:field_a)", arguments_1));
+
+    yas::db::column_vector arguments_2;
+    arguments_2.emplace_back(yas::db::column_value{"hoge_a"});
+    XCTAssertTrue(db.execute_update("insert into test_table(field_a) values(:field_a)", arguments_2));
+
+    yas::db::column_vector query_arguments;
+    query_arguments.emplace_back(yas::db::column_value{"value_a"});
+    auto query_result = db.execute_query("select * from test_table where field_a = :field_a", query_arguments);
+
+    XCTAssertTrue(query_result);
+
+    auto &result_set = query_result.value();
+
+    XCTAssertTrue(result_set);
+    XCTAssertTrue(result_set.next());
+
+    XCTAssertEqual(result_set.column_value("field_a").value<yas::db::string>(), "value_a");
+
+    XCTAssertFalse(result_set.next());
+}
+
+- (void)test_execute_query_with_map {
+    yas::db::database db = [yas_db_test_utils create_test_database];
+    db.open();
+
+    XCTAssertTrue(db.execute_update("create table test_table (field_a);"));
+
+    yas::db::column_vector arguments_1;
+    arguments_1.emplace_back(yas::db::column_value{"value_a"});
+    XCTAssertTrue(db.execute_update("insert into test_table(field_a) values(:field_a)", arguments_1));
+
+    yas::db::column_vector arguments_2;
+    arguments_2.emplace_back(yas::db::column_value{"hoge_a"});
+    XCTAssertTrue(db.execute_update("insert into test_table(field_a) values(:field_a)", arguments_2));
+
+    yas::db::column_map query_arguments;
+    query_arguments.emplace(std::make_pair("field_a", yas::db::column_value{"value_a"}));
+    auto query_result = db.execute_query("select * from test_table where field_a = :field_a", query_arguments);
+
+    XCTAssertTrue(query_result);
+
+    auto &result_set = query_result.value();
+
+    XCTAssertTrue(result_set);
+    XCTAssertTrue(result_set.next());
+
+    XCTAssertEqual(result_set.column_value("field_a").value<yas::db::string>(), "value_a");
+
+    XCTAssertFalse(result_set.next());
+}
+
 - (void)test_transaction_commit {
     yas::db::database db = [yas_db_test_utils create_test_database];
     db.open();
@@ -363,6 +423,98 @@
         XCTAssertFalse(result_set.has_row());
         XCTAssertFalse(db.has_open_result_sets());
     }
+}
+
+- (void)test_get_schema {
+    yas::db::database db = [yas_db_test_utils create_test_database];
+    db.open();
+
+    std::string const sql = "create table test_table (test_field)";
+    XCTAssertTrue(db.execute_update(sql));
+
+    auto result_set = db.get_schema();
+    XCTAssertTrue(result_set);
+    XCTAssertTrue(result_set.next());
+
+    auto map = result_set.column_map();
+
+    XCTAssertGreaterThan(map.count("sql"), 0);
+    auto &sql_column_value = map.at("sql");
+    XCTAssertEqual(sql_column_value.type(), yas::db::value_type::string);
+    XCTAssertEqual(yas::to_lower(sql_column_value.value<yas::db::string>()), sql);
+
+    XCTAssertGreaterThan(map.count("tbl_name"), 0);
+    auto &tbl_name_column_value = map.at("tbl_name");
+    XCTAssertEqual(tbl_name_column_value.type(), yas::db::value_type::string);
+    XCTAssertEqual(tbl_name_column_value.value<yas::db::string>(), "test_table");
+
+    XCTAssertGreaterThan(map.count("name"), 0);
+    auto &name_column_value = map.at("name");
+    XCTAssertEqual(name_column_value.type(), yas::db::value_type::string);
+    XCTAssertEqual(name_column_value.value<yas::db::string>(), "test_table");
+
+    XCTAssertGreaterThan(map.count("rootpage"), 0);
+    auto &rootpage_column_value = map.at("rootpage");
+    XCTAssertEqual(rootpage_column_value.type(), yas::db::value_type::int64);
+    XCTAssertEqual(sql_column_value.value<yas::db::int64>(), 0);
+
+    XCTAssertGreaterThan(map.count("type"), 0);
+    auto &type_column_value = map.at("type");
+    XCTAssertEqual(type_column_value.type(), yas::db::value_type::string);
+    XCTAssertEqual(type_column_value.value<yas::db::string>(), "table");
+
+    XCTAssertFalse(result_set.next());
+}
+
+- (void)test_get_table_schema {
+    yas::db::database db = [yas_db_test_utils create_test_database];
+    db.open();
+
+    std::string const sql = "create table test_table (field_a, field_b)";
+    XCTAssertTrue(db.execute_update(sql));
+
+    auto result_set = db.get_table_schema("test_table");
+    XCTAssertTrue(result_set);
+    XCTAssertTrue(result_set.next());
+
+    auto map = result_set.column_map();
+
+    XCTAssertGreaterThan(map.count("pk"), 0);
+    XCTAssertGreaterThan(map.count("dflt_value"), 0);
+    XCTAssertGreaterThan(map.count("type"), 0);
+    XCTAssertGreaterThan(map.count("notnull"), 0);
+    XCTAssertGreaterThan(map.count("name"), 0);
+    XCTAssertGreaterThan(map.count("cid"), 0);
+
+    XCTAssertEqual(map.at("name").value<yas::db::string>(), "field_a");
+
+    for (auto &pair : map) {
+        auto &column_value = pair.second;
+        std::cout << pair.first << " _ " << yas::to_string(column_value) << std::endl;
+    }
+
+    XCTAssertTrue(result_set.next());
+
+    map = result_set.column_map();
+
+    XCTAssertEqual(map.at("name").value<yas::db::string>(), "field_b");
+
+    XCTAssertFalse(result_set.next());
+}
+
+- (void)test_max_busy_retry_time_interval {
+    yas::db::database db = [yas_db_test_utils create_test_database];
+
+    db.set_max_busy_retry_time_interval(10.0);
+    XCTAssertEqual(db.max_busy_retry_time_interval(), 10.0);
+}
+
+- (void)test_start_busy_retry_time {
+    yas::db::database db = [yas_db_test_utils create_test_database];
+
+    auto now = std::chrono::system_clock::now();
+    db.set_start_busy_retry_time(now);
+    XCTAssertEqual(db.start_busy_retry_time(), now);
 }
 
 @end
