@@ -60,6 +60,8 @@
 		B6A285F01C2A9D3D00EC7945 /* yas_db_result_set_tests.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = yas_db_result_set_tests.mm; sourceTree = "<group>"; };
 		B6E0F1571C1D66A80033AC60 /* db_mac_tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = db_mac_tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B6E0F15C1C1D66A80033AC60 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		B6F3DA9E1C2F910C00F9EFEC /* yas_each_index_private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_each_index_private.h; sourceTree = "<group>"; };
+		B6F3DA9F1C2F910C00F9EFEC /* yas_each_index.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_each_index.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -83,6 +85,8 @@
 				B6A285E91C2A4D5700EC7945 /* yas_cf_utils_private.h */,
 				B6A285EA1C2A4D5700EC7945 /* yas_cf_utils.h */,
 				B6A285EB1C2A4D5800EC7945 /* yas_cf_utils.mm */,
+				B6F3DA9E1C2F910C00F9EFEC /* yas_each_index_private.h */,
+				B6F3DA9F1C2F910C00F9EFEC /* yas_each_index.h */,
 				B6A285E31C2A3D4900EC7945 /* yas_observing_private.h */,
 				B6A285E41C2A3D4900EC7945 /* yas_observing.h */,
 				B6A285E51C2A3D4900EC7945 /* yas_property_private.h */,
