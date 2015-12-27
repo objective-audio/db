@@ -773,7 +773,7 @@ db::update_result db::database::in_save_point(const std::function<void(bool &rol
 bool db::database::table_exists(std::string const &table_name) const {
     const std::string lower_table_name = to_lower(table_name);
     std::vector<db::column_value> args;
-    args.push_back(db::column_value{lower_table_name});
+    args.emplace_back(db::column_value{lower_table_name});
 
     if (auto query_result =
             execute_query("select [sql] from sqlite_master where [type] = 'table' and lower(name) = ?", args)) {

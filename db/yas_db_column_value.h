@@ -107,4 +107,7 @@ namespace db {
     static_assert(std::is_nothrow_move_constructible<column_value>::value == true,
                   "column_value is nothrow move constructible");
 }
+
+std::string to_string(const db::value_type &);
+std::string to_string(const db::column_value &);
 }

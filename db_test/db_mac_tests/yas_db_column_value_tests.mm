@@ -85,4 +85,37 @@
     yas::db::column_value value{vec.data(), vec.size(), yas::db::no_copy_tag};
 }
 
+- (void)test_move_assignment {
+    yas::db::column_value value_a{yas::db::int64::type{5}};
+    yas::db::column_value value_b{yas::db::int64::type{10}};
+
+    XCTAssertEqual(value_a.value<yas::db::int64>(), 5);
+    XCTAssertEqual(value_b.value<yas::db::int64>(), 10);
+
+    value_b = std::move(value_a);
+
+    XCTAssertEqual(value_b.value<yas::db::int64>(), 5);
+}
+
+- (void)test_create_empty_blob {
+    yas::db::blob empty_blob{};
+    XCTAssertEqual(empty_blob.data(), nullptr);
+    XCTAssertEqual(empty_blob.size(), 0);
+}
+
+- (void)test_to_string {
+    yas::db::column_value int_value{yas::db::int64::type{8}};
+    yas::db::column_value float_value{yas::db::float64::type{0.5}};
+    yas::db::column_value string_value{yas::db::string::type{"string_value"}};
+    std::vector<UInt8> vec{0, 1};
+    yas::db::column_value blob_value{yas::db::blob{vec.data(), vec.size()}};
+    yas::db::column_value null_value{nullptr};
+
+    XCTAssertEqual(yas::to_string(int_value), "type='int64' value='8'");
+    XCTAssertEqual(yas::to_string(float_value), "type='float64' value='0.500000'");
+    XCTAssertEqual(yas::to_string(string_value), "type='string' value='string_value'");
+    XCTAssertEqual(yas::to_string(blob_value), "type='blob' value='data' size='2'");
+    XCTAssertEqual(yas::to_string(null_value), "type='null' value='null'");
+}
+
 @end
