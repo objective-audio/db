@@ -115,7 +115,7 @@ db::next_result_code db::result_set::next() {
     return result;
 }
 
-bool db::result_set::has_another_row() {
+bool db::result_set::has_row() {
     if (auto const database = impl_ptr<impl>()->database()) {
         if (auto const sqlite_handle = database.sqlite_handle()) {
             return sqlite3_errcode(sqlite_handle) == SQLITE_ROW;
