@@ -60,7 +60,7 @@
     XCTAssertTrue(result_set.column_is_null("field_b"));
 }
 
-- (void)test_has_another_row {
+- (void)test_has_row {
     yas::db::database db = [yas_db_test_utils create_test_database];
     db.open();
 
@@ -78,15 +78,15 @@
 
     XCTAssertTrue(result_set);
 
-    XCTAssertFalse(result_set.has_another_row());
+    XCTAssertFalse(result_set.has_row());
 
     XCTAssertTrue(result_set.next());
 
-    XCTAssertTrue(result_set.has_another_row());
+    XCTAssertTrue(result_set.has_row());
 
     XCTAssertFalse(result_set.next());
 
-    XCTAssertFalse(result_set.has_another_row());
+    XCTAssertFalse(result_set.has_row());
 }
 
 - (void)test_column_value {

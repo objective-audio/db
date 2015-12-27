@@ -355,12 +355,12 @@
     if (auto query_result = db.execute_query("select * from test_table")) {
         auto &result_set = query_result.value();
         XCTAssertTrue(result_set.next());
-        XCTAssertTrue(result_set.has_another_row());
+        XCTAssertTrue(result_set.has_row());
         XCTAssertTrue(db.has_open_result_sets());
 
         db.close_open_result_sets();
 
-        XCTAssertFalse(result_set.has_another_row());
+        XCTAssertFalse(result_set.has_row());
         XCTAssertFalse(db.has_open_result_sets());
     }
 }
