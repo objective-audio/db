@@ -19,32 +19,20 @@ namespace db {
     constexpr static copy_tag_t copy_tag{};
     constexpr static no_copy_tag_t no_copy_tag{};
 
-    enum class value_type {
-        int64,
-        float64,
-        string,
-        blob,
-        null,
-    };
-
     struct int64 {
         using type = sqlite3_int64;
-        static constexpr auto value_type = value_type::int64;
     };
 
     struct float64 {
         using type = Float64;
-        static constexpr auto value_type = value_type::float64;
     };
 
     struct string {
         using type = std::string;
-        static constexpr auto value_type = value_type::string;
     };
 
     struct blob {
         using type = blob;
-        static constexpr auto value_type = value_type::blob;
 
         blob();
 
@@ -67,7 +55,6 @@ namespace db {
 
     struct null {
         using type = std::nullptr_t;
-        static constexpr auto value_type = value_type::null;
     };
 
     class column_value {
@@ -88,7 +75,7 @@ namespace db {
         column_value &operator=(const column_value &) = delete;
         column_value &operator=(column_value &&) noexcept;
 
-        value_type type() const;
+        std::type_info const &type() const;
 
         template <typename T>
         const typename T::type &value() const;
@@ -108,6 +95,5 @@ namespace db {
                   "column_value is nothrow move constructible");
 }
 
-std::string to_string(const db::value_type &);
 std::string to_string(const db::column_value &);
 }

@@ -196,27 +196,23 @@ class db::database::impl : public base::impl {
     }
 
     static void bind(const column_value &value, int column_idx, sqlite3_stmt *stmt) {
-        switch (value.type()) {
-            case value_type::null: {
-                sqlite3_bind_null(stmt, column_idx);
-            } break;
-            case value_type::blob: {
-                auto const &blob = value.value<db::blob>();
-                const void *data = blob.data();
-                if (!data) {
-                    data = "";
-                }
-                sqlite3_bind_blob(stmt, column_idx, data, static_cast<int>(blob.size()), SQLITE_STATIC);
-            } break;
-            case value_type::int64: {
-                sqlite3_bind_int64(stmt, column_idx, value.value<db::int64>());
-            } break;
-            case value_type::float64: {
-                sqlite3_bind_double(stmt, column_idx, value.value<db::float64>());
-            } break;
-            case value_type::string: {
-                sqlite3_bind_text(stmt, column_idx, value.value<db::string>().c_str(), -1, SQLITE_STATIC);
-            } break;
+        std::type_info const &type = value.type();
+
+        if (type == typeid(db::null)) {
+            sqlite3_bind_null(stmt, column_idx);
+        } else if (type == typeid(db::blob)) {
+            auto const &blob = value.value<db::blob>();
+            const void *data = blob.data();
+            if (!data) {
+                data = "";
+            }
+            sqlite3_bind_blob(stmt, column_idx, data, static_cast<int>(blob.size()), SQLITE_STATIC);
+        } else if (type == typeid(db::int64)) {
+            sqlite3_bind_int64(stmt, column_idx, value.value<db::int64>());
+        } else if (type == typeid(db::float64)) {
+            sqlite3_bind_double(stmt, column_idx, value.value<db::float64>());
+        } else if (type == typeid(db::string)) {
+            sqlite3_bind_text(stmt, column_idx, value.value<db::string>().c_str(), -1, SQLITE_STATIC);
         }
     }
 
