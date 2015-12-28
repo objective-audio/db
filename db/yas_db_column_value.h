@@ -59,9 +59,18 @@ namespace db {
 
     class column_value {
        public:
-        explicit column_value(int64::type const &);
-        explicit column_value(float64::type const &);
-        explicit column_value(string::type const &);
+        explicit column_value(UInt8 const &);
+        explicit column_value(SInt8 const &);
+        explicit column_value(UInt16 const &);
+        explicit column_value(SInt16 const &);
+        explicit column_value(UInt32 const &);
+        explicit column_value(SInt32 const &);
+        explicit column_value(UInt64 const &);
+        explicit column_value(SInt64 const &);
+        explicit column_value(Float32 const &);
+        explicit column_value(Float64 const &);
+        explicit column_value(std::string const &);
+        explicit column_value(std::string &&);
         explicit column_value(blob::type &&);
         column_value(null::type);
 

@@ -52,13 +52,31 @@ struct db::column_value::impl : public impl_base {
 
 #pragma mark - column_value
 
-db::column_value::column_value(int64::type const &value) : _impl(std::make_unique<impl<db::int64>>(value)) {
+db::column_value::column_value(UInt8 const &value) : _impl(std::make_unique<impl<db::int64>>(value)) {
+}
+db::column_value::column_value(SInt8 const &value) : _impl(std::make_unique<impl<db::int64>>(value)) {
+}
+db::column_value::column_value(UInt16 const &value) : _impl(std::make_unique<impl<db::int64>>(value)) {
+}
+db::column_value::column_value(SInt16 const &value) : _impl(std::make_unique<impl<db::int64>>(value)) {
+}
+db::column_value::column_value(UInt32 const &value) : _impl(std::make_unique<impl<db::int64>>(value)) {
+}
+db::column_value::column_value(SInt32 const &value) : _impl(std::make_unique<impl<db::int64>>(value)) {
+}
+db::column_value::column_value(UInt64 const &value) : _impl(std::make_unique<impl<db::int64>>(value)) {
+}
+db::column_value::column_value(SInt64 const &value) : _impl(std::make_unique<impl<db::int64>>(value)) {
 }
 
-db::column_value::column_value(float64::type const &value) : _impl(std::make_unique<impl<float64>>(value)) {
+db::column_value::column_value(Float32 const &value) : _impl(std::make_unique<impl<float64>>(value)) {
+}
+db::column_value::column_value(Float64 const &value) : _impl(std::make_unique<impl<float64>>(value)) {
 }
 
-db::column_value::column_value(string::type const &value) : _impl(std::make_unique<impl<string>>(value)) {
+db::column_value::column_value(std::string const &value) : _impl(std::make_unique<impl<string>>(value)) {
+}
+db::column_value::column_value(std::string &&value) : _impl(std::make_unique<impl<string>>(std::move(value))) {
 }
 
 db::column_value::column_value(blob::type &&value) : _impl(std::make_unique<impl<blob>>(std::move(value))) {
