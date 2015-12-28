@@ -217,7 +217,7 @@ class db::database::impl : public base::impl {
     }
 
     static std::string escape_save_point_name(std::string const &name) {
-        return to_replaced(name, "'", "''");
+        return replaced(name, "'", "''");
     }
 
     update_result execute_update(std::string const &sql, std::vector<db::column_value> const &vec,
