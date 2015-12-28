@@ -18,20 +18,24 @@ namespace db {
     constexpr static copy_tag_t copy_tag{};
     constexpr static no_copy_tag_t no_copy_tag{};
 
-    struct int64 {
+    struct integer {
         using type = sqlite3_int64;
+        static constexpr auto name = "integer";
     };
 
-    struct float64 {
+    struct real {
         using type = Float64;
+        static constexpr auto name = "real";
     };
 
-    struct string {
+    struct text {
         using type = std::string;
+        static constexpr auto name = "text";
     };
 
     struct blob {
         using type = blob;
+        static constexpr auto name = "blob";
 
         blob();
 
@@ -54,6 +58,7 @@ namespace db {
 
     struct null {
         using type = std::nullptr_t;
+        static constexpr auto name = "null";
     };
 
     class column_value {

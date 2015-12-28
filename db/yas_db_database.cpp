@@ -207,12 +207,12 @@ class db::database::impl : public base::impl {
                 data = "";
             }
             sqlite3_bind_blob(stmt, column_idx, data, static_cast<int>(blob.size()), SQLITE_STATIC);
-        } else if (type == typeid(db::int64)) {
-            sqlite3_bind_int64(stmt, column_idx, value.value<db::int64>());
-        } else if (type == typeid(db::float64)) {
-            sqlite3_bind_double(stmt, column_idx, value.value<db::float64>());
-        } else if (type == typeid(db::string)) {
-            sqlite3_bind_text(stmt, column_idx, value.value<db::string>().c_str(), -1, SQLITE_STATIC);
+        } else if (type == typeid(db::integer)) {
+            sqlite3_bind_int64(stmt, column_idx, value.value<db::integer>());
+        } else if (type == typeid(db::real)) {
+            sqlite3_bind_double(stmt, column_idx, value.value<db::real>());
+        } else if (type == typeid(db::text)) {
+            sqlite3_bind_text(stmt, column_idx, value.value<db::text>().c_str(), -1, SQLITE_STATIC);
         }
     }
 
@@ -804,7 +804,7 @@ bool db::database::column_exists(std::string const &column_name, std::string con
     if (auto result_set = get_table_schema(table_name)) {
         while (result_set.next()) {
             auto column_value = result_set.column_value("name");
-            if (to_lower(column_value.value<db::string>()) == column_name) {
+            if (to_lower(column_value.value<db::text>()) == column_name) {
                 return true;
             }
         }
