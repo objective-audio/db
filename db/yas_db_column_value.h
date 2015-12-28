@@ -6,7 +6,6 @@
 
 #include <MacTypes.h>
 #include <sqlite3.h>
-#include <initializer_list>
 #include <memory>
 #include <string>
 #include <unordered_map>
