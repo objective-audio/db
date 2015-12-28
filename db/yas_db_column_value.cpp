@@ -32,7 +32,7 @@ size_t db::blob::size() const {
 
 struct db::column_value::impl_base {
     virtual ~impl_base() = default;
-    virtual value_type type() const = 0;
+    virtual std::type_info const &type() const = 0;
 };
 
 template <typename T>
@@ -45,8 +45,8 @@ struct db::column_value::impl : public impl_base {
     impl(typename T::type &&val) : value(std::move(val)) {
     }
 
-    value_type type() const override {
-        return T::value_type;
+    std::type_info const &type() const override {
+        return typeid(T);
     }
 };
 
@@ -87,7 +87,7 @@ db::column_value &db::column_value::operator=(column_value &&rhs) noexcept {
     return *this;
 }
 
-db::value_type db::column_value::type() const {
+std::type_info const &db::column_value::type() const {
     return _impl->type();
 }
 
@@ -109,41 +109,29 @@ template db::null::type const &db::column_value::value<db::null>() const;
 
 #pragma mark -
 
-std::string yas::to_string(const db::value_type &value_type) {
-    switch (value_type) {
-        case db::value_type::int64:
-            return "int64";
-        case db::value_type::float64:
-            return "float64";
-        case db::value_type::string:
-            return "string";
-        case db::value_type::blob:
-            return "blob";
-        case db::value_type::null:
-            return "null";
-    }
-}
-
 std::string yas::to_string(const db::column_value &column_value) {
-    std::string result = "type='" + to_string(column_value.type()) + "' value='";
-    switch (column_value.type()) {
-        case db::value_type::int64:
-            result += std::to_string(column_value.value<db::int64>());
-            break;
-        case db::value_type::float64:
-            result += std::to_string(column_value.value<db::float64>());
-            break;
-        case db::value_type::string:
-            result += column_value.value<db::string>();
-            break;
-        case db::value_type::blob:
-            result += "data' size='";
-            result += std::to_string(column_value.value<db::blob>().size());
-            break;
-        case db::value_type::null:
-            result += "null";
-            break;
+    auto const &type = column_value.type();
+    std::string type_name;
+    std::string value_text;
+
+    if (type == typeid(db::int64)) {
+        type_name = "int64";
+        value_text = std::to_string(column_value.value<db::int64>());
+    } else if (type == typeid(db::float64)) {
+        type_name = "float64";
+        value_text = std::to_string(column_value.value<db::float64>());
+    } else if (type == typeid(db::string)) {
+        type_name = "string";
+        value_text = column_value.value<db::string>();
+    } else if (type == typeid(db::blob)) {
+        type_name = "blob";
+        value_text = "data' size='" + std::to_string(column_value.value<db::blob>().size());
+    } else if (type == typeid(db::null)) {
+        type_name = "null";
+        value_text = "null";
+    } else {
+        type_name = "unknown";
     }
-    result += "'";
-    return result;
+
+    return "type='" + type_name + "' value='" + value_text + "'";
 }

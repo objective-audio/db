@@ -20,7 +20,7 @@
 
 - (void)test_create_int_value {
     yas::db::column_value value{sqlite3_int64(1)};
-    XCTAssertEqual(value.type(), yas::db::value_type::int64);
+    XCTAssertTrue(value.type() == typeid(yas::db::int64));
     XCTAssertEqual(value.value<yas::db::int64>(), 1);
 
     XCTAssertEqual(value.value<yas::db::float64>(), 0.0);
@@ -29,7 +29,7 @@
 
 - (void)test_create_float_value {
     yas::db::column_value value{1.0};
-    XCTAssertEqual(value.type(), yas::db::value_type::float64);
+    XCTAssertTrue(value.type() == typeid(yas::db::float64));
     XCTAssertEqual(value.value<yas::db::float64>(), 1.0);
 
     XCTAssertEqual(value.value<yas::db::int64>(), 0);
@@ -37,7 +37,7 @@
 
 - (void)test_create_string_value {
     yas::db::column_value value{"test"};
-    XCTAssertEqual(value.type(), yas::db::value_type::string);
+    XCTAssertTrue(value.type() == typeid(yas::db::string));
     XCTAssertEqual(value.value<yas::db::string>(), "test");
 
     XCTAssertEqual(value.value<yas::db::float64>(), 0.0);
@@ -47,7 +47,7 @@
 - (void)test_create_blob_value_from_vector {
     std::vector<UInt8> vec{0, 1, 2, 3};
     yas::db::column_value value{vec.data(), static_cast<size_t>(vec.size())};
-    XCTAssertEqual(value.type(), yas::db::value_type::blob);
+    XCTAssertTrue(value.type() == typeid(yas::db::blob));
 
     auto const &blob = value.value<yas::db::blob>();
 
@@ -76,7 +76,7 @@
 
 - (void)test_create_null_value {
     yas::db::column_value value{nullptr};
-    XCTAssertEqual(value.type(), yas::db::value_type::null);
+    XCTAssertTrue(value.type() == typeid(yas::db::null));
     XCTAssertEqual(value.value<yas::db::null>(), nullptr);
 }
 
