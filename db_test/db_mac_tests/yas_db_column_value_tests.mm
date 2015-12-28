@@ -19,9 +19,9 @@
 }
 
 - (void)test_create_int_value {
-    yas::db::column_value value{yas::db::int64::type(1)};
-    XCTAssertTrue(value.type() == typeid(yas::db::int64));
-    XCTAssertEqual(value.value<yas::db::int64>(), 1);
+    yas::db::column_value value{yas::db::integer::type(1)};
+    XCTAssertTrue(value.type() == typeid(yas::db::integer));
+    XCTAssertEqual(value.value<yas::db::integer>(), 1);
 
     XCTAssertEqual(value.value<yas::db::float64>(), 0.0);
     XCTAssertEqual(value.value<yas::db::string>(), std::string{});
@@ -37,23 +37,23 @@
     yas::db::column_value uint64_value{UInt64{UINT64_MAX}};
     yas::db::column_value sint64_value{SInt64{INT64_MAX}};
 
-    XCTAssertTrue(uint8_value.type() == typeid(yas::db::int64));
-    XCTAssertTrue(sint8_value.type() == typeid(yas::db::int64));
-    XCTAssertTrue(uint16_value.type() == typeid(yas::db::int64));
-    XCTAssertTrue(sint16_value.type() == typeid(yas::db::int64));
-    XCTAssertTrue(uint32_value.type() == typeid(yas::db::int64));
-    XCTAssertTrue(sint32_value.type() == typeid(yas::db::int64));
-    XCTAssertTrue(uint64_value.type() == typeid(yas::db::int64));
-    XCTAssertTrue(sint64_value.type() == typeid(yas::db::int64));
+    XCTAssertTrue(uint8_value.type() == typeid(yas::db::integer));
+    XCTAssertTrue(sint8_value.type() == typeid(yas::db::integer));
+    XCTAssertTrue(uint16_value.type() == typeid(yas::db::integer));
+    XCTAssertTrue(sint16_value.type() == typeid(yas::db::integer));
+    XCTAssertTrue(uint32_value.type() == typeid(yas::db::integer));
+    XCTAssertTrue(sint32_value.type() == typeid(yas::db::integer));
+    XCTAssertTrue(uint64_value.type() == typeid(yas::db::integer));
+    XCTAssertTrue(sint64_value.type() == typeid(yas::db::integer));
 
-    XCTAssertEqual(uint8_value.value<yas::db::int64>(), UINT8_MAX);
-    XCTAssertEqual(sint8_value.value<yas::db::int64>(), INT8_MAX);
-    XCTAssertEqual(uint16_value.value<yas::db::int64>(), UINT16_MAX);
-    XCTAssertEqual(sint16_value.value<yas::db::int64>(), INT16_MAX);
-    XCTAssertEqual(uint32_value.value<yas::db::int64>(), UINT32_MAX);
-    XCTAssertEqual(sint32_value.value<yas::db::int64>(), INT32_MAX);
-    XCTAssertEqual(uint64_value.value<yas::db::int64>(), UINT64_MAX);
-    XCTAssertEqual(sint64_value.value<yas::db::int64>(), INT64_MAX);
+    XCTAssertEqual(uint8_value.value<yas::db::integer>(), UINT8_MAX);
+    XCTAssertEqual(sint8_value.value<yas::db::integer>(), INT8_MAX);
+    XCTAssertEqual(uint16_value.value<yas::db::integer>(), UINT16_MAX);
+    XCTAssertEqual(sint16_value.value<yas::db::integer>(), INT16_MAX);
+    XCTAssertEqual(uint32_value.value<yas::db::integer>(), UINT32_MAX);
+    XCTAssertEqual(sint32_value.value<yas::db::integer>(), INT32_MAX);
+    XCTAssertEqual(uint64_value.value<yas::db::integer>(), UINT64_MAX);
+    XCTAssertEqual(sint64_value.value<yas::db::integer>(), INT64_MAX);
 }
 
 - (void)test_create_float_value {
@@ -61,7 +61,7 @@
     XCTAssertTrue(value.type() == typeid(yas::db::float64));
     XCTAssertEqual(value.value<yas::db::float64>(), 1.0);
 
-    XCTAssertEqual(value.value<yas::db::int64>(), 0);
+    XCTAssertEqual(value.value<yas::db::integer>(), 0);
 }
 
 - (void)test_create_every_float_value {
@@ -81,7 +81,7 @@
     XCTAssertEqual(value.value<yas::db::string>(), "test");
 
     XCTAssertEqual(value.value<yas::db::float64>(), 0.0);
-    XCTAssertEqual(value.value<yas::db::int64>(), 0);
+    XCTAssertEqual(value.value<yas::db::integer>(), 0);
 }
 
 - (void)test_create_blob_value_from_vector {
@@ -126,15 +126,15 @@
 }
 
 - (void)test_move_assignment {
-    yas::db::column_value value_a{yas::db::int64::type{5}};
-    yas::db::column_value value_b{yas::db::int64::type{10}};
+    yas::db::column_value value_a{yas::db::integer::type{5}};
+    yas::db::column_value value_b{yas::db::integer::type{10}};
 
-    XCTAssertEqual(value_a.value<yas::db::int64>(), 5);
-    XCTAssertEqual(value_b.value<yas::db::int64>(), 10);
+    XCTAssertEqual(value_a.value<yas::db::integer>(), 5);
+    XCTAssertEqual(value_b.value<yas::db::integer>(), 10);
 
     value_b = std::move(value_a);
 
-    XCTAssertEqual(value_b.value<yas::db::int64>(), 5);
+    XCTAssertEqual(value_b.value<yas::db::integer>(), 5);
 }
 
 - (void)test_create_empty_blob {
@@ -144,7 +144,7 @@
 }
 
 - (void)test_to_string {
-    yas::db::column_value int_value{yas::db::int64::type{8}};
+    yas::db::column_value int_value{yas::db::integer::type{8}};
     yas::db::column_value float_value{yas::db::float64::type{0.5}};
     yas::db::column_value string_value{yas::db::string::type{"string_value"}};
     std::vector<UInt8> vec{0, 1};

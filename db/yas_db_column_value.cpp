@@ -52,21 +52,21 @@ struct db::column_value::impl : public impl_base {
 
 #pragma mark - column_value
 
-db::column_value::column_value(UInt8 const &value) : _impl(std::make_unique<impl<db::int64>>(value)) {
+db::column_value::column_value(UInt8 const &value) : _impl(std::make_unique<impl<db::integer>>(value)) {
 }
-db::column_value::column_value(SInt8 const &value) : _impl(std::make_unique<impl<db::int64>>(value)) {
+db::column_value::column_value(SInt8 const &value) : _impl(std::make_unique<impl<db::integer>>(value)) {
 }
-db::column_value::column_value(UInt16 const &value) : _impl(std::make_unique<impl<db::int64>>(value)) {
+db::column_value::column_value(UInt16 const &value) : _impl(std::make_unique<impl<db::integer>>(value)) {
 }
-db::column_value::column_value(SInt16 const &value) : _impl(std::make_unique<impl<db::int64>>(value)) {
+db::column_value::column_value(SInt16 const &value) : _impl(std::make_unique<impl<db::integer>>(value)) {
 }
-db::column_value::column_value(UInt32 const &value) : _impl(std::make_unique<impl<db::int64>>(value)) {
+db::column_value::column_value(UInt32 const &value) : _impl(std::make_unique<impl<db::integer>>(value)) {
 }
-db::column_value::column_value(SInt32 const &value) : _impl(std::make_unique<impl<db::int64>>(value)) {
+db::column_value::column_value(SInt32 const &value) : _impl(std::make_unique<impl<db::integer>>(value)) {
 }
-db::column_value::column_value(UInt64 const &value) : _impl(std::make_unique<impl<db::int64>>(value)) {
+db::column_value::column_value(UInt64 const &value) : _impl(std::make_unique<impl<db::integer>>(value)) {
 }
-db::column_value::column_value(SInt64 const &value) : _impl(std::make_unique<impl<db::int64>>(value)) {
+db::column_value::column_value(SInt64 const &value) : _impl(std::make_unique<impl<db::integer>>(value)) {
 }
 
 db::column_value::column_value(Float32 const &value) : _impl(std::make_unique<impl<float64>>(value)) {
@@ -119,7 +119,7 @@ const typename T::type &db::column_value::value() const {
     return _default;
 }
 
-template db::int64::type const &db::column_value::value<db::int64>() const;
+template db::integer::type const &db::column_value::value<db::integer>() const;
 template db::float64::type const &db::column_value::value<db::float64>() const;
 template db::string::type const &db::column_value::value<db::string>() const;
 template db::blob::type const &db::column_value::value<db::blob>() const;
@@ -132,9 +132,9 @@ std::string yas::to_string(const db::column_value &column_value) {
     std::string type_name;
     std::string value_text;
 
-    if (type == typeid(db::int64)) {
+    if (type == typeid(db::integer)) {
         type_name = "int64";
-        value_text = std::to_string(column_value.value<db::int64>());
+        value_text = std::to_string(column_value.value<db::integer>());
     } else if (type == typeid(db::float64)) {
         type_name = "float64";
         value_text = std::to_string(column_value.value<db::float64>());

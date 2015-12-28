@@ -18,7 +18,7 @@ namespace db {
     constexpr static copy_tag_t copy_tag{};
     constexpr static no_copy_tag_t no_copy_tag{};
 
-    struct int64 {
+    struct integer {
         using type = sqlite3_int64;
     };
 

@@ -455,8 +455,8 @@
 
     XCTAssertGreaterThan(map.count("rootpage"), 0);
     auto &rootpage_column_value = map.at("rootpage");
-    XCTAssertTrue(rootpage_column_value.type() == typeid(yas::db::int64));
-    XCTAssertEqual(sql_column_value.value<yas::db::int64>(), 0);
+    XCTAssertTrue(rootpage_column_value.type() == typeid(yas::db::integer));
+    XCTAssertEqual(sql_column_value.value<yas::db::integer>(), 0);
 
     XCTAssertGreaterThan(map.count("type"), 0);
     auto &type_column_value = map.at("type");
