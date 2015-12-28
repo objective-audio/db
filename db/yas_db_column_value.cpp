@@ -133,19 +133,19 @@ std::string yas::to_string(const db::column_value &column_value) {
     std::string value_text;
 
     if (type == typeid(db::integer)) {
-        type_name = "int64";
+        type_name = db::integer::name;
         value_text = std::to_string(column_value.value<db::integer>());
     } else if (type == typeid(db::real)) {
-        type_name = "real";
+        type_name = db::real::name;
         value_text = std::to_string(column_value.value<db::real>());
     } else if (type == typeid(db::text)) {
-        type_name = "string";
+        type_name = db::text::name;
         value_text = column_value.value<db::text>();
     } else if (type == typeid(db::blob)) {
-        type_name = "blob";
+        type_name = db::blob::name;
         value_text = "data' size='" + std::to_string(column_value.value<db::blob>().size());
     } else if (type == typeid(db::null)) {
-        type_name = "null";
+        type_name = db::null::name;
         value_text = "null";
     } else {
         type_name = "unknown";

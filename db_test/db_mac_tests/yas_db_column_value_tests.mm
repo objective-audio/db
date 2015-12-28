@@ -151,9 +151,9 @@
     yas::db::column_value blob_value{yas::db::blob{vec.data(), vec.size()}};
     yas::db::column_value null_value{nullptr};
 
-    XCTAssertEqual(yas::to_string(int_value), "type='int64' value='8'");
+    XCTAssertEqual(yas::to_string(int_value), "type='integer' value='8'");
     XCTAssertEqual(yas::to_string(float_value), "type='real' value='0.500000'");
-    XCTAssertEqual(yas::to_string(string_value), "type='string' value='string_value'");
+    XCTAssertEqual(yas::to_string(string_value), "type='text' value='string_value'");
     XCTAssertEqual(yas::to_string(blob_value), "type='blob' value='data' size='2'");
     XCTAssertEqual(yas::to_string(null_value), "type='null' value='null'");
 }
