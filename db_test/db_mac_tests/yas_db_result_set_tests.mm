@@ -123,14 +123,14 @@
     auto null_value = result_set.column_value("null_field");
 
     XCTAssertTrue(int_value.type() == typeid(yas::db::integer));
-    XCTAssertTrue(float_value.type() == typeid(yas::db::float64));
-    XCTAssertTrue(string_value.type() == typeid(yas::db::string));
+    XCTAssertTrue(float_value.type() == typeid(yas::db::real));
+    XCTAssertTrue(string_value.type() == typeid(yas::db::text));
     XCTAssertTrue(data_value.type() == typeid(yas::db::blob));
     XCTAssertTrue(null_value.type() == typeid(yas::db::null));
 
     XCTAssertEqual(int_value.value<yas::db::integer>(), 1);
-    XCTAssertEqual(float_value.value<yas::db::float64>(), 2.0);
-    XCTAssertEqual(string_value.value<yas::db::string>(), "string_value");
+    XCTAssertEqual(float_value.value<yas::db::real>(), 2.0);
+    XCTAssertEqual(string_value.value<yas::db::text>(), "string_value");
 
     auto &result_blob = data_value.value<yas::db::blob>();
     XCTAssertEqual(result_blob.size(), 4);
@@ -180,14 +180,14 @@
     auto &null_value = map.at("null_field");
 
     XCTAssertTrue(int_value.type() == typeid(yas::db::integer));
-    XCTAssertTrue(float_value.type() == typeid(yas::db::float64));
-    XCTAssertTrue(string_value.type() == typeid(yas::db::string));
+    XCTAssertTrue(float_value.type() == typeid(yas::db::real));
+    XCTAssertTrue(string_value.type() == typeid(yas::db::text));
     XCTAssertTrue(data_value.type() == typeid(yas::db::blob));
     XCTAssertTrue(null_value.type() == typeid(yas::db::null));
 
     XCTAssertEqual(int_value.value<yas::db::integer>(), 1);
-    XCTAssertEqual(float_value.value<yas::db::float64>(), 2.0);
-    XCTAssertEqual(string_value.value<yas::db::string>(), "string_value");
+    XCTAssertEqual(float_value.value<yas::db::real>(), 2.0);
+    XCTAssertEqual(string_value.value<yas::db::text>(), "string_value");
 
     auto &result_blob = data_value.value<yas::db::blob>();
     XCTAssertEqual(result_blob.size(), 4);

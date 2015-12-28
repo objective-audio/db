@@ -69,14 +69,14 @@ db::column_value::column_value(UInt64 const &value) : _impl(std::make_unique<imp
 db::column_value::column_value(SInt64 const &value) : _impl(std::make_unique<impl<db::integer>>(value)) {
 }
 
-db::column_value::column_value(Float32 const &value) : _impl(std::make_unique<impl<float64>>(value)) {
+db::column_value::column_value(Float32 const &value) : _impl(std::make_unique<impl<real>>(value)) {
 }
-db::column_value::column_value(Float64 const &value) : _impl(std::make_unique<impl<float64>>(value)) {
+db::column_value::column_value(Float64 const &value) : _impl(std::make_unique<impl<real>>(value)) {
 }
 
-db::column_value::column_value(std::string const &value) : _impl(std::make_unique<impl<string>>(value)) {
+db::column_value::column_value(std::string const &value) : _impl(std::make_unique<impl<text>>(value)) {
 }
-db::column_value::column_value(std::string &&value) : _impl(std::make_unique<impl<string>>(std::move(value))) {
+db::column_value::column_value(std::string &&value) : _impl(std::make_unique<impl<text>>(std::move(value))) {
 }
 
 db::column_value::column_value(blob::type &&value) : _impl(std::make_unique<impl<blob>>(std::move(value))) {
@@ -120,8 +120,8 @@ const typename T::type &db::column_value::value() const {
 }
 
 template db::integer::type const &db::column_value::value<db::integer>() const;
-template db::float64::type const &db::column_value::value<db::float64>() const;
-template db::string::type const &db::column_value::value<db::string>() const;
+template db::real::type const &db::column_value::value<db::real>() const;
+template db::text::type const &db::column_value::value<db::text>() const;
 template db::blob::type const &db::column_value::value<db::blob>() const;
 template db::null::type const &db::column_value::value<db::null>() const;
 
@@ -135,12 +135,12 @@ std::string yas::to_string(const db::column_value &column_value) {
     if (type == typeid(db::integer)) {
         type_name = "int64";
         value_text = std::to_string(column_value.value<db::integer>());
-    } else if (type == typeid(db::float64)) {
-        type_name = "float64";
-        value_text = std::to_string(column_value.value<db::float64>());
-    } else if (type == typeid(db::string)) {
+    } else if (type == typeid(db::real)) {
+        type_name = "real";
+        value_text = std::to_string(column_value.value<db::real>());
+    } else if (type == typeid(db::text)) {
         type_name = "string";
-        value_text = column_value.value<db::string>();
+        value_text = column_value.value<db::text>();
     } else if (type == typeid(db::blob)) {
         type_name = "blob";
         value_text = "data' size='" + std::to_string(column_value.value<db::blob>().size());

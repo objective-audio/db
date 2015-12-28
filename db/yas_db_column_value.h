@@ -22,11 +22,11 @@ namespace db {
         using type = sqlite3_int64;
     };
 
-    struct float64 {
+    struct real {
         using type = Float64;
     };
 
-    struct string {
+    struct text {
         using type = std::string;
     };
 

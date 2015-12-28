@@ -122,8 +122,8 @@
     XCTAssertTrue(result_set);
     XCTAssertTrue(result_set.next());
 
-    XCTAssertEqual(result_set.column_value(0).value<yas::db::string>(), "value_a");
-    XCTAssertEqual(result_set.column_value(1).value<yas::db::string>(), "value_b");
+    XCTAssertEqual(result_set.column_value(0).value<yas::db::text>(), "value_a");
+    XCTAssertEqual(result_set.column_value(1).value<yas::db::text>(), "value_b");
 
     XCTAssertFalse(result_set.next());
 }
@@ -145,8 +145,8 @@
     XCTAssertTrue(result_set);
     XCTAssertTrue(result_set.next());
 
-    XCTAssertEqual(result_set.column_value("field_a").value<yas::db::string>(), "value_a");
-    XCTAssertEqual(result_set.column_value("field_b").value<yas::db::string>(), "value_b");
+    XCTAssertEqual(result_set.column_value("field_a").value<yas::db::text>(), "value_a");
+    XCTAssertEqual(result_set.column_value("field_b").value<yas::db::text>(), "value_b");
 
     XCTAssertFalse(result_set.next());
 }
@@ -176,7 +176,7 @@
     XCTAssertTrue(result_set);
     XCTAssertTrue(result_set.next());
 
-    XCTAssertEqual(result_set.column_value("field_a").value<yas::db::string>(), "value_a");
+    XCTAssertEqual(result_set.column_value("field_a").value<yas::db::text>(), "value_a");
 
     XCTAssertFalse(result_set.next());
 }
@@ -206,7 +206,7 @@
     XCTAssertTrue(result_set);
     XCTAssertTrue(result_set.next());
 
-    XCTAssertEqual(result_set.column_value("field_a").value<yas::db::string>(), "value_a");
+    XCTAssertEqual(result_set.column_value("field_a").value<yas::db::text>(), "value_a");
 
     XCTAssertFalse(result_set.next());
 }
@@ -440,18 +440,18 @@
 
     XCTAssertGreaterThan(map.count("sql"), 0);
     auto &sql_column_value = map.at("sql");
-    XCTAssertTrue(sql_column_value.type() == typeid(yas::db::string));
-    XCTAssertEqual(yas::to_lower(sql_column_value.value<yas::db::string>()), sql);
+    XCTAssertTrue(sql_column_value.type() == typeid(yas::db::text));
+    XCTAssertEqual(yas::to_lower(sql_column_value.value<yas::db::text>()), sql);
 
     XCTAssertGreaterThan(map.count("tbl_name"), 0);
     auto &tbl_name_column_value = map.at("tbl_name");
-    XCTAssertTrue(tbl_name_column_value.type() == typeid(yas::db::string));
-    XCTAssertEqual(tbl_name_column_value.value<yas::db::string>(), "test_table");
+    XCTAssertTrue(tbl_name_column_value.type() == typeid(yas::db::text));
+    XCTAssertEqual(tbl_name_column_value.value<yas::db::text>(), "test_table");
 
     XCTAssertGreaterThan(map.count("name"), 0);
     auto &name_column_value = map.at("name");
-    XCTAssertTrue(name_column_value.type() == typeid(yas::db::string));
-    XCTAssertEqual(name_column_value.value<yas::db::string>(), "test_table");
+    XCTAssertTrue(name_column_value.type() == typeid(yas::db::text));
+    XCTAssertEqual(name_column_value.value<yas::db::text>(), "test_table");
 
     XCTAssertGreaterThan(map.count("rootpage"), 0);
     auto &rootpage_column_value = map.at("rootpage");
@@ -460,8 +460,8 @@
 
     XCTAssertGreaterThan(map.count("type"), 0);
     auto &type_column_value = map.at("type");
-    XCTAssertTrue(type_column_value.type() == typeid(yas::db::string));
-    XCTAssertEqual(type_column_value.value<yas::db::string>(), "table");
+    XCTAssertTrue(type_column_value.type() == typeid(yas::db::text));
+    XCTAssertEqual(type_column_value.value<yas::db::text>(), "table");
 
     XCTAssertFalse(result_set.next());
 }
@@ -486,7 +486,7 @@
     XCTAssertGreaterThan(map.count("name"), 0);
     XCTAssertGreaterThan(map.count("cid"), 0);
 
-    XCTAssertEqual(map.at("name").value<yas::db::string>(), "field_a");
+    XCTAssertEqual(map.at("name").value<yas::db::text>(), "field_a");
 
     for (auto &pair : map) {
         auto &column_value = pair.second;
@@ -497,7 +497,7 @@
 
     map = result_set.column_map();
 
-    XCTAssertEqual(map.at("name").value<yas::db::string>(), "field_b");
+    XCTAssertEqual(map.at("name").value<yas::db::text>(), "field_b");
 
     XCTAssertFalse(result_set.next());
 }
