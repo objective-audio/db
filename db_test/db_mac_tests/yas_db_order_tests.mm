@@ -32,4 +32,9 @@
     XCTAssertEqual(order.order, yas::db::order::descending);
 }
 
+- (void)test_sql {
+    XCTAssertEqual(yas::db::field_order("test_field_a", yas::db::order::ascending).sql(), "test_field_a asc");
+    XCTAssertEqual(yas::db::field_order("test_field_d", yas::db::order::descending).sql(), "test_field_d desc");
+}
+
 @end
