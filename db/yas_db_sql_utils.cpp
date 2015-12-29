@@ -3,6 +3,8 @@
 //
 
 #include <sstream>
+#include "yas_db_order.h"
+#include "yas_db_range.h"
 #include "yas_db_sql_utils.h"
 #include "yas_stl_utils.h"
 
@@ -71,4 +73,11 @@ std::string yas::db::joined_exprs(const std::vector<std::string> &fields) {
 std::string yas::db::joined_orders(std::vector<field_order> const &orders) {
     auto mapped = map<field_order, std::string>(orders, [](auto const &order) { return order.sql(); });
     return joined(mapped, field_separator);
+}
+
+std::string yas::db::select_sql(std::string const &table_name, std::vector<std::string> const &fields,
+                                std::string const &where_exprs, std::vector<field_order> const &orders,
+                                range const &limit_range) {
+#warning TODO:
+    return "";
 }

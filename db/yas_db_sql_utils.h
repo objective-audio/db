@@ -5,10 +5,13 @@
 #pragma once
 
 #include <vector>
-#include "yas_db_order.h"
+#include "yas_db_column_value.h"
 
 namespace yas {
 namespace db {
+    class field_order;
+    class range;
+
     std::string create_table_sql(std::string const &table, std::vector<std::string> const &fields);
     std::string alter_table_sql(std::string const &table, std::string const &field);
     std::string drop_table_sql(std::string const &table);
@@ -23,5 +26,9 @@ namespace db {
     std::string joined_exprs(std::vector<std::string> const &fields);
 
     std::string joined_orders(std::vector<field_order> const &orders);
+
+    std::string select_sql(std::string const &table_name, std::vector<std::string> const &fields,
+                           std::string const &where_exprs, std::vector<field_order> const &orders,
+                           range const &limit_range);
 }
 }
