@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include <string>
 #include <vector>
+#include "yas_db_order.h"
 
 namespace yas {
 namespace db {
@@ -16,5 +16,7 @@ namespace db {
     std::string expr(std::string const &field, std::string const &op);
     std::string equal_expr(std::string const &field);
     std::string joined_exprs(std::vector<std::string> const &fields);
+
+    std::string joined_orders(std::vector<field_order> const &orders);
 }
 }
