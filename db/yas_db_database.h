@@ -10,7 +10,9 @@
 #include <functional>
 #include "yas_base.h"
 #include "yas_db_column_value.h"
+#include "yas_db_order.h"
 #include "yas_db_protocol.h"
+#include "yas_db_range.h"
 #include "yas_db_result_code.h"
 #include "yas_result.h"
 
@@ -141,6 +143,12 @@ namespace db {
         update_result create_table(std::string const &table_name, std::vector<std::string> const &fields);
         update_result alter_table(std::string const &table_name, std::string const &field);
         update_result drop_table(std::string const &table_name);
+
+        std::vector<db::column_map> select(std::string const &table_name, std::vector<std::string> const &fields,
+                                           std::string const &where_exprs,
+                                           std::vector<db::column_map> const &parameter_maps,
+                                           std::vector<db::field_order> const &orders = {},
+                                           db::range const &limit_range = db::range::empty());
 
        private:
         void _result_set_did_close(uintptr_t const) override;
