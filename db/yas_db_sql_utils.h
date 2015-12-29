@@ -10,7 +10,8 @@
 namespace yas {
 namespace db {
     std::string insert_sql(std::string const &table, std::vector<std::string> const &fields);
-    std::string update_sql(std::string const &table, std::vector<std::string> const &fields, std::string const &where);
+    std::string update_sql(std::string const &table, std::vector<std::string> const &fields,
+                           std::string const &where);
     std::string delete_sql(std::string const &table, std::string const &where);
 
     std::string expr(std::string const &field, std::string const &op);
