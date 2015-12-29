@@ -7,6 +7,7 @@
 #include "yas_db_column_value.h"
 #include "yas_db_database.h"
 #include "yas_db_result_set.h"
+#include "yas_db_sql_utils.h"
 #include "yas_db_statement.h"
 #include "yas_each_index.h"
 #include "yas_stl_utils.h"
@@ -811,4 +812,16 @@ bool db::database::column_exists(std::string const &column_name, std::string con
     }
 
     return false;
+}
+
+db::update_result db::database::create_table(std::string const &table_name, std::vector<std::string> const &fields) {
+    return execute_update(create_table_sql(table_name, fields));
+}
+
+db::update_result db::database::alter_table(std::string const &table_name, std::string const &field) {
+    return execute_update(alter_table_sql(table_name, field));
+}
+
+db::update_result db::database::drop_table(std::string const &table_name) {
+    return execute_update(drop_table_sql(table_name));
 }

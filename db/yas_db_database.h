@@ -138,6 +138,10 @@ namespace db {
         db::result_set get_table_schema(std::string const &table_name) const;
         bool column_exists(std::string const &column_name, std::string const &table_name) const;
 
+        update_result create_table(std::string const &table_name, std::vector<std::string> const &fields);
+        update_result alter_table(std::string const &table_name, std::string const &field);
+        update_result drop_table(std::string const &table_name);
+
        private:
         void _result_set_did_close(uintptr_t const) override;
     };

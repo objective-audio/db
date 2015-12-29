@@ -517,4 +517,34 @@
     XCTAssertEqual(db.start_busy_retry_time(), now);
 }
 
+- (void)test_table {
+    yas::db::database db = [yas_db_test_utils create_test_database];
+    db.open();
+
+    XCTAssertTrue(db.create_table("test_table_a", {"field_a"}));
+    XCTAssertTrue(db.create_table("test_table_b", {"field_b"}));
+
+    XCTAssertTrue(db.table_exists("test_table_a"));
+    XCTAssertTrue(db.table_exists("test_table_b"));
+
+    auto schema_set_1 = db.get_table_schema("test_table_a");
+    XCTAssertTrue(schema_set_1.next());
+    XCTAssertEqual(schema_set_1.column_value("name").value<yas::db::text>(), "field_a");
+    XCTAssertFalse(schema_set_1.next());
+
+    XCTAssertTrue(db.alter_table("test_table_a", "field_c"));
+
+    auto schema_set_2 = db.get_table_schema("test_table_a");
+    XCTAssertTrue(schema_set_2.next());
+    XCTAssertEqual(schema_set_2.column_value("name").value<yas::db::text>(), "field_a");
+    XCTAssertTrue(schema_set_2.next());
+    XCTAssertEqual(schema_set_2.column_value("name").value<yas::db::text>(), "field_c");
+    XCTAssertFalse(schema_set_2.next());
+
+    XCTAssertTrue(db.drop_table("test_table_b"));
+
+    XCTAssertTrue(db.table_exists("test_table_a"));
+    XCTAssertFalse(db.table_exists("test_table_b"));
+}
+
 @end
