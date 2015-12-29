@@ -71,7 +71,7 @@ namespace db {
        public:
         class impl;
 
-        using callback_function = std::function<int(const column_map &)>;
+        using callback_function = std::function<int(column_map const &)>;
 
         static std::string sqlite_lib_version();
         static bool sqlite_thread_safe();
@@ -96,8 +96,8 @@ namespace db {
         update_result execute_update(std::string const &sql, column_map const &arguments);
 
         update_result execute_statements(std::string const &sql);
-        update_result execute_statements(std::string const &sql, const callback_function &callback);
-        const callback_function &callback_for_execute_statements() const;
+        update_result execute_statements(std::string const &sql, callback_function const &callback);
+        callback_function const &callback_for_execute_statements() const;
 
         query_result execute_query(std::string const &sql) const;
         query_result execute_query(std::string const &sql, column_vector const &arguments) const;
@@ -121,7 +121,7 @@ namespace db {
         std::string last_error_message() const;
         int last_error_code() const;
         bool had_error() const;
-        void set_max_busy_retry_time_interval(const double);
+        void set_max_busy_retry_time_interval(double const);
         double max_busy_retry_time_interval() const;
         void set_start_busy_retry_time(const std::chrono::time_point<std::chrono::system_clock> &time);
         std::chrono::time_point<std::chrono::system_clock> start_busy_retry_time() const;
@@ -131,7 +131,7 @@ namespace db {
         update_result release_save_point(std::string const &name);
         update_result rollback_save_point(std::string const &name);
 
-        update_result in_save_point(const std::function<void(bool &rollback)> function);
+        update_result in_save_point(std::function<void(bool &rollback)> const function);
 #endif
         bool table_exists(std::string const &table_name) const;
         db::result_set get_schema() const;
@@ -139,7 +139,7 @@ namespace db {
         bool column_exists(std::string const &column_name, std::string const &table_name) const;
 
        private:
-        void _result_set_did_close(const uintptr_t) override;
+        void _result_set_did_close(uintptr_t const) override;
     };
 }
 }

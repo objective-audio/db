@@ -25,7 +25,7 @@ db::next_result_code::operator bool() const {
 
 class db::result_set::impl : public base::impl {
    public:
-    impl(const db::statement &statement, database const &database) : _statement(statement), _database(database) {
+    impl(db::statement const &statement, database const &database) : _statement(statement), _database(database) {
         _statement.in_use().set_value(true);
     }
 
@@ -51,11 +51,11 @@ class db::result_set::impl : public base::impl {
         return _database;
     }
 
-    const db::statement &statement() const {
+    db::statement const &statement() const {
         return _statement;
     }
 
-    const std::unordered_map<std::string, int> &column_name_to_index_map() const {
+    std::unordered_map<std::string, int> const &column_name_to_index_map() const {
         if (_column_name_to_index_map.empty()) {
             auto *const stmt = _statement.stmt().value();
             int column_count = sqlite3_column_count(stmt);
@@ -76,7 +76,7 @@ class db::result_set::impl : public base::impl {
     mutable std::unordered_map<std::string, int> _column_name_to_index_map;
 };
 
-db::result_set::result_set(const db::statement &statement, database const &database)
+db::result_set::result_set(db::statement const &statement, database const &database)
     : super_class(std::make_unique<impl>(statement, database)) {
 }
 
@@ -101,7 +101,7 @@ std::string db::result_set::query() const {
     return impl_ptr<impl>()->query;
 }
 
-const db::statement &db::result_set::statement() const {
+db::statement const &db::result_set::statement() const {
     return impl_ptr<impl>()->statement();
 }
 
@@ -167,7 +167,7 @@ db::column_value db::result_set::column_value(int const column_idx) const {
                 return db::column_value{sqlite3_column_double(stmt, column_idx)};
             } else if (type == SQLITE_BLOB) {
                 size_t const data_size = sqlite3_column_bytes(stmt, column_idx);
-                const void *data = sqlite3_column_blob(stmt, column_idx);
+                const void *const data = sqlite3_column_blob(stmt, column_idx);
                 return db::column_value{data, data_size};
             } else if (type == SQLITE_TEXT) {
                 std::string text = (const char *)sqlite3_column_text(stmt, column_idx);

@@ -20,5 +20,5 @@ namespace db {
     };
 }
 
-std::string to_string(const db::result_code &);
+std::string to_string(db::result_code const &);
 }

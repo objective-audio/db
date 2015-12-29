@@ -17,7 +17,7 @@ int result_code::raw_value() const {
     return _raw_value;
 }
 
-std::string yas::to_string(const db::result_code &code) {
+std::string yas::to_string(db::result_code const &code) {
     switch (code.raw_value()) {
         case SQLITE_ROW:
             return "SQLITE_ROW";
