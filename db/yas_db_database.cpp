@@ -155,7 +155,7 @@ class db::database::impl : public base::impl {
         return nullptr;
     }
 
-    void set_cached_statement(const db::statement &statement, std::string const &query) {
+    void set_cached_statement(db::statement const &statement, std::string const &query) {
         db::statement cached_statement = statement;
         cached_statement.query().set_value(query);
 
@@ -195,7 +195,7 @@ class db::database::impl : public base::impl {
         return sqlite_handle;
     }
 
-    static void bind(const column_value &value, int column_idx, sqlite3_stmt *stmt) {
+    static void bind(column_value const &value, int column_idx, sqlite3_stmt *stmt) {
         std::type_info const &type = value.type();
 
         if (type == typeid(db::null)) {
@@ -325,7 +325,7 @@ class db::database::impl : public base::impl {
         }
     }
 
-    update_result execute_statements(std::string const &sql, const callback_function &function) {
+    update_result execute_statements(std::string const &sql, callback_function const &function) {
         callback_id callback_id{.database = db_key};
         callback_for_execute_statements = function;
 
@@ -478,7 +478,7 @@ class db::database::impl : public base::impl {
         return count_result{changes};
     }
 
-    void set_max_busy_retry_time_interval(const double timeout) {
+    void set_max_busy_retry_time_interval(double const timeout) {
         _max_busy_retry_time_interval = timeout;
 
         if (!sqlite_handle) {
@@ -599,11 +599,11 @@ db::update_result db::database::execute_statements(std::string const &sql) {
     return impl_ptr<impl>()->execute_statements(sql, nullptr);
 }
 
-db::update_result db::database::execute_statements(std::string const &sql, const callback_function &callback) {
+db::update_result db::database::execute_statements(std::string const &sql, callback_function const &callback) {
     return impl_ptr<impl>()->execute_statements(sql, callback);
 }
 
-const db::database::callback_function &db::database::callback_for_execute_statements() const {
+db::database::callback_function const &db::database::callback_for_execute_statements() const {
     return impl_ptr<impl>()->callback_for_execute_statements;
 }
 
@@ -699,7 +699,7 @@ bool db::database::had_error() const {
     return impl_ptr<impl>()->had_error();
 }
 
-void db::database::set_max_busy_retry_time_interval(const double timeout) {
+void db::database::set_max_busy_retry_time_interval(double const timeout) {
     impl_ptr<impl>()->set_max_busy_retry_time_interval(timeout);
 }
 
@@ -707,7 +707,7 @@ double db::database::max_busy_retry_time_interval() const {
     return impl_ptr<impl>()->max_busy_retry_time_interval();
 }
 
-void db::database::set_start_busy_retry_time(const std::chrono::time_point<std::chrono::system_clock> &time) {
+void db::database::set_start_busy_retry_time(std::chrono::time_point<std::chrono::system_clock> const &time) {
     impl_ptr<impl>()->start_busy_retry_time = time;
 }
 
@@ -717,7 +717,7 @@ std::chrono::time_point<std::chrono::system_clock> db::database::start_busy_retr
 
 #pragma mark -
 
-void db::database::_result_set_did_close(const uintptr_t id) {
+void db::database::_result_set_did_close(uintptr_t const id) {
     impl_ptr<impl>()->open_result_sets.erase(id);
 }
 
@@ -744,9 +744,9 @@ db::update_result db::database::rollback_save_point(std::string const &name) {
     return execute_update("rollback transaction to savepoint '" + impl::escape_save_point_name(name) + "';");
 }
 
-db::update_result db::database::in_save_point(const std::function<void(bool &rollback)> function) {
+db::update_result db::database::in_save_point(std::function<void(bool &rollback)> const function) {
     static unsigned long save_point_idx = 0;
-    const std::string name = "db_save_point_" + std::to_string(save_point_idx++);
+    std::string const name = "db_save_point_" + std::to_string(save_point_idx++);
 
     auto start_result = start_save_point(name);
     if (!start_result) {
@@ -767,7 +767,7 @@ db::update_result db::database::in_save_point(const std::function<void(bool &rol
 #endif
 
 bool db::database::table_exists(std::string const &table_name) const {
-    const std::string lower_table_name = to_lower(table_name);
+    std::string const lower_table_name = to_lower(table_name);
     std::vector<db::column_value> args;
     args.emplace_back(db::column_value{lower_table_name});
 

@@ -83,15 +83,13 @@ namespace db {
 
         ~column_value();
 
-        column_value(const column_value &) = delete;
         column_value(column_value &&) noexcept;
-        column_value &operator=(const column_value &) = delete;
         column_value &operator=(column_value &&) noexcept;
 
         std::type_info const &type() const;
 
         template <typename T>
-        const typename T::type &value() const;
+        typename T::type const &value() const;
 
        private:
         class impl_base;
@@ -99,6 +97,9 @@ namespace db {
 
         template <typename T>
         class impl;
+
+        column_value(const column_value &) = delete;
+        column_value &operator=(const column_value &) = delete;
     };
 
     using column_vector = std::vector<column_value>;

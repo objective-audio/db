@@ -110,7 +110,7 @@ std::type_info const &db::column_value::type() const {
 }
 
 template <typename T>
-const typename T::type &db::column_value::value() const {
+typename T::type const &db::column_value::value() const {
     if (auto impl_ptr = dynamic_cast<impl<T> *>(_impl.get())) {
         return impl_ptr->value;
     }

@@ -57,7 +57,7 @@ property<sqlite3_stmt *> &db::statement::stmt() {
     return impl_ptr<impl>()->stmt;
 }
 
-const property<sqlite3_stmt *> &db::statement::stmt() const {
+property<sqlite3_stmt *> const &db::statement::stmt() const {
     return impl_ptr<impl>()->stmt;
 }
 
@@ -65,7 +65,7 @@ property<std::string> &db::statement::query() {
     return impl_ptr<impl>()->query;
 }
 
-const property<std::string> &db::statement::query() const {
+property<std::string> const &db::statement::query() const {
     return impl_ptr<impl>()->query;
 }
 
@@ -73,7 +73,7 @@ property<bool> &db::statement::in_use() {
     return impl_ptr<impl>()->in_use;
 }
 
-const property<bool> &db::statement::in_use() const {
+property<bool> const &db::statement::in_use() const {
     return impl_ptr<impl>()->in_use;
 }
 

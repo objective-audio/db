@@ -28,13 +28,13 @@ namespace db {
         statement &operator=(statement &&) = default;
 
         property<sqlite3_stmt *> &stmt();
-        const property<sqlite3_stmt *> &stmt() const;
+        property<sqlite3_stmt *> const &stmt() const;
 
         property<std::string> &query();
-        const property<std::string> &query() const;
+        property<std::string> const &query() const;
 
         property<bool> &in_use();
-        const property<bool> &in_use() const;
+        property<bool> const &in_use() const;
 
         void reset();
 
