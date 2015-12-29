@@ -14,6 +14,19 @@ namespace db {
 }
 }
 
+std::string yas::db::create_table_sql(std::string const &table, std::vector<std::string> const &fields) {
+    std::string const joined_fields = joined(fields, field_separator);
+    return "create table if not exists " + table + " (" + joined_fields + ");";
+}
+
+std::string yas::db::alter_table_sql(std::string const &table, std::string const &field) {
+    return "alter table " + table + " add column " + field + ";";
+}
+
+std::string yas::db::drop_table_sql(std::string const &table) {
+    return "drop table if exists " + table + ";";
+}
+
 std::string yas::db::insert_sql(const std::string &table, const std::vector<std::string> &fields) {
     std::string const joined_fields = joined(fields, field_separator);
     std::string const joined_values =
