@@ -71,7 +71,7 @@
     yas::db::database db = [yas_db_test_utils create_test_database];
     db.open();
 
-    XCTAssertTrue(db.execute_update("create table test_table (field);"));
+    XCTAssertTrue(db.execute_update(yas::db::create_table_sql("test_table", {"field"})));
 
     XCTAssertTrue(db.table_exists("test_table"));
     XCTAssertFalse(db.table_exists("hoge"));
@@ -81,7 +81,7 @@
     yas::db::database db = [yas_db_test_utils create_test_database];
     db.open();
 
-    XCTAssertTrue(db.execute_update("create table test_table (field_a, field_b);"));
+    XCTAssertTrue(db.execute_update(yas::db::create_table_sql("test_table", {"field_a", "field_b"})));
 
     XCTAssertTrue(db.column_exists("field_a", "test_table"));
     XCTAssertTrue(db.column_exists("field_b", "test_table"));
@@ -109,7 +109,7 @@
     yas::db::database db = [yas_db_test_utils create_test_database];
     db.open();
 
-    XCTAssertTrue(db.execute_update("create table test_table (field_a, field_b);"));
+    XCTAssertTrue(db.execute_update(yas::db::create_table_sql("test_table", {"field_a", "field_b"})));
 
     yas::db::column_vector arguments;
     arguments.emplace_back(yas::db::column_value{"value_a"});
@@ -132,11 +132,11 @@
     yas::db::database db = [yas_db_test_utils create_test_database];
     db.open();
 
-    XCTAssertTrue(db.execute_update("create table test_table (field_a, field_b);"));
+    XCTAssertTrue(db.execute_update(yas::db::create_table_sql("test_table", {"field_a", "field_b"})));
 
     yas::db::column_map arguments;
-    arguments.insert(std::make_pair("field_a", yas::db::column_value{"value_a"}));
-    arguments.insert(std::make_pair("field_b", yas::db::column_value{"value_b"}));
+    arguments.emplace(std::make_pair("field_a", yas::db::column_value{"value_a"}));
+    arguments.emplace(std::make_pair("field_b", yas::db::column_value{"value_b"}));
     XCTAssertTrue(db.execute_update("insert into test_table(field_a, field_b) values(:field_a, :field_b)", arguments));
 
     auto query_result = db.execute_query("select * from test_table");
@@ -155,7 +155,7 @@
     yas::db::database db = [yas_db_test_utils create_test_database];
     db.open();
 
-    XCTAssertTrue(db.execute_update("create table test_table (field_a);"));
+    XCTAssertTrue(db.execute_update(yas::db::create_table_sql("test_table", {"field_a"})));
 
     yas::db::column_vector arguments_1;
     arguments_1.emplace_back(yas::db::column_value{"value_a"});
@@ -185,7 +185,7 @@
     yas::db::database db = [yas_db_test_utils create_test_database];
     db.open();
 
-    XCTAssertTrue(db.execute_update("create table test_table (field_a);"));
+    XCTAssertTrue(db.execute_update(yas::db::create_table_sql("test_table", {"field_a"})));
 
     yas::db::column_vector arguments_1;
     arguments_1.emplace_back(yas::db::column_value{"value_a"});
@@ -215,7 +215,7 @@
     yas::db::database db = [yas_db_test_utils create_test_database];
     db.open();
 
-    XCTAssertTrue(db.execute_update("create table test_table (test_field);"));
+    XCTAssertTrue(db.execute_update(yas::db::create_table_sql("test_table", {"test_field"})));
     XCTAssertTrue(db.execute_update("insert into test_table(test_field) values('value1')"));
 
     auto query_result_1 = db.execute_query("select * from test_table");
@@ -245,7 +245,7 @@
     yas::db::database db = [yas_db_test_utils create_test_database];
     db.open();
 
-    XCTAssertTrue(db.execute_update("create table test_table (test_field);"));
+    XCTAssertTrue(db.execute_update(yas::db::create_table_sql("test_table", {"test_field"})));
     XCTAssertTrue(db.execute_update("insert into test_table(test_field) values('value1')"));
 
     auto query_result_1 = db.execute_query("select * from test_table");
@@ -268,7 +268,7 @@
     yas::db::database db = [yas_db_test_utils create_test_database];
     db.open();
 
-    XCTAssertTrue(db.execute_update("create table test_table (test_field);"));
+    XCTAssertTrue(db.execute_update(yas::db::create_table_sql("test_table", {"test_field"})));
 
     auto count_of_row = [&db]() {
         auto query_result = db.execute_query("select * from test_table");
@@ -296,7 +296,7 @@
     yas::db::database db = [yas_db_test_utils create_test_database];
     db.open();
 
-    XCTAssertTrue(db.execute_update("create table test_table (test_field);"));
+    XCTAssertTrue(db.execute_update(yas::db::create_table_sql("test_table", {"test_field"})));
 
     auto count_of_row = [&db]() {
         auto query_result = db.execute_query("select * from test_table");
@@ -319,7 +319,7 @@
     yas::db::database db = [yas_db_test_utils create_test_database];
     db.open();
 
-    XCTAssertTrue(db.execute_update("create table test_table (test_field);"));
+    XCTAssertTrue(db.execute_update(yas::db::create_table_sql("test_table", {"test_field"})));
 
     auto count_of_row = [&db]() {
         auto query_result = db.execute_query("select * from test_table");
@@ -368,7 +368,7 @@
     db.open();
     db.set_should_cache_statements(true);
 
-    XCTAssertTrue(db.execute_update("create table test_table (test_field);"));
+    XCTAssertTrue(db.execute_update(yas::db::create_table_sql("test_table", {"test_field"})));
 
     std::string insert_query = "insert into test_table(test_field) values('value1')";
     std::string select_query = "select * from test_table";
@@ -401,7 +401,7 @@
     yas::db::database db = [yas_db_test_utils create_test_database];
     db.open();
 
-    XCTAssertTrue(db.execute_update("create table test_table (test_field);"));
+    XCTAssertTrue(db.execute_update(yas::db::create_table_sql("test_table", {"test_field"})));
     XCTAssertTrue(db.execute_update("insert into test_table(test_field) values('value1')"));
 
     XCTAssertFalse(db.has_open_result_sets());
@@ -470,7 +470,7 @@
     yas::db::database db = [yas_db_test_utils create_test_database];
     db.open();
 
-    std::string const sql = "create table test_table (field_a, field_b)";
+    std::string const sql = yas::db::create_table_sql("test_table", {"field_a", "field_b"});
     XCTAssertTrue(db.execute_update(sql));
 
     auto result_set = db.get_table_schema("test_table");

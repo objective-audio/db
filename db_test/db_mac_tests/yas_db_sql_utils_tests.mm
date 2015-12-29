@@ -18,12 +18,17 @@
     [super tearDown];
 }
 
-- (void)test_equal_expr {
-    XCTAssertEqual(yas::db::equal_expr("abc"), "abc = :abc");
+- (void)test_create_table_sql {
+    XCTAssertEqual(yas::db::create_table_sql("test_table", {"field_a", "field_b"}),
+                   "create table if not exists test_table (field_a, field_b);");
 }
 
-- (void)test_joined_exprs {
-    XCTAssertEqual(yas::db::joined_exprs({"abc", "def"}), "abc = :abc and def = :def");
+- (void)test_alter_table_sql {
+    XCTAssertEqual(yas::db::alter_table_sql("test_table", "field_a"), "alter table test_table add column field_a;");
+}
+
+- (void)test_drop_table_sql {
+    XCTAssertEqual(yas::db::drop_table_sql("test_table"), "drop table if exists test_table;");
 }
 
 - (void)test_insert_sql {
@@ -37,6 +42,14 @@
 
 - (void)test_delete_sql {
     XCTAssertEqual(yas::db::delete_sql("bbb", "xyz = :xyz"), "delete from bbb where xyz = :xyz;");
+}
+
+- (void)test_equal_expr {
+    XCTAssertEqual(yas::db::equal_expr("abc"), "abc = :abc");
+}
+
+- (void)test_joined_exprs {
+    XCTAssertEqual(yas::db::joined_exprs({"abc", "def"}), "abc = :abc and def = :def");
 }
 
 - (void)test_joined_orders {
