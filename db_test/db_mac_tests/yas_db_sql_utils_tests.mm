@@ -39,4 +39,10 @@
     XCTAssertEqual(yas::db::delete_sql("bbb", "xyz = :xyz"), "delete from bbb where xyz = :xyz;");
 }
 
+- (void)test_joined_orders {
+    auto joined_orders =
+        yas::db::joined_orders({{"field_a", yas::db::order::ascending}, {"field_b", yas::db::order::descending}});
+    XCTAssertEqual(joined_orders, "field_a asc, field_b desc");
+}
+
 @end
