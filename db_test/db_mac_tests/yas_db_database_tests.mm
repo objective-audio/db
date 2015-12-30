@@ -574,8 +574,7 @@
     std::vector<yas::db::column_map> param_maps;
     param_maps.emplace_back(std::move(param_map));
 
-    auto result_map =
-        db.select(table, {field_a, field_b}, yas::db::and_exprs({yas::db::equal_expr(field_a)}), param_maps);
+    auto result_map = db.select(table, {field_a, field_b}, yas::db::field_expr(field_a, "="), param_maps);
 
     XCTAssertEqual(result_map.size(), 1);
 }

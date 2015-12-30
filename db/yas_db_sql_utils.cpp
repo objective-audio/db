@@ -40,7 +40,7 @@ std::string yas::db::update_sql(const std::string &table, const std::vector<std:
                                 const std::string &where_exprs) {
     std::ostringstream stream;
     stream << "update " << table << " set "
-           << joined(map(fields, [](std::string const &field) { return equal_expr(field); }), field_separator);
+           << joined(map(fields, [](std::string const &field) { return field_expr(field, "="); }), field_separator);
     if (where_exprs.size() > 0) {
         stream << " where " << where_exprs;
     }
@@ -58,16 +58,12 @@ std::string yas::db::delete_sql(const std::string &table, const std::string &whe
     return stream.str();
 }
 
-std::string yas::db::expr(std::string const &field, std::string const &op) {
-    return field + " " + op + " :" + field;
+std::string yas::db::expr(std::string const &left, std::string const &right, std::string const &op) {
+    return "(" + left + " " + op + " " + right + ")";
 }
 
-std::string yas::db::equal_expr(std::string const &field) {
-    return expr(field, "=");
-}
-
-std::string yas::db::and_exprs(const std::vector<std::string> &expr) {
-    return joined(expr, " and ");
+std::string yas::db::field_expr(std::string const &field, std::string const &op) {
+    return expr(field, ":" + field, op);
 }
 
 std::string yas::db::joined_orders(std::vector<field_order> const &orders) {
