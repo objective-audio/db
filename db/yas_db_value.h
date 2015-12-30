@@ -1,5 +1,5 @@
 //
-//  yas_db_column_value.h
+//  yas_db_value.h
 //
 
 #pragma once
@@ -64,29 +64,29 @@ namespace db {
         static constexpr auto name = "null";
     };
 
-    class column_value : public base {
+    class value : public base {
         using super_class = base;
 
        public:
-        explicit column_value(UInt8 const &);
-        explicit column_value(SInt8 const &);
-        explicit column_value(UInt16 const &);
-        explicit column_value(SInt16 const &);
-        explicit column_value(UInt32 const &);
-        explicit column_value(SInt32 const &);
-        explicit column_value(UInt64 const &);
-        explicit column_value(SInt64 const &);
-        explicit column_value(Float32 const &);
-        explicit column_value(Float64 const &);
-        explicit column_value(std::string const &);
-        explicit column_value(std::string &&);
-        explicit column_value(blob::type &&);
-        column_value(null::type);
+        explicit value(UInt8 const &);
+        explicit value(SInt8 const &);
+        explicit value(UInt16 const &);
+        explicit value(SInt16 const &);
+        explicit value(UInt32 const &);
+        explicit value(SInt32 const &);
+        explicit value(UInt64 const &);
+        explicit value(SInt64 const &);
+        explicit value(Float32 const &);
+        explicit value(Float64 const &);
+        explicit value(std::string const &);
+        explicit value(std::string &&);
+        explicit value(blob::type &&);
+        value(null::type);
 
         template <typename T = db::copy_tag_t>
-        column_value(const void *const data, size_t const size, T const tag = db::copy_tag);
+        value(const void *const data, size_t const size, T const tag = db::copy_tag);
 
-        ~column_value();
+        ~value();
 
         std::type_info const &type() const;
 
@@ -100,9 +100,9 @@ namespace db {
         class impl;
     };
 
-    using column_vector = std::vector<column_value>;
-    using column_map = std::unordered_map<std::string, column_value>;
+    using column_vector = std::vector<value>;
+    using column_map = std::unordered_map<std::string, value>;
 }
 
-std::string to_string(const db::column_value &);
+std::string to_string(const db::value &);
 }
