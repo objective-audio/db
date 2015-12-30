@@ -114,11 +114,11 @@
 
     XCTAssertTrue(result_set.next());
 
-    auto int_value = result_set.value("int_field");
-    auto float_value = result_set.value("float_field");
-    auto string_value = result_set.value("string_field");
-    auto data_value = result_set.value("data_field");
-    auto null_value = result_set.value("null_field");
+    auto int_value = result_set.column_value("int_field");
+    auto float_value = result_set.column_value("float_field");
+    auto string_value = result_set.column_value("string_field");
+    auto data_value = result_set.column_value("data_field");
+    auto null_value = result_set.column_value("null_field");
 
     XCTAssertTrue(int_value.type() == typeid(yas::db::integer));
     XCTAssertTrue(float_value.type() == typeid(yas::db::real));

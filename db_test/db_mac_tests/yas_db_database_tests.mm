@@ -120,8 +120,8 @@
     XCTAssertTrue(result_set);
     XCTAssertTrue(result_set.next());
 
-    XCTAssertEqual(result_set.value(0).get<yas::db::text>(), "value_a");
-    XCTAssertEqual(result_set.value(1).get<yas::db::text>(), "value_b");
+    XCTAssertEqual(result_set.column_value(0).get<yas::db::text>(), "value_a");
+    XCTAssertEqual(result_set.column_value(1).get<yas::db::text>(), "value_b");
 
     XCTAssertFalse(result_set.next());
 }
@@ -142,8 +142,8 @@
     XCTAssertTrue(result_set);
     XCTAssertTrue(result_set.next());
 
-    XCTAssertEqual(result_set.value("field_a").get<yas::db::text>(), "value_a");
-    XCTAssertEqual(result_set.value("field_b").get<yas::db::text>(), "value_b");
+    XCTAssertEqual(result_set.column_value("field_a").get<yas::db::text>(), "value_a");
+    XCTAssertEqual(result_set.column_value("field_b").get<yas::db::text>(), "value_b");
 
     XCTAssertFalse(result_set.next());
 }
@@ -170,7 +170,7 @@
     XCTAssertTrue(result_set);
     XCTAssertTrue(result_set.next());
 
-    XCTAssertEqual(result_set.value("field_a").get<yas::db::text>(), "value_a");
+    XCTAssertEqual(result_set.column_value("field_a").get<yas::db::text>(), "value_a");
 
     XCTAssertFalse(result_set.next());
 }
@@ -197,7 +197,7 @@
     XCTAssertTrue(result_set);
     XCTAssertTrue(result_set.next());
 
-    XCTAssertEqual(result_set.value("field_a").get<yas::db::text>(), "value_a");
+    XCTAssertEqual(result_set.column_value("field_a").get<yas::db::text>(), "value_a");
 
     XCTAssertFalse(result_set.next());
 }
@@ -520,16 +520,16 @@
 
     auto schema_set_1 = db.get_table_schema("test_table_a");
     XCTAssertTrue(schema_set_1.next());
-    XCTAssertEqual(schema_set_1.value("name").get<yas::db::text>(), "field_a");
+    XCTAssertEqual(schema_set_1.column_value("name").get<yas::db::text>(), "field_a");
     XCTAssertFalse(schema_set_1.next());
 
     XCTAssertTrue(db.alter_table("test_table_a", "field_c"));
 
     auto schema_set_2 = db.get_table_schema("test_table_a");
     XCTAssertTrue(schema_set_2.next());
-    XCTAssertEqual(schema_set_2.value("name").get<yas::db::text>(), "field_a");
+    XCTAssertEqual(schema_set_2.column_value("name").get<yas::db::text>(), "field_a");
     XCTAssertTrue(schema_set_2.next());
-    XCTAssertEqual(schema_set_2.value("name").get<yas::db::text>(), "field_c");
+    XCTAssertEqual(schema_set_2.column_value("name").get<yas::db::text>(), "field_c");
     XCTAssertFalse(schema_set_2.next());
 
     XCTAssertTrue(db.drop_table("test_table_b"));

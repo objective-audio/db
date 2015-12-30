@@ -155,7 +155,7 @@ bool db::result_set::column_is_null(std::string const column_name) {
     return true;
 }
 
-db::value db::result_set::value(int const column_idx) const {
+db::value db::result_set::column_value(int const column_idx) const {
     if (column_idx >= 0) {
         auto *const stmt = impl_ptr<impl>()->statement().stmt().value();
         int type = sqlite3_column_type(stmt, column_idx);
@@ -179,9 +179,9 @@ db::value db::result_set::value(int const column_idx) const {
     return db::value{nullptr};
 }
 
-db::value db::result_set::value(std::string const column_name) const {
+db::value db::result_set::column_value(std::string const column_name) const {
     if (auto index_result = column_index(column_name)) {
-        return value(index_result.value());
+        return column_value(index_result.value());
     }
     return db::value{nullptr};
 }
@@ -194,7 +194,7 @@ db::column_map db::result_set::column_map() const {
     map.reserve(column_count);
 
     for (auto &idx : each_index<int>{column_count}) {
-        map.insert(std::make_pair(sqlite3_column_name(stmt, idx), value(idx)));
+        map.insert(std::make_pair(sqlite3_column_name(stmt, idx), column_value(idx)));
     }
 
     return map;
