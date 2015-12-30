@@ -164,10 +164,10 @@
 		B6E0F1601C1D66D20033AC60 /* db */ = {
 			isa = PBXGroup;
 			children = (
-				B608C85C1C20F17300F594D8 /* yas_db_value.cpp */,
-				B608C85D1C20F17300F594D8 /* yas_db_value.h */,
 				B69543AC1C1E5831009DF7F9 /* yas_db_database.cpp */,
 				B69543AD1C1E5831009DF7F9 /* yas_db_database.h */,
+				B63A0C3F1C33D0C9009EB0B3 /* yas_db_manager.cpp */,
+				B63A0C401C33D0C9009EB0B3 /* yas_db_manager.h */,
 				B63A0C321C3255B3009EB0B3 /* yas_db_order.cpp */,
 				B63A0C331C3255B3009EB0B3 /* yas_db_order.h */,
 				B62CED911C2A33960047B6DE /* yas_db_protocol.h */,
@@ -181,9 +181,9 @@
 				B6C5A2CD1C30D96800E100EC /* yas_db_sql_utils.h */,
 				B69543B21C1E5945009DF7F9 /* yas_db_statement.cpp */,
 				B69543B31C1E5945009DF7F9 /* yas_db_statement.h */,
+				B608C85C1C20F17300F594D8 /* yas_db_value.cpp */,
+				B608C85D1C20F17300F594D8 /* yas_db_value.h */,
 				B608C8611C21910400F594D8 /* yas_db.h */,
-				B63A0C3F1C33D0C9009EB0B3 /* yas_db_manager.cpp */,
-				B63A0C401C33D0C9009EB0B3 /* yas_db_manager.h */,
 			);
 			name = db;
 			path = ../db;
