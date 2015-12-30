@@ -11,6 +11,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "yas_base.h"
+
 namespace yas {
 namespace db {
     struct copy_tag_t {};
@@ -62,7 +64,9 @@ namespace db {
         static constexpr auto name = "null";
     };
 
-    class column_value {
+    class column_value : public base {
+        using super_class = base;
+
        public:
         explicit column_value(UInt8 const &);
         explicit column_value(SInt8 const &);
@@ -84,9 +88,6 @@ namespace db {
 
         ~column_value();
 
-        column_value(column_value &&) noexcept;
-        column_value &operator=(column_value &&) noexcept;
-
         std::type_info const &type() const;
 
         template <typename T>
@@ -94,20 +95,13 @@ namespace db {
 
        private:
         class impl_base;
-        std::unique_ptr<impl_base> _impl;
 
         template <typename T>
         class impl;
-
-        column_value(const column_value &) = delete;
-        column_value &operator=(const column_value &) = delete;
     };
 
     using column_vector = std::vector<column_value>;
     using column_map = std::unordered_map<std::string, column_value>;
-
-    static_assert(std::is_nothrow_move_constructible<column_value>::value == true,
-                  "column_value is nothrow move constructible");
 }
 
 std::string to_string(const db::column_value &);

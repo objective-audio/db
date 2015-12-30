@@ -30,8 +30,7 @@ size_t db::blob::size() const {
 
 #pragma mark - column_value::impl
 
-struct db::column_value::impl_base {
-    virtual ~impl_base() = default;
+struct db::column_value::impl_base : public base::impl {
     virtual std::type_info const &type() const = 0;
 };
 
@@ -52,37 +51,37 @@ struct db::column_value::impl : public impl_base {
 
 #pragma mark - column_value
 
-db::column_value::column_value(UInt8 const &value) : _impl(std::make_unique<impl<db::integer>>(value)) {
+db::column_value::column_value(UInt8 const &value) : super_class(std::make_unique<impl<db::integer>>(value)) {
 }
-db::column_value::column_value(SInt8 const &value) : _impl(std::make_unique<impl<db::integer>>(value)) {
+db::column_value::column_value(SInt8 const &value) : super_class(std::make_unique<impl<db::integer>>(value)) {
 }
-db::column_value::column_value(UInt16 const &value) : _impl(std::make_unique<impl<db::integer>>(value)) {
+db::column_value::column_value(UInt16 const &value) : super_class(std::make_unique<impl<db::integer>>(value)) {
 }
-db::column_value::column_value(SInt16 const &value) : _impl(std::make_unique<impl<db::integer>>(value)) {
+db::column_value::column_value(SInt16 const &value) : super_class(std::make_unique<impl<db::integer>>(value)) {
 }
-db::column_value::column_value(UInt32 const &value) : _impl(std::make_unique<impl<db::integer>>(value)) {
+db::column_value::column_value(UInt32 const &value) : super_class(std::make_unique<impl<db::integer>>(value)) {
 }
-db::column_value::column_value(SInt32 const &value) : _impl(std::make_unique<impl<db::integer>>(value)) {
+db::column_value::column_value(SInt32 const &value) : super_class(std::make_unique<impl<db::integer>>(value)) {
 }
-db::column_value::column_value(UInt64 const &value) : _impl(std::make_unique<impl<db::integer>>(value)) {
+db::column_value::column_value(UInt64 const &value) : super_class(std::make_unique<impl<db::integer>>(value)) {
 }
-db::column_value::column_value(SInt64 const &value) : _impl(std::make_unique<impl<db::integer>>(value)) {
-}
-
-db::column_value::column_value(Float32 const &value) : _impl(std::make_unique<impl<real>>(value)) {
-}
-db::column_value::column_value(Float64 const &value) : _impl(std::make_unique<impl<real>>(value)) {
+db::column_value::column_value(SInt64 const &value) : super_class(std::make_unique<impl<db::integer>>(value)) {
 }
 
-db::column_value::column_value(std::string const &value) : _impl(std::make_unique<impl<text>>(value)) {
+db::column_value::column_value(Float32 const &value) : super_class(std::make_unique<impl<real>>(value)) {
 }
-db::column_value::column_value(std::string &&value) : _impl(std::make_unique<impl<text>>(std::move(value))) {
-}
-
-db::column_value::column_value(blob::type &&value) : _impl(std::make_unique<impl<blob>>(std::move(value))) {
+db::column_value::column_value(Float64 const &value) : super_class(std::make_unique<impl<real>>(value)) {
 }
 
-db::column_value::column_value(null::type) : _impl(std::make_unique<impl<null>>(nullptr)) {
+db::column_value::column_value(std::string const &value) : super_class(std::make_unique<impl<text>>(value)) {
+}
+db::column_value::column_value(std::string &&value) : super_class(std::make_unique<impl<text>>(std::move(value))) {
+}
+
+db::column_value::column_value(blob::type &&value) : super_class(std::make_unique<impl<blob>>(std::move(value))) {
+}
+
+db::column_value::column_value(null::type) : super_class(std::make_unique<impl<null>>(nullptr)) {
 }
 
 template <>
@@ -97,22 +96,14 @@ db::column_value::column_value(const void *const data_ptr, size_t const size, db
 
 db::column_value::~column_value() = default;
 
-db::column_value::column_value(column_value &&rhs) noexcept : _impl(std::move_if_noexcept(rhs._impl)) {
-}
-
-db::column_value &db::column_value::operator=(column_value &&rhs) noexcept {
-    _impl = std::move_if_noexcept(rhs._impl);
-    return *this;
-}
-
 std::type_info const &db::column_value::type() const {
-    return _impl->type();
+    return impl_ptr<impl_base>()->type();
 }
 
 template <typename T>
 typename T::type const &db::column_value::value() const {
-    if (auto impl_ptr = dynamic_cast<impl<T> *>(_impl.get())) {
-        return impl_ptr->value;
+    if (auto ip = std::dynamic_pointer_cast<impl<T>>(impl_ptr())) {
+        return ip->value;
     }
 
     static const typename T::type _default{};
