@@ -111,10 +111,8 @@
 
     XCTAssertTrue(db.execute_update(yas::db::create_table_sql("test_table", {"field_a", "field_b"})));
 
-    yas::db::column_vector arguments;
-    arguments.emplace_back(yas::db::column_value{"value_a"});
-    arguments.emplace_back(yas::db::column_value{"value_b"});
-    XCTAssertTrue(db.execute_update("insert into test_table(field_a, field_b) values(:field_a, :field_b)", arguments));
+    yas::db::column_vector args{yas::db::column_value{"value_a"}, yas::db::column_value{"value_b"}};
+    XCTAssertTrue(db.execute_update("insert into test_table(field_a, field_b) values(:field_a, :field_b)", args));
 
     auto query_result = db.execute_query("select * from test_table");
     auto &result_set = query_result.value();
@@ -134,10 +132,9 @@
 
     XCTAssertTrue(db.execute_update(yas::db::create_table_sql("test_table", {"field_a", "field_b"})));
 
-    yas::db::column_map arguments;
-    arguments.emplace(std::make_pair("field_a", yas::db::column_value{"value_a"}));
-    arguments.emplace(std::make_pair("field_b", yas::db::column_value{"value_b"}));
-    XCTAssertTrue(db.execute_update("insert into test_table(field_a, field_b) values(:field_a, :field_b)", arguments));
+    yas::db::column_map args{std::make_pair("field_a", yas::db::column_value{"value_a"}),
+                             std::make_pair("field_b", yas::db::column_value{"value_b"})};
+    XCTAssertTrue(db.execute_update("insert into test_table(field_a, field_b) values(:field_a, :field_b)", args));
 
     auto query_result = db.execute_query("select * from test_table");
     auto &result_set = query_result.value();
@@ -157,17 +154,14 @@
 
     XCTAssertTrue(db.execute_update(yas::db::create_table_sql("test_table", {"field_a"})));
 
-    yas::db::column_vector args_1;
-    args_1.emplace_back(yas::db::column_value{"value_a"});
-    XCTAssertTrue(db.execute_update("insert into test_table(field_a) values(:field_a)", args_1));
+    XCTAssertTrue(
+        db.execute_update("insert into test_table(field_a) values(:field_a)", {yas::db::column_value{"value_a"}}));
 
-    yas::db::column_vector args_2;
-    args_2.emplace_back(yas::db::column_value{"hoge_a"});
-    XCTAssertTrue(db.execute_update("insert into test_table(field_a) values(:field_a)", args_2));
+    XCTAssertTrue(
+        db.execute_update("insert into test_table(field_a) values(:field_a)", {yas::db::column_value{"hoge_a"}}));
 
-    yas::db::column_vector query_arguments;
-    query_arguments.emplace_back(yas::db::column_value{"value_a"});
-    auto query_result = db.execute_query("select * from test_table where field_a = :field_a", query_arguments);
+    auto query_result =
+        db.execute_query("select * from test_table where field_a = :field_a", {yas::db::column_value{"value_a"}});
 
     XCTAssertTrue(query_result);
 
@@ -187,17 +181,14 @@
 
     XCTAssertTrue(db.execute_update(yas::db::create_table_sql("test_table", {"field_a"})));
 
-    yas::db::column_vector args_1;
-    args_1.emplace_back(yas::db::column_value{"value_a"});
-    XCTAssertTrue(db.execute_update("insert into test_table(field_a) values(:field_a)", args_1));
+    XCTAssertTrue(
+        db.execute_update("insert into test_table(field_a) values(:field_a)", {yas::db::column_value{"value_a"}}));
 
-    yas::db::column_vector args_2;
-    args_2.emplace_back(yas::db::column_value{"hoge_a"});
-    XCTAssertTrue(db.execute_update("insert into test_table(field_a) values(:field_a)", args_2));
+    XCTAssertTrue(
+        db.execute_update("insert into test_table(field_a) values(:field_a)", {yas::db::column_value{"hoge_a"}}));
 
-    yas::db::column_map query_arguments;
-    query_arguments.emplace(std::make_pair("field_a", yas::db::column_value{"value_a"}));
-    auto query_result = db.execute_query("select * from test_table where field_a = :field_a", query_arguments);
+    auto query_result = db.execute_query("select * from test_table where field_a = :field_a",
+                                         {std::make_pair("field_a", yas::db::column_value{"value_a"})});
 
     XCTAssertTrue(query_result);
 
@@ -557,22 +548,13 @@
 
     XCTAssertTrue(db.create_table(table, {field_a, field_b}));
 
-    yas::db::column_vector args_1;
-    args_1.emplace_back(yas::db::column_value{"value_a_1"});
-    args_1.emplace_back(yas::db::column_value{"value_b_1"});
-
+    yas::db::column_vector args_1{yas::db::column_value{"value_a_1"}, yas::db::column_value{"value_b_1"}};
     XCTAssertTrue(db.execute_update(yas::db::insert_sql(table, {field_a, field_b}), std::move(args_1)));
 
-    yas::db::column_vector args_2;
-    args_2.emplace_back(yas::db::column_value{"value_a_2"});
-    args_2.emplace_back(yas::db::column_value{"value_b_2"});
-
+    yas::db::column_vector args_2{yas::db::column_value{"value_a_2"}, yas::db::column_value{"value_b_2"}};
     XCTAssertTrue(db.execute_update(yas::db::insert_sql(table, {field_a, field_b}), std::move(args_2)));
 
-    yas::db::column_map param_map;
-    param_map.emplace(std::make_pair(field_a, yas::db::column_value{"value_a_2"}));
-    std::vector<yas::db::column_map> param_maps;
-    param_maps.emplace_back(std::move(param_map));
+    std::vector<yas::db::column_map> param_maps{{std::make_pair(field_a, yas::db::column_value{"value_a_2"})}};
 
     auto result_map = db.select(table, {field_a, field_b}, yas::db::field_expr(field_a, "="), param_maps);
 
