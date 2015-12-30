@@ -42,9 +42,7 @@ namespace db {
         template <typename T = copy_tag_t>
         blob(const void *const data, size_t const size, T const tag = copy_tag);
 
-        blob(const blob &) = delete;
         blob(blob &&) = default;
-        blob &operator=(const blob &) = delete;
         blob &operator=(blob &&) = default;
 
         const void *data() const;
@@ -54,6 +52,9 @@ namespace db {
         std::vector<UInt8> _vector;
         const void *_data;
         size_t _size;
+
+        blob(const blob &) = delete;
+        blob &operator=(const blob &) = delete;
     };
 
     struct null {
