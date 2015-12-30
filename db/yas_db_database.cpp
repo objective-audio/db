@@ -4,11 +4,11 @@
 
 #include <mutex>
 #include <unordered_set>
-#include "yas_db_column_value.h"
 #include "yas_db_database.h"
 #include "yas_db_result_set.h"
 #include "yas_db_sql_utils.h"
 #include "yas_db_statement.h"
+#include "yas_db_value.h"
 #include "yas_each_index.h"
 #include "yas_stl_utils.h"
 
@@ -196,24 +196,24 @@ class db::database::impl : public base::impl {
         return sqlite_handle;
     }
 
-    static void bind(column_value const &value, int column_idx, sqlite3_stmt *stmt) {
+    static void bind(value const &value, int column_idx, sqlite3_stmt *stmt) {
         std::type_info const &type = value.type();
 
         if (type == typeid(db::null)) {
             sqlite3_bind_null(stmt, column_idx);
         } else if (type == typeid(db::blob)) {
-            auto const &blob = value.value<db::blob>();
+            auto const &blob = value.get<db::blob>();
             const void *data = blob.data();
             if (!data) {
                 data = "";
             }
             sqlite3_bind_blob(stmt, column_idx, data, static_cast<int>(blob.size()), SQLITE_STATIC);
         } else if (type == typeid(db::integer)) {
-            sqlite3_bind_int64(stmt, column_idx, value.value<db::integer>());
+            sqlite3_bind_int64(stmt, column_idx, value.get<db::integer>());
         } else if (type == typeid(db::real)) {
-            sqlite3_bind_double(stmt, column_idx, value.value<db::real>());
+            sqlite3_bind_double(stmt, column_idx, value.get<db::real>());
         } else if (type == typeid(db::text)) {
-            sqlite3_bind_text(stmt, column_idx, value.value<db::text>().c_str(), -1, SQLITE_STATIC);
+            sqlite3_bind_text(stmt, column_idx, value.get<db::text>().c_str(), -1, SQLITE_STATIC);
         }
     }
 
@@ -221,8 +221,8 @@ class db::database::impl : public base::impl {
         return replaced(name, "'", "''");
     }
 
-    update_result execute_update(std::string const &sql, std::vector<db::column_value> const &vec,
-                                 std::unordered_map<std::string, db::column_value> const &map) {
+    update_result execute_update(std::string const &sql, std::vector<db::value> const &vec,
+                                 std::unordered_map<std::string, db::value> const &map) {
         if (!database_exists()) {
             return update_result{error_type::closed};
         }
@@ -274,10 +274,10 @@ class db::database::impl : public base::impl {
             }
         } else if (vec.size() == query_count) {
             while (idx < query_count) {
-                auto &column_value = vec.at(idx);
+                auto &value = vec.at(idx);
 
                 ++idx;
-                bind(column_value, idx, stmt);
+                bind(value, idx, stmt);
             }
         }
 
@@ -334,9 +334,9 @@ class db::database::impl : public base::impl {
             auto database_id = (db::callback_id){id}.database;
             if (db::_databases.count(database_id)) {
                 if (auto database = db::_databases.at(database_id).lock()) {
-                    std::unordered_map<std::string, db::column_value> map;
+                    std::unordered_map<std::string, db::value> map;
                     for (auto &idx : each_index<int>{columns}) {
-                        map.insert(std::make_pair(names[idx], db::column_value{values[idx]}));
+                        map.insert(std::make_pair(names[idx], db::value{values[idx]}));
                     }
 
                     if (auto &callback = database.callback_for_execute_statements()) {
@@ -420,9 +420,9 @@ class db::database::impl : public base::impl {
             }
         } else if (vec.size() == query_count) {
             while (idx < query_count) {
-                auto &column_value = vec.at(idx);
+                auto &value = vec.at(idx);
                 ++idx;
-                bind(column_value, idx, stmt);
+                bind(value, idx, stmt);
             }
         }
 
@@ -587,12 +587,12 @@ db::update_result db::database::execute_update(std::string const &sql) {
     return impl_ptr<impl>()->execute_update(sql, {}, {});
 }
 
-db::update_result db::database::execute_update(std::string const &sql, std::vector<db::column_value> const &arguments) {
+db::update_result db::database::execute_update(std::string const &sql, std::vector<db::value> const &arguments) {
     return impl_ptr<impl>()->execute_update(sql, arguments, {});
 }
 
 db::update_result db::database::execute_update(std::string const &sql,
-                                               std::unordered_map<std::string, db::column_value> const &arguments) {
+                                               std::unordered_map<std::string, db::value> const &arguments) {
     return impl_ptr<impl>()->execute_update(sql, {}, arguments);
 }
 
@@ -769,11 +769,9 @@ db::update_result db::database::in_save_point(std::function<void(bool &rollback)
 
 bool db::database::table_exists(std::string const &table_name) const {
     std::string const lower_table_name = to_lower(table_name);
-    std::vector<db::column_value> args;
-    args.emplace_back(db::column_value{lower_table_name});
 
-    if (auto query_result =
-            execute_query("select [sql] from sqlite_master where [type] = 'table' and lower(name) = ?", args)) {
+    if (auto query_result = execute_query("select [sql] from sqlite_master where [type] = 'table' and lower(name) = ?",
+                                          {db::value{lower_table_name}})) {
         auto &result_set = query_result.value();
         return !!result_set.next();
     }
@@ -804,8 +802,8 @@ bool db::database::column_exists(std::string const &column_name, std::string con
 
     if (auto result_set = get_table_schema(table_name)) {
         while (result_set.next()) {
-            auto column_value = result_set.column_value("name");
-            if (to_lower(column_value.value<db::text>()) == column_name) {
+            auto value = result_set.value("name");
+            if (to_lower(value.get<db::text>()) == column_name) {
                 return true;
             }
         }

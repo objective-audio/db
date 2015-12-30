@@ -5,7 +5,7 @@
 #pragma once
 
 #include <vector>
-#include "yas_db_column_value.h"
+#include "yas_db_value.h"
 
 namespace yas {
 namespace db {

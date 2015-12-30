@@ -9,7 +9,7 @@
 #include <chrono>
 #include <functional>
 #include "yas_base.h"
-#include "yas_db_column_value.h"
+#include "yas_db_value.h"
 #include "yas_db_order.h"
 #include "yas_db_protocol.h"
 #include "yas_db_range.h"

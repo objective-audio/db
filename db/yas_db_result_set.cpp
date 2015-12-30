@@ -3,10 +3,10 @@
 //
 
 #include <vector>
-#include "yas_db_column_value.h"
 #include "yas_db_database.h"
 #include "yas_db_result_set.h"
 #include "yas_db_statement.h"
+#include "yas_db_value.h"
 #include "yas_each_index.h"
 #include "yas_stl_utils.h"
 
@@ -155,35 +155,35 @@ bool db::result_set::column_is_null(std::string const column_name) {
     return true;
 }
 
-db::column_value db::result_set::column_value(int const column_idx) const {
+db::value db::result_set::value(int const column_idx) const {
     if (column_idx >= 0) {
         auto *const stmt = impl_ptr<impl>()->statement().stmt().value();
         int type = sqlite3_column_type(stmt, column_idx);
 
         if (type != SQLITE_NULL) {
             if (type == SQLITE_INTEGER) {
-                return db::column_value{sqlite3_column_int64(stmt, column_idx)};
+                return db::value{sqlite3_column_int64(stmt, column_idx)};
             } else if (type == SQLITE_FLOAT) {
-                return db::column_value{sqlite3_column_double(stmt, column_idx)};
+                return db::value{sqlite3_column_double(stmt, column_idx)};
             } else if (type == SQLITE_BLOB) {
-                size_t const data_size = sqlite3_column_bytes(stmt, column_idx);
+                std::size_t const data_size = sqlite3_column_bytes(stmt, column_idx);
                 const void *const data = sqlite3_column_blob(stmt, column_idx);
-                return db::column_value{data, data_size};
+                return db::value{data, data_size};
             } else if (type == SQLITE_TEXT) {
                 std::string text = (const char *)sqlite3_column_text(stmt, column_idx);
-                return db::column_value{text};
+                return db::value{text};
             }
         }
     }
 
-    return db::column_value{nullptr};
+    return db::value{nullptr};
 }
 
-db::column_value db::result_set::column_value(std::string const column_name) const {
+db::value db::result_set::value(std::string const column_name) const {
     if (auto index_result = column_index(column_name)) {
-        return column_value(index_result.value());
+        return value(index_result.value());
     }
-    return db::column_value{nullptr};
+    return db::value{nullptr};
 }
 
 db::column_map db::result_set::column_map() const {
@@ -194,7 +194,7 @@ db::column_map db::result_set::column_map() const {
     map.reserve(column_count);
 
     for (auto &idx : each_index<int>{column_count}) {
-        map.insert(std::make_pair(sqlite3_column_name(stmt, idx), column_value(idx)));
+        map.insert(std::make_pair(sqlite3_column_name(stmt, idx), value(idx)));
     }
 
     return map;

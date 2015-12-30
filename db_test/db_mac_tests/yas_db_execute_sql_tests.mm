@@ -33,7 +33,7 @@
 
     auto schema_set_1 = db.get_table_schema("test_table_a");
     XCTAssertTrue(schema_set_1.next());
-    XCTAssertEqual(schema_set_1.column_value("name").value<yas::db::text>(), "field_a");
+    XCTAssertEqual(schema_set_1.value("name").get<yas::db::text>(), "field_a");
     XCTAssertFalse(schema_set_1.next());
 
     std::string const &alter_sql = yas::db::alter_table_sql("test_table_a", "field_c");
@@ -41,9 +41,9 @@
 
     auto schema_set_2 = db.get_table_schema("test_table_a");
     XCTAssertTrue(schema_set_2.next());
-    XCTAssertEqual(schema_set_2.column_value("name").value<yas::db::text>(), "field_a");
+    XCTAssertEqual(schema_set_2.value("name").get<yas::db::text>(), "field_a");
     XCTAssertTrue(schema_set_2.next());
-    XCTAssertEqual(schema_set_2.column_value("name").value<yas::db::text>(), "field_c");
+    XCTAssertEqual(schema_set_2.value("name").get<yas::db::text>(), "field_c");
     XCTAssertFalse(schema_set_2.next());
 
     std::string const &drop_sql = yas::db::drop_table_sql("test_table_b");

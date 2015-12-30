@@ -33,10 +33,9 @@
 
     XCTAssertTrue(db.execute_update("create table test_table (field_a, field_b);"));
 
-    yas::db::column_map arguments;
-    arguments.emplace(std::make_pair("field_a", yas::db::column_value{"value_a"}));
-    arguments.emplace(std::make_pair("field_b", yas::db::column_value{nullptr}));
-    XCTAssertTrue(db.execute_update("insert into test_table(field_a, field_b) values(:field_a, :field_b)", arguments));
+    yas::db::column_map args{std::make_pair("field_a", yas::db::value{"value_a"}),
+                             std::make_pair("field_b", yas::db::value{nullptr})};
+    XCTAssertTrue(db.execute_update("insert into test_table(field_a, field_b) values(:field_a, :field_b)", args));
 
     auto query_result = db.execute_query("select field_a, field_b from test_table");
     XCTAssertTrue(query_result);
@@ -66,10 +65,9 @@
 
     XCTAssertTrue(db.execute_update("create table test_table (field_a, field_b);"));
 
-    yas::db::column_map arguments;
-    arguments.emplace(std::make_pair("field_a", yas::db::column_value{"value_a"}));
-    arguments.emplace(std::make_pair("field_b", yas::db::column_value{nullptr}));
-    XCTAssertTrue(db.execute_update("insert into test_table(field_a, field_b) values(:field_a, :field_b)", arguments));
+    yas::db::column_map args{std::make_pair("field_a", yas::db::value{"value_a"}),
+                             std::make_pair("field_b", yas::db::value{nullptr})};
+    XCTAssertTrue(db.execute_update("insert into test_table(field_a, field_b) values(:field_a, :field_b)", args));
 
     auto query_result = db.execute_query("select * from test_table");
     XCTAssertTrue(query_result);
@@ -96,18 +94,18 @@
     XCTAssertTrue(
         db.execute_update("create table test_table (int_field, float_field, string_field, data_field, null_field);"));
 
-    yas::db::column_map arguments;
-    arguments.emplace(std::make_pair("int_field", yas::db::column_value{sqlite3_int64{1}}));
-    arguments.emplace(std::make_pair("float_field", yas::db::column_value{Float64{2.0}}));
-    arguments.emplace(std::make_pair("string_field", yas::db::column_value{"string_value"}));
     std::vector<UInt8> vec{0, 1, 2, 3};
-    arguments.emplace(std::make_pair("data_field", yas::db::column_value{vec.data(), vec.size()}));
-    arguments.emplace(std::make_pair("null_field", yas::db::column_value{nullptr}));
+
+    yas::db::column_map args{std::make_pair("int_field", yas::db::value{sqlite3_int64{1}}),
+                             std::make_pair("float_field", yas::db::value{Float64{2.0}}),
+                             std::make_pair("string_field", yas::db::value{"string_value"}),
+                             std::make_pair("data_field", yas::db::value{vec.data(), vec.size()}),
+                             std::make_pair("null_field", yas::db::value{nullptr})};
 
     XCTAssertTrue(
         db.execute_update("insert into test_table(int_field, float_field, string_field, data_field, null_field) "
                           "values(:int_field, :float_field, :string_field, :data_field, :null_field)",
-                          arguments));
+                          args));
 
     auto query_result = db.execute_query("select * from test_table");
     XCTAssertTrue(query_result);
@@ -116,11 +114,11 @@
 
     XCTAssertTrue(result_set.next());
 
-    auto int_value = result_set.column_value("int_field");
-    auto float_value = result_set.column_value("float_field");
-    auto string_value = result_set.column_value("string_field");
-    auto data_value = result_set.column_value("data_field");
-    auto null_value = result_set.column_value("null_field");
+    auto int_value = result_set.value("int_field");
+    auto float_value = result_set.value("float_field");
+    auto string_value = result_set.value("string_field");
+    auto data_value = result_set.value("data_field");
+    auto null_value = result_set.value("null_field");
 
     XCTAssertTrue(int_value.type() == typeid(yas::db::integer));
     XCTAssertTrue(float_value.type() == typeid(yas::db::real));
@@ -128,11 +126,11 @@
     XCTAssertTrue(data_value.type() == typeid(yas::db::blob));
     XCTAssertTrue(null_value.type() == typeid(yas::db::null));
 
-    XCTAssertEqual(int_value.value<yas::db::integer>(), 1);
-    XCTAssertEqual(float_value.value<yas::db::real>(), 2.0);
-    XCTAssertEqual(string_value.value<yas::db::text>(), "string_value");
+    XCTAssertEqual(int_value.get<yas::db::integer>(), 1);
+    XCTAssertEqual(float_value.get<yas::db::real>(), 2.0);
+    XCTAssertEqual(string_value.get<yas::db::text>(), "string_value");
 
-    auto &result_blob = data_value.value<yas::db::blob>();
+    auto &result_blob = data_value.get<yas::db::blob>();
     XCTAssertEqual(result_blob.size(), 4);
 
     const UInt8 *data = (const UInt8 *)result_blob.data();
@@ -151,18 +149,17 @@
     XCTAssertTrue(
         db.execute_update("create table test_table (int_field, float_field, string_field, data_field, null_field);"));
 
-    yas::db::column_map arguments;
-    arguments.emplace(std::make_pair("int_field", yas::db::column_value{sqlite3_int64{1}}));
-    arguments.emplace(std::make_pair("float_field", yas::db::column_value{Float64{2.0}}));
-    arguments.emplace(std::make_pair("string_field", yas::db::column_value{"string_value"}));
     std::vector<UInt8> vec{0, 1, 2, 3};
-    arguments.emplace(std::make_pair("data_field", yas::db::column_value{vec.data(), vec.size()}));
-    arguments.emplace(std::make_pair("null_field", yas::db::column_value{nullptr}));
 
+    yas::db::column_map args{std::make_pair("int_field", yas::db::value{sqlite3_int64{1}}),
+                             std::make_pair("float_field", yas::db::value{Float64{2.0}}),
+                             std::make_pair("string_field", yas::db::value{"string_value"}),
+                             std::make_pair("data_field", yas::db::value{vec.data(), vec.size()}),
+                             std::make_pair("null_field", yas::db::value{nullptr})};
     XCTAssertTrue(
         db.execute_update("insert into test_table(int_field, float_field, string_field, data_field, null_field) "
                           "values(:int_field, :float_field, :string_field, :data_field, :null_field)",
-                          arguments));
+                          args));
 
     auto query_result = db.execute_query("select * from test_table");
     XCTAssertTrue(query_result);
@@ -185,11 +182,11 @@
     XCTAssertTrue(data_value.type() == typeid(yas::db::blob));
     XCTAssertTrue(null_value.type() == typeid(yas::db::null));
 
-    XCTAssertEqual(int_value.value<yas::db::integer>(), 1);
-    XCTAssertEqual(float_value.value<yas::db::real>(), 2.0);
-    XCTAssertEqual(string_value.value<yas::db::text>(), "string_value");
+    XCTAssertEqual(int_value.get<yas::db::integer>(), 1);
+    XCTAssertEqual(float_value.get<yas::db::real>(), 2.0);
+    XCTAssertEqual(string_value.get<yas::db::text>(), "string_value");
 
-    auto &result_blob = data_value.value<yas::db::blob>();
+    auto &result_blob = data_value.get<yas::db::blob>();
     XCTAssertEqual(result_blob.size(), 4);
 
     const UInt8 *data = (const UInt8 *)result_blob.data();
@@ -206,9 +203,8 @@
     db.open();
     db.execute_update("create table test_table (test_field);");
 
-    yas::db::column_map arguments;
-    arguments.emplace(std::make_pair("test_field", yas::db::column_value{"value"}));
-    db.execute_update("insert into test_table(field_a) values(:field_a)", arguments);
+    yas::db::column_map args{std::make_pair("test_field", yas::db::value{"value"})};
+    db.execute_update("insert into test_table(field_a) values(:field_a)", args);
 
     auto query_result = db.execute_query("select * from test_table");
     auto &result_set = query_result.value();
