@@ -58,4 +58,13 @@
     XCTAssertEqual(joined_orders, "field_a asc, field_b desc");
 }
 
+- (void)test_select_sql {
+    auto select_sql = yas::db::select_sql(
+        "test_table", {"field_a", "field_b"}, "abc = :def",
+        {{"field_c", yas::db::order::ascending}, {"field_d", yas::db::order::descending}}, {10, 20});
+    XCTAssertEqual(
+        select_sql,
+        "select field_a, field_b from test_table order by field_c asc, field_d desc limit 10, 20 where abc = :def;");
+}
+
 @end

@@ -96,5 +96,6 @@ std::string yas::db::select_sql(std::string const &table_name, std::vector<std::
         stream << " where " << where_exprs;
     }
 
+    stream << ";";
     return stream.str();
 }
