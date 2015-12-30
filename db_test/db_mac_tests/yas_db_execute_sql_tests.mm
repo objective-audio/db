@@ -15,6 +15,7 @@
 }
 
 - (void)tearDown {
+    [yas_db_test_utils deleteDatabase];
     [super tearDown];
 }
 
