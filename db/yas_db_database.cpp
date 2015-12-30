@@ -825,3 +825,37 @@ db::update_result db::database::alter_table(std::string const &table_name, std::
 db::update_result db::database::drop_table(std::string const &table_name) {
     return execute_update(drop_table_sql(table_name));
 }
+
+std::vector<db::column_map> db::database::select(std::string const &table_name, std::vector<std::string> const &fields,
+                                                 std::string const &where_exprs,
+                                                 std::vector<db::column_map> const &parameter_maps,
+                                                 std::vector<db::field_order> const &orders,
+                                                 db::range const &limit_range) {
+    if (!table_exists(table_name)) {
+        return {};
+    }
+
+    auto const sql = select_sql(table_name, fields, where_exprs, orders, limit_range);
+
+    std::vector<db::column_map> result_map;
+
+    if (parameter_maps.size() > 0) {
+        for (auto &parameter_map : parameter_maps) {
+            if (auto query_result = execute_query(sql, parameter_map)) {
+                auto result_set = query_result.value();
+                while (result_set.next()) {
+                    result_map.emplace_back(result_set.column_map());
+                }
+            }
+        }
+    } else {
+        if (auto query_result = execute_query(sql)) {
+            auto result_set = query_result.value();
+            while (result_set.next()) {
+                result_map.emplace_back(result_set.column_map());
+            }
+        }
+    }
+
+    return result_map;
+}

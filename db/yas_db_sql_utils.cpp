@@ -3,6 +3,8 @@
 //
 
 #include <sstream>
+#include "yas_db_order.h"
+#include "yas_db_range.h"
 #include "yas_db_sql_utils.h"
 #include "yas_stl_utils.h"
 
@@ -64,11 +66,36 @@ std::string yas::db::equal_expr(std::string const &field) {
     return expr(field, "=");
 }
 
-std::string yas::db::joined_exprs(const std::vector<std::string> &fields) {
-    return joined(map(fields, [](std::string const &field) { return equal_expr(field); }), " and ");
+std::string yas::db::and_exprs(const std::vector<std::string> &expr) {
+    return joined(expr, " and ");
 }
 
 std::string yas::db::joined_orders(std::vector<field_order> const &orders) {
     auto mapped = map<field_order, std::string>(orders, [](auto const &order) { return order.sql(); });
     return joined(mapped, field_separator);
+}
+
+std::string yas::db::select_sql(std::string const &table_name, std::vector<std::string> const &fields,
+                                std::string const &where_exprs, std::vector<field_order> const &orders,
+                                range const &limit_range) {
+    std::ostringstream stream;
+
+    std::string const joined_fields = joined(fields, field_separator);
+
+    stream << "select " << joined_fields << " from " << table_name;
+
+    if (orders.size() > 0) {
+        stream << " order by " << joined_orders(orders);
+    }
+
+    if (!limit_range.is_empty()) {
+        stream << " limit " << limit_range.sql();
+    }
+
+    if (where_exprs.size() > 0) {
+        stream << " where " << where_exprs;
+    }
+
+    stream << ";";
+    return stream.str();
 }

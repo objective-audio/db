@@ -48,14 +48,24 @@
     XCTAssertEqual(yas::db::equal_expr("abc"), "abc = :abc");
 }
 
-- (void)test_joined_exprs {
-    XCTAssertEqual(yas::db::joined_exprs({"abc", "def"}), "abc = :abc and def = :def");
+- (void)test_and_exprs {
+    XCTAssertEqual(yas::db::and_exprs({yas::db::equal_expr("abc"), yas::db::equal_expr("def")}),
+                   "abc = :abc and def = :def");
 }
 
 - (void)test_joined_orders {
     auto joined_orders =
         yas::db::joined_orders({{"field_a", yas::db::order::ascending}, {"field_b", yas::db::order::descending}});
     XCTAssertEqual(joined_orders, "field_a asc, field_b desc");
+}
+
+- (void)test_select_sql {
+    auto select_sql = yas::db::select_sql(
+        "test_table", {"field_a", "field_b"}, "abc = :def",
+        {{"field_c", yas::db::order::ascending}, {"field_d", yas::db::order::descending}}, {10, 20});
+    XCTAssertEqual(
+        select_sql,
+        "select field_a, field_b from test_table order by field_c asc, field_d desc limit 10, 20 where abc = :def;");
 }
 
 @end

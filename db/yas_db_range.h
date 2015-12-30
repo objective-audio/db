@@ -15,7 +15,11 @@ namespace db {
 
         range(UInt64 const location, UInt64 const length);
 
+        bool is_empty() const;
+
         std::string sql() const;
+
+        static const range &empty();
     };
 }
 }
