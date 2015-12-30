@@ -3,10 +3,10 @@
 //
 
 #include <vector>
-#include "yas_db_value.h"
 #include "yas_db_database.h"
 #include "yas_db_result_set.h"
 #include "yas_db_statement.h"
+#include "yas_db_value.h"
 #include "yas_each_index.h"
 #include "yas_stl_utils.h"
 
@@ -166,7 +166,7 @@ db::value db::result_set::value(int const column_idx) const {
             } else if (type == SQLITE_FLOAT) {
                 return db::value{sqlite3_column_double(stmt, column_idx)};
             } else if (type == SQLITE_BLOB) {
-                size_t const data_size = sqlite3_column_bytes(stmt, column_idx);
+                std::size_t const data_size = sqlite3_column_bytes(stmt, column_idx);
                 const void *const data = sqlite3_column_blob(stmt, column_idx);
                 return db::value{data, data_size};
             } else if (type == SQLITE_TEXT) {

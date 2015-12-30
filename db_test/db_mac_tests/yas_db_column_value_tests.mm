@@ -86,7 +86,7 @@
 
 - (void)test_create_blob_value_from_vector {
     std::vector<UInt8> vec{0, 1, 2, 3};
-    yas::db::value value{vec.data(), static_cast<size_t>(vec.size())};
+    yas::db::value value{vec.data(), static_cast<std::size_t>(vec.size())};
     XCTAssertTrue(value.type() == typeid(yas::db::blob));
 
     auto const &blob = value.get<yas::db::blob>();

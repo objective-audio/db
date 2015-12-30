@@ -12,19 +12,21 @@ db::blob::blob() : _vector(), _data(nullptr), _size(0) {
 }
 
 template <>
-db::blob::blob(const void *const data, size_t const size, copy_tag_t const) : _vector(size), _data(data), _size(size) {
+db::blob::blob(const void *const data, std::size_t const size, copy_tag_t const)
+    : _vector(size), _data(data), _size(size) {
     memcpy(_vector.data(), data, size);
 }
 
 template <>
-db::blob::blob(const void *const data, size_t const size, no_copy_tag_t const) : _vector(), _data(data), _size(size) {
+db::blob::blob(const void *const data, std::size_t const size, no_copy_tag_t const)
+    : _vector(), _data(data), _size(size) {
 }
 
 const void *db::blob::data() const {
     return _data;
 }
 
-size_t db::blob::size() const {
+std::size_t db::blob::size() const {
     return _size;
 }
 
@@ -85,12 +87,12 @@ db::value::value(null::type) : super_class(std::make_unique<impl<null>>(nullptr)
 }
 
 template <>
-db::value::value(const void *const data_ptr, size_t const size, db::copy_tag_t const)
+db::value::value(const void *const data_ptr, std::size_t const size, db::copy_tag_t const)
     : value(blob{data_ptr, size, db::copy_tag}) {
 }
 
 template <>
-db::value::value(const void *const data_ptr, size_t const size, db::no_copy_tag_t const)
+db::value::value(const void *const data_ptr, std::size_t const size, db::no_copy_tag_t const)
     : value(blob{data_ptr, size, db::no_copy_tag}) {
 }
 

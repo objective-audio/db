@@ -42,18 +42,18 @@ namespace db {
         blob();
 
         template <typename T = copy_tag_t>
-        blob(const void *const data, size_t const size, T const tag = copy_tag);
+        blob(const void *const data, std::size_t const size, T const tag = copy_tag);
 
         blob(blob &&) = default;
         blob &operator=(blob &&) = default;
 
         const void *data() const;
-        size_t size() const;
+        std::size_t size() const;
 
        private:
         std::vector<UInt8> _vector;
         const void *_data;
-        size_t _size;
+        std::size_t _size;
 
         blob(const blob &) = delete;
         blob &operator=(const blob &) = delete;
@@ -84,7 +84,7 @@ namespace db {
         value(null::type);
 
         template <typename T = db::copy_tag_t>
-        value(const void *const data, size_t const size, T const tag = db::copy_tag);
+        value(const void *const data, std::size_t const size, T const tag = db::copy_tag);
 
         ~value();
 
