@@ -66,8 +66,8 @@ std::string yas::db::equal_expr(std::string const &field) {
     return expr(field, "=");
 }
 
-std::string yas::db::joined_exprs(const std::vector<std::string> &fields) {
-    return joined(map(fields, [](std::string const &field) { return equal_expr(field); }), " and ");
+std::string yas::db::and_exprs(const std::vector<std::string> &expr) {
+    return joined(expr, " and ");
 }
 
 std::string yas::db::joined_orders(std::vector<field_order> const &orders) {

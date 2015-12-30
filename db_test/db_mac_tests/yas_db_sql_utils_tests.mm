@@ -48,8 +48,9 @@
     XCTAssertEqual(yas::db::equal_expr("abc"), "abc = :abc");
 }
 
-- (void)test_joined_exprs {
-    XCTAssertEqual(yas::db::joined_exprs({"abc", "def"}), "abc = :abc and def = :def");
+- (void)test_and_exprs {
+    XCTAssertEqual(yas::db::and_exprs({yas::db::equal_expr("abc"), yas::db::equal_expr("def")}),
+                   "abc = :abc and def = :def");
 }
 
 - (void)test_joined_orders {
