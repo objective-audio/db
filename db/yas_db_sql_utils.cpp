@@ -35,22 +35,22 @@ std::string yas::db::insert_sql(const std::string &table, const std::vector<std:
 }
 
 std::string yas::db::update_sql(const std::string &table, const std::vector<std::string> &fields,
-                                const std::string &where) {
+                                const std::string &where_exprs) {
     std::ostringstream stream;
     stream << "update " << table << " set "
            << joined(map(fields, [](std::string const &field) { return equal_expr(field); }), field_separator);
-    if (where.size() > 0) {
-        stream << " where " << where;
+    if (where_exprs.size() > 0) {
+        stream << " where " << where_exprs;
     }
     stream << ";";
     return stream.str();
 }
 
-std::string yas::db::delete_sql(const std::string &table, const std::string &where) {
+std::string yas::db::delete_sql(const std::string &table, const std::string &where_exprs) {
     std::ostringstream stream;
     stream << "delete from " << table;
-    if (where.size() > 0) {
-        stream << " where " << where;
+    if (where_exprs.size() > 0) {
+        stream << " where " << where_exprs;
     }
     stream << ";";
     return stream.str();
