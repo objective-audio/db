@@ -4,11 +4,11 @@
 
 #include <mutex>
 #include <unordered_set>
-#include "yas_db_value.h"
 #include "yas_db_database.h"
 #include "yas_db_result_set.h"
 #include "yas_db_sql_utils.h"
 #include "yas_db_statement.h"
+#include "yas_db_value.h"
 #include "yas_each_index.h"
 #include "yas_stl_utils.h"
 
@@ -769,11 +769,9 @@ db::update_result db::database::in_save_point(std::function<void(bool &rollback)
 
 bool db::database::table_exists(std::string const &table_name) const {
     std::string const lower_table_name = to_lower(table_name);
-    std::vector<db::value> args;
-    args.emplace_back(db::value{lower_table_name});
 
-    if (auto query_result =
-            execute_query("select [sql] from sqlite_master where [type] = 'table' and lower(name) = ?", args)) {
+    if (auto query_result = execute_query("select [sql] from sqlite_master where [type] = 'table' and lower(name) = ?",
+                                          {db::value{lower_table_name}})) {
         auto &result_set = query_result.value();
         return !!result_set.next();
     }
