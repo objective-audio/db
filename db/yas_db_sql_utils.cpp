@@ -78,6 +78,23 @@ std::string yas::db::joined_orders(std::vector<field_order> const &orders) {
 std::string yas::db::select_sql(std::string const &table_name, std::vector<std::string> const &fields,
                                 std::string const &where_exprs, std::vector<field_order> const &orders,
                                 range const &limit_range) {
-#warning TODO:
-    return "";
+    std::ostringstream stream;
+
+    std::string const joined_fields = joined(fields, field_separator);
+
+    stream << "select " << joined_fields << " from " << table_name;
+
+    if (orders.size() > 0) {
+        stream << " order by " << joined_orders(orders);
+    }
+
+    if (!limit_range.is_empty()) {
+        stream << " limit " << limit_range.sql();
+    }
+
+    if (where_exprs.size() > 0) {
+        stream << " where " << where_exprs;
+    }
+
+    return stream.str();
 }
