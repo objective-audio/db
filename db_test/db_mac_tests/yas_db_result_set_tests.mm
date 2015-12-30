@@ -126,11 +126,11 @@
     XCTAssertTrue(data_value.type() == typeid(yas::db::blob));
     XCTAssertTrue(null_value.type() == typeid(yas::db::null));
 
-    XCTAssertEqual(int_value.value<yas::db::integer>(), 1);
-    XCTAssertEqual(float_value.value<yas::db::real>(), 2.0);
-    XCTAssertEqual(string_value.value<yas::db::text>(), "string_value");
+    XCTAssertEqual(int_value.get<yas::db::integer>(), 1);
+    XCTAssertEqual(float_value.get<yas::db::real>(), 2.0);
+    XCTAssertEqual(string_value.get<yas::db::text>(), "string_value");
 
-    auto &result_blob = data_value.value<yas::db::blob>();
+    auto &result_blob = data_value.get<yas::db::blob>();
     XCTAssertEqual(result_blob.size(), 4);
 
     const UInt8 *data = (const UInt8 *)result_blob.data();
@@ -182,11 +182,11 @@
     XCTAssertTrue(data_value.type() == typeid(yas::db::blob));
     XCTAssertTrue(null_value.type() == typeid(yas::db::null));
 
-    XCTAssertEqual(int_value.value<yas::db::integer>(), 1);
-    XCTAssertEqual(float_value.value<yas::db::real>(), 2.0);
-    XCTAssertEqual(string_value.value<yas::db::text>(), "string_value");
+    XCTAssertEqual(int_value.get<yas::db::integer>(), 1);
+    XCTAssertEqual(float_value.get<yas::db::real>(), 2.0);
+    XCTAssertEqual(string_value.get<yas::db::text>(), "string_value");
 
-    auto &result_blob = data_value.value<yas::db::blob>();
+    auto &result_blob = data_value.get<yas::db::blob>();
     XCTAssertEqual(result_blob.size(), 4);
 
     const UInt8 *data = (const UInt8 *)result_blob.data();

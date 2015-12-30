@@ -91,7 +91,7 @@ namespace db {
         std::type_info const &type() const;
 
         template <typename T>
-        typename T::type const &value() const;
+        typename T::type const &get() const;
 
        private:
         class impl_base;

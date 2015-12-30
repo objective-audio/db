@@ -101,7 +101,7 @@ std::type_info const &db::column_value::type() const {
 }
 
 template <typename T>
-typename T::type const &db::column_value::value() const {
+typename T::type const &db::column_value::get() const {
     if (auto ip = std::dynamic_pointer_cast<impl<T>>(impl_ptr())) {
         return ip->value;
     }
@@ -110,11 +110,11 @@ typename T::type const &db::column_value::value() const {
     return _default;
 }
 
-template db::integer::type const &db::column_value::value<db::integer>() const;
-template db::real::type const &db::column_value::value<db::real>() const;
-template db::text::type const &db::column_value::value<db::text>() const;
-template db::blob::type const &db::column_value::value<db::blob>() const;
-template db::null::type const &db::column_value::value<db::null>() const;
+template db::integer::type const &db::column_value::get<db::integer>() const;
+template db::real::type const &db::column_value::get<db::real>() const;
+template db::text::type const &db::column_value::get<db::text>() const;
+template db::blob::type const &db::column_value::get<db::blob>() const;
+template db::null::type const &db::column_value::get<db::null>() const;
 
 #pragma mark -
 
@@ -125,16 +125,16 @@ std::string yas::to_string(const db::column_value &column_value) {
 
     if (type == typeid(db::integer)) {
         type_name = db::integer::name;
-        value_text = std::to_string(column_value.value<db::integer>());
+        value_text = std::to_string(column_value.get<db::integer>());
     } else if (type == typeid(db::real)) {
         type_name = db::real::name;
-        value_text = std::to_string(column_value.value<db::real>());
+        value_text = std::to_string(column_value.get<db::real>());
     } else if (type == typeid(db::text)) {
         type_name = db::text::name;
-        value_text = column_value.value<db::text>();
+        value_text = column_value.get<db::text>();
     } else if (type == typeid(db::blob)) {
         type_name = db::blob::name;
-        value_text = "data' size='" + std::to_string(column_value.value<db::blob>().size());
+        value_text = "data' size='" + std::to_string(column_value.get<db::blob>().size());
     } else if (type == typeid(db::null)) {
         type_name = db::null::name;
         value_text = "null";
