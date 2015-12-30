@@ -21,9 +21,8 @@ namespace db {
                            std::string const &where_exprs);
     std::string delete_sql(std::string const &table, std::string const &where_exprs);
 
-    std::string expr(std::string const &field, std::string const &op);
-    std::string equal_expr(std::string const &field);
-    std::string and_exprs(std::vector<std::string> const &expr);
+    std::string expr(std::string const &left, std::string const &right, std::string const &op);
+    std::string field_expr(std::string const &field, std::string const &op);
 
     std::string joined_orders(std::vector<field_order> const &orders);
 
