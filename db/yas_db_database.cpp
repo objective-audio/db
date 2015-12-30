@@ -802,7 +802,7 @@ bool db::database::column_exists(std::string const &column_name, std::string con
 
     if (auto result_set = get_table_schema(table_name)) {
         while (result_set.next()) {
-            auto value = result_set.value("name");
+            auto value = result_set.column_value("name");
             if (to_lower(value.get<db::text>()) == column_name) {
                 return true;
             }

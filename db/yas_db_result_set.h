@@ -53,8 +53,8 @@ namespace db {
         bool column_is_null(int const column_idx);
         bool column_is_null(std::string const column_name);
 
-        db::value value(int const column_idx) const;
-        db::value value(std::string const column_name) const;
+        db::value column_value(int const column_idx) const;
+        db::value column_value(std::string const column_name) const;
 
         db::column_map column_map() const;
 
