@@ -87,11 +87,15 @@ namespace db {
         value(const void *const data, std::size_t const size, T const tag = db::copy_tag);
 
         ~value();
+        
+        explicit operator bool() const;
 
         std::type_info const &type() const;
 
         template <typename T>
         typename T::type const &get() const;
+
+        std::string sql() const;
 
        private:
         class impl_base;

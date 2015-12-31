@@ -154,11 +154,9 @@
 
     XCTAssertTrue(db.execute_update(yas::db::create_table_sql("test_table", {"field_a"})));
 
-    XCTAssertTrue(
-        db.execute_update("insert into test_table(field_a) values(:field_a)", {yas::db::value{"value_a"}}));
+    XCTAssertTrue(db.execute_update("insert into test_table(field_a) values(:field_a)", {yas::db::value{"value_a"}}));
 
-    XCTAssertTrue(
-        db.execute_update("insert into test_table(field_a) values(:field_a)", {yas::db::value{"hoge_a"}}));
+    XCTAssertTrue(db.execute_update("insert into test_table(field_a) values(:field_a)", {yas::db::value{"hoge_a"}}));
 
     auto query_result =
         db.execute_query("select * from test_table where field_a = :field_a", {yas::db::value{"value_a"}});
@@ -181,11 +179,9 @@
 
     XCTAssertTrue(db.execute_update(yas::db::create_table_sql("test_table", {"field_a"})));
 
-    XCTAssertTrue(
-        db.execute_update("insert into test_table(field_a) values(:field_a)", {yas::db::value{"value_a"}}));
+    XCTAssertTrue(db.execute_update("insert into test_table(field_a) values(:field_a)", {yas::db::value{"value_a"}}));
 
-    XCTAssertTrue(
-        db.execute_update("insert into test_table(field_a) values(:field_a)", {yas::db::value{"hoge_a"}}));
+    XCTAssertTrue(db.execute_update("insert into test_table(field_a) values(:field_a)", {yas::db::value{"hoge_a"}}));
 
     auto query_result = db.execute_query("select * from test_table where field_a = :field_a",
                                          {std::make_pair("field_a", yas::db::value{"value_a"})});

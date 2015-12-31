@@ -28,6 +28,7 @@
 }
 
 - (void)test_create_every_integer_value {
+    yas::db::value bool_value{true};
     yas::db::value uint8_value{UInt8{UINT8_MAX}};
     yas::db::value sint8_value{SInt8{INT8_MAX}};
     yas::db::value uint16_value{UInt16{UINT16_MAX}};
@@ -37,6 +38,7 @@
     yas::db::value uint64_value{UInt64{UINT64_MAX}};
     yas::db::value sint64_value{SInt64{INT64_MAX}};
 
+    XCTAssertTrue(bool_value.type() == typeid(yas::db::integer));
     XCTAssertTrue(uint8_value.type() == typeid(yas::db::integer));
     XCTAssertTrue(sint8_value.type() == typeid(yas::db::integer));
     XCTAssertTrue(uint16_value.type() == typeid(yas::db::integer));
@@ -46,6 +48,7 @@
     XCTAssertTrue(uint64_value.type() == typeid(yas::db::integer));
     XCTAssertTrue(sint64_value.type() == typeid(yas::db::integer));
 
+    XCTAssertEqual(bool_value.get<yas::db::integer>(), true);
     XCTAssertEqual(uint8_value.get<yas::db::integer>(), UINT8_MAX);
     XCTAssertEqual(sint8_value.get<yas::db::integer>(), INT8_MAX);
     XCTAssertEqual(uint16_value.get<yas::db::integer>(), UINT16_MAX);
@@ -141,6 +144,23 @@
     yas::db::blob empty_blob{};
     XCTAssertEqual(empty_blob.data(), nullptr);
     XCTAssertEqual(empty_blob.size(), 0);
+}
+
+- (void)test_sql {
+    yas::db::value integer_value{yas::db::integer::type{12}};
+    yas::db::value real_value{yas::db::real::type{2.5}};
+    yas::db::value text_value{yas::db::text::type{"text_sql_value"}};
+    yas::db::value null_value{nullptr};
+
+    XCTAssertEqual(integer_value.sql(), "12");
+    XCTAssertEqual(real_value.sql(), "2.500000");
+    XCTAssertEqual(text_value.sql(), "'text_sql_value'");
+    XCTAssertEqual(null_value.sql(), "null");
+
+    std::vector<UInt8> vec{0};
+    yas::db::value blob_value{yas::db::blob{vec.data(), vec.size()}};
+
+    XCTAssertThrows(blob_value.sql());
 }
 
 - (void)test_to_string {

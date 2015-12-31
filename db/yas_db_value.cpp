@@ -86,6 +86,10 @@ db::value::value(blob::type &&value) : super_class(std::make_unique<impl<blob>>(
 db::value::value(null::type) : super_class(std::make_unique<impl<null>>(nullptr)) {
 }
 
+db::value::operator bool() const {
+    return impl_ptr() != nullptr && type() != typeid(null);
+}
+
 template <>
 db::value::value(const void *const data_ptr, std::size_t const size, db::copy_tag_t const)
     : value(blob{data_ptr, size, db::copy_tag}) {
@@ -117,6 +121,23 @@ template db::real::type const &db::value::get<db::real>() const;
 template db::text::type const &db::value::get<db::text>() const;
 template db::blob::type const &db::value::get<db::blob>() const;
 template db::null::type const &db::value::get<db::null>() const;
+
+std::string db::value::sql() const {
+    auto const &type_info = type();
+    if (type_info == typeid(integer)) {
+        return std::to_string(get<integer>());
+    } else if (type_info == typeid(real)) {
+        return std::to_string(get<real>());
+    } else if (type_info == typeid(text)) {
+        return "'" + get<text>() + "'";
+    } else if (type_info == typeid(blob)) {
+        throw std::runtime_error("don't get sql from blob value");
+    } else {
+        return "null";
+    }
+
+    return nullptr;
+}
 
 #pragma mark -
 
