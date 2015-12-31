@@ -9,6 +9,8 @@
 @interface yas_db_test_utils : NSObject
 
 + (yas::db::database)create_test_database;
++ (yas::db::manager)create_test_manager;
++ (std::string)database_path;
 + (NSString *)databasePath;
 + (void)deleteDatabase;
 
