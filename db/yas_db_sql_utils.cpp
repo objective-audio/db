@@ -30,10 +30,17 @@ std::string yas::db::drop_table_sql(std::string const &table) {
 }
 
 std::string yas::db::insert_sql(const std::string &table, const std::vector<std::string> &fields) {
-    std::string const joined_fields = joined(fields, field_separator);
-    std::string const joined_values =
-        joined(map(fields, [](std::string const &field) { return ":" + field; }), field_separator);
-    return "insert into " + table + "(" + joined_fields + ") values(" + joined_values + ");";
+    std::ostringstream stream;
+    stream << "insert into " + table;
+    if (fields.size() > 0) {
+        std::string const joined_fields = joined(fields, field_separator);
+        std::string const joined_values =
+            joined(map<std::string>(fields, [](std::string const &field) { return ":" + field; }), field_separator);
+        stream << "(" + joined_fields + ") values(" + joined_values + ");";
+    } else {
+        stream << " default values;";
+    }
+    return stream.str();
 }
 
 std::string yas::db::update_sql(const std::string &table, const std::vector<std::string> &fields,
