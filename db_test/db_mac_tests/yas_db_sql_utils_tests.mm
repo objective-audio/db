@@ -33,6 +33,7 @@
 
 - (void)test_insert_sql {
     XCTAssertEqual(yas::db::insert_sql("aaa", {"abc", "def"}), "insert into aaa(abc, def) values(:abc, :def);");
+    XCTAssertEqual(yas::db::insert_sql("bbb"), "insert into bbb default values;");
 }
 
 - (void)test_update_sql {
