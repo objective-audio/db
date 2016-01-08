@@ -6,12 +6,9 @@
 
 #include <MacTypes.h>
 #include <sqlite3.h>
-#include <chrono>
 #include <functional>
 #include "yas_base.h"
-#include "yas_db_order.h"
 #include "yas_db_protocol.h"
-#include "yas_db_range.h"
 #include "yas_db_result_code.h"
 #include "yas_db_value.h"
 #include "yas_result.h"
@@ -108,12 +105,6 @@ namespace db {
         row_result last_insert_row_id() const;
         count_result changes() const;
 
-        update_result begin_transaction();
-        update_result begin_deferred_transaction();
-        update_result commit();
-        update_result rollback();
-        bool in_transaction();
-
         void clear_cached_statements();
         void close_open_result_sets();
         bool has_open_result_sets() const;
@@ -127,28 +118,6 @@ namespace db {
         double max_busy_retry_time_interval() const;
         void set_start_busy_retry_time(const std::chrono::time_point<std::chrono::system_clock> &time);
         std::chrono::time_point<std::chrono::system_clock> start_busy_retry_time() const;
-
-#if SQLITE_VERSION_NUMBER >= 3007000
-        update_result start_save_point(std::string const &name);
-        update_result release_save_point(std::string const &name);
-        update_result rollback_save_point(std::string const &name);
-
-        update_result in_save_point(std::function<void(bool &rollback)> const function);
-#endif
-        bool table_exists(std::string const &table_name) const;
-        db::result_set get_schema() const;
-        db::result_set get_table_schema(std::string const &table_name) const;
-        bool column_exists(std::string const &column_name, std::string const &table_name) const;
-
-        update_result create_table(std::string const &table_name, std::vector<std::string> const &fields);
-        update_result alter_table(std::string const &table_name, std::string const &field);
-        update_result drop_table(std::string const &table_name);
-
-        std::vector<db::column_map> select(std::string const &table_name, std::vector<std::string> const &fields,
-                                           std::string const &where_exprs = "",
-                                           std::vector<db::column_map> const &parameter_maps = {},
-                                           std::vector<db::field_order> const &orders = {},
-                                           db::range const &limit_range = db::range::empty());
 
        private:
         void _result_set_did_close(uintptr_t const) override;

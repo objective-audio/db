@@ -4,18 +4,24 @@
 
 #import "yas_db_test_utils.h"
 
+using namespace yas;
+
 @implementation yas_db_test_utils
 
-+ (yas::db::database)create_test_database {
++ (db::database)create_test_database {
     NSString *databasePath = [[self class] databasePath];
     std::string db_path = yas::to_string((__bridge CFStringRef)databasePath);
-    return yas::db::database{db_path};
+    return db::database{db_path};
 }
 
-+ (yas::db::manager)create_test_manager {
++ (db::manager)create_test_manager {
+    return [self create_test_manager:db::model{nullptr}];
+}
+
++ (db::manager)create_test_manager:(db::model &&)model {
     NSString *databasePath = [[self class] databasePath];
     std::string db_path = yas::to_string((__bridge CFStringRef)databasePath);
-    return yas::db::manager{db_path};
+    return db::manager{db_path, std::move(model)};
 }
 
 + (std::string)database_path {
