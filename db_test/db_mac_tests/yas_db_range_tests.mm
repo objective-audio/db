@@ -4,6 +4,8 @@
 
 #import "yas_db_test_utils.h"
 
+using namespace yas;
+
 @interface yas_db_range_tests : XCTestCase
 
 @end
@@ -19,14 +21,14 @@
 }
 
 - (void)test_create {
-    yas::db::range range{4, 2};
+    db::range range{4, 2};
 
     XCTAssertEqual(range.location, 4);
     XCTAssertEqual(range.length, 2);
 }
 
 - (void)test_sql {
-    yas::db::range range{3, 5};
+    db::range range{3, 5};
 
     XCTAssertEqual(range.sql(), "3, 5");
 }

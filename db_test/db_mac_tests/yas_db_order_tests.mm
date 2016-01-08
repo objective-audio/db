@@ -4,6 +4,8 @@
 
 #import "yas_db_test_utils.h"
 
+using namespace yas;
+
 @interface yas_db_order_tests : XCTestCase
 
 @end
@@ -19,22 +21,22 @@
 }
 
 - (void)test_create_ascending {
-    yas::db::field_order order{"test_field_a", yas::db::order::ascending};
+    db::field_order order{"test_field_a", db::order::ascending};
 
     XCTAssertEqual(order.field, "test_field_a");
-    XCTAssertEqual(order.order, yas::db::order::ascending);
+    XCTAssertEqual(order.order, db::order::ascending);
 }
 
 - (void)test_create_descending {
-    yas::db::field_order order{"test_field_d", yas::db::order::descending};
+    db::field_order order{"test_field_d", db::order::descending};
 
     XCTAssertEqual(order.field, "test_field_d");
-    XCTAssertEqual(order.order, yas::db::order::descending);
+    XCTAssertEqual(order.order, db::order::descending);
 }
 
 - (void)test_sql {
-    XCTAssertEqual(yas::db::field_order("test_field_a", yas::db::order::ascending).sql(), "test_field_a asc");
-    XCTAssertEqual(yas::db::field_order("test_field_d", yas::db::order::descending).sql(), "test_field_d desc");
+    XCTAssertEqual(db::field_order("test_field_a", db::order::ascending).sql(), "test_field_a asc");
+    XCTAssertEqual(db::field_order("test_field_d", db::order::descending).sql(), "test_field_d desc");
 }
 
 @end
