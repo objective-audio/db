@@ -72,6 +72,8 @@ class db::database::impl : public base::impl {
             return false;
         }
 
+        execute_update("pragma foreign_keys = ON;", {}, {});
+
         if (_max_busy_retry_time_interval > 0.0) {
             set_max_busy_retry_time_interval(_max_busy_retry_time_interval);
         }
@@ -768,21 +770,18 @@ db::update_result db::database::in_save_point(std::function<void(bool &rollback)
 #endif
 
 bool db::database::table_exists(std::string const &table_name) const {
-    std::string const lower_table_name = to_lower(table_name);
-
-    if (auto query_result = execute_query("select [sql] from sqlite_master where [type] = 'table' and lower(name) = ?",
-                                          {db::value{lower_table_name}})) {
-        auto &result_set = query_result.value();
-        return !!result_set.next();
+    if (auto result_set = get_table_schema(table_name)) {
+        if (result_set.next()) {
+            return true;
+        }
     }
-
     return false;
 }
 
 db::result_set db::database::get_schema() const {
     if (auto query_result = execute_query(
-            "SELECT type, name, tbl_name, rootpage, sql FROM (SELECT * FROM sqlite_master UNION ALL SELECT * FROM "
-            "sqlite_temp_master) WHERE type != 'meta' AND name NOT LIKE 'sqlite_%' ORDER BY tbl_name, type DESC, "
+            "select type, name, tbl_name, rootpage, sql from (select * from sqlite_master union all select * from "
+            "sqlite_temp_master) where type != 'meta' and name not like 'sqlite_%' order by tbl_name, type desc, "
             "name")) {
         return query_result.value();
     }
