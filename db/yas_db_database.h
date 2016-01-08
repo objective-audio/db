@@ -9,11 +9,11 @@
 #include <chrono>
 #include <functional>
 #include "yas_base.h"
-#include "yas_db_value.h"
 #include "yas_db_order.h"
 #include "yas_db_protocol.h"
 #include "yas_db_range.h"
 #include "yas_db_result_code.h"
+#include "yas_db_value.h"
 #include "yas_result.h"
 
 namespace yas {
@@ -145,8 +145,8 @@ namespace db {
         update_result drop_table(std::string const &table_name);
 
         std::vector<db::column_map> select(std::string const &table_name, std::vector<std::string> const &fields,
-                                           std::string const &where_exprs,
-                                           std::vector<db::column_map> const &parameter_maps,
+                                           std::string const &where_exprs = "",
+                                           std::vector<db::column_map> const &parameter_maps = {},
                                            std::vector<db::field_order> const &orders = {},
                                            db::range const &limit_range = db::range::empty());
 

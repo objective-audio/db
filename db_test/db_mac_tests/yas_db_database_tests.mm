@@ -584,4 +584,40 @@ using namespace yas;
     XCTAssertEqual(result_map.size(), 1);
 }
 
+- (void)test_foreign_key {
+    db::database db = [yas_db_test_utils create_test_database];
+    db.open();
+
+    db.begin_transaction();
+
+    XCTAssertTrue(db.execute_update("CREATE TABLE idmaster (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT);"));
+    XCTAssertTrue(db.execute_update("INSERT INTO idmaster VALUES (null, 'A');"));
+    XCTAssertTrue(db.execute_update(
+        "CREATE TABLE address (id INTEGER, address TEXT, FOREIGN KEY(id) REFERENCES idmaster(id) ON DELETE CASCADE);"));
+    XCTAssertTrue(db.execute_update("INSERT INTO address VALUES (1, 'addressA');"));
+    XCTAssertFalse(db.execute_update("INSERT INTO address VALUES (2, 'addressB');"));
+
+    db.commit();
+
+    auto query_result = db.execute_query("SELECT * FROM idmaster;");
+    auto &result_set = query_result.value();
+    XCTAssertTrue(result_set.next());
+    XCTAssertFalse(result_set.next());
+
+    query_result = db.execute_query("SELECT * FROM address;");
+    result_set = query_result.value();
+    XCTAssertTrue(result_set.next());
+    XCTAssertFalse(result_set.next());
+
+    XCTAssertTrue(db.execute_update("delete from idmaster"));
+
+    query_result = db.execute_query("SELECT * FROM idmaster;");
+    result_set = query_result.value();
+    XCTAssertFalse(result_set.next());
+
+    query_result = db.execute_query("SELECT * FROM address;");
+    result_set = query_result.value();
+    XCTAssertFalse(result_set.next());
+}
+
 @end
