@@ -829,10 +829,6 @@ std::vector<db::column_map> db::database::select(std::string const &table_name, 
                                                  std::vector<db::column_map> const &parameter_maps,
                                                  std::vector<db::field_order> const &orders,
                                                  db::range const &limit_range) {
-    if (!table_exists(table_name)) {
-        return {};
-    }
-
     auto const sql = select_sql(table_name, fields, where_exprs, orders, limit_range);
 
     std::vector<db::column_map> result_map;
