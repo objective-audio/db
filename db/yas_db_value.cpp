@@ -212,3 +212,15 @@ std::string yas::to_string(const db::value &value) {
 
     return "type='" + type_name + "' value='" + value_text + "'";
 }
+
+db::time_point yas::to_time_point(db::value const &value) {
+    if (value.type() == typeid(db::integer)) {
+        auto integer_value = value.get<db::integer>();
+        return db::time_point{std::chrono::nanoseconds{integer_value}};
+    }
+    return {};
+}
+
+db::value yas::to_value(db::time_point const &time_point) {
+    return db::value{time_point.time_since_epoch().count()};
+}

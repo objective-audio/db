@@ -6,6 +6,7 @@
 
 #include <MacTypes.h>
 #include <sqlite3.h>
+#include <chrono>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -111,7 +112,11 @@ namespace db {
 
     using column_vector = std::vector<value>;
     using column_map = std::unordered_map<std::string, value>;
+    using time_point = std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>;
 }
 
 std::string to_string(db::value const &);
+
+db::time_point to_time_point(db::value const &);
+db::value to_value(db::time_point const &);
 }
