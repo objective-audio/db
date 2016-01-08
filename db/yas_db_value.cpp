@@ -3,6 +3,7 @@
 //
 
 #include "yas_db_value.h"
+#include "yas_each_index.h"
 
 using namespace yas;
 
@@ -20,6 +21,28 @@ db::blob::blob(const void *const data, std::size_t const size, copy_tag_t const)
 template <>
 db::blob::blob(const void *const data, std::size_t const size, no_copy_tag_t const)
     : _vector(), _data(data), _size(size) {
+}
+
+bool db::blob::operator==(blob const &rhs) const {
+    UInt8 const *lhs_data = static_cast<UInt8 const *>(data());
+    UInt8 const *rhs_data = static_cast<UInt8 const *>(rhs.data());
+
+    if (lhs_data == rhs_data) {
+        return true;
+    } else if (size() == rhs.size()) {
+        for (auto &idx : each_index<std::size_t>{size()}) {
+            if (lhs_data[idx] != rhs_data[idx]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    return false;
+}
+
+bool db::blob::operator!=(blob const &rhs) const {
+    return !(*this == rhs);
 }
 
 const void *db::blob::data() const {
@@ -84,6 +107,28 @@ db::value::value(blob::type &&value) : super_class(std::make_unique<impl<blob>>(
 }
 
 db::value::value(null::type) : super_class(std::make_unique<impl<null>>(nullptr)) {
+}
+
+bool db::value::operator==(value const &rhs) const {
+    auto &type_info = type();
+    if (type_info == rhs.type()) {
+        if (type_info == typeid(integer)) {
+            return this->get<integer>() == rhs.get<integer>();
+        } else if (type_info == typeid(real)) {
+            return this->get<real>() == rhs.get<real>();
+        } else if (type_info == typeid(text)) {
+            return this->get<text>() == rhs.get<text>();
+        } else if (type_info == typeid(blob)) {
+            return this->get<blob>() == rhs.get<blob>();
+        } else if (type_info == typeid(null)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool db::value::operator!=(value const &rhs) const {
+    return !(*this == rhs);
 }
 
 db::value::operator bool() const {
@@ -166,4 +211,16 @@ std::string yas::to_string(const db::value &value) {
     }
 
     return "type='" + type_name + "' value='" + value_text + "'";
+}
+
+db::time_point yas::to_time_point(db::value const &value) {
+    if (value.type() == typeid(db::integer)) {
+        auto integer_value = value.get<db::integer>();
+        return db::time_point{std::chrono::nanoseconds{integer_value}};
+    }
+    return {};
+}
+
+db::value yas::to_value(db::time_point const &time_point) {
+    return db::value{time_point.time_since_epoch().count()};
 }

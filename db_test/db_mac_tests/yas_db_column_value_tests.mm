@@ -2,7 +2,10 @@
 //  yas_db_value_tests.mm
 //
 
+#import <chrono>
 #import "yas_db_test_utils.h"
+
+using namespace yas;
 
 @interface yas_db_value_tests : XCTestCase
 
@@ -176,6 +179,20 @@
     XCTAssertEqual(yas::to_string(text_value), "type='text' value='text_value'");
     XCTAssertEqual(yas::to_string(blob_value), "type='blob' value='data' size='2'");
     XCTAssertEqual(yas::to_string(null_value), "type='null' value='null'");
+}
+
+- (void)test_time_point {
+    auto src_time_point = db::time_point{std::chrono::nanoseconds{1234}};
+
+    XCTAssertEqual(src_time_point.time_since_epoch().count(), 1234);
+
+    auto value = to_value(src_time_point);
+
+    XCTAssertEqual(value.get<db::integer>(), 1234);
+
+    auto dst_time_point = to_time_point(value);
+
+    XCTAssertEqual(dst_time_point.time_since_epoch().count(), 1234);
 }
 
 @end
