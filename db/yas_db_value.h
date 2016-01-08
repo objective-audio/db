@@ -10,7 +10,6 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-
 #include "yas_base.h"
 
 namespace yas {
@@ -46,6 +45,9 @@ namespace db {
 
         blob(blob &&) = default;
         blob &operator=(blob &&) = default;
+
+        bool operator==(blob const &) const;
+        bool operator!=(blob const &) const;
 
         const void *data() const;
         std::size_t size() const;
@@ -87,7 +89,10 @@ namespace db {
         value(const void *const data, std::size_t const size, T const tag = db::copy_tag);
 
         ~value();
-        
+
+        bool operator==(value const &) const;
+        bool operator!=(value const &) const;
+
         explicit operator bool() const;
 
         std::type_info const &type() const;
@@ -108,5 +113,5 @@ namespace db {
     using column_map = std::unordered_map<std::string, value>;
 }
 
-std::string to_string(const db::value &);
+std::string to_string(db::value const &);
 }
