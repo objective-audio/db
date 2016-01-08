@@ -4,7 +4,6 @@
 
 #include <sstream>
 #include "yas_db_order.h"
-#include "yas_db_range.h"
 #include "yas_db_sql_utils.h"
 #include "yas_stl_utils.h"
 
@@ -47,7 +46,8 @@ std::string yas::db::update_sql(const std::string &table, const std::vector<std:
                                 const std::string &where_exprs) {
     std::ostringstream stream;
     stream << "update " << table << " set "
-           << joined(map(fields, [](std::string const &field) { return field_expr(field, "="); }), field_separator);
+           << joined(map<std::string>(fields, [](std::string const &field) { return equal_field(field); }),
+                     field_separator);
     if (where_exprs.size() > 0) {
         stream << " where " << where_exprs;
     }
@@ -73,8 +73,12 @@ std::string yas::db::field_expr(std::string const &field, std::string const &op)
     return expr(field, ":" + field, op);
 }
 
+std::string yas::db::equal_field(std::string const &field) {
+    return field + " = :" + field;
+}
+
 std::string yas::db::joined_orders(std::vector<field_order> const &orders) {
-    auto mapped = map<field_order, std::string>(orders, [](auto const &order) { return order.sql(); });
+    auto mapped = map<std::string>(orders, [](auto const &order) { return order.sql(); });
     return joined(mapped, field_separator);
 }
 
@@ -100,5 +104,18 @@ std::string yas::db::select_sql(std::string const &table_name, std::vector<std::
     }
 
     stream << ";";
+    return stream.str();
+}
+
+std::string yas::db::foreign_key(std::string const &field, std::string const &ref_table, std::string const &ref_field,
+                                 std::string const &on_update, std::string const &on_delete) {
+    std::ostringstream stream;
+    stream << "foreign key (" + field + ") references " + ref_table + "(" + ref_field + ")";
+    if (on_update.size() > 0) {
+        stream << " on update " << on_update;
+    }
+    if (on_delete.size() > 0) {
+        stream << " on delete " << on_delete;
+    }
     return stream.str();
 }
