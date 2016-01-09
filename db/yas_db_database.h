@@ -60,11 +60,11 @@ namespace db {
     };
 
     using update_result = result<std::nullptr_t, error>;
-    using query_result = result<result_set, error>;
+    using query_result = result<row_set, error>;
     using row_result = result<sqlite3_int64, error>;
     using count_result = result<int, error>;
 
-    class database : public base, public result_set_observable {
+    class database : public base, public row_set_observable {
         using super_class = base;
 
        public:
@@ -106,8 +106,8 @@ namespace db {
         count_result changes() const;
 
         void clear_cached_statements();
-        void close_open_result_sets();
-        bool has_open_result_sets() const;
+        void close_open_row_sets();
+        bool has_open_row_sets() const;
         bool should_cache_statements() const;
         void set_should_cache_statements(bool flag);
 
@@ -120,7 +120,7 @@ namespace db {
         std::chrono::time_point<std::chrono::system_clock> start_busy_retry_time() const;
 
        private:
-        void _result_set_did_close(uintptr_t const) override;
+        void _row_set_did_close(uintptr_t const) override;
     };
 }
 }

@@ -1,5 +1,5 @@
 //
-//  yas_db_result_set.h
+//  yas_db_row_set.h
 //
 
 #pragma once
@@ -23,7 +23,7 @@ namespace db {
         explicit operator bool() const;
     };
 
-    class result_set : public base, public closable, public db_holdable {
+    class row_set : public base, public closable, public db_holdable {
         using super_class = base;
 
        public:
@@ -31,10 +31,10 @@ namespace db {
 
         using index_result = result<int, std::nullptr_t>;
 
-        result_set(statement const &, database const &);
-        result_set(std::nullptr_t);
+        row_set(statement const &, database const &);
+        row_set(std::nullptr_t);
 
-        ~result_set();
+        ~row_set();
 
         bool operator==(std::nullptr_t) const;
         bool operator!=(std::nullptr_t) const;
@@ -66,15 +66,15 @@ namespace db {
 }
 
 template <>
-struct std::hash<yas::db::result_set> {
-    std::size_t operator()(yas::db::result_set const &key) const {
+struct std::hash<yas::db::row_set> {
+    std::size_t operator()(yas::db::row_set const &key) const {
         return std::hash<uintptr_t>()(key.identifier());
     }
 };
 
 template <>
-struct std::hash<yas::weak<yas::db::result_set>> {
-    std::size_t operator()(yas::weak<yas::db::result_set> const &key) const {
+struct std::hash<yas::weak<yas::db::row_set>> {
+    std::size_t operator()(yas::weak<yas::db::row_set> const &key) const {
         return std::hash<uintptr_t>()(key.identifier());
     }
 };

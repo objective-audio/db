@@ -1,16 +1,16 @@
 //
-//  yas_db_result_set_tests.mm
+//  yas_db_row_set_tests.mm
 //
 
 #import "yas_db_test_utils.h"
 
 using namespace yas;
 
-@interface yas_db_result_set_tests : XCTestCase
+@interface yas_db_row_set_tests : XCTestCase
 
 @end
 
-@implementation yas_db_result_set_tests
+@implementation yas_db_row_set_tests
 
 - (void)setUp {
     [super setUp];
@@ -41,23 +41,23 @@ using namespace yas;
     auto query_result = db.execute_query("select field_a, field_b from test_table");
     XCTAssertTrue(query_result);
 
-    auto &result_set = query_result.value();
+    auto &row_set = query_result.value();
 
-    XCTAssertTrue(result_set);
-    XCTAssertTrue(result_set.next());
+    XCTAssertTrue(row_set);
+    XCTAssertTrue(row_set.next());
 
-    XCTAssertEqual(result_set.column_count(), 2);
+    XCTAssertEqual(row_set.column_count(), 2);
 
-    XCTAssertEqual(result_set.column_index("field_a").value(), 0);
-    XCTAssertEqual(result_set.column_index("field_b").value(), 1);
+    XCTAssertEqual(row_set.column_index("field_a").value(), 0);
+    XCTAssertEqual(row_set.column_index("field_b").value(), 1);
 
-    XCTAssertEqual(result_set.column_name(0), "field_a");
-    XCTAssertEqual(result_set.column_name(1), "field_b");
+    XCTAssertEqual(row_set.column_name(0), "field_a");
+    XCTAssertEqual(row_set.column_name(1), "field_b");
 
-    XCTAssertFalse(result_set.column_is_null(0));
-    XCTAssertTrue(result_set.column_is_null(1));
-    XCTAssertFalse(result_set.column_is_null("field_a"));
-    XCTAssertTrue(result_set.column_is_null("field_b"));
+    XCTAssertFalse(row_set.column_is_null(0));
+    XCTAssertTrue(row_set.column_is_null(1));
+    XCTAssertFalse(row_set.column_is_null("field_a"));
+    XCTAssertTrue(row_set.column_is_null("field_b"));
 }
 
 - (void)test_has_row {
@@ -72,19 +72,19 @@ using namespace yas;
     auto query_result = db.execute_query("select * from test_table");
     XCTAssertTrue(query_result);
 
-    auto &result_set = query_result.value();
+    auto &row_set = query_result.value();
 
-    XCTAssertTrue(result_set);
+    XCTAssertTrue(row_set);
 
-    XCTAssertFalse(result_set.has_row());
+    XCTAssertFalse(row_set.has_row());
 
-    XCTAssertTrue(result_set.next());
+    XCTAssertTrue(row_set.next());
 
-    XCTAssertTrue(result_set.has_row());
+    XCTAssertTrue(row_set.has_row());
 
-    XCTAssertFalse(result_set.next());
+    XCTAssertFalse(row_set.next());
 
-    XCTAssertFalse(result_set.has_row());
+    XCTAssertFalse(row_set.has_row());
 }
 
 - (void)test_column_value {
@@ -110,15 +110,15 @@ using namespace yas;
     auto query_result = db.execute_query("select * from test_table");
     XCTAssertTrue(query_result);
 
-    auto &result_set = query_result.value();
+    auto &row_set = query_result.value();
 
-    XCTAssertTrue(result_set.next());
+    XCTAssertTrue(row_set.next());
 
-    auto int_value = result_set.column_value("int_field");
-    auto float_value = result_set.column_value("float_field");
-    auto string_value = result_set.column_value("string_field");
-    auto data_value = result_set.column_value("data_field");
-    auto null_value = result_set.column_value("null_field");
+    auto int_value = row_set.column_value("int_field");
+    auto float_value = row_set.column_value("float_field");
+    auto string_value = row_set.column_value("string_field");
+    auto data_value = row_set.column_value("data_field");
+    auto null_value = row_set.column_value("null_field");
 
     XCTAssertTrue(int_value.type() == typeid(db::integer));
     XCTAssertTrue(float_value.type() == typeid(db::real));
@@ -139,7 +139,7 @@ using namespace yas;
     XCTAssertEqual(data[2], 2);
     XCTAssertEqual(data[3], 3);
 
-    XCTAssertFalse(result_set.next());
+    XCTAssertFalse(row_set.next());
 }
 
 - (void)test_result_map {
@@ -164,11 +164,11 @@ using namespace yas;
     auto query_result = db.execute_query("select * from test_table");
     XCTAssertTrue(query_result);
 
-    auto &result_set = query_result.value();
+    auto &row_set = query_result.value();
 
-    XCTAssertTrue(result_set.next());
+    XCTAssertTrue(row_set.next());
 
-    auto map = result_set.column_map();
+    auto map = row_set.column_map();
 
     auto &int_value = map.at("int_field");
     auto &float_value = map.at("float_field");
@@ -195,7 +195,7 @@ using namespace yas;
     XCTAssertEqual(data[2], 2);
     XCTAssertEqual(data[3], 3);
 
-    XCTAssertFalse(result_set.next());
+    XCTAssertFalse(row_set.next());
 }
 
 - (void)test_is_equal {
@@ -207,14 +207,14 @@ using namespace yas;
     db.execute_update("insert into test_table(field_a) values(:field_a)", args);
 
     auto query_result = db.execute_query("select * from test_table");
-    auto &result_set = query_result.value();
+    auto &row_set = query_result.value();
 
-    db::result_set null_result_set{nullptr};
+    db::row_set null_row_set{nullptr};
 
-    XCTAssertFalse(result_set == nullptr);
-    XCTAssertTrue(result_set != nullptr);
-    XCTAssertTrue(null_result_set == nullptr);
-    XCTAssertFalse(null_result_set != nullptr);
+    XCTAssertFalse(row_set == nullptr);
+    XCTAssertTrue(row_set != nullptr);
+    XCTAssertTrue(null_row_set == nullptr);
+    XCTAssertFalse(null_row_set != nullptr);
 }
 
 @end

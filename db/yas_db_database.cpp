@@ -5,7 +5,7 @@
 #include <mutex>
 #include <unordered_set>
 #include "yas_db_database.h"
-#include "yas_db_result_set.h"
+#include "yas_db_row_set.h"
 #include "yas_db_statement.h"
 #include "yas_db_value.h"
 #include "yas_each_index.h"
@@ -43,7 +43,7 @@ class db::database::impl : public base::impl {
     std::chrono::time_point<std::chrono::system_clock> start_busy_retry_time = std::chrono::system_clock::now();
 
     std::unordered_map<std::string, std::unordered_map<uintptr_t, db::statement>> cached_statements;
-    std::unordered_map<uintptr_t, weak<result_set>> open_result_sets;
+    std::unordered_map<uintptr_t, weak<row_set>> open_row_sets;
 
     callback_function callback_for_execute_statements;
 
@@ -98,7 +98,7 @@ class db::database::impl : public base::impl {
 
     bool close() {
         clear_cached_statements();
-        close_open_result_sets();
+        close_open_row_sets();
 
         if (!sqlite_handle) {
             return true;
@@ -178,18 +178,18 @@ class db::database::impl : public base::impl {
         cached_statements.clear();
     }
 
-    void close_open_result_sets() {
-        for (auto &pair : open_result_sets) {
-            if (auto result_set = pair.second.lock()) {
-                if (auto db_holdable_rs = dynamic_cast<db_holdable *>(&result_set)) {
+    void close_open_row_sets() {
+        for (auto &pair : open_row_sets) {
+            if (auto row_set = pair.second.lock()) {
+                if (auto db_holdable_rs = dynamic_cast<db_holdable *>(&row_set)) {
                     db_holdable_rs->_set_database(nullptr);
                 }
-                if (auto closable_rs = dynamic_cast<closable *>(&result_set)) {
+                if (auto closable_rs = dynamic_cast<closable *>(&row_set)) {
                     closable_rs->_close();
                 }
             }
         }
-        open_result_sets.clear();
+        open_row_sets.clear();
     }
 
     bool database_exists() const {
@@ -379,7 +379,7 @@ class db::database::impl : public base::impl {
         std::string error_message;
         sqlite3_stmt *stmt{nullptr};
         statement statement{nullptr};
-        result_set result_set{nullptr};
+        row_set row_set{nullptr};
 
         if (should_cache_statements) {
             statement = cached_statement(sql);
@@ -437,14 +437,14 @@ class db::database::impl : public base::impl {
             }
         }
 
-        result_set = db::result_set{statement, cast<db::database>()};
-        result_set.set_query(sql);
+        row_set = db::row_set{statement, cast<db::database>()};
+        row_set.set_query(sql);
 
-        open_result_sets.insert(std::make_pair(result_set.identifier(), result_set));
+        open_row_sets.insert(std::make_pair(row_set.identifier(), row_set));
 
         is_executing_statement = false;
 
-        return query_result{std::move(result_set)};
+        return query_result{std::move(row_set)};
     }
 
     row_result last_insert_row_id() {
@@ -569,8 +569,8 @@ bool db::database::good_connection() {
     }
 
     if (auto query_result = execute_query("select name from sqlite_master where type='table'")) {
-        auto &result_set = query_result.value();
-        if (auto closable_rs = dynamic_cast<closable *>(&result_set)) {
+        auto &row_set = query_result.value();
+        if (auto closable_rs = dynamic_cast<closable *>(&row_set)) {
             closable_rs->_close();
         }
         return true;
@@ -628,12 +628,12 @@ void db::database::clear_cached_statements() {
     impl_ptr<impl>()->clear_cached_statements();
 }
 
-void db::database::close_open_result_sets() {
-    impl_ptr<impl>()->close_open_result_sets();
+void db::database::close_open_row_sets() {
+    impl_ptr<impl>()->close_open_row_sets();
 }
 
-bool db::database::has_open_result_sets() const {
-    return impl_ptr<impl>()->open_result_sets.size() > 0;
+bool db::database::has_open_row_sets() const {
+    return impl_ptr<impl>()->open_row_sets.size() > 0;
 }
 
 bool db::database::should_cache_statements() const {
@@ -678,6 +678,6 @@ std::chrono::time_point<std::chrono::system_clock> db::database::start_busy_retr
 
 #pragma mark -
 
-void db::database::_result_set_did_close(uintptr_t const id) {
-    impl_ptr<impl>()->open_result_sets.erase(id);
+void db::database::_row_set_did_close(uintptr_t const id) {
+    impl_ptr<impl>()->open_row_sets.erase(id);
 }

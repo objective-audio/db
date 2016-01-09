@@ -56,15 +56,15 @@ using namespace yas;
         XCTAssertTrue(db.execute_update("insert into test_table(field_a, field_b) values(:field_a, :field_b)", args));
 
         auto query_result = db.execute_query("select * from test_table");
-        auto &result_set = query_result.value();
+        auto &row_set = query_result.value();
 
-        XCTAssertTrue(result_set);
-        XCTAssertTrue(result_set.next());
+        XCTAssertTrue(row_set);
+        XCTAssertTrue(row_set.next());
 
-        XCTAssertEqual(result_set.column_value(0).get<db::text>(), "value_a");
-        XCTAssertEqual(result_set.column_value(1).get<db::text>(), "value_b");
+        XCTAssertEqual(row_set.column_value(0).get<db::text>(), "value_a");
+        XCTAssertEqual(row_set.column_value(1).get<db::text>(), "value_b");
 
-        XCTAssertFalse(result_set.next());
+        XCTAssertFalse(row_set.next());
 
         [expectation fulfill];
     });

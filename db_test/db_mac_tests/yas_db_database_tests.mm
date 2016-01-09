@@ -91,29 +91,29 @@ using namespace yas;
     XCTAssertTrue(db.execute_update("insert into test_table(field_a, field_b) values(:field_a, :field_b)", args));
 
     auto query_result = db.execute_query("select * from test_table");
-    auto &result_set = query_result.value();
+    auto &row_set = query_result.value();
 
-    XCTAssertTrue(result_set);
-    XCTAssertTrue(result_set.next());
+    XCTAssertTrue(row_set);
+    XCTAssertTrue(row_set.next());
 
-    XCTAssertEqual(result_set.column_value(0).get<db::text>(), "value_a");
-    XCTAssertEqual(result_set.column_value(1).get<db::text>(), "value_b");
+    XCTAssertEqual(row_set.column_value(0).get<db::text>(), "value_a");
+    XCTAssertEqual(row_set.column_value(1).get<db::text>(), "value_b");
 
-    XCTAssertFalse(result_set.next());
+    XCTAssertFalse(row_set.next());
 
     db::column_vector update_args{db::value{"value_a_2"}, db::value{"value_b_2"}};
     XCTAssertTrue(db.execute_update("update test_table set field_a = :field_a, field_b = :field_b", update_args));
 
     query_result = db.execute_query("select * from test_table");
-    result_set = query_result.value();
+    row_set = query_result.value();
 
-    XCTAssertTrue(result_set);
-    XCTAssertTrue(result_set.next());
+    XCTAssertTrue(row_set);
+    XCTAssertTrue(row_set.next());
 
-    XCTAssertEqual(result_set.column_value(0).get<db::text>(), "value_a_2");
-    XCTAssertEqual(result_set.column_value(1).get<db::text>(), "value_b_2");
+    XCTAssertEqual(row_set.column_value(0).get<db::text>(), "value_a_2");
+    XCTAssertEqual(row_set.column_value(1).get<db::text>(), "value_b_2");
 
-    XCTAssertFalse(result_set.next());
+    XCTAssertFalse(row_set.next());
 }
 
 - (void)test_execute_update_with_map {
@@ -127,30 +127,30 @@ using namespace yas;
     XCTAssertTrue(db.execute_update("insert into test_table(field_a, field_b) values(:field_a, :field_b)", args));
 
     auto query_result = db.execute_query("select * from test_table");
-    auto &result_set = query_result.value();
+    auto &row_set = query_result.value();
 
-    XCTAssertTrue(result_set);
-    XCTAssertTrue(result_set.next());
+    XCTAssertTrue(row_set);
+    XCTAssertTrue(row_set.next());
 
-    XCTAssertEqual(result_set.column_value("field_a").get<db::text>(), "value_a");
-    XCTAssertEqual(result_set.column_value("field_b").get<db::text>(), "value_b");
+    XCTAssertEqual(row_set.column_value("field_a").get<db::text>(), "value_a");
+    XCTAssertEqual(row_set.column_value("field_b").get<db::text>(), "value_b");
 
-    XCTAssertFalse(result_set.next());
+    XCTAssertFalse(row_set.next());
 
     db::column_map update_args{std::make_pair("field_a", db::value{"value_a_2"}),
                                std::make_pair("field_b", db::value{"value_b_2"})};
     XCTAssertTrue(db.execute_update("update test_table set field_a = :field_a, field_b = :field_b", update_args));
 
     query_result = db.execute_query("select * from test_table");
-    result_set = query_result.value();
+    row_set = query_result.value();
 
-    XCTAssertTrue(result_set);
-    XCTAssertTrue(result_set.next());
+    XCTAssertTrue(row_set);
+    XCTAssertTrue(row_set.next());
 
-    XCTAssertEqual(result_set.column_value(0).get<db::text>(), "value_a_2");
-    XCTAssertEqual(result_set.column_value(1).get<db::text>(), "value_b_2");
+    XCTAssertEqual(row_set.column_value(0).get<db::text>(), "value_a_2");
+    XCTAssertEqual(row_set.column_value(1).get<db::text>(), "value_b_2");
 
-    XCTAssertFalse(result_set.next());
+    XCTAssertFalse(row_set.next());
 }
 
 - (void)test_execute_query_with_vector {
@@ -167,14 +167,14 @@ using namespace yas;
 
     XCTAssertTrue(query_result);
 
-    auto &result_set = query_result.value();
+    auto &row_set = query_result.value();
 
-    XCTAssertTrue(result_set);
-    XCTAssertTrue(result_set.next());
+    XCTAssertTrue(row_set);
+    XCTAssertTrue(row_set.next());
 
-    XCTAssertEqual(result_set.column_value("field_a").get<db::text>(), "value_a");
+    XCTAssertEqual(row_set.column_value("field_a").get<db::text>(), "value_a");
 
-    XCTAssertFalse(result_set.next());
+    XCTAssertFalse(row_set.next());
 }
 
 - (void)test_execute_query_with_map {
@@ -192,14 +192,14 @@ using namespace yas;
 
     XCTAssertTrue(query_result);
 
-    auto &result_set = query_result.value();
+    auto &row_set = query_result.value();
 
-    XCTAssertTrue(result_set);
-    XCTAssertTrue(result_set.next());
+    XCTAssertTrue(row_set);
+    XCTAssertTrue(row_set.next());
 
-    XCTAssertEqual(result_set.column_value("field_a").get<db::text>(), "value_a");
+    XCTAssertEqual(row_set.column_value("field_a").get<db::text>(), "value_a");
 
-    XCTAssertFalse(result_set.next());
+    XCTAssertFalse(row_set.next());
 }
 
 - (void)test_get_error {
@@ -251,31 +251,31 @@ using namespace yas;
     XCTAssertNotEqual(query_result_1.value().statement(), query_result_3.value().statement());
 }
 
-- (void)test_open_result_sets {
+- (void)test_open_row_sets {
     db::database db = [yas_db_test_utils create_test_database];
     db.open();
 
     XCTAssertTrue(db::create_table(db, "test_table", {"test_field"}));
     XCTAssertTrue(db.execute_update("insert into test_table(test_field) values('value1')"));
 
-    XCTAssertFalse(db.has_open_result_sets());
+    XCTAssertFalse(db.has_open_row_sets());
 
     if (auto query_result = db.execute_query("select * from test_table")) {
-        XCTAssertTrue(db.has_open_result_sets());
+        XCTAssertTrue(db.has_open_row_sets());
     }
 
-    XCTAssertFalse(db.has_open_result_sets());
+    XCTAssertFalse(db.has_open_row_sets());
 
     if (auto query_result = db.execute_query("select * from test_table")) {
-        auto &result_set = query_result.value();
-        XCTAssertTrue(result_set.next());
-        XCTAssertTrue(result_set.has_row());
-        XCTAssertTrue(db.has_open_result_sets());
+        auto &row_set = query_result.value();
+        XCTAssertTrue(row_set.next());
+        XCTAssertTrue(row_set.has_row());
+        XCTAssertTrue(db.has_open_row_sets());
 
-        db.close_open_result_sets();
+        db.close_open_row_sets();
 
-        XCTAssertFalse(result_set.has_row());
-        XCTAssertFalse(db.has_open_result_sets());
+        XCTAssertFalse(row_set.has_row());
+        XCTAssertFalse(db.has_open_row_sets());
     }
 }
 
@@ -310,24 +310,24 @@ using namespace yas;
     db::commit(db);
 
     auto query_result = db.execute_query("select * from idmaster;");
-    auto &result_set = query_result.value();
-    XCTAssertTrue(result_set.next());
-    XCTAssertFalse(result_set.next());
+    auto &row_set = query_result.value();
+    XCTAssertTrue(row_set.next());
+    XCTAssertFalse(row_set.next());
 
     query_result = db.execute_query("select * from address;");
-    result_set = query_result.value();
-    XCTAssertTrue(result_set.next());
-    XCTAssertFalse(result_set.next());
+    row_set = query_result.value();
+    XCTAssertTrue(row_set.next());
+    XCTAssertFalse(row_set.next());
 
     XCTAssertTrue(db.execute_update("delete from idmaster"));
 
     query_result = db.execute_query("select * from idmaster;");
-    result_set = query_result.value();
-    XCTAssertFalse(result_set.next());
+    row_set = query_result.value();
+    XCTAssertFalse(row_set.next());
 
     query_result = db.execute_query("select * from address;");
-    result_set = query_result.value();
-    XCTAssertFalse(result_set.next());
+    row_set = query_result.value();
+    XCTAssertFalse(row_set.next());
 }
 
 @end
