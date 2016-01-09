@@ -34,7 +34,7 @@ using namespace yas;
 
     XCTestExpectation *expectation = [self expectationWithDescription:@"execution"];
 
-    manager.execute([self, expectation](auto &database, auto &model, auto const &operation) {
+    manager.execute([self, expectation](auto &database, auto const &operation) {
         XCTAssertTrue(database);
         XCTAssertTrue(operation);
         XCTAssertFalse([NSThread isMainThread]);
@@ -49,7 +49,7 @@ using namespace yas;
 
     XCTestExpectation *expectation = [self expectationWithDescription:@"execution"];
 
-    manager.execute([self, expectation](db::database &db, auto &model, auto const &operation) {
+    manager.execute([self, expectation](db::database &db, auto const &operation) {
         XCTAssertTrue(db.execute_update(db::create_table_sql("test_table", {"field_a", "field_b"})));
 
         db::column_vector args{db::value{"value_a"}, db::value{"value_b"}};
@@ -80,7 +80,7 @@ using namespace yas;
 
     manager.setup([self](bool const success) { XCTAssertTrue(success); });
 
-    manager.execute([self, expectation](db::database &db, auto const &model, auto const &op) {
+    manager.execute([self, expectation](db::database &db, auto const &op) {
         XCTAssertTrue(db::table_exists(db, "db_info"));
         auto db_infos = db::select(db, "db_info", {"*"});
         XCTAssertEqual(db_infos.size(), 1);
@@ -108,7 +108,7 @@ using namespace yas;
 
     manager.setup([self](bool const success) { XCTAssertTrue(success); });
 
-    manager.execute([self, first_expectation](db::database &db, auto const &, auto const &) {
+    manager.execute([self, first_expectation](db::database &db, auto const &) {
         db::begin_transaction(db);
 
         bool rollback = false;
@@ -155,7 +155,7 @@ using namespace yas;
 
     manager.setup([self](bool const success) { XCTAssertTrue(success); });
 
-    manager.execute([self, second_expectation](db::database &db, auto const &, auto const &) {
+    manager.execute([self, second_expectation](db::database &db, auto const &) {
         XCTAssertTrue(db::table_exists(db, "db_info"));
         auto db_infos = db::select(db, "db_info", {"*"});
         XCTAssertEqual(db_infos.size(), 1);
