@@ -332,7 +332,15 @@ class db::database::impl : public base::impl {
                 if (auto database = db::_databases.at(database_id).lock()) {
                     std::unordered_map<std::string, db::value> map;
                     for (auto &idx : each_index<int>{columns}) {
-                        map.insert(std::make_pair(names[idx], db::value{values[idx]}));
+                        auto const &name = names[idx];
+                        auto const &value = values[idx];
+                        if (name) {
+                            if (value) {
+                                map.insert(std::make_pair(name, db::value{value}));
+                            } else {
+                                map.insert(std::make_pair(name, db::value{nullptr}));
+                            }
+                        }
                     }
 
                     if (auto &callback = database.callback_for_execute_statements()) {
