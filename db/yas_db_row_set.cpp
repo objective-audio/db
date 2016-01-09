@@ -67,8 +67,6 @@ class db::row_set::impl : public base::impl {
         return _column_name_to_index_map;
     }
 
-    std::string query;
-
    private:
     db::database _database;
     db::statement _statement;
@@ -91,14 +89,6 @@ bool db::row_set::operator==(std::nullptr_t) const {
 
 bool db::row_set::operator!=(std::nullptr_t) const {
     return super_class::operator!=(nullptr);
-}
-
-void db::row_set::set_query(std::string const &query) {
-    impl_ptr<impl>()->query = query;
-}
-
-std::string db::row_set::query() const {
-    return impl_ptr<impl>()->query;
 }
 
 db::statement const &db::row_set::statement() const {

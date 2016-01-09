@@ -39,9 +39,6 @@ namespace db {
         bool operator==(std::nullptr_t) const;
         bool operator!=(std::nullptr_t) const;
 
-        void set_query(std::string const &);
-        std::string query() const;
-
         statement const &statement() const;
 
         next_result_code next();
