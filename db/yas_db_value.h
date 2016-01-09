@@ -103,6 +103,8 @@ namespace db {
 
         std::string sql() const;
 
+        static value const &empty();
+
        private:
         class impl_base;
 

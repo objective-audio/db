@@ -184,6 +184,11 @@ std::string db::value::sql() const {
     return nullptr;
 }
 
+db::value const &db::value::empty() {
+    static db::value null_value{nullptr};
+    return null_value;
+}
+
 #pragma mark -
 
 std::string yas::to_string(const db::value &value) {
