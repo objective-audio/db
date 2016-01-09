@@ -269,11 +269,6 @@ using namespace yas;
 
     XCTAssertEqual(map.at("name").get<db::text>(), "field_a");
 
-    for (auto &pair : map) {
-        auto &value = pair.second;
-        std::cout << pair.first << " _ " << yas::to_string(value) << std::endl;
-    }
-
     XCTAssertTrue(row_set.next());
 
     map = row_set.column_map();
