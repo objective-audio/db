@@ -6,7 +6,6 @@
 #include <unordered_set>
 #include "yas_db_database.h"
 #include "yas_db_result_set.h"
-#include "yas_db_sql_utils.h"
 #include "yas_db_statement.h"
 #include "yas_db_value.h"
 #include "yas_each_index.h"
@@ -40,7 +39,6 @@ class db::database::impl : public base::impl {
 
     bool should_cache_statements = false;
     bool is_executing_statement = false;
-    bool in_transaction = false;
 
     std::chrono::time_point<std::chrono::system_clock> start_busy_retry_time = std::chrono::system_clock::now();
 
@@ -217,10 +215,6 @@ class db::database::impl : public base::impl {
         } else if (type == typeid(db::text)) {
             sqlite3_bind_text(stmt, column_idx, value.get<db::text>().c_str(), -1, SQLITE_STATIC);
         }
-    }
-
-    static std::string escape_save_point_name(std::string const &name) {
-        return replaced(name, "'", "''");
     }
 
     update_result execute_update(std::string const &sql, std::vector<db::value> const &vec,
@@ -630,42 +624,6 @@ db::count_result db::database::changes() const {
     return impl_ptr<impl>()->changes();
 }
 
-db::update_result db::database::begin_transaction() {
-    auto result = execute_update("begin exclusive transaction");
-    if (result) {
-        impl_ptr<impl>()->in_transaction = true;
-    }
-    return result;
-}
-
-db::update_result db::database::begin_deferred_transaction() {
-    auto result = execute_update("begin deferred transaction");
-    if (result) {
-        impl_ptr<impl>()->in_transaction = true;
-    }
-    return result;
-}
-
-db::update_result db::database::commit() {
-    auto result = execute_update("commit transaction");
-    if (result) {
-        impl_ptr<impl>()->in_transaction = false;
-    }
-    return result;
-}
-
-db::update_result db::database::rollback() {
-    auto result = execute_update("rollback transaction");
-    if (result) {
-        impl_ptr<impl>()->in_transaction = false;
-    }
-    return result;
-}
-
-bool db::database::in_transaction() {
-    return impl_ptr<impl>()->in_transaction;
-}
-
 void db::database::clear_cached_statements() {
     impl_ptr<impl>()->clear_cached_statements();
 }
@@ -722,133 +680,4 @@ std::chrono::time_point<std::chrono::system_clock> db::database::start_busy_retr
 
 void db::database::_result_set_did_close(uintptr_t const id) {
     impl_ptr<impl>()->open_result_sets.erase(id);
-}
-
-#if SQLITE_VERSION_NUMBER >= 3007000
-
-db::update_result db::database::start_save_point(std::string const &name) {
-    if (name.size() == 0) {
-        return update_result{error_type::invalid_argument};
-    }
-    return execute_update("savepoint '" + impl::escape_save_point_name(name) + "';");
-}
-
-db::update_result db::database::release_save_point(std::string const &name) {
-    if (name.size() == 0) {
-        return update_result{error_type::invalid_argument};
-    }
-    return execute_update("release savepoint '" + impl::escape_save_point_name(name) + "';");
-}
-
-db::update_result db::database::rollback_save_point(std::string const &name) {
-    if (name.size() == 0) {
-        return update_result{error_type::invalid_argument};
-    }
-    return execute_update("rollback transaction to savepoint '" + impl::escape_save_point_name(name) + "';");
-}
-
-db::update_result db::database::in_save_point(std::function<void(bool &rollback)> const function) {
-    static unsigned long save_point_idx = 0;
-    std::string const name = "db_save_point_" + std::to_string(save_point_idx++);
-
-    auto start_result = start_save_point(name);
-    if (!start_result) {
-        return start_result;
-    }
-
-    bool should_rollback = false;
-
-    function(should_rollback);
-
-    if (should_rollback) {
-        rollback_save_point(name);
-    }
-
-    return release_save_point(name);
-}
-
-#endif
-
-bool db::database::table_exists(std::string const &table_name) const {
-    if (auto result_set = get_table_schema(table_name)) {
-        if (result_set.next()) {
-            return true;
-        }
-    }
-    return false;
-}
-
-db::result_set db::database::get_schema() const {
-    if (auto query_result = execute_query(
-            "select type, name, tbl_name, rootpage, sql from (select * from sqlite_master union all select * from "
-            "sqlite_temp_master) where type != 'meta' and name not like 'sqlite_%' order by tbl_name, type desc, "
-            "name")) {
-        return query_result.value();
-    }
-    return nullptr;
-}
-
-db::result_set db::database::get_table_schema(std::string const &table_name) const {
-    if (auto query_result = execute_query("pragma table_info('" + table_name + "')")) {
-        return query_result.value();
-    }
-    return nullptr;
-}
-
-bool db::database::column_exists(std::string const &column_name, std::string const &table_name) const {
-    std::string lower_table_name = to_lower(table_name);
-    std::string lower_column_name = to_lower(column_name);
-
-    if (auto result_set = get_table_schema(table_name)) {
-        while (result_set.next()) {
-            auto value = result_set.column_value("name");
-            if (to_lower(value.get<db::text>()) == column_name) {
-                return true;
-            }
-        }
-    }
-
-    return false;
-}
-
-db::update_result db::database::create_table(std::string const &table_name, std::vector<std::string> const &fields) {
-    return execute_update(create_table_sql(table_name, fields));
-}
-
-db::update_result db::database::alter_table(std::string const &table_name, std::string const &field) {
-    return execute_update(alter_table_sql(table_name, field));
-}
-
-db::update_result db::database::drop_table(std::string const &table_name) {
-    return execute_update(drop_table_sql(table_name));
-}
-
-std::vector<db::column_map> db::database::select(std::string const &table_name, std::vector<std::string> const &fields,
-                                                 std::string const &where_exprs,
-                                                 std::vector<db::column_map> const &parameter_maps,
-                                                 std::vector<db::field_order> const &orders,
-                                                 db::range const &limit_range) {
-    auto const sql = select_sql(table_name, fields, where_exprs, orders, limit_range);
-
-    std::vector<db::column_map> result_map;
-
-    if (parameter_maps.size() > 0) {
-        for (auto &parameter_map : parameter_maps) {
-            if (auto query_result = execute_query(sql, parameter_map)) {
-                auto result_set = query_result.value();
-                while (result_set.next()) {
-                    result_map.emplace_back(result_set.column_map());
-                }
-            }
-        }
-    } else {
-        if (auto query_result = execute_query(sql)) {
-            auto result_set = query_result.value();
-            while (result_set.next()) {
-                result_map.emplace_back(result_set.column_map());
-            }
-        }
-    }
-
-    return result_map;
 }

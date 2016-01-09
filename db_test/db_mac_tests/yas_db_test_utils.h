@@ -10,6 +10,7 @@
 
 + (yas::db::database)create_test_database;
 + (yas::db::manager)create_test_manager;
++ (yas::db::manager)create_test_manager:(yas::db::model &&)model;
 + (std::string)database_path;
 + (NSString *)databasePath;
 + (void)deleteDatabase;
