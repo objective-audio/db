@@ -438,7 +438,6 @@ class db::database::impl : public base::impl {
         }
 
         row_set = db::row_set{statement, cast<db::database>()};
-        row_set.set_query(sql);
 
         open_row_sets.insert(std::make_pair(row_set.identifier(), row_set));
 
