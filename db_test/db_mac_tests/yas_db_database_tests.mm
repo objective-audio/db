@@ -153,6 +153,42 @@ using namespace yas;
     XCTAssertFalse(row_set.next());
 }
 
+- (void)test_execute_statements {
+    db::database db = [yas_db_test_utils create_test_database];
+    db.open();
+
+    std::string sql_a = db::create_table_sql("test_table_a", {"field_a", "field_b"});
+    std::string sql_b = db::create_table_sql("test_table_b", {"field_a", "field_b"});
+    auto joined_sql = joined({sql_a, sql_b}, "");
+
+    XCTAssertTrue(db.execute_statements(joined_sql));
+
+    XCTAssertTrue(db::table_exists(db, "test_table_a"));
+    XCTAssertTrue(db::table_exists(db, "test_table_b"));
+
+    std::string insert_a = "insert into test_table_a(field_a, field_b) values('value_1', 1);";
+    std::string insert_b = "insert into test_table_b(field_a, field_b) values('value_2', null);";
+    std::string joined_insert_sql = joined({insert_a, insert_b}, "");
+
+    XCTAssertTrue(db.execute_statements(joined_insert_sql));
+
+    XCTAssertTrue(db.execute_statements({"select * from test_table_a;"},
+                                        [self](db::column_map const &column_map) {
+                                            XCTAssertEqual(column_map.size(), 2);
+                                            XCTAssertEqual(column_map.at("field_a").get<db::text>(), "value_1");
+                                            XCTAssertEqual(column_map.at("field_b").get<db::text>(), "1");
+                                            return 0;
+                                        }));
+
+    XCTAssertTrue(db.execute_statements({"select * from test_table_b;"},
+                                        [self](db::column_map const &column_map) {
+                                            XCTAssertEqual(column_map.size(), 2);
+                                            XCTAssertEqual(column_map.at("field_a").get<db::text>(), "value_2");
+                                            XCTAssertTrue(column_map.at("field_b").type() == typeid(db::null));
+                                            return 0;
+                                        }));
+}
+
 - (void)test_execute_query_with_vector {
     db::database db = [yas_db_test_utils create_test_database];
     db.open();
