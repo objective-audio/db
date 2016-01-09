@@ -16,7 +16,7 @@ namespace db {
 
        public:
         using setup_completion_f = std::function<void(bool const)>;
-        using execution_f = std::function<void(database &, model const &, operation const &)>;
+        using execution_f = std::function<void(database &, operation const &)>;
 
         explicit manager(std::string const &db_path, model &&model);
         manager(std::nullptr_t);
