@@ -188,29 +188,20 @@ std::string db::value::sql() const {
 
 std::string yas::to_string(const db::value &value) {
     auto const &type = value.type();
-    std::string type_name;
-    std::string value_text;
 
     if (type == typeid(db::integer)) {
-        type_name = db::integer::name;
-        value_text = std::to_string(value.get<db::integer>());
+        return std::to_string(value.get<db::integer>());
     } else if (type == typeid(db::real)) {
-        type_name = db::real::name;
-        value_text = std::to_string(value.get<db::real>());
+        return std::to_string(value.get<db::real>());
     } else if (type == typeid(db::text)) {
-        type_name = db::text::name;
-        value_text = value.get<db::text>();
+        return value.get<db::text>();
     } else if (type == typeid(db::blob)) {
-        type_name = db::blob::name;
-        value_text = "data' size='" + std::to_string(value.get<db::blob>().size());
+        //        return "data' size='" + std::to_string(value.get<db::blob>().size());
     } else if (type == typeid(db::null)) {
-        type_name = db::null::name;
-        value_text = "null";
-    } else {
-        type_name = "unknown";
+        return "null";
     }
 
-    return "type='" + type_name + "' value='" + value_text + "'";
+    return std::string{};
 }
 
 db::time_point yas::to_time_point(db::value const &value) {

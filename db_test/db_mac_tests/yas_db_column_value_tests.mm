@@ -174,11 +174,11 @@ using namespace yas;
     db::value blob_value{db::blob{vec.data(), vec.size()}};
     db::value null_value{nullptr};
 
-    XCTAssertEqual(yas::to_string(integer_value), "type='integer' value='8'");
-    XCTAssertEqual(yas::to_string(real_value), "type='real' value='0.500000'");
-    XCTAssertEqual(yas::to_string(text_value), "type='text' value='text_value'");
-    XCTAssertEqual(yas::to_string(blob_value), "type='blob' value='data' size='2'");
-    XCTAssertEqual(yas::to_string(null_value), "type='null' value='null'");
+    XCTAssertEqual(yas::to_string(integer_value), "8");
+    XCTAssertEqual(yas::to_string(real_value), "0.500000");
+    XCTAssertEqual(yas::to_string(text_value), "text_value");
+    XCTAssertEqual(yas::to_string(blob_value), "");
+    XCTAssertEqual(yas::to_string(null_value), "null");
 }
 
 - (void)test_is_equal_blobs {
