@@ -5,7 +5,7 @@
 #include "yas_db_database.h"
 #include "yas_db_order.h"
 #include "yas_db_range.h"
-#include "yas_db_result_set.h"
+#include "yas_db_row_set.h"
 #include "yas_db_sql_utils.h"
 #include "yas_db_utils.h"
 
@@ -94,15 +94,15 @@ db::update_result db::in_save_point(db::database &db, std::function<void(bool &r
 #endif
 
 bool db::table_exists(database const &db, std::string const &table_name) {
-    if (auto result_set = get_table_schema(db, table_name)) {
-        if (result_set.next()) {
+    if (auto row_set = get_table_schema(db, table_name)) {
+        if (row_set.next()) {
             return true;
         }
     }
     return false;
 }
 
-db::result_set db::get_schema(database const &db) {
+db::row_set db::get_schema(database const &db) {
     if (auto query_result = db.execute_query(
             "select type, name, tbl_name, rootpage, sql from (select * from sqlite_master union all select * from "
             "sqlite_temp_master) where type != 'meta' and name not like 'sqlite_%' order by tbl_name, type desc, "
@@ -112,7 +112,7 @@ db::result_set db::get_schema(database const &db) {
     return nullptr;
 }
 
-db::result_set db::get_table_schema(database const &db, std::string const &table_name) {
+db::row_set db::get_table_schema(database const &db, std::string const &table_name) {
     if (auto query_result = db.execute_query("pragma table_info('" + table_name + "')")) {
         return query_result.value();
     }
@@ -123,9 +123,9 @@ bool db::column_exists(database const &db, std::string const &column_name, std::
     std::string lower_table_name = to_lower(table_name);
     std::string lower_column_name = to_lower(column_name);
 
-    if (auto result_set = get_table_schema(db, table_name)) {
-        while (result_set.next()) {
-            auto value = result_set.column_value("name");
+    if (auto row_set = get_table_schema(db, table_name)) {
+        while (row_set.next()) {
+            auto value = row_set.column_value("name");
             if (to_lower(value.get<db::text>()) == column_name) {
                 return true;
             }
@@ -146,17 +146,17 @@ std::vector<db::column_map> db::select(db::database const &db, std::string const
     if (parameter_maps.size() > 0) {
         for (auto &parameter_map : parameter_maps) {
             if (auto query_result = db.execute_query(sql, parameter_map)) {
-                auto result_set = query_result.value();
-                while (result_set.next()) {
-                    result_map.emplace_back(result_set.column_map());
+                auto row_set = query_result.value();
+                while (row_set.next()) {
+                    result_map.emplace_back(row_set.column_map());
                 }
             }
         }
     } else {
         if (auto query_result = db.execute_query(sql)) {
-            auto result_set = query_result.value();
-            while (result_set.next()) {
-                result_map.emplace_back(result_set.column_map());
+            auto row_set = query_result.value();
+            while (row_set.next()) {
+                result_map.emplace_back(row_set.column_map());
             }
         }
     }

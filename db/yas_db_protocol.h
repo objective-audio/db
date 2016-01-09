@@ -7,7 +7,7 @@
 namespace yas {
 namespace db {
     class database;
-    class result_set;
+    class row_set;
 
     struct closable {
         virtual ~closable() = default;
@@ -15,10 +15,10 @@ namespace db {
         virtual void _close() = 0;
     };
 
-    struct result_set_observable {
-        virtual ~result_set_observable() = default;
+    struct row_set_observable {
+        virtual ~row_set_observable() = default;
 
-        virtual void _result_set_did_close(const uintptr_t) = 0;
+        virtual void _row_set_did_close(const uintptr_t) = 0;
     };
 
     struct db_holdable {

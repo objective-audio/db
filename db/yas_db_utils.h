@@ -26,8 +26,8 @@ namespace db {
 #endif
 
     bool table_exists(database const &db, std::string const &table_name);
-    db::result_set get_schema(database const &db);
-    db::result_set get_table_schema(database const &db, std::string const &table_name);
+    db::row_set get_schema(database const &db);
+    db::row_set get_table_schema(database const &db, std::string const &table_name);
     bool column_exists(database const &db, std::string const &column_name, std::string const &table_name);
 
     std::vector<db::column_map> select(database const &db, std::string const &table_name,

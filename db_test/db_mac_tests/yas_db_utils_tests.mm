@@ -214,11 +214,11 @@ using namespace yas;
     std::string const sql = "create table test_table (test_field)";
     XCTAssertTrue(db.execute_update(sql));
 
-    auto result_set = db::get_schema(db);
-    XCTAssertTrue(result_set);
-    XCTAssertTrue(result_set.next());
+    auto row_set = db::get_schema(db);
+    XCTAssertTrue(row_set);
+    XCTAssertTrue(row_set.next());
 
-    auto map = result_set.column_map();
+    auto map = row_set.column_map();
 
     XCTAssertGreaterThan(map.count("sql"), 0);
     auto &sql_column_value = map.at("sql");
@@ -245,7 +245,7 @@ using namespace yas;
     XCTAssertTrue(type_column_value.type() == typeid(db::text));
     XCTAssertEqual(type_column_value.get<db::text>(), "table");
 
-    XCTAssertFalse(result_set.next());
+    XCTAssertFalse(row_set.next());
 }
 
 - (void)test_get_table_schema {
@@ -254,11 +254,11 @@ using namespace yas;
 
     XCTAssertTrue(db::create_table(db, "test_table", {"field_a", "field_b"}));
 
-    auto result_set = db::get_table_schema(db, "test_table");
-    XCTAssertTrue(result_set);
-    XCTAssertTrue(result_set.next());
+    auto row_set = db::get_table_schema(db, "test_table");
+    XCTAssertTrue(row_set);
+    XCTAssertTrue(row_set.next());
 
-    auto map = result_set.column_map();
+    auto map = row_set.column_map();
 
     XCTAssertGreaterThan(map.count("pk"), 0);
     XCTAssertGreaterThan(map.count("dflt_value"), 0);
@@ -274,13 +274,13 @@ using namespace yas;
         std::cout << pair.first << " _ " << yas::to_string(value) << std::endl;
     }
 
-    XCTAssertTrue(result_set.next());
+    XCTAssertTrue(row_set.next());
 
-    map = result_set.column_map();
+    map = row_set.column_map();
 
     XCTAssertEqual(map.at("name").get<db::text>(), "field_b");
 
-    XCTAssertFalse(result_set.next());
+    XCTAssertFalse(row_set.next());
 }
 
 - (void)test_select {
