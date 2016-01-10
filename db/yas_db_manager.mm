@@ -7,6 +7,7 @@
 #include "yas_db_order.h"
 #include "yas_db_sql_utils.h"
 #include "yas_db_utils.h"
+#include "yas_each_index.h"
 
 using namespace yas;
 
@@ -21,13 +22,38 @@ struct db::manager::impl : public base::impl {
     db::database database;
     db::model model;
     operation_queue queue;
+    db::entity_objects_map entity_objects;
 
-    impl(std::string const &path, db::model &&model) : database(path), model(std::move(model)), queue() {
+    impl(std::string const &path, db::model const &model) : database(path), model(model), queue(), entity_objects() {
+    }
+
+    void set_object(db::object const &object) {
+        auto const &entity_name = object.entity_name();
+        if (entity_objects.count(entity_name) == 0) {
+            entity_objects.emplace(std::make_pair(entity_name, object_map{}));
+        }
+
+        auto &objects = entity_objects.at(entity_name);
+
+        if (auto const &object_id_value = object.object_id()) {
+            auto const &object_id = object_id_value.get<integer>();
+            if (objects.count(object_id)) {
+                objects.erase(object_id);
+            }
+
+            objects.insert(std::make_pair(object_id, object));
+        }
+    }
+
+    void set_objects(std::vector<db::object> const &objects) {
+        for (auto const &object : objects) {
+            set_object(object);
+        }
     }
 };
 
-db::manager::manager(std::string const &db_path, db::model &&model)
-    : super_class(std::make_unique<impl>(db_path, std::move(model))) {
+db::manager::manager(std::string const &db_path, db::model const &model)
+    : super_class(std::make_unique<impl>(db_path, model)) {
 }
 
 db::manager::manager(std::nullptr_t) : super_class(nullptr) {
@@ -190,4 +216,67 @@ void db::manager::execute(execution_f &&db_execution) {
     };
 
     ip->queue.add_operation(operation{std::move(execution)});
+}
+
+void db::manager::insert_objects(std::string const &entity_name, std::size_t const count,
+                                 insert_completion_f &&completion) {
+    execute([completion = std::move(completion), manager = *this, entity_name, count](db::database & db,
+                                                                                      operation const &op) {
+        db::begin_transaction(db);
+
+        bool rollback = false;
+
+        std::vector<db::object> inserted_objects;
+        db::integer::type start_obj_id = 1;
+
+        if (auto max_value = db::max(db, entity_name, object_id_field)) {
+            start_obj_id = max_value.get<integer>() + 1;
+        }
+
+        for (auto const &idx : each_index<std::size_t>{count}) {
+            db::value obj_id_value{start_obj_id + idx};
+
+            if (!db.execute_update(db::insert_sql(entity_name, {object_id_field}), {obj_id_value})) {
+                rollback = true;
+                break;
+            }
+
+            auto maps = db::select(db, entity_name, {"*"}, db::field_expr(object_id_field, "="),
+                                   {db::column_map{std::make_pair(object_id_field, obj_id_value)}});
+
+            if (maps.size() == 0) {
+                rollback = true;
+                break;
+            }
+
+            db::object obj{manager.model(), entity_name};
+            obj.load(maps.at(0));
+            inserted_objects.emplace_back(std::move(obj));
+        }
+
+        if (rollback) {
+            db::rollback(db);
+            inserted_objects.clear();
+        } else {
+            db::commit(db);
+        }
+
+        auto lambda = [inserted_objects = std::move(inserted_objects), manager, completion = std::move(completion)]() {
+            manager.impl_ptr<impl>()->set_objects(inserted_objects);
+            completion(inserted_objects);
+        };
+
+        dispatch_sync(dispatch_get_main_queue(), std::move(lambda));
+    });
+}
+
+db::object const &db::manager::cached_object(std::string const &entity_name, db::integer::type object_id) {
+    auto &entity_objects = impl_ptr<impl>()->entity_objects;
+    if (entity_objects.count(entity_name) > 0) {
+        auto &objects = entity_objects.at(entity_name);
+        if (objects.count(object_id)) {
+            return objects.at(object_id);
+        }
+    }
+    return db::object::empty();
 }

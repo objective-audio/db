@@ -198,4 +198,29 @@ using namespace yas;
     [self waitForExpectationsWithTimeout:1.0 handler:nil];
 }
 
+- (void)test_insert_objects {
+    db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
+    auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
+
+    XCTestExpectation *expectation = [self expectationWithDescription:@"insert"];
+
+    manager.setup([self](bool const success) { XCTAssertTrue(success); });
+
+    manager.insert_objects("sample_a", 3, [self, expectation](std::vector<db::object> const &objects) {
+        XCTAssertEqual(objects.size(), 3);
+        XCTAssertEqual(objects.at(0).object_id(), db::value{1});
+        XCTAssertEqual(objects.at(1).object_id(), db::value{2});
+        XCTAssertEqual(objects.at(2).object_id(), db::value{3});
+        [expectation fulfill];
+    });
+
+    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+
+    auto &object_1 = manager.cached_object("sample_a", 1);
+    XCTAssertTrue(object_1);
+    XCTAssertEqual(object_1.object_id(), db::value{1});
+
+    XCTAssertFalse(manager.cached_object("sample_a", 4));
+}
+
 @end
