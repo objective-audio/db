@@ -61,6 +61,9 @@ struct db::model::impl : public base::impl {
             auto id_attr = attribute::id_attribute();
             attributes.emplace(std::make_pair(id_attr.name, std::move(id_attr)));
 
+            auto obj_id_attr = attribute::object_id_attribute();
+            attributes.emplace(std::make_pair(obj_id_attr.name, std::move(obj_id_attr)));
+
             CFDictionaryRef cf_attributes = get<CFDictionaryRef>(cf_entity_dict, attributes_key);
             if (cf_attributes) {
                 for (auto &cf_attribute_pair : each_dictionary{cf_attributes}) {
