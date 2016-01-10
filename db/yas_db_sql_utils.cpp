@@ -91,16 +91,16 @@ std::string yas::db::select_sql(std::string const &table_name, std::vector<std::
 
     stream << "select " << joined_fields << " from " << table_name;
 
+    if (where_exprs.size() > 0) {
+        stream << " where " << where_exprs;
+    }
+
     if (orders.size() > 0) {
         stream << " order by " << joined_orders(orders);
     }
 
     if (!limit_range.is_empty()) {
         stream << " limit " << limit_range.sql();
-    }
-
-    if (where_exprs.size() > 0) {
-        stream << " where " << where_exprs;
     }
 
     stream << ";";

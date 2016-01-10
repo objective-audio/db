@@ -65,7 +65,7 @@ using namespace yas;
                                      {{"field_c", db::order::ascending}, {"field_d", db::order::descending}}, {10, 20});
     XCTAssertEqual(
         select_sql,
-        "select field_a, field_b from test_table order by field_c asc, field_d desc limit 10, 20 where abc = :def;");
+        "select field_a, field_b from test_table where abc = :def order by field_c asc, field_d desc limit 10, 20;");
 }
 
 @end
