@@ -74,3 +74,7 @@ db::attribute db::attribute::id_attribute() {
 db::attribute db::attribute::object_id_attribute() {
     return db::attribute{object_id_field, db::integer::name, db::value{0}, true};
 }
+
+db::attribute db::attribute::removed_attribute() {
+    return db::attribute{removed_field, db::integer::name, nullptr};
+}

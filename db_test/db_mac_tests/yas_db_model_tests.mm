@@ -32,7 +32,7 @@ using namespace yas;
 
     auto &entity = entities.at("sample_a");
     auto &attributes = entity.attributes;
-    XCTAssertEqual(attributes.size(), 6);
+    XCTAssertEqual(attributes.size(), 7);
 
     auto &id_attr = attributes.at(db::id_field);
     XCTAssertEqual(id_attr.name, "id");
@@ -40,6 +40,24 @@ using namespace yas;
     XCTAssertTrue(id_attr.default_value.type() == typeid(db::null));
     XCTAssertEqual(id_attr.not_null, false);
     XCTAssertEqual(id_attr.primary, true);
+    XCTAssertEqual(id_attr.unique, false);
+
+    auto &object_id_attr = attributes.at(db::object_id_field);
+    XCTAssertEqual(object_id_attr.name, "obj_id");
+    XCTAssertEqual(object_id_attr.type, "integer");
+    XCTAssertTrue(object_id_attr.default_value.type() == typeid(db::integer));
+    XCTAssertEqual(object_id_attr.default_value.get<db::integer>(), 0);
+    XCTAssertEqual(object_id_attr.not_null, true);
+    XCTAssertEqual(object_id_attr.primary, false);
+    XCTAssertEqual(object_id_attr.unique, false);
+
+    auto &removed_attr = attributes.at(db::removed_field);
+    XCTAssertEqual(removed_attr.name, "removed");
+    XCTAssertEqual(removed_attr.type, "integer");
+    XCTAssertTrue(removed_attr.default_value.type() == typeid(db::null));
+    XCTAssertEqual(removed_attr.not_null, false);
+    XCTAssertEqual(removed_attr.primary, false);
+    XCTAssertEqual(removed_attr.unique, false);
 
     auto &age = attributes.at("age");
     XCTAssertEqual(age.name, "age");
@@ -48,6 +66,7 @@ using namespace yas;
     XCTAssertEqual(age.default_value.get<db::integer>(), 10);
     XCTAssertEqual(age.not_null, true);
     XCTAssertEqual(age.primary, false);
+    XCTAssertEqual(age.unique, false);
 
     auto &name = attributes.at("name");
     XCTAssertEqual(name.name, "name");
@@ -56,6 +75,7 @@ using namespace yas;
     XCTAssertEqual(name.default_value.get<db::text>(), "default_value");
     XCTAssertEqual(name.not_null, false);
     XCTAssertEqual(name.primary, false);
+    XCTAssertEqual(name.unique, false);
 
     auto &weight = attributes.at("weight");
     XCTAssertEqual(weight.name, "weight");
@@ -64,6 +84,7 @@ using namespace yas;
     XCTAssertEqual(weight.default_value.get<db::real>(), 65.4);
     XCTAssertEqual(weight.not_null, false);
     XCTAssertEqual(weight.primary, false);
+    XCTAssertEqual(weight.unique, false);
 
     auto &data = attributes.at("data");
     XCTAssertEqual(data.name, "data");
@@ -71,10 +92,11 @@ using namespace yas;
     XCTAssertTrue(data.default_value.type() == typeid(db::null));
     XCTAssertEqual(data.not_null, false);
     XCTAssertEqual(data.primary, false);
+    XCTAssertEqual(data.unique, false);
 
     auto &entity_b = entities.at("sample_b");
     auto &attributes_b = entity_b.attributes;
-    XCTAssertEqual(attributes_b.size(), 3);
+    XCTAssertEqual(attributes_b.size(), 4);
 
     auto &id_attr_b = attributes_b.at(db::id_field);
     XCTAssertEqual(id_attr_b.name, "id");
@@ -82,6 +104,24 @@ using namespace yas;
     XCTAssertTrue(id_attr_b.default_value.type() == typeid(db::null));
     XCTAssertEqual(id_attr_b.not_null, false);
     XCTAssertEqual(id_attr_b.primary, true);
+    XCTAssertEqual(id_attr_b.unique, false);
+
+    auto &object_id_attr_b = attributes.at(db::object_id_field);
+    XCTAssertEqual(object_id_attr_b.name, "obj_id");
+    XCTAssertEqual(object_id_attr_b.type, "integer");
+    XCTAssertTrue(object_id_attr_b.default_value.type() == typeid(db::integer));
+    XCTAssertEqual(object_id_attr_b.default_value.get<db::integer>(), 0);
+    XCTAssertEqual(object_id_attr_b.not_null, true);
+    XCTAssertEqual(object_id_attr_b.primary, false);
+    XCTAssertEqual(object_id_attr_b.unique, false);
+
+    auto &removed_attr_b = attributes.at(db::removed_field);
+    XCTAssertEqual(removed_attr_b.name, "removed");
+    XCTAssertEqual(removed_attr_b.type, "integer");
+    XCTAssertTrue(removed_attr_b.default_value.type() == typeid(db::null));
+    XCTAssertEqual(removed_attr_b.not_null, false);
+    XCTAssertEqual(removed_attr_b.primary, false);
+    XCTAssertEqual(removed_attr_b.unique, false);
 
     auto &name_b = attributes_b.at("name");
     XCTAssertEqual(name_b.name, "name");
@@ -89,6 +129,7 @@ using namespace yas;
     XCTAssertTrue(name_b.default_value.type() == typeid(db::null));
     XCTAssertEqual(name_b.not_null, false);
     XCTAssertEqual(name_b.primary, false);
+    XCTAssertEqual(name_b.unique, false);
 
     auto &relations = entity.relations;
     XCTAssertEqual(relations.size(), 1);

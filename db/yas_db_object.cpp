@@ -5,6 +5,7 @@
 #include "yas_db_entity.h"
 #include "yas_db_model.h"
 #include "yas_db_object.h"
+#include "yas_stl_utils.h"
 
 using namespace yas;
 
@@ -18,7 +19,22 @@ struct db::object::impl : public base::impl {
         : model(model), entity_name(entity_name), status(db::object::status::invalid) {
     }
 
+    void clear() {
+        values.clear();
+        status = db::object::status::invalid;
+    }
+
+    bool is_removed() {
+        if (values.count(removed_field)) {
+            return values.at(removed_field).get<integer>() > 0;
+        }
+
+        return false;
+    }
+
     void load(db::column_map const &vals) {
+        clear();
+
         db::entity const &entity = model.entities().at(entity_name);
         for (auto const &pair : entity.attributes) {
             auto const &attr_name = pair.first;
@@ -34,6 +50,7 @@ struct db::object::impl : public base::impl {
         if (values.count(column_name)) {
             return values.at(column_name);
         }
+
         return db::value::empty();
     }
 
@@ -44,6 +61,22 @@ struct db::object::impl : public base::impl {
         values.emplace(std::make_pair(attr_name, value));
 
         status = db::object::status::updated;
+    }
+
+    void remove() {
+        if (is_removed()) {
+            return;
+        }
+
+        erase_if(values, [](auto const &pair) {
+            auto const &column_name = pair.first;
+            if (column_name == id_field || column_name == object_id_field || column_name == removed_field) {
+                return false;
+            }
+            return true;
+        });
+
+        set(removed_field, db::value{true});
     }
 };
 
@@ -80,6 +113,14 @@ enum db::object::status db::object::status() const {
 
 db::value const &db::object::object_id() const {
     return get(object_id_field);
+}
+
+void db::object::remove() {
+    impl_ptr<impl>()->remove();
+}
+
+bool db::object::is_removed() const {
+    return impl_ptr<impl>()->is_removed();
 }
 
 db::object const &db::object::empty() {
