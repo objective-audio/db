@@ -10,6 +10,7 @@
 #include "yas_base.h"
 #include "yas_db_protocol.h"
 #include "yas_db_result_code.h"
+#include "yas_db_row_set.h"
 #include "yas_db_value.h"
 #include "yas_result.h"
 

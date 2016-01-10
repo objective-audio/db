@@ -7,7 +7,6 @@
 namespace yas {
 namespace db {
     class database;
-    class row_set;
 
     struct closable {
         virtual ~closable() = default;
