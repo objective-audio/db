@@ -163,3 +163,13 @@ std::vector<db::column_map> db::select(db::database const &db, std::string const
 
     return result_map;
 }
+
+db::value db::max(database const &db, std::string const &table_name, std::string const &field) {
+    if (auto query_result = db.execute_query("select max(" + field + ") from " + table_name + ";")) {
+        auto &row_set = query_result.value();
+        if (row_set.next()) {
+            return row_set.column_value(0);
+        }
+    }
+    return nullptr;
+}

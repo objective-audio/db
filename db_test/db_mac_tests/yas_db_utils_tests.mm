@@ -301,4 +301,28 @@ using namespace yas;
     XCTAssertEqual(result_map.size(), 1);
 }
 
+- (void)test_max {
+    db::database db = [yas_db_test_utils create_test_database];
+    db.open();
+
+    auto const table = "table_a";
+    auto const field = "field_a";
+
+    XCTAssertTrue(db::create_table(db, table, {field}));
+
+    XCTAssertEqual(db::max(db, table, field), nullptr);
+
+    XCTAssertTrue(db.execute_update(db::insert_sql(table, {field}), {db::value{1}}));
+
+    XCTAssertEqual(db::max(db, table, field), db::value{1});
+
+    XCTAssertTrue(db.execute_update(db::insert_sql(table, {field}), {db::value{10}}));
+
+    XCTAssertEqual(db::max(db, table, field), db::value{10});
+
+    XCTAssertTrue(db.execute_update(db::insert_sql(table, {field}), {db::value{5}}));
+
+    XCTAssertEqual(db::max(db, table, field), db::value{10});
+}
+
 @end
