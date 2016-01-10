@@ -35,5 +35,7 @@ namespace db {
                                        std::vector<db::column_map> const &parameter_maps = {},
                                        std::vector<db::field_order> const &orders = {},
                                        db::range const &limit_range = db::range::empty());
+    
+    db::value max(database const &db, std::string const &table_name, std::string const &field);
 }
 }
