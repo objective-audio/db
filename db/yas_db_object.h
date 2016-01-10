@@ -20,7 +20,6 @@ namespace db {
             invalid,
             saved,
             updated,
-            deleted,
         };
 
         object(model const &model, std::string const &entity_name);
@@ -37,7 +36,10 @@ namespace db {
         status status() const;
 
         db::value const &object_id() const;
-        
+
+        void remove();
+        bool is_removed() const;
+
         static db::object const &empty();
 
        private:

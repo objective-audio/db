@@ -33,9 +33,10 @@ using namespace yas;
     XCTAssertEqual(obj.get("name"), nullptr);
     XCTAssertEqual(obj.get("weight"), nullptr);
     XCTAssertEqual(obj.object_id(), nullptr);
+    XCTAssertFalse(obj.is_removed());
 }
 
-- (void)test_load_attributes {
+- (void)test_load {
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
     db::object obj{model, "sample_a"};
@@ -48,6 +49,26 @@ using namespace yas;
     XCTAssertEqual(obj.get("age"), db::value{10});
     XCTAssertEqual(obj.get("name"), db::value{"name_val"});
     XCTAssertEqual(obj.get("weight"), db::value{53.4});
+    XCTAssertEqual(obj.get("hoge"), nullptr);
+}
+
+- (void)test_reload {
+    NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
+    db::model model((__bridge CFDictionaryRef)model_dict);
+    db::object obj{model, "sample_a"};
+
+    db::column_map prev_values{std::make_pair("age", db::value{10}), std::make_pair("name", db::value{"name_val"}),
+                               std::make_pair("weight", db::value{53.4}), std::make_pair("hoge", db::value{"hage"})};
+
+    obj.load(prev_values);
+
+    db::column_map post_values{std::make_pair("age", db::value{543}), std::make_pair("hoge", db::value{"poke"})};
+
+    obj.load(post_values);
+
+    XCTAssertEqual(obj.get("age"), db::value{543});
+    XCTAssertEqual(obj.get("name"), nullptr);
+    XCTAssertEqual(obj.get("weight"), nullptr);
     XCTAssertEqual(obj.get("hoge"), nullptr);
 }
 
@@ -77,6 +98,28 @@ using namespace yas;
     obj.set("age", db::value{5});
 
     XCTAssertEqual(obj.get("age"), db::value{5});
+}
+
+- (void)test_remove {
+    NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
+    db::model model((__bridge CFDictionaryRef)model_dict);
+    db::object obj{model, "sample_a"};
+
+    XCTAssertFalse(obj.is_removed());
+
+    obj.set(db::id_field, db::value{11});
+    obj.set(db::object_id_field, db::value{45});
+    obj.set("name", db::value{"tanaka"});
+
+    XCTAssertEqual(obj.get(db::object_id_field), db::value{45});
+    XCTAssertEqual(obj.get("name"), db::value{"tanaka"});
+
+    obj.remove();
+
+    XCTAssertTrue(obj.is_removed());
+    XCTAssertEqual(obj.get("name"), nullptr);
+    XCTAssertEqual(obj.get(db::id_field), db::value{11});
+    XCTAssertEqual(obj.get(db::object_id_field), db::value{45});
 }
 
 @end
