@@ -19,8 +19,9 @@ namespace db {
         relations_map const relations;
 
         entity(std::string const &name, attributes_map &&attributes, relations_map &&relations);
-        
-        std::string sql() const;
+
+        std::string sql_for_create() const;
+        std::string sql_for_update() const;
     };
 }
 }

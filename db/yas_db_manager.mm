@@ -115,7 +115,7 @@ void db::manager::setup(setup_completion_f &&completion) {
                                 }
                             } else {
                                 // create table
-                                if (!db.execute_update(entity.sql())) {
+                                if (!db.execute_update(entity.sql_for_create())) {
                                     result = false;
                                     break;
                                 }
@@ -158,7 +158,7 @@ void db::manager::setup(setup_completion_f &&completion) {
                         auto const &entities = model.entities();
                         for (auto &entity_pair : entities) {
                             auto &entity = entity_pair.second;
-                            if (!db.execute_update(entity.sql())) {
+                            if (!db.execute_update(entity.sql_for_create())) {
                                 result = false;
                                 break;
                             }
