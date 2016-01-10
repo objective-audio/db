@@ -126,6 +126,11 @@ using namespace yas;
     XCTAssertEqual(value.get<db::null>(), nullptr);
 }
 
+- (void)test_empty_value {
+    db::value const &empty_value = db::value::empty();
+    XCTAssertEqual(empty_value, nullptr);
+}
+
 - (void)test_no_copy {
     std::vector<UInt8> vec{10};
     db::value value{vec.data(), vec.size(), yas::db::no_copy_tag};
