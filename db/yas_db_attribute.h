@@ -10,6 +10,7 @@
 namespace yas {
 namespace db {
     static std::string const id_field = "id";
+    static std::string const object_id_field = "obj_id";
 
     struct attribute {
         std::string const name;
@@ -26,6 +27,7 @@ namespace db {
         std::string sql() const;
 
         static attribute id_attribute();
+        static attribute object_id_attribute();
 
        private:
     };

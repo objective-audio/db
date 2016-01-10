@@ -32,7 +32,7 @@ using namespace yas;
 
     auto &entity = entities.at("sample_a");
     auto &attributes = entity.attributes;
-    XCTAssertEqual(attributes.size(), 5);
+    XCTAssertEqual(attributes.size(), 6);
 
     auto &id_attr = attributes.at(db::id_field);
     XCTAssertEqual(id_attr.name, "id");
@@ -74,7 +74,7 @@ using namespace yas;
 
     auto &entity_b = entities.at("sample_b");
     auto &attributes_b = entity_b.attributes;
-    XCTAssertEqual(attributes_b.size(), 2);
+    XCTAssertEqual(attributes_b.size(), 3);
 
     auto &id_attr_b = attributes_b.at(db::id_field);
     XCTAssertEqual(id_attr_b.name, "id");

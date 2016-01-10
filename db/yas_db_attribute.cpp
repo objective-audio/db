@@ -70,3 +70,7 @@ std::string db::attribute::sql() const {
 db::attribute db::attribute::id_attribute() {
     return db::attribute{id_field, db::integer::name, nullptr, false, true};
 }
+
+db::attribute db::attribute::object_id_attribute() {
+    return db::attribute{object_id_field, db::integer::name, db::value{0}, true};
+}
