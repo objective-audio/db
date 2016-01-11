@@ -60,7 +60,7 @@ struct db::object::impl : public base::impl {
         }
         values.emplace(std::make_pair(attr_name, value));
 
-        status = db::object::status::updated;
+        status = db::object::status::changed;
     }
 
     void remove() {
