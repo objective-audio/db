@@ -19,7 +19,8 @@ namespace db {
         enum class status {
             invalid,
             saved,
-            updated,
+            changed,
+            updating,
         };
 
         object(model const &model, std::string const &entity_name);
