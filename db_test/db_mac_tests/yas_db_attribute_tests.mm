@@ -86,7 +86,7 @@ using namespace yas;
 }
 
 - (void)test_create_id_attribute {
-    auto attr = db::attribute::id_attribute();
+    auto const &attr = db::attribute::id_attribute();
 
     XCTAssertEqual(attr.name, "id");
     XCTAssertEqual(attr.type, "integer");
@@ -142,7 +142,7 @@ using namespace yas;
 }
 
 - (void)test_id_sql {
-    auto attr = db::attribute::id_attribute();
+    auto const &attr = db::attribute::id_attribute();
 
     XCTAssertEqual(attr.sql(), "id integer primary key");
 }

@@ -67,14 +67,22 @@ std::string db::attribute::sql() const {
     return stream.str();
 }
 
-db::attribute db::attribute::id_attribute() {
-    return db::attribute{id_field, db::integer::name, nullptr, false, true};
+db::attribute const &db::attribute::id_attribute() {
+    static db::attribute const attr{id_field, db::integer::name, nullptr, false, true};
+    return attr;
 }
 
-db::attribute db::attribute::object_id_attribute() {
-    return db::attribute{object_id_field, db::integer::name, db::value{0}, true};
+db::attribute const &db::attribute::object_id_attribute() {
+    static db::attribute const attr{object_id_field, db::integer::name, db::value{0}, true};
+    return attr;
 }
 
-db::attribute db::attribute::removed_attribute() {
-    return db::attribute{removed_field, db::integer::name, nullptr};
+db::attribute const &db::attribute::save_id_attribute() {
+    static db::attribute const attr{save_id_field, db::integer::name, db::value{0}, true};
+    return attr;
+}
+
+db::attribute const &db::attribute::removed_attribute() {
+    static db::attribute const attr{removed_field, db::integer::name, nullptr};
+    return attr;
 }
