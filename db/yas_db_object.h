@@ -41,6 +41,8 @@ namespace db {
         void remove();
         bool is_removed() const;
 
+        db::column_map parameters() const;
+
         static db::object const &empty();
 
        private:
