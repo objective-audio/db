@@ -9,6 +9,7 @@ namespace db {
     class database;
 
     using select_result = result<std::vector<db::column_map>, db::error>;
+    using select_single_result = result<db::column_map, std::nullptr_t>;
 
     update_result create_table(database &db, std::string const &table_name, std::vector<std::string> const &fields);
     update_result alter_table(database &db, std::string const &table_name, std::string const &field);
@@ -37,6 +38,7 @@ namespace db {
                          std::vector<db::field_order> const &orders = {},
                          db::range const &limit_range = db::range::empty());
     select_result select_last(database const &db, std::string const &table_name);
+    select_single_result select_db_info(database const &db);
 
     db::value max(database const &db, std::string const &table_name, std::string const &field);
 }

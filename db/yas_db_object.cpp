@@ -131,6 +131,10 @@ db::value const &db::object::object_id() const {
     return get(object_id_field);
 }
 
+db::value const &db::object::save_id() const {
+    return get(save_id_field);
+}
+
 void db::object::remove() {
     impl_ptr<impl>()->remove();
 }
