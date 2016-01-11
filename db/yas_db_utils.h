@@ -8,7 +8,7 @@ namespace yas {
 namespace db {
     class database;
 
-    using select_result = result<std::vector<db::column_map>, db::error>;
+    using select_result = result<db::column_maps, db::error>;
     using select_single_result = result<db::column_map, std::nullptr_t>;
 
     update_result create_table(database &db, std::string const &table_name, std::vector<std::string> const &fields);

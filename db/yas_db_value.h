@@ -114,6 +114,8 @@ namespace db {
 
     using column_vector = std::vector<value>;
     using column_map = std::unordered_map<std::string, value>;
+    using column_maps = std::vector<db::column_map>;
+    using column_maps_map = std::unordered_map<std::string, column_maps>;
     using time_point = std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>;
 }
 
