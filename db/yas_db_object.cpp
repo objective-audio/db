@@ -78,6 +78,22 @@ struct db::object::impl : public base::impl {
 
         set(removed_field, db::value{true});
     }
+
+    db::column_map parameters() {
+        db::column_map params;
+
+        db::entity const &entity = model.entities().at(entity_name);
+        for (auto const &pair : entity.attributes) {
+            auto const &attr_name = pair.first;
+            if (values.count(attr_name)) {
+                params.insert(std::make_pair(attr_name, values.at(attr_name)));
+            } else {
+                params.insert(std::make_pair(attr_name, pair.second.default_value));
+            }
+        }
+
+        return params;
+    }
 };
 
 db::object::object(db::model const &model, std::string const &entity_name)
@@ -121,6 +137,10 @@ void db::object::remove() {
 
 bool db::object::is_removed() const {
     return impl_ptr<impl>()->is_removed();
+}
+
+db::column_map db::object::parameters() const {
+    return impl_ptr<impl>()->parameters();
 }
 
 db::object const &db::object::empty() {
