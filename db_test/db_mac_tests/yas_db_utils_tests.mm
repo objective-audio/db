@@ -296,9 +296,10 @@ using namespace yas;
 
     std::vector<db::column_map> param_maps{{std::make_pair(field_a, db::value{"value_a_2"})}};
 
-    auto result_map = db::select(db, table, {field_a, field_b}, db::field_expr(field_a, "="), param_maps);
+    auto const select_result = db::select(db, table, {field_a, field_b}, db::field_expr(field_a, "="), param_maps);
 
-    XCTAssertEqual(result_map.size(), 1);
+    XCTAssertTrue(select_result);
+    XCTAssertEqual(select_result.value().size(), 1);
 }
 
 - (void)test_select_last {
