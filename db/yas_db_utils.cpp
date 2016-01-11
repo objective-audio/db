@@ -4,6 +4,7 @@
 
 #include "yas_db_attribute.h"
 #include "yas_db_database.h"
+#include "yas_db_manager.h"
 #include "yas_db_order.h"
 #include "yas_db_range.h"
 #include "yas_db_row_set.h"
@@ -164,7 +165,7 @@ db::select_result db::select_last(database const &db, std::string const &table_n
 }
 
 db::select_single_result db::select_db_info(database const &db) {
-    if (auto const &select_result = select(db, "db_info", {"*"})) {
+    if (auto const &select_result = select(db, db::info_table, {"*"})) {
         if (select_result.value().size() > 0) {
             return select_single_result{std::move(select_result.value().at(0))};
         }

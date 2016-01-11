@@ -12,6 +12,9 @@
 
 namespace yas {
 namespace db {
+    static auto constexpr info_table = "db_info";
+    static auto constexpr version_field = "version";
+
     class manager : public base {
         using super_class = base;
 

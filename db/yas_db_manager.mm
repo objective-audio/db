@@ -11,13 +11,6 @@
 
 using namespace yas;
 
-namespace yas {
-namespace db {
-    static auto constexpr info_table = "db_info";
-    static auto constexpr version_field = "version";
-}
-}
-
 struct db::manager::impl : public base::impl {
     db::database database;
     db::model model;

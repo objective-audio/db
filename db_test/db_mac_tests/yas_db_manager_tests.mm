@@ -81,11 +81,11 @@ using namespace yas;
     manager.setup([self](bool const success) { XCTAssertTrue(success); });
 
     manager.execute([self, expectation](db::database &db, auto const &op) {
-        XCTAssertTrue(db::table_exists(db, "db_info"));
-        auto select_infos_result = db::select(db, "db_info", {"*"});
+        XCTAssertTrue(db::table_exists(db, db::info_table));
+        auto select_infos_result = db::select(db, db::info_table, {"*"});
         XCTAssertTrue(select_infos_result);
         XCTAssertEqual(select_infos_result.value().size(), 1);
-        XCTAssertEqual(select_infos_result.value().at(0).at("version").get<db::text>(), "0.0.1");
+        XCTAssertEqual(select_infos_result.value().at(0).at(db::version_field).get<db::text>(), "0.0.1");
 
         XCTAssertTrue(db::table_exists(db, "sample_a"));
         auto select_result_a = db::select(db, "sample_a", {"*"});
@@ -136,7 +136,7 @@ using namespace yas;
             rollback = true;
         }
 
-        if (!db.execute_update(db::update_sql("db_info", {db::save_id_field}, ""), {db::value{100}})) {
+        if (!db.execute_update(db::update_sql(db::info_table, {db::save_id_field}, ""), {db::value{100}})) {
             rollback = true;
         }
 
@@ -163,11 +163,11 @@ using namespace yas;
     manager.setup([self](bool const success) { XCTAssertTrue(success); });
 
     manager.execute([self, second_expectation](db::database &db, auto const &) {
-        XCTAssertTrue(db::table_exists(db, "db_info"));
-        auto select_infos_result = db::select(db, "db_info", {"*"});
+        XCTAssertTrue(db::table_exists(db, db::info_table));
+        auto select_infos_result = db::select(db, db::info_table, {"*"});
         XCTAssertTrue(select_infos_result);
         XCTAssertEqual(select_infos_result.value().size(), 1);
-        XCTAssertEqual(select_infos_result.value().at(0).at("version").get<db::text>(), "0.0.2");
+        XCTAssertEqual(select_infos_result.value().at(0).at(db::version_field).get<db::text>(), "0.0.2");
         XCTAssertEqual(select_infos_result.value().at(0).at(db::save_id_field).get<db::integer>(), 100);
 
         XCTAssertTrue(db::table_exists(db, "sample_a"));
