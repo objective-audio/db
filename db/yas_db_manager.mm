@@ -66,21 +66,22 @@ void db::manager::setup(setup_completion_f &&completion) {
 
             if (db::begin_transaction(db)) {
                 if (db::table_exists(db, info_table)) {
-                    auto infos = db::select(db, {info_table}, {version_field}, "", {},
-                                            {yas::db::field_order{version_field, yas::db::order::ascending}});
-                    if (infos.size() == 0) {
-                        result = false;
-                    } else {
+                    auto select_result = db::select(db, {info_table}, {version_field}, "", {},
+                                                    {yas::db::field_order{version_field, yas::db::order::ascending}});
+                    if (select_result) {
                         auto sql = update_sql(info_table, {version_field}, "");
                         if (!db.execute_update(update_sql(info_table, {version_field}, ""),
                                                {db::value{model.version().str()}})) {
                             result = false;
                         }
+                    } else {
+                        result = false;
                     }
 
                     bool needs_migration = false;
 
                     if (result) {
+                        auto const &infos = select_result.value();
                         auto const &info = *infos.rbegin();
                         if (info.count(version_field) == 0) {
                             result = false;

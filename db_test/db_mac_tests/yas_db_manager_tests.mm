@@ -82,17 +82,20 @@ using namespace yas;
 
     manager.execute([self, expectation](db::database &db, auto const &op) {
         XCTAssertTrue(db::table_exists(db, "db_info"));
-        auto db_infos = db::select(db, "db_info", {"*"});
-        XCTAssertEqual(db_infos.size(), 1);
-        XCTAssertEqual(db_infos.at(0).at("version").get<db::text>(), "0.0.1");
+        auto select_infos_result = db::select(db, "db_info", {"*"});
+        XCTAssertTrue(select_infos_result);
+        XCTAssertEqual(select_infos_result.value().size(), 1);
+        XCTAssertEqual(select_infos_result.value().at(0).at("version").get<db::text>(), "0.0.1");
 
         XCTAssertTrue(db::table_exists(db, "sample_a"));
-        auto selected_samples = db::select(db, "sample_a", {"*"});
-        XCTAssertEqual(selected_samples.size(), 0);
+        auto select_result_a = db::select(db, "sample_a", {"*"});
+        XCTAssertTrue(select_result_a);
+        XCTAssertEqual(select_result_a.value().size(), 0);
 
         XCTAssertTrue(db::table_exists(db, "rel_sample_a_child"));
-        auto selected_rels = db::select(db, "rel_sample_a_child", {"*"});
-        XCTAssertEqual(selected_rels.size(), 0);
+        auto select_rels_result = db::select(db, "rel_sample_a_child", {"*"});
+        XCTAssertTrue(select_rels_result);
+        XCTAssertEqual(select_rels_result.value().size(), 0);
 
         [expectation fulfill];
     });
