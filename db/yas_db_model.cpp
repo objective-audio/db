@@ -64,6 +64,9 @@ struct db::model::impl : public base::impl {
             auto const &obj_id_attr = attribute::object_id_attribute();
             attributes.emplace(std::make_pair(obj_id_attr.name, obj_id_attr));
 
+            auto const &save_id_attr = attribute::save_id_attribute();
+            attributes.emplace(std::make_pair(save_id_attr.name, save_id_attr));
+
             auto const &removed_attr = attribute::removed_attribute();
             attributes.emplace(std::make_pair(removed_attr.name, removed_attr));
 

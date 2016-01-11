@@ -32,7 +32,7 @@ using namespace yas;
 
     auto &entity = entities.at("sample_a");
     auto &attributes = entity.attributes;
-    XCTAssertEqual(attributes.size(), 7);
+    XCTAssertEqual(attributes.size(), 8);
 
     auto &id_attr = attributes.at(db::id_field);
     XCTAssertEqual(id_attr.name, "id");
@@ -50,6 +50,15 @@ using namespace yas;
     XCTAssertEqual(object_id_attr.not_null, true);
     XCTAssertEqual(object_id_attr.primary, false);
     XCTAssertEqual(object_id_attr.unique, false);
+
+    auto &save_id_attr = attributes.at(db::save_id_field);
+    XCTAssertEqual(save_id_attr.name, "save_id");
+    XCTAssertEqual(save_id_attr.type, "integer");
+    XCTAssertTrue(save_id_attr.default_value.type() == typeid(db::integer));
+    XCTAssertEqual(save_id_attr.default_value.get<db::integer>(), 0);
+    XCTAssertEqual(save_id_attr.not_null, true);
+    XCTAssertEqual(save_id_attr.primary, false);
+    XCTAssertEqual(save_id_attr.unique, false);
 
     auto &removed_attr = attributes.at(db::removed_field);
     XCTAssertEqual(removed_attr.name, "removed");
@@ -96,7 +105,7 @@ using namespace yas;
 
     auto &entity_b = entities.at("sample_b");
     auto &attributes_b = entity_b.attributes;
-    XCTAssertEqual(attributes_b.size(), 4);
+    XCTAssertEqual(attributes_b.size(), 5);
 
     auto &id_attr_b = attributes_b.at(db::id_field);
     XCTAssertEqual(id_attr_b.name, "id");
@@ -114,6 +123,15 @@ using namespace yas;
     XCTAssertEqual(object_id_attr_b.not_null, true);
     XCTAssertEqual(object_id_attr_b.primary, false);
     XCTAssertEqual(object_id_attr_b.unique, false);
+    
+    auto &save_id_attr_b = attributes.at(db::save_id_field);
+    XCTAssertEqual(save_id_attr_b.name, "save_id");
+    XCTAssertEqual(save_id_attr_b.type, "integer");
+    XCTAssertTrue(save_id_attr_b.default_value.type() == typeid(db::integer));
+    XCTAssertEqual(save_id_attr_b.default_value.get<db::integer>(), 0);
+    XCTAssertEqual(save_id_attr_b.not_null, true);
+    XCTAssertEqual(save_id_attr_b.primary, false);
+    XCTAssertEqual(save_id_attr_b.unique, false);
 
     auto &removed_attr_b = attributes.at(db::removed_field);
     XCTAssertEqual(removed_attr_b.name, "removed");
