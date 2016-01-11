@@ -33,7 +33,7 @@ namespace db {
     bool column_exists(database const &db, std::string const &column_name, std::string const &table_name);
 
     select_result select(database const &db, std::string const &table_name, std::vector<std::string> const &fields,
-                         std::string const &where_exprs = "", std::vector<db::column_map> const &parameter_maps = {},
+                         std::string const &where_exprs = "", db::column_map const args = {},
                          std::vector<db::field_order> const &orders = {},
                          db::range const &limit_range = db::range::empty());
     select_result select_last(database const &db, std::string const &table_name);

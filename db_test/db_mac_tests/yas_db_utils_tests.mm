@@ -294,9 +294,8 @@ using namespace yas;
     db::column_vector args_2{db::value{"value_a_2"}, db::value{"value_b_2"}};
     XCTAssertTrue(db.execute_update(db::insert_sql(table, {field_a, field_b}), std::move(args_2)));
 
-    std::vector<db::column_map> param_maps{{std::make_pair(field_a, db::value{"value_a_2"})}};
-
-    auto const select_result = db::select(db, table, {field_a, field_b}, db::field_expr(field_a, "="), param_maps);
+    db::column_map sel_args{std::make_pair(field_a, db::value{"value_a_2"})};
+    auto const select_result = db::select(db, table, {field_a, field_b}, db::field_expr(field_a, "="), sel_args);
 
     XCTAssertTrue(select_result);
     XCTAssertEqual(select_result.value().size(), 1);
