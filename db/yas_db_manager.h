@@ -33,7 +33,7 @@ namespace db {
 
         void insert_objects(std::string const &entity_name, std::size_t const count, insert_completion_f &&completion);
 
-        db::object const &cached_object(std::string const &entity_name, db::integer::type object_id);
+        db::object const &cached_object(std::string const &entity_name, db::integer::type object_id) const;
 
        private:
         class impl;
