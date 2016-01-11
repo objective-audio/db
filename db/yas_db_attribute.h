@@ -28,10 +28,10 @@ namespace db {
 
         std::string sql() const;
 
-        static attribute id_attribute();
-        static attribute object_id_attribute();
-        static attribute save_id_attribute();
-        static attribute removed_attribute();
+        static attribute const &id_attribute();
+        static attribute const &object_id_attribute();
+        static attribute const &save_id_attribute();
+        static attribute const &removed_attribute();
 
        private:
     };

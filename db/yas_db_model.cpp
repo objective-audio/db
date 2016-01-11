@@ -58,14 +58,14 @@ struct db::model::impl : public base::impl {
 
             attributes_map attributes;
 
-            auto id_attr = attribute::id_attribute();
-            attributes.emplace(std::make_pair(id_attr.name, std::move(id_attr)));
+            auto const &id_attr = attribute::id_attribute();
+            attributes.emplace(std::make_pair(id_attr.name, id_attr));
 
-            auto obj_id_attr = attribute::object_id_attribute();
-            attributes.emplace(std::make_pair(obj_id_attr.name, std::move(obj_id_attr)));
+            auto const &obj_id_attr = attribute::object_id_attribute();
+            attributes.emplace(std::make_pair(obj_id_attr.name, obj_id_attr));
 
-            auto removed_attr = attribute::removed_attribute();
-            attributes.emplace(std::make_pair(removed_attr.name, std::move(removed_attr)));
+            auto const &removed_attr = attribute::removed_attribute();
+            attributes.emplace(std::make_pair(removed_attr.name, removed_attr));
 
             CFDictionaryRef cf_attributes = get<CFDictionaryRef>(cf_entity_dict, attributes_key);
             if (cf_attributes) {
