@@ -271,7 +271,7 @@ void db::manager::insert_objects(std::string const &entity_name, std::size_t con
     });
 }
 
-db::object const &db::manager::cached_object(std::string const &entity_name, db::integer::type object_id) {
+db::object const &db::manager::cached_object(std::string const &entity_name, db::integer::type object_id) const {
     auto &entity_objects = impl_ptr<impl>()->entity_objects;
     if (entity_objects.count(entity_name) > 0) {
         auto &objects = entity_objects.at(entity_name);
