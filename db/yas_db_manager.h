@@ -19,8 +19,26 @@ namespace db {
         using super_class = base;
 
        public:
-        using setup_completion_f = std::function<void(bool const)>;
-        using insert_completion_f = std::function<void(std::vector<db::object> const &)>;
+        enum class setup_error {
+            unknown,
+            begin_transaction_failed,
+            select_info_failed,
+            update_info_failed,
+            version_not_found,
+            invalid_version_text,
+            alter_entity_table_failed,
+            create_info_table_failed,
+            insert_info_failed,
+            create_entity_table_failed,
+            create_relation_table_failed
+        };
+        enum class insert_error { unknown, insert_failed, select_failed, save_id_not_found, update_save_id_failed };
+
+        using setup_result = result<std::nullptr_t, setup_error>;
+        using insert_result = result<std::vector<db::object>, insert_error>;
+
+        using setup_completion_f = std::function<void(setup_result const &)>;
+        using insert_completion_f = std::function<void(insert_result const &)>;
         using execution_f = std::function<void(database &, operation const &)>;
 
         explicit manager(std::string const &db_path, model const &model);
