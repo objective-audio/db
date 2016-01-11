@@ -73,8 +73,8 @@ db::manager::manager(std::nullptr_t) : super_class(nullptr) {
 void db::manager::setup(setup_completion_f &&completion) {
     execute([completion = std::move(completion), model = impl_ptr<impl>()->model, manager = *this](
         db::database & db, operation const &op) {
-        bool result = true;
         db::column_map db_info;
+        setup_result result{nullptr};
 
         if (db::begin_transaction(db)) {
             if (db::table_exists(db, info_table)) {
@@ -83,10 +83,10 @@ void db::manager::setup(setup_completion_f &&completion) {
                 if (select_result) {
                     if (!db.execute_update(update_sql(info_table, {version_field}, ""),
                                            {db::value{model.version().str()}})) {
-                        result = false;
+                        result = setup_result{setup_error::update_info_failed};
                     }
                 } else {
-                    result = false;
+                    result = setup_result{setup_error::select_info_failed};
                 }
 
                 bool needs_migration = false;
@@ -95,11 +95,11 @@ void db::manager::setup(setup_completion_f &&completion) {
                     auto const &infos = select_result.value();
                     auto const &info = *infos.rbegin();
                     if (info.count(version_field) == 0) {
-                        result = false;
+                        result = setup_result{setup_error::version_not_found};
                     } else {
                         auto db_version_str = info.at(version_field).get<text>();
                         if (db_version_str.size() == 0) {
-                            result = false;
+                            result = setup_result{setup_error::invalid_version_text};
                         } else {
                             auto const db_version = yas::version{db_version_str};
                             if (db_version < model.version()) {
@@ -120,7 +120,7 @@ void db::manager::setup(setup_completion_f &&completion) {
                                 if (!db::column_exists(db, attr_pair.first, entity_name)) {
                                     auto const &attr = attr_pair.second;
                                     if (!db.execute_update(alter_table_sql(entity_name, attr.sql()))) {
-                                        result = false;
+                                        result = setup_result{setup_error::alter_entity_table_failed};
                                         break;
                                     }
                                 }
@@ -128,7 +128,7 @@ void db::manager::setup(setup_completion_f &&completion) {
                         } else {
                             // create table
                             if (!db.execute_update(entity.sql_for_create())) {
-                                result = false;
+                                result = setup_result{setup_error::create_entity_table_failed};
                                 break;
                             }
                         }
@@ -140,7 +140,7 @@ void db::manager::setup(setup_completion_f &&completion) {
                         for (auto &rel_pair : entity.relations) {
                             auto &relation = rel_pair.second;
                             if (!db.execute_update(relation.sql())) {
-                                result = false;
+                                result = setup_result{setup_error::create_relation_table_failed};
                                 break;
                             }
                         }
@@ -154,13 +154,13 @@ void db::manager::setup(setup_completion_f &&completion) {
                 // create information table
 
                 if (!db.execute_update(db::create_table_sql(info_table, {version_field, save_id_field}))) {
-                    result = false;
+                    result = setup_result{setup_error::create_info_table_failed};
                 }
 
                 if (result) {
                     db::column_map args{std::make_pair(version_field, db::value{model.version().str()})};
                     if (!db.execute_update(db::insert_sql(info_table, {version_field}), args)) {
-                        result = false;
+                        result = setup_result{setup_error::insert_info_failed};
                     }
                 }
 
@@ -171,14 +171,14 @@ void db::manager::setup(setup_completion_f &&completion) {
                     for (auto &entity_pair : entities) {
                         auto &entity = entity_pair.second;
                         if (!db.execute_update(entity.sql_for_create())) {
-                            result = false;
+                            result = setup_result{setup_error::create_entity_table_failed};
                             break;
                         }
 
                         for (auto &rel_pair : entity.relations) {
                             auto &relation = rel_pair.second;
                             if (!db.execute_update(relation.sql())) {
-                                result = false;
+                                result = setup_result{setup_error::create_relation_table_failed};
                                 break;
                             }
                         }
@@ -190,7 +190,7 @@ void db::manager::setup(setup_completion_f &&completion) {
                 }
             }
         } else {
-            result = false;
+            result = setup_result{setup_error::begin_transaction_failed};
         }
 
         if (result) {
@@ -205,7 +205,8 @@ void db::manager::setup(setup_completion_f &&completion) {
             db::rollback(db);
         }
 
-        auto lambda = [completion = std::move(completion), result, manager, db_info = std::move(db_info)]() {
+        auto lambda =
+            [completion = std::move(completion), result = std::move(result), manager, db_info = std::move(db_info)]() {
             if (result) {
                 manager.impl_ptr<impl>()->set_db_info(db_info);
             }

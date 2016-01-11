@@ -78,7 +78,7 @@ using namespace yas;
 
     XCTestExpectation *expectation = [self expectationWithDescription:@"setup"];
 
-    manager.setup([self](bool const success) { XCTAssertTrue(success); });
+    manager.setup([self](auto const &result) { XCTAssertTrue(result); });
 
     manager.execute([self, expectation](db::database &db, auto const &op) {
         XCTAssertTrue(db::table_exists(db, db::info_table));
@@ -109,7 +109,7 @@ using namespace yas;
 
     XCTestExpectation *first_expectation = [self expectationWithDescription:@"setup_1"];
 
-    manager.setup([self](bool const success) { XCTAssertTrue(success); });
+    manager.setup([self](auto const &result) { XCTAssertTrue(result); });
 
     manager.execute([self, first_expectation](db::database &db, auto const &) {
         db::begin_transaction(db);
@@ -160,7 +160,7 @@ using namespace yas;
     db::model model_0_0_2{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_2]};
     manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_2)];
 
-    manager.setup([self](bool const success) { XCTAssertTrue(success); });
+    manager.setup([self](auto const &result) { XCTAssertTrue(result); });
 
     manager.execute([self, second_expectation](db::database &db, auto const &) {
         XCTAssertTrue(db::table_exists(db, db::info_table));
@@ -216,8 +216,8 @@ using namespace yas;
 
     XCTestExpectation *expectation_1 = [self expectationWithDescription:@"insert_1"];
 
-    manager.setup([self, &manager](bool const success) {
-        XCTAssertTrue(success);
+    manager.setup([self, &manager](auto const &result) {
+        XCTAssertTrue(result);
         XCTAssertEqual(manager.save_id(), 0);
     });
 
