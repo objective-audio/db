@@ -163,6 +163,15 @@ db::select_result db::select_last(database const &db, std::string const &table_n
     return select(db, table_name, {"*"}, where_expr);
 }
 
+db::select_single_result db::select_db_info(database const &db) {
+    if (auto const &select_result = select(db, "db_info", {"*"})) {
+        if (select_result.value().size() > 0) {
+            return select_single_result{std::move(select_result.value().at(0))};
+        }
+    }
+    return select_single_result{nullptr};
+}
+
 db::value db::max(database const &db, std::string const &table_name, std::string const &field) {
     if (auto query_result = db.execute_query("select max(" + field + ") from " + table_name + ";")) {
         auto &row_set = query_result.value();

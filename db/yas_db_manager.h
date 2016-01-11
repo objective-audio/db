@@ -28,6 +28,7 @@ namespace db {
         std::string const &database_path() const;
         const database &database() const;
         const model &model() const;
+        db::integer::type save_id() const;
 
         void execute(execution_f &&execution);
 

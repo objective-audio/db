@@ -136,6 +136,10 @@ using namespace yas;
             rollback = true;
         }
 
+        if (!db.execute_update(db::update_sql("db_info", {db::save_id_field}, ""), {db::value{100}})) {
+            rollback = true;
+        }
+
         XCTAssertFalse(rollback);
 
         if (rollback) {
@@ -164,6 +168,7 @@ using namespace yas;
         XCTAssertTrue(select_infos_result);
         XCTAssertEqual(select_infos_result.value().size(), 1);
         XCTAssertEqual(select_infos_result.value().at(0).at("version").get<db::text>(), "0.0.2");
+        XCTAssertEqual(select_infos_result.value().at(0).at(db::save_id_field).get<db::integer>(), 100);
 
         XCTAssertTrue(db::table_exists(db, "sample_a"));
         auto select_result_a = db::select(db, "sample_a", {"*"});
@@ -209,25 +214,50 @@ using namespace yas;
     db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
 
-    XCTestExpectation *expectation = [self expectationWithDescription:@"insert"];
+    XCTestExpectation *expectation_1 = [self expectationWithDescription:@"insert_1"];
 
-    manager.setup([self](bool const success) { XCTAssertTrue(success); });
+    manager.setup([self, &manager](bool const success) {
+        XCTAssertTrue(success);
+        XCTAssertEqual(manager.save_id(), 0);
+    });
 
-    manager.insert_objects("sample_a", 3, [self, expectation](std::vector<db::object> const &objects) {
+    manager.insert_objects("sample_a", 3, [self, expectation_1](std::vector<db::object> const &objects) {
         XCTAssertEqual(objects.size(), 3);
         XCTAssertEqual(objects.at(0).object_id(), db::value{1});
         XCTAssertEqual(objects.at(1).object_id(), db::value{2});
         XCTAssertEqual(objects.at(2).object_id(), db::value{3});
-        [expectation fulfill];
+
+        XCTAssertEqual(objects.at(0).save_id(), db::value{1});
+        XCTAssertEqual(objects.at(1).save_id(), db::value{1});
+        XCTAssertEqual(objects.at(2).save_id(), db::value{1});
+
+        [expectation_1 fulfill];
     });
 
     [self waitForExpectationsWithTimeout:1.0 handler:nil];
+
+    XCTAssertEqual(manager.save_id(), 1);
+
+    XCTestExpectation *expectation_2 = [self expectationWithDescription:@"insert_2"];
+
+    manager.insert_objects("sample_a", 1, [self, expectation_2](std::vector<db::object> const &objects) {
+        XCTAssertEqual(objects.size(), 1);
+        XCTAssertEqual(objects.at(0).object_id(), db::value{4});
+
+        XCTAssertEqual(objects.at(0).save_id(), db::value{2});
+
+        [expectation_2 fulfill];
+    });
+
+    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+
+    XCTAssertEqual(manager.save_id(), 2);
 
     auto &object_1 = manager.cached_object("sample_a", 1);
     XCTAssertTrue(object_1);
     XCTAssertEqual(object_1.object_id(), db::value{1});
 
-    XCTAssertFalse(manager.cached_object("sample_a", 4));
+    XCTAssertFalse(manager.cached_object("sample_a", 5));
 }
 
 @end

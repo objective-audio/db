@@ -37,6 +37,7 @@ namespace db {
         status status() const;
 
         db::value const &object_id() const;
+        db::value const &save_id() const;
 
         void remove();
         bool is_removed() const;
