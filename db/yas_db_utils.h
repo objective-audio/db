@@ -8,12 +8,7 @@ namespace yas {
 namespace db {
     class database;
 
-    enum class select_error {
-        query_failed,
-        not_found,
-    };
-
-    using select_result = result<std::vector<db::column_map>, select_error>;
+    using select_result = result<std::vector<db::column_map>, db::error>;
 
     update_result create_table(database &db, std::string const &table_name, std::vector<std::string> const &fields);
     update_result alter_table(database &db, std::string const &table_name, std::string const &field);
@@ -37,13 +32,11 @@ namespace db {
     db::row_set get_table_schema(database const &db, std::string const &table_name);
     bool column_exists(database const &db, std::string const &column_name, std::string const &table_name);
 
+    select_result select(database const &db, std::string const &table_name, std::vector<std::string> const &fields,
+                         std::string const &where_exprs = "", db::column_map const args = {},
+                         std::vector<db::field_order> const &orders = {},
+                         db::range const &limit_range = db::range::empty());
     select_result select_last(database const &db, std::string const &table_name);
-
-    std::vector<db::column_map> select(database const &db, std::string const &table_name,
-                                       std::vector<std::string> const &fields, std::string const &where_exprs = "",
-                                       std::vector<db::column_map> const &parameter_maps = {},
-                                       std::vector<db::field_order> const &orders = {},
-                                       db::range const &limit_range = db::range::empty());
 
     db::value max(database const &db, std::string const &table_name, std::string const &field);
 }

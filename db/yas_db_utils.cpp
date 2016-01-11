@@ -136,55 +136,31 @@ bool db::column_exists(database const &db, std::string const &column_name, std::
     return false;
 }
 
-db::select_result db::select_last(database const &db, std::string const &table_name) {
-    std::string where_expr =
-        "rowid in (select max(rowid) from " + table_name + " group by " + db::object_id_field + ")";
+db::select_result db::select(db::database const &db, std::string const &table_name,
+                             std::vector<std::string> const &fields, std::string const &where_exprs,
+                             db::column_map const args, std::vector<db::field_order> const &orders,
+                             db::range const &limit_range) {
+    auto const sql = select_sql(table_name, fields, where_exprs, orders, limit_range);
 
-    std::string sql = select_sql(table_name, {"*"}, where_expr);
+    std::vector<db::column_map> column_map;
 
-    if (auto query_result = db.execute_query(sql)) {
+    auto query_result = db.execute_query(sql, args);
+    if (query_result) {
         auto row_set = query_result.value();
-        std::vector<db::column_map> column_map;
         while (row_set.next()) {
             column_map.emplace_back(row_set.column_map());
         }
-        if (column_map.size() > 0) {
-            return select_result{column_map};
-        } else {
-            return select_result{select_error::not_found};
-        }
     } else {
-        return select_result{select_error::query_failed};
+        return select_result{std::move(query_result.error())};
     }
+
+    return select_result{column_map};
 }
 
-std::vector<db::column_map> db::select(db::database const &db, std::string const &table_name,
-                                       std::vector<std::string> const &fields, std::string const &where_exprs,
-                                       std::vector<db::column_map> const &parameter_maps,
-                                       std::vector<db::field_order> const &orders, db::range const &limit_range) {
-    auto const sql = select_sql(table_name, fields, where_exprs, orders, limit_range);
-
-    std::vector<db::column_map> result_map;
-
-    if (parameter_maps.size() > 0) {
-        for (auto &parameter_map : parameter_maps) {
-            if (auto query_result = db.execute_query(sql, parameter_map)) {
-                auto row_set = query_result.value();
-                while (row_set.next()) {
-                    result_map.emplace_back(row_set.column_map());
-                }
-            }
-        }
-    } else {
-        if (auto query_result = db.execute_query(sql)) {
-            auto row_set = query_result.value();
-            while (row_set.next()) {
-                result_map.emplace_back(row_set.column_map());
-            }
-        }
-    }
-
-    return result_map;
+db::select_result db::select_last(database const &db, std::string const &table_name) {
+    std::string where_expr =
+        "rowid in (select max(rowid) from " + table_name + " group by " + db::object_id_field + ")";
+    return select(db, table_name, {"*"}, where_expr);
 }
 
 db::value db::max(database const &db, std::string const &table_name, std::string const &field) {

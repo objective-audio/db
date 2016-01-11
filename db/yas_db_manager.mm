@@ -66,21 +66,22 @@ void db::manager::setup(setup_completion_f &&completion) {
 
             if (db::begin_transaction(db)) {
                 if (db::table_exists(db, info_table)) {
-                    auto infos = db::select(db, {info_table}, {version_field}, "", {},
-                                            {yas::db::field_order{version_field, yas::db::order::ascending}});
-                    if (infos.size() == 0) {
-                        result = false;
-                    } else {
+                    auto select_result = db::select(db, {info_table}, {version_field}, "", {},
+                                                    {yas::db::field_order{version_field, yas::db::order::ascending}});
+                    if (select_result) {
                         auto sql = update_sql(info_table, {version_field}, "");
                         if (!db.execute_update(update_sql(info_table, {version_field}, ""),
                                                {db::value{model.version().str()}})) {
                             result = false;
                         }
+                    } else {
+                        result = false;
                     }
 
                     bool needs_migration = false;
 
                     if (result) {
+                        auto const &infos = select_result.value();
                         auto const &info = *infos.rbegin();
                         if (info.count(version_field) == 0) {
                             result = false;
@@ -241,16 +242,16 @@ void db::manager::insert_objects(std::string const &entity_name, std::size_t con
                 break;
             }
 
-            auto maps = db::select(db, entity_name, {"*"}, db::field_expr(object_id_field, "="),
-                                   {db::column_map{std::make_pair(object_id_field, obj_id_value)}});
+            auto const &select_result = db::select(db, entity_name, {"*"}, db::field_expr(object_id_field, "="),
+                                                   {db::column_map{std::make_pair(object_id_field, obj_id_value)}});
 
-            if (maps.size() == 0) {
+            if (!select_result) {
                 rollback = true;
                 break;
             }
 
             db::object obj{manager.model(), entity_name};
-            obj.load(maps.at(0));
+            obj.load(select_result.value().at(0));
             inserted_objects.emplace_back(std::move(obj));
         }
 
