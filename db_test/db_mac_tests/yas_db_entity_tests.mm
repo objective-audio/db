@@ -33,7 +33,8 @@ using namespace yas;
     XCTAssertEqual(entity.attributes.size(), 1);
     XCTAssertEqual(entity.relations.size(), 1);
 
-    XCTAssertEqual(entity.sql(), "create table if not exists entity_name (attr_name integer default 1);");
+    XCTAssertEqual(entity.sql_for_create(), "create table if not exists entity_name (attr_name integer default 1);");
+    XCTAssertEqual(entity.sql_for_update(), "update entity_name set attr_name = :attr_name where (id = :id);");
 }
 
 @end
