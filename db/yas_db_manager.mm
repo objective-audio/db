@@ -259,10 +259,12 @@ void db::manager::insert_objects(std::string const &entity_name, std::size_t con
         db::database & db, operation const &op) {
         db::begin_transaction(db);
 
-        bool rollback = false;
-
+        db::column_map db_info;
         column_maps_map inserted_objects;
         db::integer::type start_obj_id = 1;
+
+        using insert_state = result<std::nullptr_t, insert_error>;
+        insert_state state{nullptr};
 
         if (auto max_value = db::max(db, entity_name, object_id_field)) {
             start_obj_id = max_value.get<integer>() + 1;
@@ -275,7 +277,7 @@ void db::manager::insert_objects(std::string const &entity_name, std::size_t con
 
             if (!db.execute_update(db::insert_sql(entity_name, {object_id_field, save_id_field}),
                                    db::column_vector{obj_id_value, save_id_value})) {
-                rollback = true;
+                state = insert_state{insert_error::insert_failed};
                 break;
             }
 
@@ -283,7 +285,7 @@ void db::manager::insert_objects(std::string const &entity_name, std::size_t con
                                                    {db::column_map{std::make_pair(object_id_field, obj_id_value)}});
 
             if (!select_result) {
-                rollback = true;
+                state = insert_state{insert_error::select_failed};
                 break;
             }
 
@@ -294,41 +296,39 @@ void db::manager::insert_objects(std::string const &entity_name, std::size_t con
             inserted_objects.at(entity_name).emplace_back(std::move(select_result.value().at(0)));
         }
 
-        db::column_map db_info;
-
-        if (!rollback) {
+        if (state) {
             if (db.execute_update(update_sql(info_table, {save_id_field}, ""), {save_id_value})) {
                 auto const &select_result = db::select_db_info(db);
                 if (!select_result) {
-                    rollback = true;
+                    state = insert_state{insert_error::save_id_not_found};
                 } else {
                     db_info = select_result.value();
                 }
             } else {
-                rollback = true;
+                state = insert_state{insert_error::update_save_id_failed};
             }
         }
 
-        if (rollback) {
+        if (state) {
+            db::commit(db);
+        } else {
             db::rollback(db);
             inserted_objects.clear();
-        } else {
-            db::commit(db);
         }
 
         auto lambda = [
-            rollback,
+            state = std::move(state),
             inserted_objects = std::move(inserted_objects),
             manager,
             completion = std::move(completion),
             db_info = std::move(db_info)
         ]() {
-            if (!rollback) {
+            if (state) {
                 manager.impl_ptr<impl>()->set_db_info(db_info);
                 auto loaded_objects = manager.impl_ptr<impl>()->load_objects(inserted_objects);
-                completion(std::move(loaded_objects));
+                completion(insert_result{std::move(loaded_objects)});
             } else {
-                completion({});
+                completion(insert_result{state.error()});
             }
         };
 

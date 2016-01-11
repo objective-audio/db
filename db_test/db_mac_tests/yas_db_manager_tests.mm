@@ -221,7 +221,11 @@ using namespace yas;
         XCTAssertEqual(manager.save_id(), 0);
     });
 
-    manager.insert_objects("sample_a", 3, [self, expectation_1](std::vector<db::object> const &objects) {
+    manager.insert_objects("sample_a", 3, [self, expectation_1](auto const &insert_result) {
+        XCTAssertTrue(insert_result);
+
+        auto const &objects = insert_result.value();
+
         XCTAssertEqual(objects.size(), 3);
         XCTAssertEqual(objects.at(0).object_id(), db::value{1});
         XCTAssertEqual(objects.at(1).object_id(), db::value{2});
@@ -240,7 +244,11 @@ using namespace yas;
 
     XCTestExpectation *expectation_2 = [self expectationWithDescription:@"insert_2"];
 
-    manager.insert_objects("sample_a", 1, [self, expectation_2](std::vector<db::object> const &objects) {
+    manager.insert_objects("sample_a", 1, [self, expectation_2](auto const &insert_result) {
+        XCTAssertTrue(insert_result);
+
+        auto const &objects = insert_result.value();
+
         XCTAssertEqual(objects.size(), 1);
         XCTAssertEqual(objects.at(0).object_id(), db::value{4});
 
