@@ -142,19 +142,19 @@ db::select_result db::select(db::database const &db, std::string const &table_na
                              db::range const &limit_range) {
     auto const sql = select_sql(table_name, fields, where_exprs, orders, limit_range);
 
-    std::vector<db::column_map> column_map;
+    db::column_maps column_maps;
 
     auto query_result = db.execute_query(sql, args);
     if (query_result) {
         auto row_set = query_result.value();
         while (row_set.next()) {
-            column_map.emplace_back(row_set.column_map());
+            column_maps.emplace_back(row_set.column_map());
         }
     } else {
         return select_result{std::move(query_result.error())};
     }
 
-    return select_result{column_map};
+    return select_result{column_maps};
 }
 
 db::select_result db::select_last(database const &db, std::string const &table_name) {

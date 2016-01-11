@@ -28,28 +28,41 @@ struct db::manager::impl : public base::impl {
     impl(std::string const &path, db::model const &model) : database(path), model(model), queue(), entity_objects() {
     }
 
-    void set_object(db::object const &object) {
-        auto const &entity_name = object.entity_name();
+    db::object const &load_object(std::string const &entity_name, db::column_map const &map) {
         if (entity_objects.count(entity_name) == 0) {
             entity_objects.emplace(std::make_pair(entity_name, object_map{}));
         }
 
         auto &objects = entity_objects.at(entity_name);
 
-        if (auto const &object_id_value = object.object_id()) {
+        if (auto const &object_id_value = map.at(object_id_field)) {
             auto const &object_id = object_id_value.get<integer>();
-            if (objects.count(object_id)) {
-                objects.erase(object_id);
+            if (objects.count(object_id) > 0) {
+                objects.at(object_id).load(map);
+            } else {
+                db::object obj{model, entity_name};
+                obj.load(map);
+                objects.emplace(std::make_pair(object_id, std::move(obj)));
             }
-
-            objects.insert(std::make_pair(object_id, object));
+            return objects.at(object_id);
+        } else {
+            throw "object_id not found.";
         }
+
+        return db::object::empty();
     }
 
-    void set_objects(std::vector<db::object> const &objects) {
-        for (auto const &object : objects) {
-            set_object(object);
+    std::vector<db::object> load_objects(column_maps_map const &entity_maps) {
+        std::vector<db::object> objects;
+        for (auto const &entity_pair : entity_maps) {
+            auto const &entity_name = entity_pair.first;
+            for (auto const &map : entity_pair.second) {
+                if (auto const &obj = load_object(entity_name, map)) {
+                    objects.push_back(obj);
+                }
+            }
         }
+        return objects;
     }
 
     void set_db_info(db::column_map const &info) {
@@ -255,7 +268,7 @@ void db::manager::insert_objects(std::string const &entity_name, std::size_t con
 
         bool rollback = false;
 
-        std::vector<db::object> inserted_objects;
+        column_maps_map inserted_objects;
         db::integer::type start_obj_id = 1;
 
         if (auto max_value = db::max(db, entity_name, object_id_field)) {
@@ -281,9 +294,11 @@ void db::manager::insert_objects(std::string const &entity_name, std::size_t con
                 break;
             }
 
-            db::object obj{manager.model(), entity_name};
-            obj.load(select_result.value().at(0));
-            inserted_objects.emplace_back(std::move(obj));
+            if (inserted_objects.count(entity_name) == 0) {
+                inserted_objects.emplace(std::make_pair(entity_name, column_maps{}));
+            }
+
+            inserted_objects.at(entity_name).emplace_back(std::move(select_result.value().at(0)));
         }
 
         db::column_map db_info;
@@ -316,10 +331,12 @@ void db::manager::insert_objects(std::string const &entity_name, std::size_t con
             db_info = std::move(db_info)
         ]() {
             if (!rollback) {
-                manager.impl_ptr<impl>()->set_objects(inserted_objects);
                 manager.impl_ptr<impl>()->set_db_info(db_info);
+                auto loaded_objects = manager.impl_ptr<impl>()->load_objects(inserted_objects);
+                completion(std::move(loaded_objects));
+            } else {
+                completion({});
             }
-            completion(inserted_objects);
         };
 
         dispatch_sync(dispatch_get_main_queue(), std::move(lambda));
