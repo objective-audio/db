@@ -122,4 +122,36 @@ using namespace yas;
     XCTAssertEqual(obj.get(db::object_id_field), db::value{45});
 }
 
+- (void)test_parameters_for_save {
+    NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
+    db::model model((__bridge CFDictionaryRef)model_dict);
+    db::object obj{model, "sample_a"};
+
+    obj.set(db::id_field, db::value{22});
+    obj.set(db::object_id_field, db::value{55});
+    obj.set("name", db::value{"suzuki"});
+    obj.set("age", db::value{32});
+    obj.set("weight", db::value{90.1});
+    obj.set("data", db::value::empty());
+    obj.set(db::save_id_field, db::value{100});
+
+    auto params = obj.parameters_for_save();
+
+    XCTAssertGreaterThan(params.size(), 6);
+    XCTAssertEqual(params.count(db::id_field), 1);
+    XCTAssertEqual(params.at(db::id_field), db::value{22});
+    XCTAssertEqual(params.count(db::object_id_field), 1);
+    XCTAssertEqual(params.at(db::object_id_field), db::value{55});
+    XCTAssertEqual(params.count("name"), 1);
+    XCTAssertEqual(params.at("name"), db::value{"suzuki"});
+    XCTAssertEqual(params.count("age"), 1);
+    XCTAssertEqual(params.at("age"), db::value{32});
+    XCTAssertEqual(params.count("weight"), 1);
+    XCTAssertEqual(params.at("weight"), db::value{90.1});
+    XCTAssertEqual(params.count("data"), 1);
+    XCTAssertEqual(params.at("data"), db::value::empty());
+
+    XCTAssertEqual(params.count(db::save_id_field), 0);
+}
+
 @end

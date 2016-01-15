@@ -21,3 +21,14 @@ std::string db::entity::sql_for_update() const {
     auto mapped_fields = map<std::string>(attributes, [](auto const &pair) { return pair.first; });
     return db::update_sql(name, mapped_fields, field_expr(id_field, "="));
 }
+
+std::string db::entity::sql_for_insert() const {
+    std::vector<std::string> mapped_fields;
+    for (auto const &pair : attributes) {
+        auto const &field_name = pair.first;
+        if (field_name != id_field) {
+            mapped_fields.push_back(field_name);
+        }
+    }
+    return db::insert_sql(name, mapped_fields);
+}

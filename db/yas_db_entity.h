@@ -22,6 +22,7 @@ namespace db {
 
         std::string sql_for_create() const;
         std::string sql_for_update() const;
+        std::string sql_for_insert() const;
     };
 }
 }

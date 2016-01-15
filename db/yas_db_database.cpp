@@ -29,6 +29,31 @@ db::sqlite_result_code::operator bool() const {
     return value == SQLITE_OK || value == SQLITE_DONE;
 }
 
+#pragma mark - error
+
+db::error::error(std::nullptr_t) : _type(error_type::none), _code(0), _message() {
+}
+
+db::error::error(error_type const type, sqlite_result_code const &code, std::string const &message)
+    : _type(type), _code(code), _message(message) {
+}
+
+db::error::operator bool() const {
+    return _type != error_type::none;
+}
+
+db::error_type const &db::error::type() const {
+    return _type;
+}
+
+db::sqlite_result_code const &db::error::code() const {
+    return _code;
+}
+
+std::string const &db::error::message() const {
+    return _message;
+}
+
 #pragma mark - impl
 
 class db::database::impl : public base::impl {
@@ -220,11 +245,11 @@ class db::database::impl : public base::impl {
     update_result execute_update(std::string const &sql, std::vector<db::value> const &vec,
                                  std::unordered_map<std::string, db::value> const &map) {
         if (!database_exists()) {
-            return update_result{error_type::closed};
+            return update_result{error{error_type::closed}};
         }
 
         if (is_executing_statement) {
-            return update_result{error_type::in_use};
+            return update_result{error{error_type::in_use}};
         }
 
         is_executing_statement = true;
@@ -280,7 +305,7 @@ class db::database::impl : public base::impl {
         if (idx != query_count) {
             sqlite3_finalize(stmt);
             is_executing_statement = false;
-            return update_result{error_type::invalid_query_count};
+            return update_result{error{error_type::invalid_query_count}};
         }
 
         result_code = sqlite3_step(stmt);
@@ -374,11 +399,11 @@ class db::database::impl : public base::impl {
 
     db::query_result execute_query(std::string const &sql, column_vector const &vec, column_map const &map) {
         if (!database_exists()) {
-            return query_result{error_type::closed};
+            return query_result{error{error_type::closed}};
         }
 
         if (is_executing_statement) {
-            return query_result{error_type::in_use};
+            return query_result{error{error_type::in_use}};
         }
 
         is_executing_statement = true;
@@ -687,4 +712,24 @@ std::chrono::time_point<std::chrono::system_clock> db::database::start_busy_retr
 
 void db::database::_row_set_did_close(uintptr_t const id) {
     impl_ptr<impl>()->open_row_sets.erase(id);
+}
+
+#pragma mark -
+
+std::string yas::to_string(db::error_type const &error_type) {
+    switch (error_type) {
+        case db::error_type::closed:
+            return "closed";
+        case db::error_type::in_use:
+            return "in_use";
+        case db::error_type::invalid_query_count:
+            return "invalid_query_count";
+        case db::error_type::invalid_argument:
+            return "invalid_argument";
+        case db::error_type::sqlite:
+            return "sqlite";
+        case db::error_type::none:
+            return "none";
+    }
+    return std::string();
 }

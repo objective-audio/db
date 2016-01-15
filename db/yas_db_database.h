@@ -30,6 +30,7 @@ namespace db {
     };
 
     enum class error_type {
+        none,
         closed,
         in_use,
         invalid_query_count,
@@ -38,21 +39,14 @@ namespace db {
     };
 
     struct error {
-        error(error_type const type, sqlite_result_code const &code = 0, std::string const &message = "")
-            : _type(type), _code(code), _message(message) {
-        }
+        error(std::nullptr_t);
+        explicit error(error_type const type, sqlite_result_code const &code = 0, std::string const &message = "");
 
-        error_type const &type() const {
-            return _type;
-        }
+        explicit operator bool() const;
 
-        sqlite_result_code const &code() const {
-            return _code;
-        }
-
-        std::string const &message() const {
-            return _message;
-        }
+        error_type const &type() const;
+        sqlite_result_code const &code() const;
+        std::string const &message() const;
 
        private:
         error_type _type;
@@ -124,4 +118,5 @@ namespace db {
         void _row_set_did_close(uintptr_t const) override;
     };
 }
+std::string to_string(db::error_type const &);
 }

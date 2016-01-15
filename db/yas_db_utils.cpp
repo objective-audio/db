@@ -54,21 +54,21 @@ namespace db {
 
 db::update_result db::start_save_point(db::database &db, std::string const &name) {
     if (name.size() == 0) {
-        return update_result{error_type::invalid_argument};
+        return update_result{error{error_type::invalid_argument}};
     }
     return db.execute_update("savepoint '" + escape_save_point_name(name) + "';");
 }
 
 db::update_result db::release_save_point(db::database &db, std::string const &name) {
     if (name.size() == 0) {
-        return update_result{error_type::invalid_argument};
+        return update_result{error{error_type::invalid_argument}};
     }
     return db.execute_update("release savepoint '" + escape_save_point_name(name) + "';");
 }
 
 db::update_result db::rollback_save_point(db::database &db, std::string const &name) {
     if (name.size() == 0) {
-        return update_result{error_type::invalid_argument};
+        return update_result{error{error_type::invalid_argument}};
     }
     return db.execute_update("rollback transaction to savepoint '" + escape_save_point_name(name) + "';");
 }
