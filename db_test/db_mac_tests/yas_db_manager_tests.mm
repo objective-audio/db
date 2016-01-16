@@ -52,7 +52,7 @@ using namespace yas;
     manager.execute([self, expectation](db::database &db, auto const &operation) {
         XCTAssertTrue(db.execute_update(db::create_table_sql("test_table", {"field_a", "field_b"})));
 
-        db::column_vector args{db::value{"value_a"}, db::value{"value_b"}};
+        db::value_vector args{db::value{"value_a"}, db::value{"value_b"}};
         XCTAssertTrue(db.execute_update("insert into test_table(field_a, field_b) values(:field_a, :field_b)", args));
 
         auto query_result = db.execute_query("select * from test_table");
@@ -132,7 +132,7 @@ using namespace yas;
         auto &tgt_id = select_result_b.value().at(0).at(db::id_field);
 
         auto sql = db::insert_sql("rel_sample_a_child", {db::src_id_field, db::tgt_id_field});
-        if (!db.execute_update(sql, db::column_vector{src_id, tgt_id})) {
+        if (!db.execute_update(sql, db::value_vector{src_id, tgt_id})) {
             rollback = true;
         }
 

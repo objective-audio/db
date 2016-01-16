@@ -139,23 +139,23 @@ bool db::column_exists(database const &db, std::string const &column_name, std::
 
 db::select_result db::select(db::database const &db, std::string const &table_name,
                              std::vector<std::string> const &fields, std::string const &where_exprs,
-                             db::column_map const args, std::vector<db::field_order> const &orders,
+                             db::value_map const args, std::vector<db::field_order> const &orders,
                              db::range const &limit_range) {
     auto const sql = select_sql(table_name, fields, where_exprs, orders, limit_range);
 
-    db::column_maps column_maps;
+    db::value_map_vector value_map_vector;
 
     auto query_result = db.execute_query(sql, args);
     if (query_result) {
         auto row_set = query_result.value();
         while (row_set.next()) {
-            column_maps.emplace_back(row_set.column_map());
+            value_map_vector.emplace_back(row_set.value_map());
         }
     } else {
         return select_result{std::move(query_result.error())};
     }
 
-    return select_result{column_maps};
+    return select_result{value_map_vector};
 }
 
 db::select_result db::select_last(database const &db, std::string const &table_name) {

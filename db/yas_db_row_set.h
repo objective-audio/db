@@ -54,7 +54,7 @@ namespace db {
         db::value column_value(int const column_idx) const;
         db::value column_value(std::string const column_name) const;
 
-        db::column_map column_map() const;
+        db::value_map value_map() const;
 
        private:
         void _close() override;

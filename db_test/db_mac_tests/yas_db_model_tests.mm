@@ -123,7 +123,7 @@ using namespace yas;
     XCTAssertEqual(object_id_attr_b.not_null, true);
     XCTAssertEqual(object_id_attr_b.primary, false);
     XCTAssertEqual(object_id_attr_b.unique, false);
-    
+
     auto &save_id_attr_b = attributes.at(db::save_id_field);
     XCTAssertEqual(save_id_attr_b.name, "save_id");
     XCTAssertEqual(save_id_attr_b.type, "integer");

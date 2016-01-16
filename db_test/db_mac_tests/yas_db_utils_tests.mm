@@ -218,7 +218,7 @@ using namespace yas;
     XCTAssertTrue(row_set);
     XCTAssertTrue(row_set.next());
 
-    auto map = row_set.column_map();
+    auto map = row_set.value_map();
 
     XCTAssertGreaterThan(map.count("sql"), 0);
     auto &sql_column_value = map.at("sql");
@@ -258,7 +258,7 @@ using namespace yas;
     XCTAssertTrue(row_set);
     XCTAssertTrue(row_set.next());
 
-    auto map = row_set.column_map();
+    auto map = row_set.value_map();
 
     XCTAssertGreaterThan(map.count("pk"), 0);
     XCTAssertGreaterThan(map.count("dflt_value"), 0);
@@ -271,7 +271,7 @@ using namespace yas;
 
     XCTAssertTrue(row_set.next());
 
-    map = row_set.column_map();
+    map = row_set.value_map();
 
     XCTAssertEqual(map.at("name").get<db::text>(), "field_b");
 
@@ -288,13 +288,13 @@ using namespace yas;
 
     XCTAssertTrue(db::create_table(db, table, {field_a, field_b}));
 
-    db::column_vector args_1{db::value{"value_a_1"}, db::value{"value_b_1"}};
+    db::value_vector args_1{db::value{"value_a_1"}, db::value{"value_b_1"}};
     XCTAssertTrue(db.execute_update(db::insert_sql(table, {field_a, field_b}), std::move(args_1)));
 
-    db::column_vector args_2{db::value{"value_a_2"}, db::value{"value_b_2"}};
+    db::value_vector args_2{db::value{"value_a_2"}, db::value{"value_b_2"}};
     XCTAssertTrue(db.execute_update(db::insert_sql(table, {field_a, field_b}), std::move(args_2)));
 
-    db::column_map sel_args{std::make_pair(field_a, db::value{"value_a_2"})};
+    db::value_map sel_args{std::make_pair(field_a, db::value{"value_a_2"})};
     auto const select_result = db::select(db, table, {field_a, field_b}, db::field_expr(field_a, "="), sel_args);
 
     XCTAssertTrue(select_result);
@@ -311,7 +311,7 @@ using namespace yas;
 
     XCTAssertTrue(db::create_table(db, table_name, fields));
 
-    db::column_vector args;
+    db::value_vector args;
 
     args = {db::value{1}, db::value{"value_1"}};
     XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), std::move(args)));

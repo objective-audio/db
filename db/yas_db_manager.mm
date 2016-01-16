@@ -47,12 +47,12 @@ struct db::manager::impl : public base::impl {
     db::model model;
     operation_queue queue;
     db::entity_objects_map entity_objects;
-    db::column_map db_info;
+    db::value_map db_info;
 
     impl(std::string const &path, db::model const &model) : database(path), model(model), queue(), entity_objects() {
     }
 
-    db::object const &load_object(std::string const &entity_name, db::column_map const &map) {
+    db::object const &load_object(std::string const &entity_name, db::value_map const &map) {
         if (entity_objects.count(entity_name) == 0) {
             entity_objects.emplace(std::make_pair(entity_name, object_map{}));
         }
@@ -76,7 +76,7 @@ struct db::manager::impl : public base::impl {
         return db::object::empty();
     }
 
-    entity_objects_map load_objects(column_maps_map const &entity_maps) {
+    entity_objects_map load_objects(value_map_vector_map const &entity_maps) {
         entity_objects_map entity_objects;
         for (auto const &entity_pair : entity_maps) {
             auto const &entity_name = entity_pair.first;
@@ -91,18 +91,18 @@ struct db::manager::impl : public base::impl {
         return entity_objects;
     }
 
-    void set_db_info(db::column_map const &info) {
+    void set_db_info(db::value_map const &info) {
         db_info = info;
     }
 
-    db::column_maps_map changed_parameters_for_save() {
-        db::column_maps_map changed_params;
+    db::value_map_vector_map changed_parameters_for_save() {
+        db::value_map_vector_map changed_params;
 
         for (auto const &entity_pair : entity_objects) {
             auto const &entity_name = entity_pair.first;
             auto const &objects = entity_pair.second;
 
-            db::column_maps entity_params;
+            db::value_map_vector entity_params;
 
             for (auto const &object_pair : objects) {
                 auto object = object_pair.second;
@@ -140,7 +140,7 @@ db::manager::manager(std::nullptr_t) : super_class(nullptr) {
 void db::manager::setup(setup_completion_f &&completion) {
     execute([completion = std::move(completion), model = impl_ptr<impl>()->model, manager = *this](
         db::database & db, operation const &op) {
-        db::column_map db_info;
+        db::value_map db_info;
         setup_result result{nullptr};
 
         if (db::begin_transaction(db)) {
@@ -233,7 +233,7 @@ void db::manager::setup(setup_completion_f &&completion) {
                 }
 
                 if (result) {
-                    db::column_map args{std::make_pair(version_field, db::value{model.version().str()})};
+                    db::value_map args{std::make_pair(version_field, db::value{model.version().str()})};
                     auto const update_result = db.execute_update(db::insert_sql(info_table, {version_field}), args);
                     if (!update_result) {
                         result = setup_result{make_error(setup_error_type::insert_info_failed, update_result.error())};
@@ -335,8 +335,8 @@ void db::manager::execute(execution_f &&db_execution) {
 void db::manager::insert_objects(entity_count_map const &counts, insert_completion_f &&completion) {
     execute([completion = std::move(completion), manager = *this, counts = std::move(counts)](db::database & db,
                                                                                               operation const &op) {
-        db::column_map db_info;
-        column_maps_map inserted_objects;
+        db::value_map db_info;
+        value_map_vector_map inserted_objects;
         db::integer::type start_obj_id = 1;
 
         using insert_state = result<std::nullptr_t, error<insert_error_type>>;
@@ -370,13 +370,13 @@ void db::manager::insert_objects(entity_count_map const &counts, insert_completi
                 db::value obj_id_value{start_obj_id + idx};
 
                 if (!db.execute_update(db::insert_sql(entity_name, {object_id_field, save_id_field}),
-                                       db::column_vector{obj_id_value, save_id_value})) {
+                                       db::value_vector{obj_id_value, save_id_value})) {
                     state = insert_state{make_error(insert_error_type::insert_failed)};
                     break;
                 }
 
                 auto const &select_result = db::select(db, entity_name, {"*"}, db::field_expr(object_id_field, "="),
-                                                       {db::column_map{std::make_pair(object_id_field, obj_id_value)}});
+                                                       {db::value_map{std::make_pair(object_id_field, obj_id_value)}});
 
                 if (!select_result) {
                     state = insert_state{make_error(insert_error_type::select_failed)};
@@ -384,7 +384,7 @@ void db::manager::insert_objects(entity_count_map const &counts, insert_completi
                 }
 
                 if (inserted_objects.count(entity_name) == 0) {
-                    inserted_objects.emplace(std::make_pair(entity_name, column_maps{}));
+                    inserted_objects.emplace(std::make_pair(entity_name, value_map_vector{}));
                 }
 
                 inserted_objects.at(entity_name).emplace_back(std::move(select_result.value().at(0)));
@@ -436,8 +436,8 @@ void db::manager::save(save_completion_f &&completion) {
 
     execute([completion = std::move(completion), manager = *this, changed_params = std::move(changed_params)](
         db::database & db, operation const &) {
-        db::column_map db_info;
-        db::column_maps_map saved_objects;
+        db::value_map db_info;
+        db::value_map_vector_map saved_objects;
 
         using save_state = result<std::nullptr_t, error<save_error_type>>;
         save_state state{nullptr};
@@ -461,7 +461,7 @@ void db::manager::save(save_completion_f &&completion) {
                 for (auto const &entity_pair : changed_params) {
                     auto const &entity_name = entity_pair.first;
                     auto const sql = manager.model().entities().at(entity_name).sql_for_insert();
-                    db::column_maps saved_params;
+                    db::value_map_vector saved_params;
                     for (auto params : entity_pair.second) {
                         if (params.count(save_id_field)) {
                             params.erase(save_id_field);
