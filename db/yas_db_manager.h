@@ -52,6 +52,8 @@ namespace db {
             db::error _db_error;
         };
 
+        using entity_count_map = std::unordered_map<std::string, std::size_t>;
+
         using setup_result = result<std::nullptr_t, error<setup_error_type>>;
         using insert_result = result<entity_objects_map, error<insert_error_type>>;
         using save_result = result<entity_objects_map, error<save_error_type>>;
@@ -73,7 +75,7 @@ namespace db {
 
         void execute(execution_f &&execution);
 
-        void insert_objects(std::string const &entity_name, std::size_t const count, insert_completion_f &&completion);
+        void insert_objects(entity_count_map const &counts, insert_completion_f &&completion);
         void save(save_completion_f &&completion);
 
         db::object const &cached_object(std::string const &entity_name, db::integer::type object_id) const;
