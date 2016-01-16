@@ -25,7 +25,7 @@ using namespace yas;
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
 
-    db::object obj{model, "sample_a"};
+    db::object obj{nullptr, model, "sample_a"};
 
     XCTAssertEqual(obj.model(), model);
     XCTAssertEqual(obj.entity_name(), "sample_a");
@@ -39,7 +39,7 @@ using namespace yas;
 - (void)test_load {
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
-    db::object obj{model, "sample_a"};
+    db::object obj{nullptr, model, "sample_a"};
 
     db::value_map values{std::make_pair("age", db::value{10}), std::make_pair("name", db::value{"name_val"}),
                          std::make_pair("weight", db::value{53.4}), std::make_pair("hoge", db::value{"hage"})};
@@ -55,7 +55,7 @@ using namespace yas;
 - (void)test_reload {
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
-    db::object obj{model, "sample_a"};
+    db::object obj{nullptr, model, "sample_a"};
 
     db::value_map prev_values{std::make_pair("age", db::value{10}), std::make_pair("name", db::value{"name_val"}),
                               std::make_pair("weight", db::value{53.4}), std::make_pair("hoge", db::value{"hage"})};
@@ -75,7 +75,7 @@ using namespace yas;
 - (void)test_set_and_get {
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
-    db::object obj{model, "sample_a"};
+    db::object obj{nullptr, model, "sample_a"};
 
     obj.set("age", db::value{24});
     obj.set("name", db::value{"nabe"});
@@ -89,7 +89,7 @@ using namespace yas;
 - (void)test_replace {
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
-    db::object obj{model, "sample_a"};
+    db::object obj{nullptr, model, "sample_a"};
 
     obj.set("age", db::value{1});
 
@@ -103,7 +103,7 @@ using namespace yas;
 - (void)test_remove {
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
-    db::object obj{model, "sample_a"};
+    db::object obj{nullptr, model, "sample_a"};
 
     XCTAssertFalse(obj.is_removed());
 
@@ -125,7 +125,7 @@ using namespace yas;
 - (void)test_parameters_for_save {
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
-    db::object obj{model, "sample_a"};
+    db::object obj{nullptr, model, "sample_a"};
 
     obj.set(db::id_field, db::value{22});
     obj.set(db::object_id_field, db::value{55});

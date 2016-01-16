@@ -3,6 +3,7 @@
 //
 
 #include "yas_db_entity.h"
+#include "yas_db_manager.h"
 #include "yas_db_model.h"
 #include "yas_db_object.h"
 #include "yas_stl_utils.h"
@@ -13,10 +14,19 @@ struct db::object::impl : public base::impl {
     db::model model;
     std::string entity_name;
     db::value_map values;
-    enum db::object_status status;
+    enum db::object_status status = db::object_status::invalid;
+    db::manager manager;
 
-    impl(db::model const &model, std::string const &entity_name)
-        : model(model), entity_name(entity_name), status(db::object_status::invalid) {
+    impl(db::manager const &manager, db::model const &model, std::string const &entity_name)
+        : manager(manager), model(model), entity_name(entity_name) {
+    }
+
+    ~impl() {
+        if (manager) {
+            if (auto observable = dynamic_cast<object_observable *>(&manager)) {
+                observable->_object_did_erase(entity_name, get(object_id_field).get<integer>());
+            }
+        }
     }
 
     void clear() {
@@ -40,7 +50,7 @@ struct db::object::impl : public base::impl {
             for (auto const &pair : entity.attributes) {
                 auto const &attr_name = pair.first;
                 if (vals.count(attr_name)) {
-                    set(attr_name, vals.at(attr_name));
+                    set(attr_name, vals.at(attr_name), true);
                 }
             }
         }
@@ -56,13 +66,19 @@ struct db::object::impl : public base::impl {
         return db::value::empty();
     }
 
-    void set(std::string const &attr_name, db::value const &value) {
+    void set(std::string const &attr_name, db::value const &value, bool const loading = false) {
         if (values.count(attr_name)) {
             values.erase(attr_name);
         }
         values.emplace(std::make_pair(attr_name, value));
 
-        status = db::object_status::changed;
+        if (status != db::object_status::changed) {
+            status = db::object_status::changed;
+
+            if (!loading) {
+                notify_did_change();
+            }
+        }
     }
 
     void remove() {
@@ -100,10 +116,18 @@ struct db::object::impl : public base::impl {
 
         return params;
     }
+
+    void notify_did_change() {
+        if (manager) {
+            if (auto observable = dynamic_cast<object_observable *>(&manager)) {
+                observable->_object_did_change(cast<db::object>());
+            }
+        }
+    }
 };
 
-db::object::object(db::model const &model, std::string const &entity_name)
-    : super_class(std::make_unique<impl>(model, entity_name)) {
+db::object::object(manager const &manager, db::model const &model, std::string const &entity_name)
+    : super_class(std::make_unique<impl>(manager, model, entity_name)) {
 }
 
 db::object::object(std::nullptr_t) : super_class(nullptr) {
