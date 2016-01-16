@@ -224,7 +224,7 @@ using namespace yas;
     db::object_map_map inserted_objects_1;
 
     manager.insert_objects({{"sample_a", 3}},
-                           [self, expectation_1, &inserted_objects_1](auto const &insert_result) {
+                           [self, expectation_1, &inserted_objects_1, &manager](auto const &insert_result) {
                                XCTAssertTrue(insert_result);
 
                                inserted_objects_1 = std::move(insert_result.value());
@@ -245,6 +245,10 @@ using namespace yas;
                                XCTAssertEqual(objects.at(2).save_id(), db::value{1});
                                XCTAssertEqual(objects.at(3).save_id(), db::value{1});
 
+                               XCTAssertEqual(objects.at(1).manager(), manager);
+                               XCTAssertEqual(objects.at(2).manager(), manager);
+                               XCTAssertEqual(objects.at(3).manager(), manager);
+
                                [expectation_1 fulfill];
                            });
 
@@ -263,7 +267,7 @@ using namespace yas;
     db::object_map_map inserted_objects_2;
 
     manager.insert_objects({{"sample_a", 1}},
-                           [self, expectation_2, &inserted_objects_2](auto const &insert_result) {
+                           [self, expectation_2, &inserted_objects_2, &manager](auto const &insert_result) {
                                XCTAssertTrue(insert_result);
 
                                inserted_objects_2 = std::move(insert_result.value());
@@ -273,6 +277,7 @@ using namespace yas;
 
                                XCTAssertEqual(objects.at(4).object_id(), db::value{4});
                                XCTAssertEqual(objects.at(4).save_id(), db::value{2});
+                               XCTAssertEqual(objects.at(4).manager(), manager);
 
                                [expectation_2 fulfill];
                            });

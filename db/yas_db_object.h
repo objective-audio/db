@@ -28,6 +28,7 @@ namespace db {
         value const &get(std::string const &attr_name) const;
         void set(std::string const &attr_name, value const &value);
 
+        manager const &manager() const;
         model const &model() const;
         std::string const &entity_name() const;
 
