@@ -13,15 +13,15 @@ struct db::object::impl : public base::impl {
     db::model model;
     std::string entity_name;
     db::column_map values;
-    enum db::object::status status;
+    enum db::object_status status;
 
     impl(db::model const &model, std::string const &entity_name)
-        : model(model), entity_name(entity_name), status(db::object::status::invalid) {
+        : model(model), entity_name(entity_name), status(db::object_status::invalid) {
     }
 
     void clear() {
         values.clear();
-        status = db::object::status::invalid;
+        status = db::object_status::invalid;
     }
 
     bool is_removed() {
@@ -33,17 +33,19 @@ struct db::object::impl : public base::impl {
     }
 
     void load(db::column_map const &vals) {
-        clear();
+        if (status != db::object_status::changed) {
+            clear();
 
-        db::entity const &entity = model.entities().at(entity_name);
-        for (auto const &pair : entity.attributes) {
-            auto const &attr_name = pair.first;
-            if (vals.count(attr_name)) {
-                set(attr_name, vals.at(attr_name));
+            db::entity const &entity = model.entities().at(entity_name);
+            for (auto const &pair : entity.attributes) {
+                auto const &attr_name = pair.first;
+                if (vals.count(attr_name)) {
+                    set(attr_name, vals.at(attr_name));
+                }
             }
         }
 
-        status = db::object::status::saved;
+        status = db::object_status::saved;
     }
 
     db::value const &get(std::string const &column_name) {
@@ -60,7 +62,7 @@ struct db::object::impl : public base::impl {
         }
         values.emplace(std::make_pair(attr_name, value));
 
-        status = db::object::status::changed;
+        status = db::object_status::changed;
     }
 
     void remove() {
@@ -79,16 +81,20 @@ struct db::object::impl : public base::impl {
         set(removed_field, db::value{true});
     }
 
-    db::column_map parameters() {
+    db::column_map parameters_for_save() {
         db::column_map params;
 
         db::entity const &entity = model.entities().at(entity_name);
         for (auto const &pair : entity.attributes) {
             auto const &attr_name = pair.first;
-            if (values.count(attr_name)) {
-                params.insert(std::make_pair(attr_name, values.at(attr_name)));
-            } else {
-                params.insert(std::make_pair(attr_name, pair.second.default_value));
+            if (attr_name != save_id_field) {
+                if (values.count(attr_name)) {
+                    params.insert(std::make_pair(attr_name, values.at(attr_name)));
+                } else if (pair.second.not_null) {
+                    params.insert(std::make_pair(attr_name, pair.second.default_value));
+                } else {
+                    params.insert(std::make_pair(attr_name, db::value::empty()));
+                }
             }
         }
 
@@ -123,8 +129,12 @@ std::string const &db::object::entity_name() const {
     return impl_ptr<impl>()->entity_name;
 }
 
-enum db::object::status db::object::status() const {
+enum db::object_status db::object::status() const {
     return impl_ptr<impl>()->status;
+}
+
+void db::object::set_status(object_status const &stat) {
+    impl_ptr<impl>()->status = stat;
 }
 
 db::value const &db::object::object_id() const {
@@ -143,8 +153,8 @@ bool db::object::is_removed() const {
     return impl_ptr<impl>()->is_removed();
 }
 
-db::column_map db::object::parameters() const {
-    return impl_ptr<impl>()->parameters();
+db::column_map db::object::parameters_for_save() const {
+    return impl_ptr<impl>()->parameters_for_save();
 }
 
 db::object const &db::object::empty() {

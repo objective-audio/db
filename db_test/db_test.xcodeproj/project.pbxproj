@@ -59,6 +59,7 @@
 		B608C8611C21910400F594D8 /* yas_db.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_db.h; sourceTree = "<group>"; };
 		B608C8621C21B8F000F594D8 /* yas_result_private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_result_private.h; sourceTree = "<group>"; };
 		B608C8631C21B8F000F594D8 /* yas_result.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_result.h; sourceTree = "<group>"; };
+		B629500D1C491A6F0024034B /* yas_db_additional_protocol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_db_additional_protocol.h; sourceTree = "<group>"; };
 		B62CED8F1C2A33640047B6DE /* yas_db_statement_tests.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = yas_db_statement_tests.mm; sourceTree = "<group>"; };
 		B62CED911C2A33960047B6DE /* yas_db_protocol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_db_protocol.h; sourceTree = "<group>"; };
 		B63A0C301C3222A4009EB0B3 /* yas_db_order_tests.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = yas_db_order_tests.mm; sourceTree = "<group>"; };
@@ -239,6 +240,7 @@
 		B6F6482F1C40A5E800265C93 /* additions */ = {
 			isa = PBXGroup;
 			children = (
+				B629500D1C491A6F0024034B /* yas_db_additional_protocol.h */,
 				B6B281DF1C34CD72009053E1 /* yas_db_attribute.cpp */,
 				B6B281E01C34CD72009053E1 /* yas_db_attribute.h */,
 				B6B281E51C34D321009053E1 /* yas_db_cf_utils.cpp */,
@@ -249,6 +251,8 @@
 				B63A0C3F1C33D0C9009EB0B3 /* yas_db_manager.mm */,
 				B6B281D41C34CB2E009053E1 /* yas_db_model.cpp */,
 				B6B281D51C34CB2E009053E1 /* yas_db_model.h */,
+				B64BBFFB1C4119B500B32664 /* yas_db_object.cpp */,
+				B64BBFFC1C4119B500B32664 /* yas_db_object.h */,
 				B63A0C321C3255B3009EB0B3 /* yas_db_order.cpp */,
 				B63A0C331C3255B3009EB0B3 /* yas_db_order.h */,
 				B63A0C371C32B665009EB0B3 /* yas_db_range.cpp */,
@@ -259,8 +263,6 @@
 				B6C5A2CD1C30D96800E100EC /* yas_db_sql_utils.h */,
 				B6F648301C40A64400265C93 /* yas_db_utils.cpp */,
 				B6F648311C40A64400265C93 /* yas_db_utils.h */,
-				B64BBFFB1C4119B500B32664 /* yas_db_object.cpp */,
-				B64BBFFC1C4119B500B32664 /* yas_db_object.h */,
 			);
 			name = additions;
 			sourceTree = "<group>";
