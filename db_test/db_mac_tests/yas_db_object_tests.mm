@@ -122,7 +122,7 @@ using namespace yas;
     XCTAssertEqual(obj.get(db::object_id_field), db::value{45});
 }
 
-- (void)test_parameters_for_save {
+- (void)test_values_for_save {
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
     db::object obj{nullptr, model, "sample_a"};
@@ -135,23 +135,23 @@ using namespace yas;
     obj.set("data", db::value::empty());
     obj.set(db::save_id_field, db::value{100});
 
-    auto params = obj.parameters_for_save();
+    auto values = obj.values_for_save();
 
-    XCTAssertGreaterThan(params.size(), 6);
-    XCTAssertEqual(params.count(db::id_field), 1);
-    XCTAssertEqual(params.at(db::id_field), db::value{22});
-    XCTAssertEqual(params.count(db::object_id_field), 1);
-    XCTAssertEqual(params.at(db::object_id_field), db::value{55});
-    XCTAssertEqual(params.count("name"), 1);
-    XCTAssertEqual(params.at("name"), db::value{"suzuki"});
-    XCTAssertEqual(params.count("age"), 1);
-    XCTAssertEqual(params.at("age"), db::value{32});
-    XCTAssertEqual(params.count("weight"), 1);
-    XCTAssertEqual(params.at("weight"), db::value{90.1});
-    XCTAssertEqual(params.count("data"), 1);
-    XCTAssertEqual(params.at("data"), db::value::empty());
+    XCTAssertGreaterThan(values.size(), 6);
+    XCTAssertEqual(values.count(db::id_field), 1);
+    XCTAssertEqual(values.at(db::id_field), db::value{22});
+    XCTAssertEqual(values.count(db::object_id_field), 1);
+    XCTAssertEqual(values.at(db::object_id_field), db::value{55});
+    XCTAssertEqual(values.count("name"), 1);
+    XCTAssertEqual(values.at("name"), db::value{"suzuki"});
+    XCTAssertEqual(values.count("age"), 1);
+    XCTAssertEqual(values.at("age"), db::value{32});
+    XCTAssertEqual(values.count("weight"), 1);
+    XCTAssertEqual(values.at("weight"), db::value{90.1});
+    XCTAssertEqual(values.count("data"), 1);
+    XCTAssertEqual(values.at("data"), db::value::empty());
 
-    XCTAssertEqual(params.count(db::save_id_field), 0);
+    XCTAssertEqual(values.count(db::save_id_field), 0);
 }
 
 @end

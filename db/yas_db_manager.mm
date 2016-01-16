@@ -108,34 +108,34 @@ struct db::manager::impl : public base::impl {
         db_info = info;
     }
 
-    db::value_map_vector_map changed_parameters_for_save() {
-        db::value_map_vector_map changed_params;
+    db::value_map_vector_map changed_values_for_save() {
+        db::value_map_vector_map changed_values;
 
         for (auto const &entity_pair : changed_objects) {
             auto const &entity_name = entity_pair.first;
             auto const &objects = entity_pair.second;
 
-            db::value_map_vector entity_params;
+            db::value_map_vector entitiy_values;
 
             for (auto const &object_pair : objects) {
                 auto object = object_pair.second;
-                auto params = object.parameters_for_save();
-                if (params.size() > 0) {
-                    entity_params.emplace_back(std::move(params));
+                auto values = object.values_for_save();
+                if (values.size() > 0) {
+                    entitiy_values.emplace_back(std::move(values));
                 } else {
-                    throw "parameters are empty.";
+                    throw "values are empty.";
                 }
                 if (auto manageable_object = dynamic_cast<manageable *>(&object)) {
                     manageable_object->set_status(db::object_status::updating);
                 }
             }
 
-            if (entity_params.size() > 0) {
-                changed_params.emplace(std::make_pair(entity_name, std::move(entity_params)));
+            if (entitiy_values.size() > 0) {
+                changed_values.emplace(std::make_pair(entity_name, std::move(entitiy_values)));
             }
         }
 
-        return changed_params;
+        return changed_values;
     }
 
     db::object cached_object(std::string const &entity_name, db::integer::type object_id) {
@@ -475,9 +475,9 @@ void db::manager::insert_objects(entity_count_map const &counts, insert_completi
 }
 
 void db::manager::save(save_completion_f &&completion) {
-    auto const changed_params = impl_ptr<impl>()->changed_parameters_for_save();
+    auto const changed_values = impl_ptr<impl>()->changed_values_for_save();
 
-    execute([completion = std::move(completion), manager = *this, changed_params = std::move(changed_params)](
+    execute([completion = std::move(completion), manager = *this, changed_values = std::move(changed_values)](
         db::database & db, operation const &) {
         db::value_map db_info;
         db::value_map_vector_map saved_objects;
@@ -485,7 +485,7 @@ void db::manager::save(save_completion_f &&completion) {
         using save_state = result<std::nullptr_t, error<save_error_type>>;
         save_state state{nullptr};
 
-        if (changed_params.size() > 0) {
+        if (changed_values.size() > 0) {
             db::begin_transaction(db);
 
             db::integer::type next_save_id = 0;
@@ -501,22 +501,22 @@ void db::manager::save(save_completion_f &&completion) {
             } else {
                 auto const &save_id_pair = std::make_pair(save_id_field, db::value{next_save_id});
 
-                for (auto const &entity_pair : changed_params) {
+                for (auto const &entity_pair : changed_values) {
                     auto const &entity_name = entity_pair.first;
                     auto const sql = manager.model().entities().at(entity_name).sql_for_insert();
-                    db::value_map_vector saved_params;
-                    for (auto params : entity_pair.second) {
-                        if (params.count(save_id_field)) {
-                            params.erase(save_id_field);
+                    db::value_map_vector saved_values;
+                    for (auto values : entity_pair.second) {
+                        if (values.count(save_id_field)) {
+                            values.erase(save_id_field);
                         }
-                        if (params.count(id_field)) {
-                            params.erase(id_field);
+                        if (values.count(id_field)) {
+                            values.erase(id_field);
                         }
-                        params.insert(save_id_pair);
+                        values.insert(save_id_pair);
 
-                        auto const update_result = db.execute_update(sql, params);
+                        auto const update_result = db.execute_update(sql, values);
                         if (update_result) {
-                            saved_params.emplace_back(std::move(params));
+                            saved_values.emplace_back(std::move(values));
                         } else {
                             state = save_state{make_error(save_error_type::insert_failed, update_result.error())};
                         }
@@ -526,7 +526,7 @@ void db::manager::save(save_completion_f &&completion) {
                         break;
                     }
 
-                    saved_objects.emplace(std::make_pair(entity_name, saved_params));
+                    saved_objects.emplace(std::make_pair(entity_name, saved_values));
                 }
             }
 
