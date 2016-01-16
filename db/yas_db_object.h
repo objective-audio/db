@@ -47,6 +47,6 @@ namespace db {
     };
 
     using object_map = std::unordered_map<db::integer::type, object>;
-    using entity_objects_map = std::unordered_map<std::string, object_map>;
+    using object_map_map = std::unordered_map<std::string, object_map>;
 }
 }

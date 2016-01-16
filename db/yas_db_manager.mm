@@ -46,7 +46,7 @@ struct db::manager::impl : public base::impl {
     db::database database;
     db::model model;
     operation_queue queue;
-    db::entity_objects_map entity_objects;
+    db::object_map_map entity_objects;
     db::value_map db_info;
 
     impl(std::string const &path, db::model const &model) : database(path), model(model), queue(), entity_objects() {
@@ -76,8 +76,8 @@ struct db::manager::impl : public base::impl {
         return db::object::empty();
     }
 
-    entity_objects_map load_objects(value_map_vector_map const &entity_maps) {
-        entity_objects_map entity_objects;
+    object_map_map load_objects(value_map_vector_map const &entity_maps) {
+        object_map_map entity_objects;
         for (auto const &entity_pair : entity_maps) {
             auto const &entity_name = entity_pair.first;
             object_map objects;
