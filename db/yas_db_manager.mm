@@ -76,17 +76,19 @@ struct db::manager::impl : public base::impl {
         return db::object::empty();
     }
 
-    std::vector<db::object> load_objects(column_maps_map const &entity_maps) {
-        std::vector<db::object> objects;
+    entity_objects_map load_objects(column_maps_map const &entity_maps) {
+        entity_objects_map entity_objects;
         for (auto const &entity_pair : entity_maps) {
             auto const &entity_name = entity_pair.first;
+            object_map objects;
             for (auto const &map : entity_pair.second) {
                 if (auto const &obj = load_object(entity_name, map)) {
-                    objects.push_back(obj);
+                    objects.insert(std::make_pair(obj.object_id().get<integer>(), obj));
                 }
             }
+            entity_objects.emplace(std::make_pair(entity_name, std::move(objects)));
         }
-        return objects;
+        return entity_objects;
     }
 
     void set_db_info(db::column_map const &info) {
