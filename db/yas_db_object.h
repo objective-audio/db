@@ -40,7 +40,7 @@ namespace db {
         void remove();
         bool is_removed() const;
 
-        db::value_map parameters_for_save() const;
+        db::value_map values_for_save() const;
 
         static db::object const &empty();
 
