@@ -12,12 +12,15 @@
 namespace yas {
 namespace db {
     class model;
+    class manager;
 
-    class object : public base, public object_manageable {
+    class object : public base, public manageable {
         using super_class = base;
 
        public:
-        object(model const &model, std::string const &entity_name);
+        class impl;
+
+        object(manager const &manager, model const &model, std::string const &entity_name);
         object(std::nullptr_t);
 
         void load(db::value_map const &values);
@@ -41,12 +44,12 @@ namespace db {
         static db::object const &empty();
 
        private:
-        class impl;
-
         void set_status(object_status const &);
     };
 
     using object_map = std::unordered_map<db::integer::type, object>;
     using object_map_map = std::unordered_map<std::string, object_map>;
+    using weak_object_map = std::unordered_map<db::integer::type, weak<object>>;
+    using weak_object_map_map = std::unordered_map<std::string, weak_object_map>;
 }
 }

@@ -15,10 +15,12 @@ namespace db {
     static auto constexpr info_table = "db_info";
     static auto constexpr version_field = "version";
 
-    class manager : public base {
+    class manager : public base, public object_observable {
         using super_class = base;
 
        public:
+        class impl;
+
         enum class setup_error_type {
             none,
             begin_transaction_failed,
@@ -78,10 +80,11 @@ namespace db {
         void insert_objects(entity_count_map const &counts, insert_completion_f &&completion);
         void save(save_completion_f &&completion);
 
-        db::object const &cached_object(std::string const &entity_name, db::integer::type object_id) const;
+        db::object cached_object(std::string const &entity_name, db::integer::type const object_id) const;
 
        private:
-        class impl;
+        void _object_did_change(db::object const &);
+        void _object_did_erase(std::string const &entity_name, db::integer::type const object_id);
     };
 }
 

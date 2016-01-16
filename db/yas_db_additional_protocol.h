@@ -6,6 +6,9 @@
 
 namespace yas {
 namespace db {
+    class object;
+    class manager;
+
     enum class object_status {
         invalid,
         saved,
@@ -13,10 +16,17 @@ namespace db {
         updating,
     };
 
-    struct object_manageable {
-        virtual ~object_manageable() = default;
+    struct manageable {
+        virtual ~manageable() = default;
 
         virtual void set_status(object_status const &) = 0;
+    };
+
+    struct object_observable {
+        virtual ~object_observable() = default;
+
+        virtual void _object_did_change(db::object const &) = 0;
+        virtual void _object_did_erase(std::string const &entity_name, db::integer::type const object_id) = 0;
     };
 }
 }

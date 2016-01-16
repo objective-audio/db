@@ -46,29 +46,42 @@ struct db::manager::impl : public base::impl {
     db::database database;
     db::model model;
     operation_queue queue;
-    db::object_map_map entity_objects;
+    db::weak_object_map_map cached_objects;
+    db::object_map_map changed_objects;
     db::value_map db_info;
 
-    impl(std::string const &path, db::model const &model) : database(path), model(model), queue(), entity_objects() {
+    impl(std::string const &path, db::model const &model) : database(path), model(model), queue(), cached_objects() {
     }
 
-    db::object const &load_object(std::string const &entity_name, db::value_map const &map) {
-        if (entity_objects.count(entity_name) == 0) {
-            entity_objects.emplace(std::make_pair(entity_name, object_map{}));
+    db::object load_object(std::string const &entity_name, db::value_map const &map) {
+        if (cached_objects.count(entity_name) == 0) {
+            cached_objects.emplace(std::make_pair(entity_name, weak_object_map{}));
         }
 
-        auto &objects = entity_objects.at(entity_name);
+        auto manager = cast<db::manager>();
+        auto &objects = cached_objects.at(entity_name);
 
         if (auto const &object_id_value = map.at(object_id_field)) {
             auto const &object_id = object_id_value.get<integer>();
+
+            db::object object{nullptr};
+
             if (objects.count(object_id) > 0) {
-                objects.at(object_id).load(map);
-            } else {
-                db::object obj{model, entity_name};
-                obj.load(map);
-                objects.emplace(std::make_pair(object_id, std::move(obj)));
+                if (auto const &weak_object = objects.at(object_id)) {
+                    object = weak_object.lock();
+                    if (object) {
+                        object.load(map);
+                    }
+                }
             }
-            return objects.at(object_id);
+
+            if (!object) {
+                object = db::object{manager, model, entity_name};
+                object.load(map);
+                objects.emplace(std::make_pair(object_id, to_weak(object)));
+            }
+
+            return object;
         } else {
             throw "object_id not found.";
         }
@@ -77,18 +90,18 @@ struct db::manager::impl : public base::impl {
     }
 
     object_map_map load_objects(value_map_vector_map const &entity_maps) {
-        object_map_map entity_objects;
+        object_map_map loaded_objects;
         for (auto const &entity_pair : entity_maps) {
             auto const &entity_name = entity_pair.first;
             object_map objects;
             for (auto const &map : entity_pair.second) {
-                if (auto const &obj = load_object(entity_name, map)) {
+                if (auto const obj = load_object(entity_name, map)) {
                     objects.insert(std::make_pair(obj.object_id().get<integer>(), obj));
                 }
             }
-            entity_objects.emplace(std::make_pair(entity_name, std::move(objects)));
+            loaded_objects.emplace(std::make_pair(entity_name, std::move(objects)));
         }
-        return entity_objects;
+        return loaded_objects;
     }
 
     void set_db_info(db::value_map const &info) {
@@ -98,7 +111,7 @@ struct db::manager::impl : public base::impl {
     db::value_map_vector_map changed_parameters_for_save() {
         db::value_map_vector_map changed_params;
 
-        for (auto const &entity_pair : entity_objects) {
+        for (auto const &entity_pair : changed_objects) {
             auto const &entity_name = entity_pair.first;
             auto const &objects = entity_pair.second;
 
@@ -106,16 +119,14 @@ struct db::manager::impl : public base::impl {
 
             for (auto const &object_pair : objects) {
                 auto object = object_pair.second;
-                if (object.status() == db::object_status::changed) {
-                    auto params = object.parameters_for_save();
-                    if (params.size() > 0) {
-                        entity_params.emplace_back(std::move(params));
-                    } else {
-                        throw "parameters are empty.";
-                    }
-                    if (auto manageable_object = dynamic_cast<object_manageable *>(&object)) {
-                        manageable_object->set_status(db::object_status::updating);
-                    }
+                auto params = object.parameters_for_save();
+                if (params.size() > 0) {
+                    entity_params.emplace_back(std::move(params));
+                } else {
+                    throw "parameters are empty.";
+                }
+                if (auto manageable_object = dynamic_cast<manageable *>(&object)) {
+                    manageable_object->set_status(db::object_status::updating);
                 }
             }
 
@@ -125,6 +136,38 @@ struct db::manager::impl : public base::impl {
         }
 
         return changed_params;
+    }
+
+    db::object cached_object(std::string const &entity_name, db::integer::type object_id) {
+        if (cached_objects.count(entity_name) > 0) {
+            auto &objects = cached_objects.at(entity_name);
+            if (objects.count(object_id)) {
+                if (auto const &weak_object = objects.at(object_id)) {
+                    if (auto strong_object = weak_object.lock()) {
+                        return strong_object;
+                    }
+                }
+            }
+        }
+        return db::object::empty();
+    }
+
+    void _object_did_change(db::object const &object) {
+        auto const &entity_name = object.entity_name();
+        if (changed_objects.count(entity_name) == 0) {
+            changed_objects.insert(std::make_pair(entity_name, db::object_map{}));
+        }
+
+        changed_objects.at(entity_name).emplace(std::make_pair(object.object_id().get<integer>(), object));
+    }
+
+    void _object_did_erase(std::string const &entity_name, db::integer::type const object_id) {
+        if (cached_objects.count(entity_name) > 0) {
+            auto objects = cached_objects.at(entity_name);
+            if (objects.count(object_id)) {
+                objects.erase(object_id);
+            }
+        }
     }
 };
 
@@ -432,7 +475,7 @@ void db::manager::insert_objects(entity_count_map const &counts, insert_completi
 }
 
 void db::manager::save(save_completion_f &&completion) {
-    auto const &changed_params = impl_ptr<impl>()->changed_parameters_for_save();
+    auto const changed_params = impl_ptr<impl>()->changed_parameters_for_save();
 
     execute([completion = std::move(completion), manager = *this, changed_params = std::move(changed_params)](
         db::database & db, operation const &) {
@@ -518,6 +561,7 @@ void db::manager::save(save_completion_f &&completion) {
             if (state) {
                 manager.impl_ptr<impl>()->set_db_info(db_info);
                 auto loaded_objects = manager.impl_ptr<impl>()->load_objects(saved_objects);
+                manager.impl_ptr<impl>()->changed_objects.clear();
                 completion(save_result{std::move(loaded_objects)});
             } else {
                 completion(save_result{state.error()});
@@ -527,15 +571,16 @@ void db::manager::save(save_completion_f &&completion) {
     });
 }
 
-db::object const &db::manager::cached_object(std::string const &entity_name, db::integer::type object_id) const {
-    auto &entity_objects = impl_ptr<impl>()->entity_objects;
-    if (entity_objects.count(entity_name) > 0) {
-        auto &objects = entity_objects.at(entity_name);
-        if (objects.count(object_id)) {
-            return objects.at(object_id);
-        }
-    }
-    return db::object::empty();
+db::object db::manager::cached_object(std::string const &entity_name, db::integer::type const object_id) const {
+    return impl_ptr<impl>()->cached_object(entity_name, object_id);
+}
+
+void db::manager::_object_did_change(db::object const &object) {
+    impl_ptr<impl>()->_object_did_change(object);
+}
+
+void db::manager::_object_did_erase(std::string const &entity_name, db::integer::type const object_id) {
+    impl_ptr<impl>()->_object_did_erase(entity_name, object_id);
 }
 
 std::string yas::to_string(db::manager::setup_error_type const &error) {
