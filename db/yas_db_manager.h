@@ -55,8 +55,8 @@ namespace db {
         using entity_count_map = std::unordered_map<std::string, std::size_t>;
 
         using setup_result = result<std::nullptr_t, error<setup_error_type>>;
-        using insert_result = result<entity_objects_map, error<insert_error_type>>;
-        using save_result = result<entity_objects_map, error<save_error_type>>;
+        using insert_result = result<object_map_map, error<insert_error_type>>;
+        using save_result = result<object_map_map, error<save_error_type>>;
 
         using setup_completion_f = std::function<void(setup_result const &)>;
         using insert_completion_f = std::function<void(insert_result const &)>;

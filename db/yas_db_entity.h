@@ -10,15 +10,15 @@
 
 namespace yas {
 namespace db {
-    using attributes_map = std::unordered_map<std::string, db::attribute>;
-    using relations_map = std::unordered_map<std::string, db::relation>;
+    using attribute_map = std::unordered_map<std::string, db::attribute>;
+    using relation_map = std::unordered_map<std::string, db::relation>;
 
     struct entity {
         std::string const name;
-        attributes_map const attributes;
-        relations_map const relations;
+        attribute_map const attributes;
+        relation_map const relations;
 
-        entity(std::string const &name, attributes_map &&attributes, relations_map &&relations);
+        entity(std::string const &name, attribute_map &&attributes, relation_map &&relations);
 
         std::string sql_for_create() const;
         std::string sql_for_update() const;

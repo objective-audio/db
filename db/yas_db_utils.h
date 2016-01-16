@@ -8,8 +8,8 @@ namespace yas {
 namespace db {
     class database;
 
-    using select_result = result<db::column_maps, db::error>;
-    using select_single_result = result<db::column_map, std::nullptr_t>;
+    using select_result = result<db::value_map_vector, db::error>;
+    using select_single_result = result<db::value_map, std::nullptr_t>;
 
     update_result create_table(database &db, std::string const &table_name, std::vector<std::string> const &fields);
     update_result alter_table(database &db, std::string const &table_name, std::string const &field);
@@ -34,7 +34,7 @@ namespace db {
     bool column_exists(database const &db, std::string const &column_name, std::string const &table_name);
 
     select_result select(database const &db, std::string const &table_name, std::vector<std::string> const &fields,
-                         std::string const &where_exprs = "", db::column_map const args = {},
+                         std::string const &where_exprs = "", db::value_map const args = {},
                          std::vector<db::field_order> const &orders = {},
                          db::range const &limit_range = db::range::empty());
     select_result select_last(database const &db, std::string const &table_name);

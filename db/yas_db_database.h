@@ -65,7 +65,7 @@ namespace db {
        public:
         class impl;
 
-        using callback_function = std::function<int(column_map const &)>;
+        using callback_function = std::function<int(value_map const &)>;
 
         static std::string sqlite_lib_version();
         static bool sqlite_thread_safe();
@@ -86,16 +86,16 @@ namespace db {
         bool good_connection();
 
         update_result execute_update(std::string const &sql);
-        update_result execute_update(std::string const &sql, column_vector const &arguments);
-        update_result execute_update(std::string const &sql, column_map const &arguments);
+        update_result execute_update(std::string const &sql, value_vector const &arguments);
+        update_result execute_update(std::string const &sql, value_map const &arguments);
 
         update_result execute_statements(std::string const &sql);
         update_result execute_statements(std::string const &sql, callback_function const &callback);
         callback_function const &callback_for_execute_statements() const;
 
         query_result execute_query(std::string const &sql) const;
-        query_result execute_query(std::string const &sql, column_vector const &arguments) const;
-        query_result execute_query(std::string const &sql, column_map const &arguments) const;
+        query_result execute_query(std::string const &sql, value_vector const &arguments) const;
+        query_result execute_query(std::string const &sql, value_map const &arguments) const;
 
         row_result last_insert_row_id() const;
         count_result changes() const;

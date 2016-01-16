@@ -397,7 +397,7 @@ class db::database::impl : public base::impl {
         }
     }
 
-    db::query_result execute_query(std::string const &sql, column_vector const &vec, column_map const &map) {
+    db::query_result execute_query(std::string const &sql, value_vector const &vec, value_map const &map) {
         if (!database_exists()) {
             return query_result{error{error_type::closed}};
         }
@@ -640,11 +640,11 @@ db::query_result db::database::execute_query(std::string const &sql) const {
     return impl_ptr<impl>()->execute_query(sql, {}, {});
 }
 
-db::query_result db::database::execute_query(std::string const &sql, column_vector const &arguments) const {
+db::query_result db::database::execute_query(std::string const &sql, value_vector const &arguments) const {
     return impl_ptr<impl>()->execute_query(sql, arguments, {});
 }
 
-db::query_result db::database::execute_query(std::string const &sql, column_map const &arguments) const {
+db::query_result db::database::execute_query(std::string const &sql, value_map const &arguments) const {
     return impl_ptr<impl>()->execute_query(sql, {}, arguments);
 }
 

@@ -20,7 +20,7 @@ namespace db {
         object(model const &model, std::string const &entity_name);
         object(std::nullptr_t);
 
-        void load(db::column_map const &values);
+        void load(db::value_map const &values);
 
         value const &get(std::string const &attr_name) const;
         void set(std::string const &attr_name, value const &value);
@@ -36,7 +36,7 @@ namespace db {
         void remove();
         bool is_removed() const;
 
-        db::column_map parameters_for_save() const;
+        db::value_map parameters_for_save() const;
 
         static db::object const &empty();
 
@@ -47,6 +47,6 @@ namespace db {
     };
 
     using object_map = std::unordered_map<db::integer::type, object>;
-    using entity_objects_map = std::unordered_map<std::string, object_map>;
+    using object_map_map = std::unordered_map<std::string, object_map>;
 }
 }

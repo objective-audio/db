@@ -112,10 +112,10 @@ namespace db {
         class impl;
     };
 
-    using column_vector = std::vector<value>;
-    using column_map = std::unordered_map<std::string, value>;
-    using column_maps = std::vector<db::column_map>;
-    using column_maps_map = std::unordered_map<std::string, column_maps>;
+    using value_vector = std::vector<value>;
+    using value_map = std::unordered_map<std::string, value>;
+    using value_map_vector = std::vector<db::value_map>;
+    using value_map_vector_map = std::unordered_map<std::string, value_map_vector>;
     using time_point = std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>;
 }
 

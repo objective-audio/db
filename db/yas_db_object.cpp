@@ -12,7 +12,7 @@ using namespace yas;
 struct db::object::impl : public base::impl {
     db::model model;
     std::string entity_name;
-    db::column_map values;
+    db::value_map values;
     enum db::object_status status;
 
     impl(db::model const &model, std::string const &entity_name)
@@ -32,7 +32,7 @@ struct db::object::impl : public base::impl {
         return false;
     }
 
-    void load(db::column_map const &vals) {
+    void load(db::value_map const &vals) {
         if (status != db::object_status::changed) {
             clear();
 
@@ -81,8 +81,8 @@ struct db::object::impl : public base::impl {
         set(removed_field, db::value{true});
     }
 
-    db::column_map parameters_for_save() {
-        db::column_map params;
+    db::value_map parameters_for_save() {
+        db::value_map params;
 
         db::entity const &entity = model.entities().at(entity_name);
         for (auto const &pair : entity.attributes) {
@@ -109,7 +109,7 @@ db::object::object(db::model const &model, std::string const &entity_name)
 db::object::object(std::nullptr_t) : super_class(nullptr) {
 }
 
-void db::object::load(db::column_map const &values) {
+void db::object::load(db::value_map const &values) {
     impl_ptr<impl>()->load(values);
 }
 
@@ -153,7 +153,7 @@ bool db::object::is_removed() const {
     return impl_ptr<impl>()->is_removed();
 }
 
-db::column_map db::object::parameters_for_save() const {
+db::value_map db::object::parameters_for_save() const {
     return impl_ptr<impl>()->parameters_for_save();
 }
 

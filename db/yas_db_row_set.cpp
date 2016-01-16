@@ -176,11 +176,11 @@ db::value db::row_set::column_value(std::string const column_name) const {
     return db::value{nullptr};
 }
 
-db::column_map db::row_set::column_map() const {
+db::value_map db::row_set::value_map() const {
     auto *const stmt = impl_ptr<impl>()->statement().stmt().value();
     int const column_count = sqlite3_data_count(stmt);
 
-    db::column_map map;
+    db::value_map map;
     map.reserve(column_count);
 
     for (auto &idx : each_index<int>{column_count}) {

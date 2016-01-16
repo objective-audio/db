@@ -41,8 +41,8 @@ using namespace yas;
     db::model model((__bridge CFDictionaryRef)model_dict);
     db::object obj{model, "sample_a"};
 
-    db::column_map values{std::make_pair("age", db::value{10}), std::make_pair("name", db::value{"name_val"}),
-                          std::make_pair("weight", db::value{53.4}), std::make_pair("hoge", db::value{"hage"})};
+    db::value_map values{std::make_pair("age", db::value{10}), std::make_pair("name", db::value{"name_val"}),
+                         std::make_pair("weight", db::value{53.4}), std::make_pair("hoge", db::value{"hage"})};
 
     obj.load(values);
 
@@ -57,12 +57,12 @@ using namespace yas;
     db::model model((__bridge CFDictionaryRef)model_dict);
     db::object obj{model, "sample_a"};
 
-    db::column_map prev_values{std::make_pair("age", db::value{10}), std::make_pair("name", db::value{"name_val"}),
-                               std::make_pair("weight", db::value{53.4}), std::make_pair("hoge", db::value{"hage"})};
+    db::value_map prev_values{std::make_pair("age", db::value{10}), std::make_pair("name", db::value{"name_val"}),
+                              std::make_pair("weight", db::value{53.4}), std::make_pair("hoge", db::value{"hage"})};
 
     obj.load(prev_values);
 
-    db::column_map post_values{std::make_pair("age", db::value{543}), std::make_pair("hoge", db::value{"poke"})};
+    db::value_map post_values{std::make_pair("age", db::value{543}), std::make_pair("hoge", db::value{"poke"})};
 
     obj.load(post_values);
 

@@ -56,7 +56,7 @@ struct db::model::impl : public base::impl {
                 return;
             }
 
-            attributes_map attributes;
+            attribute_map attributes;
 
             auto const &id_attr = attribute::id_attribute();
             attributes.emplace(std::make_pair(id_attr.name, id_attr));
@@ -81,7 +81,7 @@ struct db::model::impl : public base::impl {
                 }
             }
 
-            relations_map relations;
+            relation_map relations;
 
             CFDictionaryRef cf_relations = get<CFDictionaryRef>(cf_entity_dict, relations_key);
             if (cf_relations) {

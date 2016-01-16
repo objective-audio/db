@@ -52,7 +52,7 @@ using namespace yas;
     manager.execute([self, expectation](db::database &db, auto const &operation) {
         XCTAssertTrue(db.execute_update(db::create_table_sql("test_table", {"field_a", "field_b"})));
 
-        db::column_vector args{db::value{"value_a"}, db::value{"value_b"}};
+        db::value_vector args{db::value{"value_a"}, db::value{"value_b"}};
         XCTAssertTrue(db.execute_update("insert into test_table(field_a, field_b) values(:field_a, :field_b)", args));
 
         auto query_result = db.execute_query("select * from test_table");
@@ -132,7 +132,7 @@ using namespace yas;
         auto &tgt_id = select_result_b.value().at(0).at(db::id_field);
 
         auto sql = db::insert_sql("rel_sample_a_child", {db::src_id_field, db::tgt_id_field});
-        if (!db.execute_update(sql, db::column_vector{src_id, tgt_id})) {
+        if (!db.execute_update(sql, db::value_vector{src_id, tgt_id})) {
             rollback = true;
         }
 
@@ -225,7 +225,7 @@ using namespace yas;
                            [self, expectation_1](auto const &insert_result) {
                                XCTAssertTrue(insert_result);
 
-                               db::entity_objects_map const &entity_objects = insert_result.value();
+                               db::object_map_map const &entity_objects = insert_result.value();
                                XCTAssertGreaterThan(entity_objects.count("sample_a"), 0);
 
                                db::object_map const &objects = entity_objects.at("sample_a");
@@ -256,7 +256,7 @@ using namespace yas;
                            [self, expectation_2](auto const &insert_result) {
                                XCTAssertTrue(insert_result);
 
-                               db::entity_objects_map const &entity_objects = insert_result.value();
+                               db::object_map_map const &entity_objects = insert_result.value();
                                db::object_map const &objects = entity_objects.at("sample_a");
 
                                XCTAssertEqual(objects.size(), 1);
@@ -288,7 +288,7 @@ using namespace yas;
 
     manager.insert_objects({{"sample_a", 3}, {"sample_b", 5}},
                            [self, expectation_1](auto const &insert_result) {
-                               db::entity_objects_map const &entity_objects = insert_result.value();
+                               db::object_map_map const &entity_objects = insert_result.value();
                                XCTAssertEqual(entity_objects.size(), 2);
 
                                XCTAssertGreaterThan(entity_objects.count("sample_a"), 0);
@@ -322,7 +322,7 @@ using namespace yas;
 
     manager.insert_objects({{"sample_a", 1}},
                            [self, &main_objects, exp1](db::manager::insert_result const &insert_result) {
-                               db::entity_objects_map const &entity_objects = insert_result.value();
+                               db::object_map_map const &entity_objects = insert_result.value();
                                db::object_map const &objects = entity_objects.at("sample_a");
                                for (auto const &obj_pair : objects) {
                                    main_objects.insert(obj_pair);

@@ -8,7 +8,7 @@
 
 using namespace yas;
 
-db::entity::entity(std::string const &name, attributes_map &&attributes, relations_map &&relations)
+db::entity::entity(std::string const &name, attribute_map &&attributes, relation_map &&relations)
     : name(name), attributes(std::move(attributes)), relations(std::move(relations)) {
 }
 
