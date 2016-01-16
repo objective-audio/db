@@ -53,8 +53,8 @@ namespace db {
         };
 
         using setup_result = result<std::nullptr_t, error<setup_error_type>>;
-        using insert_result = result<std::vector<db::object>, error<insert_error_type>>;
-        using save_result = result<std::vector<db::object>, error<save_error_type>>;
+        using insert_result = result<entity_objects_map, error<insert_error_type>>;
+        using save_result = result<entity_objects_map, error<save_error_type>>;
 
         using setup_completion_f = std::function<void(setup_result const &)>;
         using insert_completion_f = std::function<void(insert_result const &)>;
