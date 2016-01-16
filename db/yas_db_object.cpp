@@ -126,7 +126,7 @@ struct db::object::impl : public base::impl {
     }
 };
 
-db::object::object(manager const &manager, db::model const &model, std::string const &entity_name)
+db::object::object(db::manager const &manager, db::model const &model, std::string const &entity_name)
     : super_class(std::make_unique<impl>(manager, model, entity_name)) {
 }
 
@@ -143,6 +143,10 @@ db::value const &db::object::get(std::string const &attr_name) const {
 
 void db::object::set(std::string const &attr_name, db::value const &value) {
     impl_ptr<impl>()->set(attr_name, value);
+}
+
+db::manager const &db::object::manager() const {
+    return impl_ptr<impl>()->manager;
 }
 
 db::model const &db::object::model() const {
