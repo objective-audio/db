@@ -122,7 +122,7 @@ using namespace yas;
     XCTAssertEqual(obj.get(db::object_id_field), db::value{45});
 }
 
-- (void)test_parameters_for_save {
+- (void)test_values_for_save {
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
     db::object obj{nullptr, model, "sample_a"};

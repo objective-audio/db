@@ -98,23 +98,23 @@ struct db::object::impl : public base::impl {
     }
 
     db::value_map values_for_save() {
-        db::value_map params;
+        db::value_map values_for_save;
 
         db::entity const &entity = model.entities().at(entity_name);
         for (auto const &pair : entity.attributes) {
             auto const &attr_name = pair.first;
             if (attr_name != save_id_field) {
                 if (values.count(attr_name)) {
-                    params.insert(std::make_pair(attr_name, values.at(attr_name)));
+                    values_for_save.insert(std::make_pair(attr_name, values.at(attr_name)));
                 } else if (pair.second.not_null) {
-                    params.insert(std::make_pair(attr_name, pair.second.default_value));
+                    values_for_save.insert(std::make_pair(attr_name, pair.second.default_value));
                 } else {
-                    params.insert(std::make_pair(attr_name, db::value::empty()));
+                    values_for_save.insert(std::make_pair(attr_name, db::value::empty()));
                 }
             }
         }
 
-        return params;
+        return values_for_save;
     }
 
     void notify_did_change() {
