@@ -332,10 +332,9 @@ void db::manager::execute(execution_f &&db_execution) {
     ip->queue.add_operation(operation{std::move(execution)});
 }
 
-void db::manager::insert_objects(std::string const &entity_name, std::size_t const count,
-                                 insert_completion_f &&completion) {
-    execute([completion = std::move(completion), manager = *this, entity_name, count](db::database & db,
-                                                                                      operation const &op) {
+void db::manager::insert_objects(entity_count_map const &counts, insert_completion_f &&completion) {
+    execute([completion = std::move(completion), manager = *this, counts = std::move(counts)](db::database & db,
+                                                                                              operation const &op) {
         db::column_map db_info;
         column_maps_map inserted_objects;
         db::integer::type start_obj_id = 1;
@@ -357,34 +356,39 @@ void db::manager::insert_objects(std::string const &entity_name, std::size_t con
             state = insert_state{make_error(insert_error_type::save_id_not_found)};
         }
 
-        if (auto max_value = db::max(db, entity_name, object_id_field)) {
-            start_obj_id = max_value.get<integer>() + 1;
-        }
-
         db::value const save_id_value{next_save_id};
 
-        for (auto const &idx : each_index<std::size_t>{count}) {
-            db::value obj_id_value{start_obj_id + idx};
+        for (auto const &count_pair : counts) {
+            auto const &entity_name = count_pair.first;
+            auto const &count = count_pair.second;
 
-            if (!db.execute_update(db::insert_sql(entity_name, {object_id_field, save_id_field}),
-                                   db::column_vector{obj_id_value, save_id_value})) {
-                state = insert_state{make_error(insert_error_type::insert_failed)};
-                break;
+            if (auto max_value = db::max(db, entity_name, object_id_field)) {
+                start_obj_id = max_value.get<integer>() + 1;
             }
 
-            auto const &select_result = db::select(db, entity_name, {"*"}, db::field_expr(object_id_field, "="),
-                                                   {db::column_map{std::make_pair(object_id_field, obj_id_value)}});
+            for (auto const &idx : each_index<std::size_t>{count}) {
+                db::value obj_id_value{start_obj_id + idx};
 
-            if (!select_result) {
-                state = insert_state{make_error(insert_error_type::select_failed)};
-                break;
+                if (!db.execute_update(db::insert_sql(entity_name, {object_id_field, save_id_field}),
+                                       db::column_vector{obj_id_value, save_id_value})) {
+                    state = insert_state{make_error(insert_error_type::insert_failed)};
+                    break;
+                }
+
+                auto const &select_result = db::select(db, entity_name, {"*"}, db::field_expr(object_id_field, "="),
+                                                       {db::column_map{std::make_pair(object_id_field, obj_id_value)}});
+
+                if (!select_result) {
+                    state = insert_state{make_error(insert_error_type::select_failed)};
+                    break;
+                }
+
+                if (inserted_objects.count(entity_name) == 0) {
+                    inserted_objects.emplace(std::make_pair(entity_name, column_maps{}));
+                }
+
+                inserted_objects.at(entity_name).emplace_back(std::move(select_result.value().at(0)));
             }
-
-            if (inserted_objects.count(entity_name) == 0) {
-                inserted_objects.emplace(std::make_pair(entity_name, column_maps{}));
-            }
-
-            inserted_objects.at(entity_name).emplace_back(std::move(select_result.value().at(0)));
         }
 
         if (state) {
