@@ -158,10 +158,20 @@ db::select_result db::select(db::database const &db, std::string const &table_na
     return select_result{value_map_vector};
 }
 
-db::select_result db::select_last(database const &db, std::string const &table_name) {
-    std::string where_expr =
-        "rowid in (select max(rowid) from " + table_name + " group by " + db::object_id_field + ")";
-    return select(db, table_name, {"*"}, where_expr);
+db::select_result db::select_last(database const &db, std::string const &table_name, db::value const &save_id,
+                                  std::string const &where_exprs, db::value_map const args,
+                                  std::vector<db::field_order> const &orders, db::range const &limit_range) {
+    std::vector<std::string> sub_where_components;
+    if (save_id) {
+        sub_where_components.emplace_back(expr(save_id_field, to_string(save_id), "<="));
+    }
+    if (where_exprs.size() > 0) {
+        sub_where_components.push_back(where_exprs);
+    }
+    std::string sub_where = sub_where_components.size() > 0 ? " where " + joined(sub_where_components, " and ") : "";
+    std::string where =
+        "rowid in (select max(rowid) from " + table_name + sub_where + " group by " + db::object_id_field + ")";
+    return select(db, table_name, {"*"}, where, args, orders, limit_range);
 }
 
 db::select_single_result db::select_db_info(database const &db) {

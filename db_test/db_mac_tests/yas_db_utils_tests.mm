@@ -334,6 +334,93 @@ using namespace yas;
     XCTAssertEqual(select_result.value().at(1).at(field_name).get<db::text>(), "value_1_1");
 }
 
+- (void)test_select_last_by_save_id {
+    db::database db = [yas_db_test_utils create_test_database];
+    db.open();
+
+    auto const table_name = "table_a";
+    auto const field_name = "field_a";
+    std::vector<std::string> const fields{db::object_id_field, field_name, db::save_id_field};
+
+    XCTAssertTrue(db::create_table(db, table_name, fields));
+
+    db::value_vector args;
+    args = {db::value{1}, db::value{"value_1_a"}, db::value{1}};
+    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), std::move(args)));
+    args = {db::value{2}, db::value{"value_2_a"}, db::value{1}};
+    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), std::move(args)));
+    args = {db::value{1}, db::value{"value_1_b"}, db::value{2}};
+    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), std::move(args)));
+    args = {db::value{2}, db::value{"value_2_b"}, db::value{2}};
+    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), std::move(args)));
+    args = {db::value{1}, db::value{"value_1_c"}, db::value{3}};
+    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), std::move(args)));
+    args = {db::value{2}, db::value{"value_2_c"}, db::value{4}};
+    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), std::move(args)));
+
+    auto select_result = db::select_last(db, table_name, db::value{4});
+    XCTAssertTrue(select_result);
+    XCTAssertEqual(select_result.value().size(), 2);
+    XCTAssertEqual(select_result.value().at(0).at(field_name).get<db::text>(), "value_1_c");
+    XCTAssertEqual(select_result.value().at(1).at(field_name).get<db::text>(), "value_2_c");
+
+    select_result = db::select_last(db, table_name, db::value{2});
+    XCTAssertTrue(select_result);
+    XCTAssertEqual(select_result.value().size(), 2);
+    XCTAssertEqual(select_result.value().at(0).at(field_name).get<db::text>(), "value_1_b");
+    XCTAssertEqual(select_result.value().at(1).at(field_name).get<db::text>(), "value_2_b");
+
+    select_result = db::select_last(db, table_name, db::value{3});
+    XCTAssertTrue(select_result);
+    XCTAssertEqual(select_result.value().size(), 2);
+    XCTAssertEqual(select_result.value().at(0).at(field_name).get<db::text>(), "value_2_b");
+    XCTAssertEqual(select_result.value().at(1).at(field_name).get<db::text>(), "value_1_c");
+
+    select_result = db::select_last(db, table_name, db::value{1});
+    XCTAssertTrue(select_result);
+    XCTAssertEqual(select_result.value().size(), 2);
+    XCTAssertEqual(select_result.value().at(0).at(field_name).get<db::text>(), "value_1_a");
+    XCTAssertEqual(select_result.value().at(1).at(field_name).get<db::text>(), "value_2_a");
+}
+
+- (void)test_select_last_with_addtional_parameters {
+    db::database db = [yas_db_test_utils create_test_database];
+    db.open();
+
+    auto const table_name = "table_a";
+    auto const field_name = "field_a";
+    std::vector<std::string> const fields{db::object_id_field, field_name, db::save_id_field};
+
+    XCTAssertTrue(db::create_table(db, table_name, fields));
+
+    db::value_vector args;
+    args = {db::value{1}, db::value{"value_1_a"}, db::value{1}};
+    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), std::move(args)));
+    args = {db::value{2}, db::value{"value_2_a"}, db::value{1}};
+    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), std::move(args)));
+    args = {db::value{1}, db::value{"value_1_b"}, db::value{2}};
+    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), std::move(args)));
+    args = {db::value{2}, db::value{"value_2_b"}, db::value{2}};
+    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), std::move(args)));
+    args = {db::value{1}, db::value{"value_1_c"}, db::value{3}};
+    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), std::move(args)));
+    args = {db::value{2}, db::value{"value_2_c"}, db::value{4}};
+    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), std::move(args)));
+
+    auto select_result = db::select_last(db, table_name, db::value{3}, "", {},
+                                         {db::field_order{db::object_id_field, db::order::ascending}});
+    XCTAssertTrue(select_result);
+    XCTAssertEqual(select_result.value().size(), 2);
+    XCTAssertEqual(select_result.value().at(0).at(field_name).get<db::text>(), "value_1_c");
+    XCTAssertEqual(select_result.value().at(1).at(field_name).get<db::text>(), "value_2_b");
+
+    select_result = db::select_last(db, table_name, db::value{3}, "", {},
+                                    {db::field_order{db::object_id_field, db::order::descending}}, db::range{0, 1});
+    XCTAssertTrue(select_result);
+    XCTAssertEqual(select_result.value().size(), 1);
+    XCTAssertEqual(select_result.value().at(0).at(field_name).get<db::text>(), "value_2_b");
+}
+
 - (void)test_max {
     db::database db = [yas_db_test_utils create_test_database];
     db.open();
