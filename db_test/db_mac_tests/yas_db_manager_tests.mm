@@ -82,18 +82,18 @@ using namespace yas;
 
     manager.execute([self, expectation](db::database &db, auto const &op) {
         XCTAssertTrue(db::table_exists(db, db::info_table));
-        auto select_infos_result = db::select(db, db::info_table, {"*"});
+        auto select_infos_result = db::select(db, db::info_table);
         XCTAssertTrue(select_infos_result);
         XCTAssertEqual(select_infos_result.value().size(), 1);
         XCTAssertEqual(select_infos_result.value().at(0).at(db::version_field).get<db::text>(), "0.0.1");
 
         XCTAssertTrue(db::table_exists(db, "sample_a"));
-        auto select_result_a = db::select(db, "sample_a", {"*"});
+        auto select_result_a = db::select(db, "sample_a");
         XCTAssertTrue(select_result_a);
         XCTAssertEqual(select_result_a.value().size(), 0);
 
         XCTAssertTrue(db::table_exists(db, "rel_sample_a_child"));
-        auto select_rels_result = db::select(db, "rel_sample_a_child", {"*"});
+        auto select_rels_result = db::select(db, "rel_sample_a_child");
         XCTAssertTrue(select_rels_result);
         XCTAssertEqual(select_rels_result.value().size(), 0);
 
@@ -125,10 +125,12 @@ using namespace yas;
             rollback = true;
         }
 
-        auto select_result_a = db::select(db, "sample_a", {db::id_field});
+        db::select_option option{.fields = {db::id_field}};
+
+        auto select_result_a = db::select(db, "sample_a", option);
         auto &src_id = select_result_a.value().at(0).at(db::id_field);
 
-        auto select_result_b = db::select(db, "sample_b", {db::id_field});
+        auto select_result_b = db::select(db, "sample_b", option);
         auto &tgt_id = select_result_b.value().at(0).at(db::id_field);
 
         auto sql = db::insert_sql("rel_sample_a_child", {db::src_id_field, db::tgt_id_field});
@@ -164,14 +166,14 @@ using namespace yas;
 
     manager.execute([self, second_expectation](db::database &db, auto const &) {
         XCTAssertTrue(db::table_exists(db, db::info_table));
-        auto select_infos_result = db::select(db, db::info_table, {"*"});
+        auto select_infos_result = db::select(db, db::info_table);
         XCTAssertTrue(select_infos_result);
         XCTAssertEqual(select_infos_result.value().size(), 1);
         XCTAssertEqual(select_infos_result.value().at(0).at(db::version_field).get<db::text>(), "0.0.2");
         XCTAssertEqual(select_infos_result.value().at(0).at(db::save_id_field).get<db::integer>(), 100);
 
         XCTAssertTrue(db::table_exists(db, "sample_a"));
-        auto select_result_a = db::select(db, "sample_a", {"*"});
+        auto select_result_a = db::select(db, "sample_a");
         XCTAssertTrue(select_result_a);
         XCTAssertEqual(select_result_a.value().size(), 1);
 
@@ -181,7 +183,7 @@ using namespace yas;
         XCTAssertEqual(sample_a.at("weight").get<db::real>(), 451.2);
 
         XCTAssertTrue(db::table_exists(db, "sample_b"));
-        auto select_result_b = db::select(db, "sample_b", {"*"});
+        auto select_result_b = db::select(db, "sample_b");
         XCTAssertTrue(select_result_b);
         XCTAssertEqual(select_result_b.value().size(), 1);
 
@@ -189,12 +191,12 @@ using namespace yas;
         XCTAssertEqual(sample_b.at("name").get<db::text>(), "qwerty");
 
         XCTAssertTrue(db::table_exists(db, "sample_c"));
-        auto select_result_c = db::select(db, "sample_c", {"*"});
+        auto select_result_c = db::select(db, "sample_c");
         XCTAssertTrue(select_result_c);
         XCTAssertEqual(select_result_c.value().size(), 0);
 
         XCTAssertTrue(db::table_exists(db, "rel_sample_a_child"));
-        auto select_rels_result = db::select(db, "rel_sample_a_child", {"*"});
+        auto select_rels_result = db::select(db, "rel_sample_a_child");
         XCTAssertEqual(select_rels_result.value().size(), 1);
 
         auto &src_id = sample_a.at(db::id_field);
@@ -398,7 +400,7 @@ using namespace yas;
     });
 
     manager.execute([self, exp3](db::database &db, operation const &) {
-        auto select_result = db::select(db, "sample_a", {"*"});
+        auto select_result = db::select(db, "sample_a");
         auto const &selected_maps = select_result.value();
 
         XCTAssertEqual(selected_maps.size(), 2);

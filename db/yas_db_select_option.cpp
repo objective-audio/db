@@ -1,13 +1,18 @@
 //
-//  yas_db_range.cpp
+//  yas_db_select_option.cpp
 //
 
-#include "yas_db_range.h"
+#include "yas_db_select_option.h"
 
 using namespace yas;
 
-db::range::range(UInt64 const location, UInt64 const length) : location(location), length(length) {
+#pragma mark - db::field_order
+
+std::string db::field_order::sql() const {
+    return field + (order == db::order::ascending ? " asc" : " desc");
 }
+
+#pragma mark - db::range
 
 bool db::range::is_empty() const {
     return length == 0;

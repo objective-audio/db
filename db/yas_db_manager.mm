@@ -4,7 +4,6 @@
 
 #include <dispatch/dispatch.h>
 #include "yas_db_manager.h"
-#include "yas_db_order.h"
 #include "yas_db_sql_utils.h"
 #include "yas_db_utils.h"
 #include "yas_each_index.h"
@@ -188,8 +187,9 @@ void db::manager::setup(setup_completion_f &&completion) {
 
         if (db::begin_transaction(db)) {
             if (db::table_exists(db, info_table)) {
-                auto select_result = db::select(db, {info_table}, {version_field, save_id_field}, "", {},
-                                                {yas::db::field_order{version_field, yas::db::order::ascending}});
+                auto select_result =
+                    db::select(db, {info_table}, {.fields = {version_field, save_id_field},
+                                                  .field_orders = {{version_field, db::order::ascending}}});
                 if (select_result) {
                     auto const update_result = db.execute_update(update_sql(info_table, {version_field}, ""),
                                                                  {db::value{model.version().str()}});
@@ -418,9 +418,9 @@ void db::manager::insert_objects(entity_count_map const &counts, insert_completi
                     break;
                 }
 
-                auto const &select_result = db::select(db, entity_name, {"*"}, db::field_expr(object_id_field, "="),
-                                                       {db::value_map{std::make_pair(object_id_field, obj_id_value)}});
-
+                auto const &select_result =
+                    db::select(db, entity_name, {.where_exprs = db::field_expr(object_id_field, "="),
+                                                 .arguments = {{std::make_pair(object_id_field, obj_id_value)}}});
                 if (!select_result) {
                     state = insert_state{make_error(insert_error_type::select_failed)};
                     break;
