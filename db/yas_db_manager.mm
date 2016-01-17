@@ -4,6 +4,7 @@
 
 #include <dispatch/dispatch.h>
 #include "yas_db_manager.h"
+#include "yas_db_select_option.h"
 #include "yas_db_sql_utils.h"
 #include "yas_db_utils.h"
 #include "yas_each_index.h"
@@ -88,14 +89,15 @@ struct db::manager::impl : public base::impl {
         return db::object::empty();
     }
 
-    object_map_map load_objects(value_map_vector_map const &entity_maps) {
-        object_map_map loaded_objects;
+    object_vector_map load_objects(value_map_vector_map const &entity_maps) {
+        object_vector_map loaded_objects;
         for (auto const &entity_pair : entity_maps) {
             auto const &entity_name = entity_pair.first;
-            object_map objects;
+            object_vector objects;
+            objects.reserve(entity_pair.second.size());
             for (auto const &map : entity_pair.second) {
                 if (auto const obj = load_object(entity_name, map)) {
-                    objects.insert(std::make_pair(obj.object_id().get<integer>(), obj));
+                    objects.emplace_back(std::move(obj));
                 }
             }
             loaded_objects.emplace(std::make_pair(entity_name, std::move(objects)));
@@ -470,6 +472,53 @@ void db::manager::insert_objects(entity_count_map const &counts, insert_completi
             }
         };
 
+        dispatch_sync(dispatch_get_main_queue(), std::move(lambda));
+    });
+}
+
+void db::manager::fetch_objects(std::string const &entity_name, db::select_option &&option,
+                                fetch_completion_f &&completion) {
+    execute([entity_name, manager = *this, option = std::move(option), completion = std::move(completion)](
+        db::database & db, operation const &) {
+        using fetch_state = result<std::nullptr_t, error<fetch_error_type>>;
+        fetch_state state{nullptr};
+
+        value_map_vector_map fetched_objects;
+
+        auto begin_result = db::begin_transaction(db);
+        if (begin_result) {
+            auto select_result = db::select_last(db, entity_name, nullptr, option);
+            if (!select_result) {
+                state = fetch_state{make_error(fetch_error_type::select_failed)};
+            }
+
+            if (state) {
+                fetched_objects.emplace(std::make_pair(entity_name, std::move(select_result.value())));
+            }
+
+            if (state) {
+                db::commit(db);
+            } else {
+                db::rollback(db);
+                fetched_objects.clear();
+            }
+        } else {
+            state = fetch_state{make_error(fetch_error_type::begin_failed, begin_result.error())};
+        }
+
+        auto lambda = [
+            state = std::move(state),
+            completion = std::move(completion),
+            fetched_objects = std::move(fetched_objects),
+            manager
+        ]() {
+            if (state) {
+                auto loaded_objects = manager.impl_ptr<impl>()->load_objects(fetched_objects);
+                completion(fetch_result{std::move(loaded_objects)});
+            } else {
+                completion(fetch_result{state.error()});
+            }
+        };
         dispatch_sync(dispatch_get_main_queue(), std::move(lambda));
     });
 }
