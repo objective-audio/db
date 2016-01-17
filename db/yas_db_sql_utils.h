@@ -5,7 +5,7 @@
 #pragma once
 
 #include <vector>
-#include "yas_db_range.h"
+#include "yas_db_select_option.h"
 #include "yas_db_value.h"
 
 namespace yas {

@@ -5,9 +5,8 @@
 #include "yas_db_attribute.h"
 #include "yas_db_database.h"
 #include "yas_db_manager.h"
-#include "yas_db_order.h"
-#include "yas_db_range.h"
 #include "yas_db_row_set.h"
+#include "yas_db_select_option.h"
 #include "yas_db_sql_utils.h"
 #include "yas_db_utils.h"
 
@@ -137,15 +136,13 @@ bool db::column_exists(database const &db, std::string const &column_name, std::
     return false;
 }
 
-db::select_result db::select(db::database const &db, std::string const &table_name,
-                             std::vector<std::string> const &fields, std::string const &where_exprs,
-                             db::value_map const args, std::vector<db::field_order> const &orders,
-                             db::range const &limit_range) {
-    auto const sql = select_sql(table_name, fields, where_exprs, orders, limit_range);
+db::select_result db::select(db::database const &db, std::string const &table_name, select_option const &options) {
+    auto const sql =
+        select_sql(table_name, options.fields, options.where_exprs, options.field_orders, options.limit_range);
 
     db::value_map_vector value_map_vector;
 
-    auto query_result = db.execute_query(sql, args);
+    auto query_result = db.execute_query(sql, options.arguments);
     if (query_result) {
         auto row_set = query_result.value();
         while (row_set.next()) {
@@ -159,23 +156,26 @@ db::select_result db::select(db::database const &db, std::string const &table_na
 }
 
 db::select_result db::select_last(database const &db, std::string const &table_name, db::value const &save_id,
-                                  std::string const &where_exprs, db::value_map const args,
-                                  std::vector<db::field_order> const &orders, db::range const &limit_range) {
+                                  select_option const &options) {
+    auto edited_options = options;
+
     std::vector<std::string> sub_where_components;
     if (save_id) {
         sub_where_components.emplace_back(expr(save_id_field, to_string(save_id), "<="));
     }
-    if (where_exprs.size() > 0) {
-        sub_where_components.push_back(where_exprs);
+    if (edited_options.where_exprs.size() > 0) {
+        sub_where_components.push_back(edited_options.where_exprs);
     }
     std::string sub_where = sub_where_components.size() > 0 ? " where " + joined(sub_where_components, " and ") : "";
-    std::string where =
+
+    edited_options.where_exprs =
         "rowid in (select max(rowid) from " + table_name + sub_where + " group by " + db::object_id_field + ")";
-    return select(db, table_name, {"*"}, where, args, orders, limit_range);
+
+    return select(db, table_name, edited_options);
 }
 
 db::select_single_result db::select_db_info(database const &db) {
-    if (auto const &select_result = select(db, db::info_table, {"*"})) {
+    if (auto const &select_result = select(db, db::info_table)) {
         if (select_result.value().size() > 0) {
             return select_single_result{std::move(select_result.value().at(0))};
         }

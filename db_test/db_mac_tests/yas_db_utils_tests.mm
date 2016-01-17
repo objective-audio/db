@@ -294,8 +294,9 @@ using namespace yas;
     db::value_vector args_2{db::value{"value_a_2"}, db::value{"value_b_2"}};
     XCTAssertTrue(db.execute_update(db::insert_sql(table, {field_a, field_b}), std::move(args_2)));
 
-    db::value_map sel_args{std::make_pair(field_a, db::value{"value_a_2"})};
-    auto const select_result = db::select(db, table, {field_a, field_b}, db::field_expr(field_a, "="), sel_args);
+    auto const select_result = db::select(db, table, {.fields = {field_a, field_b},
+                                                      .arguments = {std::make_pair(field_a, db::value{"value_a_2"})},
+                                                      .where_exprs = db::field_expr(field_a, "=")});
 
     XCTAssertTrue(select_result);
     XCTAssertEqual(select_result.value().size(), 1);
@@ -407,15 +408,16 @@ using namespace yas;
     args = {db::value{2}, db::value{"value_2_c"}, db::value{4}};
     XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), std::move(args)));
 
-    auto select_result = db::select_last(db, table_name, db::value{3}, "", {},
-                                         {db::field_order{db::object_id_field, db::order::ascending}});
+    auto select_result =
+        db::select_last(db, table_name, db::value{3}, {.field_orders = {{db::object_id_field, db::order::ascending}}});
     XCTAssertTrue(select_result);
     XCTAssertEqual(select_result.value().size(), 2);
     XCTAssertEqual(select_result.value().at(0).at(field_name).get<db::text>(), "value_1_c");
     XCTAssertEqual(select_result.value().at(1).at(field_name).get<db::text>(), "value_2_b");
 
-    select_result = db::select_last(db, table_name, db::value{3}, "", {},
-                                    {db::field_order{db::object_id_field, db::order::descending}}, db::range{0, 1});
+    select_result =
+        db::select_last(db, table_name, db::value{3},
+                        {.field_orders = {{db::object_id_field, db::order::descending}}, .limit_range = {0, 1}});
     XCTAssertTrue(select_result);
     XCTAssertEqual(select_result.value().size(), 1);
     XCTAssertEqual(select_result.value().at(0).at(field_name).get<db::text>(), "value_2_b");

@@ -7,6 +7,7 @@
 namespace yas {
 namespace db {
     class database;
+    class select_option;
 
     using select_result = result<db::value_map_vector, db::error>;
     using select_single_result = result<db::value_map, std::nullptr_t>;
@@ -33,14 +34,9 @@ namespace db {
     db::row_set get_table_schema(database const &db, std::string const &table_name);
     bool column_exists(database const &db, std::string const &column_name, std::string const &table_name);
 
-    select_result select(database const &db, std::string const &table_name, std::vector<std::string> const &fields,
-                         std::string const &where_exprs = "", db::value_map const args = {},
-                         std::vector<db::field_order> const &orders = {},
-                         db::range const &limit_range = db::range::empty());
+    select_result select(database const &db, std::string const &table_name, select_option const &option = {});
     db::select_result select_last(database const &db, std::string const &table_name, db::value const &save_id = nullptr,
-                                  std::string const &where_exprs = "", db::value_map const args = {},
-                                  std::vector<db::field_order> const &orders = {},
-                                  db::range const &limit_range = db::range::empty());
+                                  select_option const &option = {});
     select_single_result select_db_info(database const &db);
 
     db::value max(database const &db, std::string const &table_name, std::string const &field);
