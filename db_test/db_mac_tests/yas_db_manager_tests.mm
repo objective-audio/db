@@ -450,6 +450,21 @@ using namespace yas;
     [self waitForExpectationsWithTimeout:1.0 handler:nil];
 
     XCTAssertEqual(manager.save_id(), 3);
+
+    XCTestExpectation *exp5 = [self expectationWithDescription:@"5"];
+
+    manager.save([self, exp5](db::manager::save_result const &save_result) {
+        XCTAssertTrue(save_result);
+
+        auto const &entity_objects = save_result.value();
+        XCTAssertEqual(entity_objects.size(), 0);
+
+        [exp5 fulfill];
+    });
+
+    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+
+    XCTAssertEqual(manager.save_id(), 3);
 }
 
 - (void)test_make_setup_error {
