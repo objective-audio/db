@@ -50,6 +50,8 @@ namespace db {
 
     using object_map = std::unordered_map<db::integer::type, object>;
     using object_map_map = std::unordered_map<std::string, object_map>;
+    using object_vector = std::vector<object>;
+    using object_vector_map = std::unordered_map<std::string, object_vector>;
     using weak_object_map = std::unordered_map<db::integer::type, weak<object>>;
     using weak_object_map_map = std::unordered_map<std::string, weak_object_map>;
 }

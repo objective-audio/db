@@ -12,6 +12,8 @@
 
 namespace yas {
 namespace db {
+    class select_option;
+
     static auto constexpr info_table = "db_info";
     static auto constexpr version_field = "version";
 
@@ -39,6 +41,8 @@ namespace db {
 
         enum class save_error_type { none, save_id_not_found, update_save_id_failed, insert_failed };
 
+        enum class fetch_error_type { none, begin_failed, select_failed };
+
         template <typename T>
         struct error {
             error(std::nullptr_t);
@@ -57,11 +61,13 @@ namespace db {
         using entity_count_map = std::unordered_map<std::string, std::size_t>;
 
         using setup_result = result<std::nullptr_t, error<setup_error_type>>;
-        using insert_result = result<object_map_map, error<insert_error_type>>;
-        using save_result = result<object_map_map, error<save_error_type>>;
+        using insert_result = result<object_vector_map, error<insert_error_type>>;
+        using fetch_result = result<object_vector_map, error<fetch_error_type>>;
+        using save_result = result<object_vector_map, error<save_error_type>>;
 
         using setup_completion_f = std::function<void(setup_result const &)>;
         using insert_completion_f = std::function<void(insert_result const &)>;
+        using fetch_completion_f = std::function<void(fetch_result const &)>;
         using save_completion_f = std::function<void(save_result const &)>;
         using execution_f = std::function<void(database &, operation const &)>;
 
@@ -78,6 +84,7 @@ namespace db {
         void execute(execution_f &&execution);
 
         void insert_objects(entity_count_map const &counts, insert_completion_f &&completion);
+        void fetch_objects(std::string const &entity_name, db::select_option &&option, fetch_completion_f &&completion);
         void save(save_completion_f &&completion);
 
         db::object cached_object(std::string const &entity_name, db::integer::type const object_id) const;

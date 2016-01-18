@@ -315,9 +315,9 @@ using namespace yas;
     db::value_vector args;
 
     args = {db::value{1}, db::value{"value_1"}};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), std::move(args)));
+    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
     args = {db::value{2}, db::value{"value_2"}};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), std::move(args)));
+    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
 
     auto select_result = db::select_last(db, table_name);
     XCTAssertTrue(select_result);
@@ -326,7 +326,7 @@ using namespace yas;
     XCTAssertEqual(select_result.value().at(1).at(field_name).get<db::text>(), "value_2");
 
     args = {db::value{1}, db::value{"value_1_1"}};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), std::move(args)));
+    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
 
     select_result = db::select_last(db, table_name);
     XCTAssertTrue(select_result);
@@ -347,17 +347,17 @@ using namespace yas;
 
     db::value_vector args;
     args = {db::value{1}, db::value{"value_1_a"}, db::value{1}};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), std::move(args)));
+    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
     args = {db::value{2}, db::value{"value_2_a"}, db::value{1}};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), std::move(args)));
+    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
     args = {db::value{1}, db::value{"value_1_b"}, db::value{2}};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), std::move(args)));
+    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
     args = {db::value{2}, db::value{"value_2_b"}, db::value{2}};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), std::move(args)));
+    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
     args = {db::value{1}, db::value{"value_1_c"}, db::value{3}};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), std::move(args)));
+    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
     args = {db::value{2}, db::value{"value_2_c"}, db::value{4}};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), std::move(args)));
+    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
 
     auto select_result = db::select_last(db, table_name, db::value{4});
     XCTAssertTrue(select_result);
@@ -396,17 +396,17 @@ using namespace yas;
 
     db::value_vector args;
     args = {db::value{1}, db::value{"value_1_a"}, db::value{1}};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), std::move(args)));
+    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
     args = {db::value{2}, db::value{"value_2_a"}, db::value{1}};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), std::move(args)));
+    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
     args = {db::value{1}, db::value{"value_1_b"}, db::value{2}};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), std::move(args)));
+    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
     args = {db::value{2}, db::value{"value_2_b"}, db::value{2}};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), std::move(args)));
+    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
     args = {db::value{1}, db::value{"value_1_c"}, db::value{3}};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), std::move(args)));
+    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
     args = {db::value{2}, db::value{"value_2_c"}, db::value{4}};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), std::move(args)));
+    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
 
     auto select_result =
         db::select_last(db, table_name, db::value{3}, {.field_orders = {{db::object_id_field, db::order::ascending}}});
