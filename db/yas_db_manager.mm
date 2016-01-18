@@ -533,13 +533,7 @@ void db::manager::save(save_completion_f &&completion) {
             if (state) {
                 auto update_result =
                     db.execute_update(update_sql(info_table, {save_id_field}, ""), {db::value{next_save_id}});
-                if (update_result) {
-                    if (auto const select_result = db::select_db_info(db)) {
-                        db_info = std::move(select_result.value());
-                    } else {
-                        state = save_state{make_error(save_error_type::save_id_not_found)};
-                    }
-                } else {
+                if (!update_result) {
                     state = save_state{make_error(save_error_type::update_save_id_failed, update_result.error())};
                 }
             }
@@ -548,6 +542,14 @@ void db::manager::save(save_completion_f &&completion) {
                 db::commit(db);
             } else {
                 db::rollback(db);
+            }
+        }
+
+        if (state) {
+            if (auto const select_result = db::select_db_info(db)) {
+                db_info = std::move(select_result.value());
+            } else {
+                state = save_state{make_error(save_error_type::save_id_not_found)};
             }
         }
 
