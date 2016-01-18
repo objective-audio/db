@@ -25,8 +25,8 @@ namespace db {
     struct object_observable {
         virtual ~object_observable() = default;
 
-        virtual void _object_did_change(db::object const &) = 0;
-        virtual void _object_did_erase(std::string const &entity_name, db::integer::type const object_id) = 0;
+        virtual void _object_did_change(object const &) = 0;
+        virtual void _object_did_erase(std::string const &entity_name, integer::type const object_id) = 0;
     };
 }
 }

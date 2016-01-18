@@ -9,8 +9,8 @@ namespace db {
     class database;
     class select_option;
 
-    using select_result = result<db::value_map_vector, db::error>;
-    using select_single_result = result<db::value_map, std::nullptr_t>;
+    using select_result = result<value_map_vector, error>;
+    using select_single_result = result<value_map, std::nullptr_t>;
 
     update_result create_table(database &db, std::string const &table_name, std::vector<std::string> const &fields);
     update_result alter_table(database &db, std::string const &table_name, std::string const &field);
@@ -30,15 +30,15 @@ namespace db {
 #endif
 
     bool table_exists(database const &db, std::string const &table_name);
-    db::row_set get_schema(database const &db);
-    db::row_set get_table_schema(database const &db, std::string const &table_name);
+    row_set get_schema(database const &db);
+    row_set get_table_schema(database const &db, std::string const &table_name);
     bool column_exists(database const &db, std::string const &column_name, std::string const &table_name);
 
     select_result select(database const &db, std::string const &table_name, select_option const &option = {});
-    db::select_result select_last(database const &db, std::string const &table_name, db::value const &save_id = nullptr,
-                                  select_option const &option = {});
+    select_result select_last(database const &db, std::string const &table_name, value const &save_id = nullptr,
+                              select_option const &option = {});
     select_single_result select_db_info(database const &db);
 
-    db::value max(database const &db, std::string const &table_name, std::string const &field);
+    value max(database const &db, std::string const &table_name, std::string const &field);
 }
 }

@@ -6,7 +6,9 @@
 #include "yas_db_manager.h"
 #include "yas_db_model.h"
 #include "yas_db_object.h"
+#include "yas_db_value.h"
 #include "yas_stl_utils.h"
+#include "yas_db_attribute.h"
 
 using namespace yas;
 

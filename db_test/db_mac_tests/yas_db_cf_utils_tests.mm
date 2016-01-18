@@ -2,8 +2,7 @@
 //  yas_db_cf_utils_tests.mm
 //
 
-#import <XCTest/XCTest.h>
-#import "yas_db_cf_utils.h"
+#import "yas_db_test_utils.h"
 
 using namespace yas;
 

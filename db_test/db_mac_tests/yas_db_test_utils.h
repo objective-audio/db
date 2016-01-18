@@ -5,6 +5,8 @@
 #import <XCTest/XCTest.h>
 #import "yas_cf_utils.h"
 #import "yas_db.h"
+#import "yas_operation.h"
+#import "yas_version.h"
 
 @interface yas_db_test_utils : NSObject
 

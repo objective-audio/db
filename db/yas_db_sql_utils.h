@@ -6,7 +6,6 @@
 
 #include <vector>
 #include "yas_db_select_option.h"
-#include "yas_db_value.h"
 
 namespace yas {
 namespace db {

@@ -5,13 +5,15 @@
 #pragma once
 
 #include <string>
-#include "yas_db_attribute.h"
-#include "yas_db_relation.h"
+#include <unordered_map>
 
 namespace yas {
 namespace db {
-    using attribute_map = std::unordered_map<std::string, db::attribute>;
-    using relation_map = std::unordered_map<std::string, db::relation>;
+    class attribute;
+    class relation;
+
+    using attribute_map = std::unordered_map<std::string, attribute>;
+    using relation_map = std::unordered_map<std::string, relation>;
 
     struct entity {
         std::string const name;

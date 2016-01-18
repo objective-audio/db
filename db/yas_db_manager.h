@@ -6,13 +6,15 @@
 
 #include "yas_base.h"
 #include "yas_db_database.h"
-#include "yas_db_model.h"
 #include "yas_db_object.h"
-#include "yas_operation.h"
 
 namespace yas {
+class operation;
+
 namespace db {
     class select_option;
+    class model;
+    class error;
 
     static auto constexpr info_table = "db_info";
     static auto constexpr version_field = "version";
@@ -46,7 +48,7 @@ namespace db {
         template <typename T>
         struct error {
             error(std::nullptr_t);
-            explicit error(T const &error_type, db::error const &error = nullptr);
+            explicit error(T const &error_type, db::error const &db_error = nullptr);
 
             explicit operator bool() const;
 
@@ -79,19 +81,19 @@ namespace db {
         std::string const &database_path() const;
         database const &database() const;
         model const &model() const;
-        db::integer::type save_id() const;
+        integer::type save_id() const;
 
         void execute(execution_f &&execution);
 
         void insert_objects(entity_count_map const &counts, insert_completion_f &&completion);
-        void fetch_objects(std::string const &entity_name, db::select_option &&option, fetch_completion_f &&completion);
+        void fetch_objects(std::string const &entity_name, select_option &&option, fetch_completion_f &&completion);
         void save(save_completion_f &&completion);
 
-        db::object cached_object(std::string const &entity_name, db::integer::type const object_id) const;
+        object cached_object(std::string const &entity_name, integer::type const object_id) const;
 
        private:
-        void _object_did_change(db::object const &);
-        void _object_did_erase(std::string const &entity_name, db::integer::type const object_id);
+        void _object_did_change(object const &);
+        void _object_did_erase(std::string const &entity_name, integer::type const object_id);
     };
 }
 
