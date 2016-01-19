@@ -196,8 +196,7 @@ void db::manager::setup(setup_completion_f &&completion) {
         if (db::begin_transaction(db)) {
             if (db::table_exists(db, info_table)) {
                 auto select_result =
-                    db::select(db, {info_table}, {.fields = {version_field, save_id_field},
-                                                  .field_orders = {{version_field, db::order::ascending}}});
+                    db::select(db, {info_table}, {.fields = {version_field}, .limit_range = db::range{0, 1}});
                 if (select_result) {
                     auto const update_result = db.execute_update(update_sql(info_table, {version_field}, ""),
                                                                  {db::value{model.version().str()}});
@@ -276,8 +275,8 @@ void db::manager::setup(setup_completion_f &&completion) {
             } else {
                 // create information table
 
-                auto const update_result =
-                    db.execute_update(db::create_table_sql(info_table, {version_field, save_id_field}));
+                auto const update_result = db.execute_update(
+                    db::create_table_sql(info_table, {version_field, current_save_id_field, last_save_id_field}));
                 if (!update_result) {
                     result =
                         setup_result{make_error(setup_error_type::create_info_table_failed, update_result.error())};
@@ -361,10 +360,18 @@ db::model const &db::manager::model() const {
     return impl_ptr<impl>()->model;
 }
 
-db::integer::type db::manager::save_id() const {
+db::integer::type db::manager::current_save_id() const {
     auto &db_info = impl_ptr<impl>()->db_info;
-    if (db_info.count(save_id_field)) {
-        return db_info.at(save_id_field).get<integer>();
+    if (db_info.count(current_save_id_field)) {
+        return db_info.at(current_save_id_field).get<integer>();
+    }
+    return 0;
+}
+
+db::integer::type db::manager::last_save_id() const {
+    auto &db_info = impl_ptr<impl>()->db_info;
+    if (db_info.count(last_save_id_field)) {
+        return db_info.at(last_save_id_field).get<integer>();
     }
     return 0;
 }
@@ -398,8 +405,8 @@ void db::manager::insert_objects(entity_count_map const &counts, insert_completi
         db::integer::type next_save_id = 0;
         if (auto const &select_result = db::select_db_info(db)) {
             auto const &db_info = select_result.value();
-            if (db_info.count(save_id_field)) {
-                next_save_id = db_info.at(save_id_field).get<integer>() + 1;
+            if (db_info.count(current_save_id_field)) {
+                next_save_id = db_info.at(current_save_id_field).get<integer>() + 1;
             }
         }
 
@@ -443,15 +450,18 @@ void db::manager::insert_objects(entity_count_map const &counts, insert_completi
         }
 
         if (state) {
-            if (db.execute_update(update_sql(info_table, {save_id_field}, ""), {save_id_value})) {
-                auto const &select_result = db::select_db_info(db);
-                if (!select_result) {
-                    state = insert_state{make_error(insert_error_type::save_id_not_found)};
-                } else {
+            auto const sql = update_sql(info_table, {current_save_id_field, last_save_id_field}, "");
+            db::value_vector const params{save_id_value, save_id_value};
+            auto update_result = db.execute_update(sql, params);
+            if (update_result) {
+                auto const select_result = db::select_db_info(db);
+                if (select_result) {
                     db_info = select_result.value();
+                } else {
+                    state = insert_state{make_error(insert_error_type::save_id_not_found, select_result.error())};
                 }
             } else {
-                state = insert_state{make_error(insert_error_type::update_save_id_failed)};
+                state = insert_state{make_error(insert_error_type::update_save_id_failed, update_result.error())};
             }
         }
 
@@ -546,8 +556,8 @@ void db::manager::save(save_completion_f &&completion) {
             db::integer::type next_save_id = 0;
             if (auto const select_result = db::select_db_info(db)) {
                 auto const &db_info = select_result.value();
-                if (db_info.count(save_id_field)) {
-                    next_save_id = db_info.at(save_id_field).get<integer>() + 1;
+                if (db_info.count(current_save_id_field)) {
+                    next_save_id = db_info.at(current_save_id_field).get<integer>() + 1;
                 }
             }
 
@@ -586,8 +596,10 @@ void db::manager::save(save_completion_f &&completion) {
             }
 
             if (state) {
-                auto update_result =
-                    db.execute_update(update_sql(info_table, {save_id_field}, ""), {db::value{next_save_id}});
+                db::value const save_id{next_save_id};
+                auto const sql = update_sql(info_table, {current_save_id_field, last_save_id_field}, "");
+                db::value_vector const params{save_id, save_id};
+                auto update_result = db.execute_update(sql, params);
                 if (!update_result) {
                     state = save_state{make_error(save_error_type::update_save_id_failed, update_result.error())};
                 }

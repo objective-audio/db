@@ -16,8 +16,10 @@ namespace db {
     class model;
     class error;
 
-    static auto constexpr info_table = "db_info";
-    static auto constexpr version_field = "version";
+    static std::string const info_table = "db_info";
+    static std::string const version_field = "version";
+    static std::string const current_save_id_field = "cur_save_id";
+    static std::string const last_save_id_field = "last_save_id";
 
     class manager : public base, public object_observable {
         using super_class = base;
@@ -81,7 +83,8 @@ namespace db {
         std::string const &database_path() const;
         database const &database() const;
         model const &model() const;
-        integer::type save_id() const;
+        integer::type current_save_id() const;
+        integer::type last_save_id() const;
 
         void execute(execution_f &&execution);
 

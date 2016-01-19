@@ -138,7 +138,9 @@ using namespace yas;
             rollback = true;
         }
 
-        if (!db.execute_update(db::update_sql(db::info_table, {db::save_id_field}, ""), {db::value{100}})) {
+        db::value const save_id{100};
+        if (!db.execute_update(db::update_sql(db::info_table, {db::current_save_id_field, db::last_save_id_field}, ""),
+                               db::value_vector{save_id, save_id})) {
             rollback = true;
         }
 
@@ -170,7 +172,8 @@ using namespace yas;
         XCTAssertTrue(select_infos_result);
         XCTAssertEqual(select_infos_result.value().size(), 1);
         XCTAssertEqual(select_infos_result.value().at(0).at(db::version_field).get<db::text>(), "0.0.2");
-        XCTAssertEqual(select_infos_result.value().at(0).at(db::save_id_field).get<db::integer>(), 100);
+        XCTAssertEqual(select_infos_result.value().at(0).at(db::current_save_id_field).get<db::integer>(), 100);
+        XCTAssertEqual(select_infos_result.value().at(0).at(db::last_save_id_field).get<db::integer>(), 100);
 
         XCTAssertTrue(db::table_exists(db, "sample_a"));
         auto select_result_a = db::select(db, "sample_a");
@@ -220,7 +223,7 @@ using namespace yas;
 
     manager.setup([self, &manager](auto const &result) {
         XCTAssertTrue(result);
-        XCTAssertEqual(manager.save_id(), 0);
+        XCTAssertEqual(manager.current_save_id(), 0);
     });
 
     db::object_vector_map inserted_objects_1;
@@ -256,7 +259,7 @@ using namespace yas;
     XCTAssertGreaterThan(inserted_objects_1.count("sample_a"), 0);
     XCTAssertEqual(inserted_objects_1.at("sample_a").size(), 3);
 
-    XCTAssertEqual(manager.save_id(), 1);
+    XCTAssertEqual(manager.current_save_id(), 1);
 
     XCTestExpectation *expectation_2 = [self expectationWithDescription:@"insert_2"];
 
@@ -284,7 +287,7 @@ using namespace yas;
     XCTAssertEqual(inserted_objects_2.count("sample_a"), 1);
     XCTAssertEqual(inserted_objects_2.at("sample_a").size(), 1);
 
-    XCTAssertEqual(manager.save_id(), 2);
+    XCTAssertEqual(manager.current_save_id(), 2);
 
     auto const object_1 = manager.cached_object("sample_a", 1);
     XCTAssertTrue(object_1);
@@ -356,7 +359,7 @@ using namespace yas;
 
     [self waitForExpectationsWithTimeout:1.0 handler:nil];
 
-    XCTAssertEqual(manager.save_id(), 1);
+    XCTAssertEqual(manager.current_save_id(), 1);
     objects.at("sample_a").at(1).set("name", db::value{"value_1"});
 
     XCTestExpectation *exp2 = [self expectationWithDescription:@"2"];
@@ -369,7 +372,7 @@ using namespace yas;
 
     [self waitForExpectationsWithTimeout:1.0 handler:nil];
 
-    XCTAssertEqual(manager.save_id(), 2);
+    XCTAssertEqual(manager.current_save_id(), 2);
 
     XCTestExpectation *exp3 = [self expectationWithDescription:@"3"];
 
@@ -404,7 +407,7 @@ using namespace yas;
 
     [self waitForExpectationsWithTimeout:1.0 handler:nil];
 
-    XCTAssertEqual(manager.save_id(), 3);
+    XCTAssertEqual(manager.current_save_id(), 3);
 
     XCTestExpectation *exp5 = [self expectationWithDescription:@"4"];
 
@@ -442,7 +445,7 @@ using namespace yas;
 
     manager.setup([self, &manager](auto const &result) {
         XCTAssertTrue(result);
-        XCTAssertEqual(manager.save_id(), 0);
+        XCTAssertEqual(manager.current_save_id(), 0);
     });
 
     std::unordered_map<db::integer::type, db::object> main_objects;
@@ -469,7 +472,7 @@ using namespace yas;
 
     [self waitForExpectationsWithTimeout:1.0 handler:nil];
 
-    XCTAssertEqual(manager.save_id(), 1);
+    XCTAssertEqual(manager.current_save_id(), 1);
 
     XCTestExpectation *exp2 = [self expectationWithDescription:@"2"];
 
@@ -523,7 +526,7 @@ using namespace yas;
 
     [self waitForExpectationsWithTimeout:1.0 handler:nil];
 
-    XCTAssertEqual(manager.save_id(), 2);
+    XCTAssertEqual(manager.current_save_id(), 2);
     XCTAssertEqual(object.get("name"), db::value{"new_value"});
     XCTAssertEqual(object.get("age"), db::value{77});
     XCTAssertEqual(object.save_id(), db::value{2});
@@ -556,7 +559,7 @@ using namespace yas;
 
     [self waitForExpectationsWithTimeout:1.0 handler:nil];
 
-    XCTAssertEqual(manager.save_id(), 3);
+    XCTAssertEqual(manager.current_save_id(), 3);
 
     XCTestExpectation *exp5 = [self expectationWithDescription:@"5"];
 
@@ -571,7 +574,7 @@ using namespace yas;
 
     [self waitForExpectationsWithTimeout:1.0 handler:nil];
 
-    XCTAssertEqual(manager.save_id(), 3);
+    XCTAssertEqual(manager.current_save_id(), 3);
 }
 
 - (void)test_make_setup_error {
