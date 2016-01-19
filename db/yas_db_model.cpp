@@ -5,9 +5,13 @@
 #include <unordered_map>
 #include <vector>
 #include "yas_cf_utils.h"
+#include "yas_db_attribute.h"
 #include "yas_db_cf_utils.h"
+#include "yas_db_entity.h"
 #include "yas_db_model.h"
+#include "yas_db_relation.h"
 #include "yas_each_dictionary.h"
+#include "yas_version.h"
 
 using namespace yas;
 
@@ -22,7 +26,7 @@ namespace db {
 
 struct db::model::impl : public base::impl {
     yas::version version;
-    entities_map entities;
+    entity_map entities;
 
     impl(CFDictionaryRef const &cf_dict) {
         if (!cf_dict) {
@@ -108,6 +112,6 @@ yas::version const &db::model::version() const {
     return impl_ptr<impl>()->version;
 }
 
-db::model::entities_map const &db::model::entities() const {
+db::model::entity_map const &db::model::entities() const {
     return impl_ptr<impl>()->entities;
 }

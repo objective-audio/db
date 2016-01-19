@@ -3,11 +3,17 @@
 //
 
 #include <dispatch/dispatch.h>
+#include "yas_db_attribute.h"
+#include "yas_db_entity.h"
 #include "yas_db_manager.h"
+#include "yas_db_model.h"
+#include "yas_db_relation.h"
 #include "yas_db_select_option.h"
 #include "yas_db_sql_utils.h"
 #include "yas_db_utils.h"
 #include "yas_each_index.h"
+#include "yas_operation.h"
+#include "yas_version.h"
 
 using namespace yas;
 
@@ -18,7 +24,7 @@ db::manager::error<T>::error(std::nullptr_t) : _type(), _db_error(nullptr) {
 }
 
 template <typename T>
-db::manager::error<T>::error(T const &error_type, db::error const &error) : _type(error_type), _db_error(error) {
+db::manager::error<T>::error(T const &error_type, db::error const &db_error) : _type(error_type), _db_error(db_error) {
 }
 
 template <typename T>

@@ -8,21 +8,23 @@
 #include <memory>
 #include <string>
 #include "yas_base.h"
-#include "yas_db_entity.h"
-#include "yas_version.h"
 
 namespace yas {
+class version;
+
 namespace db {
+    class entity;
+
     class model : public base {
         using super_class = base;
 
        public:
-        using entities_map = std::unordered_map<std::string, entity>;
+        using entity_map = std::unordered_map<std::string, entity>;
 
         model(CFDictionaryRef const &dict);
 
         yas::version const &version() const;
-        entities_map const &entities() const;
+        entity_map const &entities() const;
 
        private:
         class impl;

@@ -32,8 +32,6 @@ namespace db {
         static attribute const &object_id_attribute();
         static attribute const &save_id_attribute();
         static attribute const &removed_attribute();
-
-       private:
     };
 }
 }

@@ -5,9 +5,12 @@
 #pragma once
 
 #include <CoreFoundation/CoreFoundation.h>
-#include "yas_db_value.h"
+#include <string>
 
 namespace yas {
+namespace db {
+    class value;
+}
 db::value to_value(CFTypeRef const &cf_obj);
 
 template <typename T>
