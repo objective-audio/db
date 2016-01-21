@@ -14,6 +14,11 @@ namespace db {
     class manager;
     class value;
 
+    struct object_data {
+        value_map values;
+        value_vector_map relations;
+    };
+
     class object : public base, public manageable {
         using super_class = base;
 
