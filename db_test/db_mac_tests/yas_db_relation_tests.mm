@@ -41,10 +41,9 @@ using namespace yas;
     NSDictionary *dict = @{ @"target": @"c" };
     db::relation relation{"a", "b", (__bridge CFDictionaryRef)dict};
 
-    XCTAssertEqual(relation.sql(),
+    XCTAssertEqual(relation.sql_for_create(),
                    "create table if not exists rel_a_b (id integer primary key, src_id integer, tgt_id integer, "
-                   "foreign key (src_id) references a(id) on update cascade on delete cascade, foreign key (tgt_id) "
-                   "references c(id) on update cascade on delete cascade);");
+                   "save_id integer);");
 }
 
 @end

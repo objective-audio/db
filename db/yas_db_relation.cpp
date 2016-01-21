@@ -15,7 +15,6 @@ namespace yas {
 namespace db {
     static auto constexpr target_key = "target";
     static auto constexpr many_key = "many";
-    static auto constexpr cascade = "cascade";
 }
 }
 
@@ -27,13 +26,16 @@ db::relation::relation(std::string const entity_name, std::string const &attribu
       table_name("rel_" + entity_name + "_" + name) {
 }
 
-std::string db::relation::sql() const {
+std::string db::relation::sql_for_create() const {
     auto id_sql = db::attribute::id_attribute().sql();
     auto src_id_sql = db::attribute{src_id_field, db::integer::name}.sql();
     auto tgt_id_sql = db::attribute{tgt_id_field, db::integer::name}.sql();
-    auto src_foreign_sql = db::foreign_key(src_id_field, entity_name, db::id_field, cascade, cascade);
-    auto tgt_foreign_sql = db::foreign_key(tgt_id_field, target_entity_name, db::id_field, cascade, cascade);
+    auto save_id_sql = db::attribute{save_id_field, db::integer::name}.sql();
 
-    return db::create_table_sql(table_name, {std::move(id_sql), std::move(src_id_sql), std::move(tgt_id_sql),
-                                             std::move(src_foreign_sql), std::move(tgt_foreign_sql)});
+    return db::create_table_sql(
+        table_name, {std::move(id_sql), std::move(src_id_sql), std::move(tgt_id_sql), std::move(save_id_sql)});
+}
+
+std::string db::relation::sql_for_insert() const {
+    return db::insert_sql(table_name, {src_id_field, tgt_id_field, save_id_field});
 }
