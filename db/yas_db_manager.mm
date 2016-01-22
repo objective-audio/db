@@ -338,13 +338,17 @@ void db::manager::setup(setup_completion_f &&completion) {
             db::rollback(db);
         }
 
-        auto lambda =
-            [completion = std::move(completion), result = std::move(result), manager, db_info = std::move(db_info)]() {
+        auto lambda = [
+            completion = std::move(completion),
+            result = std::move(result),
+            manager,
+            db_info = std::move(db_info)
+        ]() mutable {
             if (result) {
                 manager.impl_ptr<impl>()->set_db_info(db_info);
             }
 
-            completion(result);
+            completion(manager, result);
         };
 
         dispatch_async(dispatch_get_main_queue(), std::move(lambda));
@@ -489,13 +493,13 @@ void db::manager::insert_objects(entity_count_map const &counts, insert_completi
                 manager,
                 completion = std::move(completion),
                 db_info = std::move(db_info)
-            ]() {
+            ]() mutable {
                 if (state) {
                     manager.impl_ptr<impl>()->set_db_info(db_info);
                     auto loaded_objects = manager.impl_ptr<impl>()->load_object_datas(inserted_datas);
-                    completion(insert_result{std::move(loaded_objects)});
+                    completion(manager, insert_result{std::move(loaded_objects)});
                 } else {
-                    completion(insert_result{state.error()});
+                    completion(manager, insert_result{state.error()});
                 }
             };
 
@@ -569,12 +573,12 @@ void db::manager::fetch_objects(std::string const &entity_name, db::select_optio
             completion = std::move(completion),
             fetched_datas = std::move(fetched_datas),
             manager
-        ]() {
+        ]() mutable {
             if (state) {
                 auto loaded_objects = manager.impl_ptr<impl>()->load_object_datas(fetched_datas);
-                completion(fetch_result{std::move(loaded_objects)});
+                completion(manager, fetch_result{std::move(loaded_objects)});
             } else {
-                completion(fetch_result{state.error()});
+                completion(manager, fetch_result{state.error()});
             }
         };
         dispatch_sync(dispatch_get_main_queue(), std::move(lambda));
@@ -695,14 +699,14 @@ void db::manager::save(save_completion_f &&completion) {
             completion = std::move(completion),
             saved_datas = std::move(saved_datas),
             db_info = std::move(db_info)
-        ]() {
+        ]() mutable {
             if (state) {
                 manager.impl_ptr<impl>()->set_db_info(db_info);
                 auto loaded_objects = manager.impl_ptr<impl>()->load_object_datas(saved_datas);
                 manager.impl_ptr<impl>()->changed_objects.clear();
-                completion(save_result{std::move(loaded_objects)});
+                completion(manager, save_result{std::move(loaded_objects)});
             } else {
-                completion(save_result{state.error()});
+                completion(manager, save_result{state.error()});
             }
         };
         dispatch_sync(dispatch_get_main_queue(), std::move(lambda));
