@@ -49,7 +49,9 @@ using namespace yas;
 
     XCTestExpectation *expectation = [self expectationWithDescription:@"execution"];
 
-    manager.execute([self, expectation](db::database &db, auto const &operation) {
+    manager.execute([self, expectation](db::manager &manager, auto const &operation) {
+        auto &db = manager.database();
+
         XCTAssertTrue(db.execute_update(db::create_table_sql("test_table", {"field_a", "field_b"})));
 
         db::value_vector args{db::value{"value_a"}, db::value{"value_b"}};
@@ -80,7 +82,9 @@ using namespace yas;
 
     manager.setup([self](auto const &result) { XCTAssertTrue(result); });
 
-    manager.execute([self, expectation](db::database &db, auto const &op) {
+    manager.execute([self, expectation](db::manager &manager, auto const &op) {
+        auto &db = manager.database();
+
         XCTAssertTrue(db::table_exists(db, db::info_table));
         auto select_infos_result = db::select(db, db::info_table);
         XCTAssertTrue(select_infos_result);
@@ -111,7 +115,9 @@ using namespace yas;
 
     manager.setup([self](auto const &result) { XCTAssertTrue(result); });
 
-    manager.execute([self, first_expectation](db::database &db, auto const &) {
+    manager.execute([self, first_expectation](db::manager &manager, auto const &) {
+        auto &db = manager.database();
+
         db::begin_transaction(db);
 
         bool rollback = false;
@@ -166,7 +172,9 @@ using namespace yas;
 
     manager.setup([self](auto const &result) { XCTAssertTrue(result); });
 
-    manager.execute([self, second_expectation](db::database &db, auto const &) {
+    manager.execute([self, second_expectation](db::manager &manager, auto const &) {
+        auto &db = manager.database();
+
         XCTAssertTrue(db::table_exists(db, db::info_table));
         auto select_infos_result = db::select(db, db::info_table);
         XCTAssertTrue(select_infos_result);
@@ -546,7 +554,9 @@ using namespace yas;
         XCTAssertEqual(obj.get_relation("child", 1), db::value{200});
     });
 
-    manager.execute([self, exp3, &manager](db::database &db, operation const &) {
+    manager.execute([self, exp3](db::manager &manager, operation const &) {
+        auto &db = manager.database();
+
         auto value_result = db::select(db, "sample_a");
         auto const &selected_values = value_result.value();
 
