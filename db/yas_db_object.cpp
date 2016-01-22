@@ -27,20 +27,20 @@ struct db::object::impl : public base::impl {
     ~impl() {
         if (manager) {
             if (auto observable = dynamic_cast<object_observable *>(&manager)) {
-                observable->_object_did_erase(entity_name, get_value(object_id_field).get<integer>());
+                observable->_object_did_erase(entity_name, get_attribute(object_id_field).get<integer>());
             }
         }
     }
 
     void clear() {
-        data.values.clear();
+        data.attributes.clear();
         data.relations.clear();
         status = db::object_status::invalid;
     }
 
     bool is_removed() {
-        if (data.values.count(removed_field)) {
-            return data.values.at(removed_field).get<integer>() > 0;
+        if (data.attributes.count(removed_field)) {
+            return data.attributes.at(removed_field).get<integer>() > 0;
         }
 
         return false;
@@ -54,8 +54,8 @@ struct db::object::impl : public base::impl {
 
             for (auto const &pair : entity.attributes) {
                 auto const &attr_name = pair.first;
-                if (obj_data.values.count(attr_name)) {
-                    set_value(attr_name, obj_data.values.at(attr_name), true);
+                if (obj_data.attributes.count(attr_name)) {
+                    set_value(attr_name, obj_data.attributes.at(attr_name), true);
                 }
             }
 
@@ -70,19 +70,19 @@ struct db::object::impl : public base::impl {
         status = db::object_status::saved;
     }
 
-    db::value const &get_value(std::string const &column_name) {
-        if (data.values.count(column_name)) {
-            return data.values.at(column_name);
+    db::value const &get_attribute(std::string const &column_name) {
+        if (data.attributes.count(column_name)) {
+            return data.attributes.at(column_name);
         }
 
         return db::value::empty();
     }
 
     void set_value(std::string const &attr_name, db::value const &value, bool const loading = false) {
-        if (data.values.count(attr_name)) {
-            data.values.erase(attr_name);
+        if (data.attributes.count(attr_name)) {
+            data.attributes.erase(attr_name);
         }
-        data.values.emplace(std::make_pair(attr_name, value));
+        data.attributes.emplace(std::make_pair(attr_name, value));
 
         status = db::object_status::changed;
 
@@ -175,7 +175,7 @@ struct db::object::impl : public base::impl {
             return;
         }
 
-        erase_if(data.values, [](auto const &pair) {
+        erase_if(data.attributes, [](auto const &pair) {
             auto const &column_name = pair.first;
             if (column_name == id_field || column_name == object_id_field || column_name == removed_field) {
                 return false;
@@ -189,7 +189,7 @@ struct db::object::impl : public base::impl {
     }
 
     db::object_data data_for_save() {
-        db::value_map values;
+        db::value_map attributes;
         db::value_vector_map relations;
 
         db::entity const &entity = model.entities().at(entity_name);
@@ -197,12 +197,12 @@ struct db::object::impl : public base::impl {
         for (auto const &pair : entity.attributes) {
             auto const &attr_name = pair.first;
             if (attr_name != save_id_field) {
-                if (data.values.count(attr_name)) {
-                    values.insert(std::make_pair(attr_name, data.values.at(attr_name)));
+                if (data.attributes.count(attr_name)) {
+                    attributes.insert(std::make_pair(attr_name, data.attributes.at(attr_name)));
                 } else if (pair.second.not_null) {
-                    values.insert(std::make_pair(attr_name, pair.second.default_value));
+                    attributes.insert(std::make_pair(attr_name, pair.second.default_value));
                 } else {
-                    values.insert(std::make_pair(attr_name, db::value::empty()));
+                    attributes.insert(std::make_pair(attr_name, db::value::empty()));
                 }
             }
         }
@@ -214,7 +214,7 @@ struct db::object::impl : public base::impl {
             }
         }
 
-        return object_data{.values = std::move(values), .relations = std::move(relations)};
+        return object_data{.attributes = std::move(attributes), .relations = std::move(relations)};
     }
 
     void notify_did_change() {
@@ -237,8 +237,8 @@ void db::object::load_data(object_data const &obj_data) {
     impl_ptr<impl>()->load_data(obj_data);
 }
 
-db::value const &db::object::get_value(std::string const &attr_name) const {
-    return impl_ptr<impl>()->get_value(attr_name);
+db::value const &db::object::get_attribute(std::string const &attr_name) const {
+    return impl_ptr<impl>()->get_attribute(attr_name);
 }
 
 void db::object::set_value(std::string const &attr_name, db::value const &value) {
@@ -298,11 +298,11 @@ void db::object::set_status(object_status const &stat) {
 }
 
 db::value const &db::object::object_id() const {
-    return get_value(object_id_field);
+    return get_attribute(object_id_field);
 }
 
 db::value const &db::object::save_id() const {
-    return get_value(save_id_field);
+    return get_attribute(save_id_field);
 }
 
 void db::object::remove() {

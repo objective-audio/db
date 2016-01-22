@@ -15,7 +15,7 @@ namespace db {
     class value;
 
     struct object_data {
-        value_map values;
+        value_map attributes;
         value_vector_map relations;
     };
 
@@ -30,7 +30,7 @@ namespace db {
 
         void load_data(object_data const &obj_data);
 
-        value const &get_value(std::string const &attr_name) const;
+        value const &get_attribute(std::string const &attr_name) const;
         void set_value(std::string const &attr_name, value const &value);
 
         value_vector get_relation(std::string const &rel_name) const;

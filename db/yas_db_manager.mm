@@ -67,8 +67,8 @@ struct db::manager::impl : public base::impl {
         auto manager = cast<db::manager>();
         auto &objects = cached_objects.at(entity_name);
 
-        if (data.values.count(object_id_field)) {
-            if (auto const &object_id_value = data.values.at(object_id_field)) {
+        if (data.attributes.count(object_id_field)) {
+            if (auto const &object_id_value = data.attributes.at(object_id_field)) {
                 auto const &object_id = object_id_value.get<integer>();
 
                 db::object object{nullptr};
@@ -129,10 +129,10 @@ struct db::manager::impl : public base::impl {
             for (auto const &object_pair : objects) {
                 auto object = object_pair.second;
                 auto data = object.data_for_save();
-                if (data.values.size() > 0) {
+                if (data.attributes.size() > 0) {
                     entity_datas.emplace_back(std::move(data));
                 } else {
-                    throw "object_data.values is empty.";
+                    throw "object_data.attributes is empty.";
                 }
                 if (auto manageable_object = dynamic_cast<manageable *>(&object)) {
                     manageable_object->set_status(db::object_status::updating);
@@ -449,7 +449,7 @@ void db::manager::insert_objects(entity_count_map const &counts, insert_completi
                 }
 
                 inserted_datas.at(entity_name)
-                    .emplace_back(object_data{.values = std::move(select_result.value().at(0))});
+                    .emplace_back(object_data{.attributes = std::move(select_result.value().at(0))});
             }
         }
 
@@ -516,7 +516,7 @@ void db::manager::fetch_objects(std::string const &entity_name, db::select_optio
             if (state) {
                 db::object_data_vector datas;
                 datas.reserve(select_result.value().size());
-                for (auto const &values : select_result.value()) {
+                for (auto const &attributes : select_result.value()) {
                     db::value_vector_map relations;
                     for (auto const &model_rel_pair : model_relations) {
                         auto const &rel_name = model_rel_pair.first;
@@ -524,8 +524,8 @@ void db::manager::fetch_objects(std::string const &entity_name, db::select_optio
                         std::string where_exprs =
                             joined({field_expr(save_id_field, "="), field_expr(src_id_field, "=")}, " and ");
                         db::select_option option{.where_exprs = where_exprs,
-                                                 .arguments = {{save_id_field, values.at(save_id_field)},
-                                                               {src_id_field, values.at(object_id_field)}}};
+                                                 .arguments = {{save_id_field, attributes.at(save_id_field)},
+                                                               {src_id_field, attributes.at(object_id_field)}}};
                         auto const select_result = db::select(db, table_name, std::move(option));
                         if (select_result) {
                             auto const &result_relations = select_result.value();
@@ -539,7 +539,8 @@ void db::manager::fetch_objects(std::string const &entity_name, db::select_optio
                             state = fetch_state{make_error(fetch_error_type::select_failed, select_result.error())};
                         }
                     }
-                    datas.emplace_back(db::object_data{.values = std::move(values), .relations = std::move(relations)});
+                    datas.emplace_back(
+                        db::object_data{.attributes = std::move(attributes), .relations = std::move(relations)});
                 }
                 fetched_datas.emplace(std::make_pair(entity_name, std::move(datas)));
             }
@@ -606,22 +607,22 @@ void db::manager::save(save_completion_f &&completion) {
                     db::object_data_vector entity_saved_datas;
 
                     for (auto data : entity_pair.second) {
-                        if (data.values.count(save_id_field)) {
-                            data.values.erase(save_id_field);
+                        if (data.attributes.count(save_id_field)) {
+                            data.attributes.erase(save_id_field);
                         }
-                        if (data.values.count(id_field)) {
-                            data.values.erase(id_field);
+                        if (data.attributes.count(id_field)) {
+                            data.attributes.erase(id_field);
                         }
-                        data.values.insert(save_id_pair);
+                        data.attributes.insert(save_id_pair);
 
-                        auto const update_result = db.execute_update(sql, data.values);
+                        auto const update_result = db.execute_update(sql, data.attributes);
                         if (!update_result) {
                             state = save_state{make_error(save_error_type::insert_failed, update_result.error())};
                         }
 
                         if (state) {
                             // insert relation
-                            auto const src_id_pair = std::make_pair(src_id_field, data.values.at(object_id_field));
+                            auto const src_id_pair = std::make_pair(src_id_field, data.attributes.at(object_id_field));
 
                             for (auto const &rel_pair : data.relations) {
                                 auto const &rel_name = rel_pair.first;

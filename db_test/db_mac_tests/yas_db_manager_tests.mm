@@ -353,9 +353,9 @@ using namespace yas;
                                XCTAssertEqual(objects_a.at(0).save_id().get<db::integer>(), 1);
                                XCTAssertEqual(objects_a.at(1).save_id().get<db::integer>(), 1);
                                XCTAssertEqual(objects_a.at(2).save_id().get<db::integer>(), 1);
-                               XCTAssertEqual(objects_a.at(0).get_value("name").get<db::text>(), "default_value");
-                               XCTAssertEqual(objects_a.at(1).get_value("name").get<db::text>(), "default_value");
-                               XCTAssertEqual(objects_a.at(2).get_value("name").get<db::text>(), "default_value");
+                               XCTAssertEqual(objects_a.at(0).get_attribute("name").get<db::text>(), "default_value");
+                               XCTAssertEqual(objects_a.at(1).get_attribute("name").get<db::text>(), "default_value");
+                               XCTAssertEqual(objects_a.at(2).get_attribute("name").get<db::text>(), "default_value");
 
                                XCTAssertGreaterThan(objects.count("sample_b"), 0);
                                auto &objects_b = objects.at("sample_b");
@@ -364,8 +364,8 @@ using namespace yas;
                                XCTAssertEqual(objects_b.at(1).object_id().get<db::integer>(), 2);
                                XCTAssertEqual(objects_b.at(0).save_id().get<db::integer>(), 1);
                                XCTAssertEqual(objects_b.at(1).save_id().get<db::integer>(), 1);
-                               XCTAssertFalse(objects_b.at(0).get_value("name"));
-                               XCTAssertFalse(objects_b.at(1).get_value("name"));
+                               XCTAssertFalse(objects_b.at(0).get_attribute("name"));
+                               XCTAssertFalse(objects_b.at(1).get_attribute("name"));
 
                                [exp1 fulfill];
                            });
@@ -406,9 +406,9 @@ using namespace yas;
                               XCTAssertEqual(objects_a.at(0).save_id().get<db::integer>(), 1);
                               XCTAssertEqual(objects_a.at(1).save_id().get<db::integer>(), 1);
                               XCTAssertEqual(objects_a.at(2).save_id().get<db::integer>(), 2);
-                              XCTAssertEqual(objects_a.at(0).get_value("name").get<db::text>(), "default_value");
-                              XCTAssertEqual(objects_a.at(1).get_value("name").get<db::text>(), "default_value");
-                              XCTAssertEqual(objects_a.at(2).get_value("name").get<db::text>(), "value_1");
+                              XCTAssertEqual(objects_a.at(0).get_attribute("name").get<db::text>(), "default_value");
+                              XCTAssertEqual(objects_a.at(1).get_attribute("name").get<db::text>(), "default_value");
+                              XCTAssertEqual(objects_a.at(2).get_attribute("name").get<db::text>(), "value_1");
 
                               XCTAssertEqual(objects_a.at(2).relation_size("child"), 1);
                               XCTAssertEqual(objects_a.at(2).get_relation("child").size(), 1);
@@ -451,11 +451,11 @@ using namespace yas;
 
                               XCTAssertEqual(objects_a.at(0).object_id().get<db::integer>(), 3);
                               XCTAssertEqual(objects_a.at(0).save_id().get<db::integer>(), 3);
-                              XCTAssertEqual(objects_a.at(0).get_value("name").get<db::text>(), "value_2");
+                              XCTAssertEqual(objects_a.at(0).get_attribute("name").get<db::text>(), "value_2");
 
                               XCTAssertEqual(objects_a.at(1).object_id().get<db::integer>(), 2);
                               XCTAssertEqual(objects_a.at(1).save_id().get<db::integer>(), 2);
-                              XCTAssertEqual(objects_a.at(1).get_value("name").get<db::text>(), "value_1");
+                              XCTAssertEqual(objects_a.at(1).get_attribute("name").get<db::text>(), "value_1");
 
                               XCTAssertEqual(objects_a.at(0).relation_size("child"), 2);
                               XCTAssertEqual(objects_a.at(0).get_relation("child").size(), 2);
@@ -494,7 +494,7 @@ using namespace yas;
 
                                auto const &obj = objects.at(0);
                                XCTAssertEqual(obj.save_id(), db::value{1});
-                               XCTAssertEqual(obj.get_value("name"), db::value{"default_value"});
+                               XCTAssertEqual(obj.get_attribute("name"), db::value{"default_value"});
                                XCTAssertEqual(obj.status(), db::object_status::saved);
 
                                [exp1 fulfill];
@@ -537,8 +537,8 @@ using namespace yas;
 
         auto const &obj = objects.at(0);
         XCTAssertEqual(obj.save_id(), db::value{2});
-        XCTAssertEqual(obj.get_value("name"), db::value{"new_value"});
-        XCTAssertEqual(obj.get_value("age"), db::value{77});
+        XCTAssertEqual(obj.get_attribute("name"), db::value{"new_value"});
+        XCTAssertEqual(obj.get_attribute("age"), db::value{77});
         XCTAssertEqual(obj.status(), db::object_status::saved);
         XCTAssertEqual(obj.relation_size("child"), 2);
         XCTAssertEqual(obj.get_relation("child").size(), 2);
@@ -573,8 +573,8 @@ using namespace yas;
 
     XCTAssertEqual(manager.current_save_id(), 2);
     XCTAssertEqual(manager.last_save_id(), 2);
-    XCTAssertEqual(object.get_value("name"), db::value{"new_value"});
-    XCTAssertEqual(object.get_value("age"), db::value{77});
+    XCTAssertEqual(object.get_attribute("name"), db::value{"new_value"});
+    XCTAssertEqual(object.get_attribute("age"), db::value{77});
     XCTAssertEqual(object.save_id(), db::value{2});
     XCTAssertEqual(object.status(), db::object_status::saved);
     XCTAssertEqual(object.relation_size("child"), 2);
@@ -599,8 +599,8 @@ using namespace yas;
 
         auto const &obj = objects.at(0);
         XCTAssertEqual(obj.save_id(), db::value{3});
-        XCTAssertEqual(obj.get_value("name"), db::value::empty());
-        XCTAssertEqual(obj.get_value("age"), db::value{10});
+        XCTAssertEqual(obj.get_attribute("name"), db::value::empty());
+        XCTAssertEqual(obj.get_attribute("age"), db::value{10});
         XCTAssertEqual(obj.relation_size("child"), 0);
         XCTAssertEqual(obj.get_relation("child").size(), 0);
         XCTAssertTrue(obj.is_removed());
