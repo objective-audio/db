@@ -29,9 +29,9 @@ using namespace yas;
 
     XCTAssertEqual(obj.model(), model);
     XCTAssertEqual(obj.entity_name(), "sample_a");
-    XCTAssertEqual(obj.get_value("age"), nullptr);
-    XCTAssertEqual(obj.get_value("name"), nullptr);
-    XCTAssertEqual(obj.get_value("weight"), nullptr);
+    XCTAssertEqual(obj.get_attribute("age"), nullptr);
+    XCTAssertEqual(obj.get_attribute("name"), nullptr);
+    XCTAssertEqual(obj.get_attribute("weight"), nullptr);
     XCTAssertEqual(obj.object_id(), nullptr);
     XCTAssertEqual(obj.get_relation("child").size(), 0);
     XCTAssertFalse(obj.is_removed());
@@ -42,17 +42,17 @@ using namespace yas;
     db::model model((__bridge CFDictionaryRef)model_dict);
     db::object obj{nullptr, model, "sample_a"};
 
-    db::value_map values{std::make_pair("age", db::value{10}), std::make_pair("name", db::value{"name_val"}),
-                         std::make_pair("weight", db::value{53.4}), std::make_pair("hoge", db::value{"hage"})};
+    db::value_map attributes{std::make_pair("age", db::value{10}), std::make_pair("name", db::value{"name_val"}),
+                             std::make_pair("weight", db::value{53.4}), std::make_pair("hoge", db::value{"hage"})};
     db::value_vector_map relations{std::make_pair("child", db::value_vector{db::value{12}, db::value{34}})};
-    db::object_data obj_data{.values = std::move(values), .relations = std::move(relations)};
+    db::object_data obj_data{.attributes = std::move(attributes), .relations = std::move(relations)};
 
     obj.load_data(obj_data);
 
-    XCTAssertEqual(obj.get_value("age"), db::value{10});
-    XCTAssertEqual(obj.get_value("name"), db::value{"name_val"});
-    XCTAssertEqual(obj.get_value("weight"), db::value{53.4});
-    XCTAssertEqual(obj.get_value("hoge"), nullptr);
+    XCTAssertEqual(obj.get_attribute("age"), db::value{10});
+    XCTAssertEqual(obj.get_attribute("name"), db::value{"name_val"});
+    XCTAssertEqual(obj.get_attribute("weight"), db::value{53.4});
+    XCTAssertEqual(obj.get_attribute("hoge"), nullptr);
 
     XCTAssertEqual(obj.relation_size("child"), 2);
     XCTAssertEqual(obj.get_relation("child", 0), db::value{12});
@@ -64,24 +64,24 @@ using namespace yas;
     db::model model((__bridge CFDictionaryRef)model_dict);
     db::object obj{nullptr, model, "sample_a"};
 
-    db::value_map prev_values{std::make_pair("age", db::value{10}), std::make_pair("name", db::value{"name_val"}),
-                              std::make_pair("weight", db::value{53.4}), std::make_pair("hoge", db::value{"hage"})};
+    db::value_map prev_attributes{std::make_pair("age", db::value{10}), std::make_pair("name", db::value{"name_val"}),
+                                  std::make_pair("weight", db::value{53.4}), std::make_pair("hoge", db::value{"hage"})};
     db::value_vector_map prev_relations{std::make_pair("child", db::value_vector{db::value{12}, db::value{34}})};
-    db::object_data prev_obj_data{.values = std::move(prev_values), .relations = std::move(prev_relations)};
+    db::object_data prev_obj_data{.attributes = std::move(prev_attributes), .relations = std::move(prev_relations)};
 
     obj.load_data(prev_obj_data);
 
-    db::value_map post_values{std::make_pair("age", db::value{543}), std::make_pair("hoge", db::value{"poke"})};
+    db::value_map post_attributes{std::make_pair("age", db::value{543}), std::make_pair("hoge", db::value{"poke"})};
     db::value_vector_map post_relations{
         std::make_pair("child", db::value_vector{db::value{234}, db::value{567}, db::value{890}})};
-    db::object_data post_obj_data{.values = std::move(post_values), .relations = std::move(post_relations)};
+    db::object_data post_obj_data{.attributes = std::move(post_attributes), .relations = std::move(post_relations)};
 
     obj.load_data(post_obj_data);
 
-    XCTAssertEqual(obj.get_value("age"), db::value{543});
-    XCTAssertEqual(obj.get_value("name"), nullptr);
-    XCTAssertEqual(obj.get_value("weight"), nullptr);
-    XCTAssertEqual(obj.get_value("hoge"), nullptr);
+    XCTAssertEqual(obj.get_attribute("age"), db::value{543});
+    XCTAssertEqual(obj.get_attribute("name"), nullptr);
+    XCTAssertEqual(obj.get_attribute("weight"), nullptr);
+    XCTAssertEqual(obj.get_attribute("hoge"), nullptr);
 
     XCTAssertEqual(obj.relation_size("child"), 3);
     XCTAssertEqual(obj.get_relation("child", 0), db::value{234});
@@ -98,9 +98,9 @@ using namespace yas;
     obj.set_value("name", db::value{"nabe"});
     obj.set_value("weight", db::value{5783.23});
 
-    XCTAssertEqual(obj.get_value("age"), db::value{24});
-    XCTAssertEqual(obj.get_value("name"), db::value{"nabe"});
-    XCTAssertEqual(obj.get_value("weight"), db::value{5783.23});
+    XCTAssertEqual(obj.get_attribute("age"), db::value{24});
+    XCTAssertEqual(obj.get_attribute("name"), db::value{"nabe"});
+    XCTAssertEqual(obj.get_attribute("weight"), db::value{5783.23});
 }
 
 - (void)test_push_back_and_erase_relation {
@@ -188,11 +188,11 @@ using namespace yas;
 
     obj.set_value("age", db::value{1});
 
-    XCTAssertEqual(obj.get_value("age"), db::value{1});
+    XCTAssertEqual(obj.get_attribute("age"), db::value{1});
 
     obj.set_value("age", db::value{5});
 
-    XCTAssertEqual(obj.get_value("age"), db::value{5});
+    XCTAssertEqual(obj.get_attribute("age"), db::value{5});
 }
 
 - (void)test_remove {
@@ -207,16 +207,16 @@ using namespace yas;
     obj.set_value("name", db::value{"tanaka"});
     obj.set_relation("child", {db::value{111}});
 
-    XCTAssertEqual(obj.get_value(db::object_id_field), db::value{45});
-    XCTAssertEqual(obj.get_value("name"), db::value{"tanaka"});
+    XCTAssertEqual(obj.get_attribute(db::object_id_field), db::value{45});
+    XCTAssertEqual(obj.get_attribute("name"), db::value{"tanaka"});
     XCTAssertEqual(obj.get_relation("child").at(0), db::value{111});
 
     obj.remove();
 
     XCTAssertTrue(obj.is_removed());
-    XCTAssertEqual(obj.get_value("name"), nullptr);
-    XCTAssertEqual(obj.get_value(db::id_field), db::value{11});
-    XCTAssertEqual(obj.get_value(db::object_id_field), db::value{45});
+    XCTAssertEqual(obj.get_attribute("name"), nullptr);
+    XCTAssertEqual(obj.get_attribute(db::id_field), db::value{11});
+    XCTAssertEqual(obj.get_attribute(db::object_id_field), db::value{45});
     XCTAssertEqual(obj.get_relation("child").size(), 0);
 }
 
@@ -237,19 +237,19 @@ using namespace yas;
 
     auto data = obj.data_for_save();
 
-    XCTAssertGreaterThan(data.values.size(), 6);
-    XCTAssertEqual(data.values.count(db::id_field), 1);
-    XCTAssertEqual(data.values.at(db::id_field), db::value{22});
-    XCTAssertEqual(data.values.count(db::object_id_field), 1);
-    XCTAssertEqual(data.values.at(db::object_id_field), db::value{55});
-    XCTAssertEqual(data.values.count("name"), 1);
-    XCTAssertEqual(data.values.at("name"), db::value{"suzuki"});
-    XCTAssertEqual(data.values.count("age"), 1);
-    XCTAssertEqual(data.values.at("age"), db::value{32});
-    XCTAssertEqual(data.values.count("weight"), 1);
-    XCTAssertEqual(data.values.at("weight"), db::value{90.1});
-    XCTAssertEqual(data.values.count("data"), 1);
-    XCTAssertEqual(data.values.at("data"), db::value::empty());
+    XCTAssertGreaterThan(data.attributes.size(), 6);
+    XCTAssertEqual(data.attributes.count(db::id_field), 1);
+    XCTAssertEqual(data.attributes.at(db::id_field), db::value{22});
+    XCTAssertEqual(data.attributes.count(db::object_id_field), 1);
+    XCTAssertEqual(data.attributes.at(db::object_id_field), db::value{55});
+    XCTAssertEqual(data.attributes.count("name"), 1);
+    XCTAssertEqual(data.attributes.at("name"), db::value{"suzuki"});
+    XCTAssertEqual(data.attributes.count("age"), 1);
+    XCTAssertEqual(data.attributes.at("age"), db::value{32});
+    XCTAssertEqual(data.attributes.count("weight"), 1);
+    XCTAssertEqual(data.attributes.at("weight"), db::value{90.1});
+    XCTAssertEqual(data.attributes.count("data"), 1);
+    XCTAssertEqual(data.attributes.at("data"), db::value::empty());
 
     XCTAssertEqual(data.relations.size(), 1);
     XCTAssertEqual(data.relations.count("child"), 1);
@@ -257,7 +257,7 @@ using namespace yas;
     XCTAssertEqual(data.relations.at("child").at(0), db::value{33});
     XCTAssertEqual(data.relations.at("child").at(1), db::value{44});
 
-    XCTAssertEqual(data.values.count(db::save_id_field), 0);
+    XCTAssertEqual(data.attributes.count(db::save_id_field), 0);
 }
 
 - (void)test_change_status {

@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		B608C85E1C20F17300F594D8 /* yas_db_value.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B608C85C1C20F17300F594D8 /* yas_db_value.cpp */; };
-		B608C8601C20F61800F594D8 /* yas_db_column_value_tests.mm in Sources */ = {isa = PBXBuildFile; fileRef = B608C85F1C20F61800F594D8 /* yas_db_column_value_tests.mm */; };
+		B608C8601C20F61800F594D8 /* yas_db_value_tests.mm in Sources */ = {isa = PBXBuildFile; fileRef = B608C85F1C20F61800F594D8 /* yas_db_value_tests.mm */; };
 		B62950101C4B7E780024034B /* yas_db_select_option.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B629500E1C4B7E780024034B /* yas_db_select_option.cpp */; };
 		B62CED901C2A33640047B6DE /* yas_db_statement_tests.mm in Sources */ = {isa = PBXBuildFile; fileRef = B62CED8F1C2A33640047B6DE /* yas_db_statement_tests.mm */; };
 		B63A0C311C3222A4009EB0B3 /* yas_db_order_tests.mm in Sources */ = {isa = PBXBuildFile; fileRef = B63A0C301C3222A4009EB0B3 /* yas_db_order_tests.mm */; };
@@ -54,7 +54,7 @@
 		B608C85B1C20641200F594D8 /* yas_stl_utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_stl_utils.h; sourceTree = "<group>"; };
 		B608C85C1C20F17300F594D8 /* yas_db_value.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = yas_db_value.cpp; sourceTree = "<group>"; };
 		B608C85D1C20F17300F594D8 /* yas_db_value.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_db_value.h; sourceTree = "<group>"; };
-		B608C85F1C20F61800F594D8 /* yas_db_column_value_tests.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = yas_db_column_value_tests.mm; sourceTree = "<group>"; };
+		B608C85F1C20F61800F594D8 /* yas_db_value_tests.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = yas_db_value_tests.mm; sourceTree = "<group>"; };
 		B608C8611C21910400F594D8 /* yas_db.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_db.h; sourceTree = "<group>"; };
 		B608C8621C21B8F000F594D8 /* yas_result_private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_result_private.h; sourceTree = "<group>"; };
 		B608C8631C21B8F000F594D8 /* yas_result.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_result.h; sourceTree = "<group>"; };
@@ -200,7 +200,7 @@
 				B6E0F15C1C1D66A80033AC60 /* Info.plist */,
 				B6A285ED1C2A9C8C00EC7945 /* yas_db_test_utils.h */,
 				B6A285EE1C2A9C8C00EC7945 /* yas_db_test_utils.mm */,
-				B608C85F1C20F61800F594D8 /* yas_db_column_value_tests.mm */,
+				B608C85F1C20F61800F594D8 /* yas_db_value_tests.mm */,
 				B62CED8F1C2A33640047B6DE /* yas_db_statement_tests.mm */,
 				B6A285E71C2A475500EC7945 /* yas_db_database_tests.mm */,
 				B6F648361C40B35800265C93 /* yas_db_utils_tests.mm */,
@@ -351,7 +351,7 @@
 				B6C5A2CE1C30D96800E100EC /* yas_db_sql_utils.cpp in Sources */,
 				B6A285F11C2A9D3D00EC7945 /* yas_db_row_set_tests.mm in Sources */,
 				B6A285E81C2A475500EC7945 /* yas_db_database_tests.mm in Sources */,
-				B608C8601C20F61800F594D8 /* yas_db_column_value_tests.mm in Sources */,
+				B608C8601C20F61800F594D8 /* yas_db_value_tests.mm in Sources */,
 				B6A285EC1C2A4D5800EC7945 /* yas_cf_utils.mm in Sources */,
 				B6B281E71C34D321009053E1 /* yas_db_cf_utils.cpp in Sources */,
 				B63C48B11C381B7F00B63598 /* yas_version.cpp in Sources */,
