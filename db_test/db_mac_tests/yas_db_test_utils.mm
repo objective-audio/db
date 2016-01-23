@@ -74,8 +74,14 @@ using namespace yas;
                 },
                 @"relations": @{@"child": @{@"target": @"sample_b"}, @"friend": @{@"target": @"sample_c"}}
             },
-            @"sample_b": @{@"attributes": @{@"name": @{@"type": @"text"}}, @"relations": @{}},
-            @"sample_c": @{@"attributes": @{@"name": @{@"type": @"text"}}, @"relations": @{}}
+            @"sample_b": @{
+                @"attributes": @{@"name": @{@"type": @"text"}},
+                @"relations": @{@"parent": @{@"target": @"sample_a"}}
+            },
+            @"sample_c": @{
+                @"attributes": @{@"name": @{@"type": @"text"}},
+                @"relations": @{@"friend": @{@"target": @"sample_a"}}
+            }
         }
     };
 }
