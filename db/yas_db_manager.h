@@ -69,11 +69,11 @@ namespace db {
         using fetch_result = result<object_vector_map, error<fetch_error_type>>;
         using save_result = result<object_vector_map, error<save_error_type>>;
 
-        using setup_completion_f = std::function<void(setup_result const &)>;
-        using insert_completion_f = std::function<void(insert_result const &)>;
-        using fetch_completion_f = std::function<void(fetch_result const &)>;
-        using save_completion_f = std::function<void(save_result const &)>;
-        using execution_f = std::function<void(database &, operation const &)>;
+        using setup_completion_f = std::function<void(manager &, setup_result const &)>;
+        using insert_completion_f = std::function<void(manager &, insert_result const &)>;
+        using fetch_completion_f = std::function<void(manager &, fetch_result const &)>;
+        using save_completion_f = std::function<void(manager &, save_result const &)>;
+        using execution_f = std::function<void(manager &, operation const &)>;
 
         explicit manager(std::string const &db_path, model const &model);
         manager(std::nullptr_t);
@@ -81,7 +81,8 @@ namespace db {
         void setup(setup_completion_f &&completion);
 
         std::string const &database_path() const;
-        database const &database() const;
+        db::database const &database() const;
+        db::database &database();
         model const &model() const;
         integer::type current_save_id() const;
         integer::type last_save_id() const;

@@ -108,44 +108,6 @@ using namespace yas;
     db::model model((__bridge CFDictionaryRef)model_dict);
     db::object obj{nullptr, model, "sample_a"};
 
-    XCTAssertEqual(obj.relation_size("child"), 0);
-
-    obj.push_back_relation("child", db::value{7});
-
-    XCTAssertEqual(obj.relation_size("child"), 1);
-
-    obj.push_back_relation("child", db::value{6});
-
-    XCTAssertEqual(obj.relation_size("child"), 2);
-
-    obj.push_back_relation("child", db::value{5});
-
-    XCTAssertEqual(obj.relation_size("child"), 3);
-    XCTAssertEqual(obj.get_relation("child", 0), db::value{7});
-    XCTAssertEqual(obj.get_relation("child", 1), db::value{6});
-    XCTAssertEqual(obj.get_relation("child", 2), db::value{5});
-
-    obj.erase_relation("child", 1);
-
-    XCTAssertEqual(obj.relation_size("child"), 2);
-    XCTAssertEqual(obj.get_relation("child", 0), db::value{7});
-    XCTAssertEqual(obj.get_relation("child", 1), db::value{5});
-
-    obj.erase_relation("child", db::value{7});
-
-    XCTAssertEqual(obj.relation_size("child"), 1);
-    XCTAssertEqual(obj.get_relation("child", 0), db::value{5});
-
-    obj.clear_relation("child");
-
-    XCTAssertEqual(obj.relation_size("child"), 0);
-}
-
-- (void)test_add_and_remove_relation {
-    NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
-    db::model model((__bridge CFDictionaryRef)model_dict);
-    db::object obj{nullptr, model, "sample_a"};
-
     obj.push_back_relation("child", db::value{321});
 
     XCTAssertEqual(obj.get_relation("child").size(), 1);
