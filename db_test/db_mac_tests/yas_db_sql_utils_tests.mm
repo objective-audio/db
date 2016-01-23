@@ -48,7 +48,7 @@ using namespace yas;
 }
 
 - (void)test_expr {
-    XCTAssertEqual(db::expr("abc", ":def", "="), "(abc = :def)");
+    XCTAssertEqual(db::expr("abc", "=", ":def"), "(abc = :def)");
 }
 
 - (void)test_field_expr {

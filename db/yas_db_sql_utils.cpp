@@ -64,12 +64,12 @@ std::string yas::db::delete_sql(const std::string &table, const std::string &whe
     return stream.str();
 }
 
-std::string yas::db::expr(std::string const &left, std::string const &right, std::string const &op) {
+std::string yas::db::expr(std::string const &left, std::string const &op, std::string const &right) {
     return "(" + left + " " + op + " " + right + ")";
 }
 
 std::string yas::db::field_expr(std::string const &field, std::string const &op) {
-    return expr(field, ":" + field, op);
+    return expr(field, op, ":" + field);
 }
 
 std::string yas::db::equal_field_expr(std::string const &field) {

@@ -161,7 +161,7 @@ db::select_result db::select_last(database const &db, std::string const &table_n
 
     std::vector<std::string> sub_where_components;
     if (save_id) {
-        sub_where_components.emplace_back(expr(save_id_field, to_string(save_id), "<="));
+        sub_where_components.emplace_back(expr(save_id_field, "<=", to_string(save_id)));
     }
     if (edited_options.where_exprs.size() > 0) {
         sub_where_components.push_back(edited_options.where_exprs);
