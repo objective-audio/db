@@ -91,6 +91,7 @@ namespace db {
 
         void insert_objects(entity_count_map const &counts, insert_completion_f &&completion);
         void fetch_objects(std::string const &entity_name, select_option &&option, fetch_completion_f &&completion);
+        void fetch_relation_objects(object_vector_map const &objects, fetch_completion_f &&completion);
         void save(save_completion_f &&completion);
 
         object cached_object(std::string const &entity_name, integer::type const object_id) const;
