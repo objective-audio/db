@@ -244,4 +244,26 @@ using namespace yas;
     XCTAssertEqual(obj.status(), db::object_status::updating);
 }
 
+- (void)test_relation_ids_for_fetch {
+    NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
+    db::model model((__bridge CFDictionaryRef)model_dict);
+    db::object obj{nullptr, model, "sample_a"};
+
+    obj.set_relation("child", db::value_vector{db::value{1}, db::value{2}, db::value{3}, db::value{2}});
+
+    XCTAssertEqual(obj.relation_size("child"), 4);
+
+    auto rel_ids = obj.relation_ids_for_fetch();
+
+    XCTAssertEqual(rel_ids.count("sample_b"), 1);
+
+    auto const &sample_b_rel_ids = rel_ids.at("sample_b");
+
+    XCTAssertEqual(sample_b_rel_ids.size(), 3);
+    XCTAssertEqual(sample_b_rel_ids.count(1), 1);
+    XCTAssertEqual(sample_b_rel_ids.count(2), 1);
+    XCTAssertEqual(sample_b_rel_ids.count(3), 1);
+    XCTAssertEqual(sample_b_rel_ids.count(4), 0);
+}
+
 @end

@@ -217,6 +217,29 @@ struct db::object::impl : public base::impl {
         return object_data{.attributes = std::move(attributes), .relations = std::move(relations)};
     }
 
+    integer_set_map relation_ids_for_fetch() {
+        integer_set_map relation_ids;
+
+        db::entity const &entity = model.entities().at(entity_name);
+        for (auto const &pair : entity.relations) {
+            auto const &rel_name = pair.first;
+            if (data.relations.count(rel_name)) {
+                auto const &tgt_entity_name = pair.second.target_entity_name;
+                if (relation_ids.count(tgt_entity_name) == 0) {
+                    relation_ids.emplace(std::make_pair(tgt_entity_name, integer_set{}));
+                }
+
+                auto &rel_id_set = relation_ids.at(tgt_entity_name);
+                auto const &rel = data.relations.at(rel_name);
+                for (auto const &tgt_id : rel) {
+                    rel_id_set.insert(tgt_id.get<integer>());
+                }
+            }
+        }
+
+        return relation_ids;
+    }
+
     void notify_did_change() {
         if (manager) {
             if (auto observable = dynamic_cast<object_observable *>(&manager)) {
@@ -315,6 +338,10 @@ bool db::object::is_removed() const {
 
 db::object_data db::object::data_for_save() const {
     return impl_ptr<impl>()->data_for_save();
+}
+
+db::integer_set_map db::object::relation_ids_for_fetch() const {
+    return impl_ptr<impl>()->relation_ids_for_fetch();
 }
 
 db::object const &db::object::empty() {

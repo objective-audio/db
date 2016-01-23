@@ -19,6 +19,9 @@ namespace db {
         value_vector_map relations;
     };
 
+    using integer_set = std::unordered_set<integer::type>;
+    using integer_set_map = std::unordered_map<std::string, integer_set>;
+
     class object : public base, public manageable {
         using super_class = base;
 
@@ -55,6 +58,7 @@ namespace db {
         bool is_removed() const;
 
         object_data data_for_save() const;
+        integer_set_map relation_ids_for_fetch() const;
 
         static object const &empty();
 
