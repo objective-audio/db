@@ -21,7 +21,7 @@ std::string db::entity::sql_for_create() const {
 
 std::string db::entity::sql_for_update() const {
     auto mapped_fields = map<std::string>(attributes, [](auto const &pair) { return pair.first; });
-    return db::update_sql(name, mapped_fields, field_expr(id_field, "="));
+    return db::update_sql(name, mapped_fields, equal_field_expr(id_field));
 }
 
 std::string db::entity::sql_for_insert() const {

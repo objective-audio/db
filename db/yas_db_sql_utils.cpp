@@ -72,6 +72,10 @@ std::string yas::db::field_expr(std::string const &field, std::string const &op)
     return expr(field, ":" + field, op);
 }
 
+std::string yas::db::equal_field_expr(std::string const &field) {
+    return field_expr(field, "=");
+}
+
 std::string yas::db::equal_field(std::string const &field) {
     return field + " = :" + field;
 }

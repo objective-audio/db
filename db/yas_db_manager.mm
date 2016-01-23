@@ -450,7 +450,7 @@ void db::manager::insert_objects(entity_count_map const &counts, insert_completi
                     }
 
                     auto const &select_result =
-                        db::select(db, entity_name, {.where_exprs = db::field_expr(object_id_field, "="),
+                        db::select(db, entity_name, {.where_exprs = db::equal_field_expr(object_id_field),
                                                      .arguments = {{std::make_pair(object_id_field, obj_id_value)}}});
                     if (!select_result) {
                         state = insert_state{make_error(insert_error_type::select_failed)};
@@ -541,7 +541,7 @@ void db::manager::fetch_objects(std::string const &entity_name, db::select_optio
                         auto const &rel_name = model_rel_pair.first;
                         auto const &table_name = model_rel_pair.second.table_name;
                         std::string where_exprs =
-                            joined({field_expr(save_id_field, "="), field_expr(src_id_field, "=")}, " and ");
+                            joined({equal_field_expr(save_id_field), equal_field_expr(src_id_field)}, " and ");
                         db::select_option option{.where_exprs = where_exprs,
                                                  .arguments = {{save_id_field, attributes.at(save_id_field)},
                                                                {src_id_field, attributes.at(object_id_field)}}};

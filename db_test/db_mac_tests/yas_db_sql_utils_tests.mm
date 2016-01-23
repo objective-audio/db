@@ -55,6 +55,10 @@ using namespace yas;
     XCTAssertEqual(db::field_expr("abc", "="), "(abc = :abc)");
 }
 
+- (void)test_equal_field_expr {
+    XCTAssertEqual(db::equal_field_expr("abc"), "(abc = :abc)");
+}
+
 - (void)test_joined_orders {
     auto joined_orders = db::joined_orders({{"field_a", db::order::ascending}, {"field_b", db::order::descending}});
     XCTAssertEqual(joined_orders, "field_a asc, field_b desc");

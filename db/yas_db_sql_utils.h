@@ -23,6 +23,7 @@ namespace db {
 
     std::string expr(std::string const &left, std::string const &right, std::string const &op);
     std::string field_expr(std::string const &field, std::string const &op);
+    std::string equal_field_expr(std::string const &field);
 
     std::string equal_field(std::string const &field);
 
