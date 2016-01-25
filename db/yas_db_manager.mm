@@ -772,6 +772,7 @@ void db::manager::save(save_completion_f &&completion) {
                 db::commit(db);
             } else {
                 db::rollback(db);
+                saved_datas.clear();
             }
         }
 
