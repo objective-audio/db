@@ -186,6 +186,43 @@ struct db::manager::impl : public base::impl {
     }
 };
 
+#pragma mark - utils
+
+namespace yas {
+namespace db {
+    using object_data_result = result<db::object_data, manager::error<manager::fetch_error_type>>;
+
+    object_data_result fetch_object_data(database &db, relation_map const &relation_models, db::value_map &attributes) {
+        db::value_vector_map relations;
+
+        for (auto const &rel_model_pair : relation_models) {
+            auto const &rel_name = rel_model_pair.first;
+            auto const &table_name = rel_model_pair.second.table_name;
+            std::string where_exprs =
+                joined({equal_field_expr(save_id_field), equal_field_expr(src_id_field)}, " and ");
+            db::select_option option{.where_exprs = where_exprs,
+                                     .arguments = {{save_id_field, attributes.at(save_id_field)},
+                                                   {src_id_field, attributes.at(object_id_field)}}};
+
+            auto const select_result = db::select(db, table_name, std::move(option));
+            if (select_result) {
+                auto const &result_relations = select_result.value();
+                db::value_vector rels;
+                rels.reserve(result_relations.size());
+                for (auto const &result_relation : result_relations) {
+                    rels.push_back(result_relation.at(tgt_id_field));
+                }
+                relations.emplace(std::make_pair(rel_name, std::move(rels)));
+            } else {
+                return object_data_result{make_error(manager::fetch_error_type::select_failed, select_result.error())};
+            }
+        }
+
+        return object_data_result{object_data{.attributes = std::move(attributes), .relations = std::move(relations)}};
+    }
+}
+}
+
 #pragma mark - manager
 
 db::manager::manager(std::string const &db_path, db::model const &model)
@@ -512,41 +549,6 @@ void db::manager::insert_objects(entity_count_map const &counts, insert_completi
 
             dispatch_sync(dispatch_get_main_queue(), std::move(lambda));
         });
-}
-
-namespace yas {
-namespace db {
-    using object_data_result = result<db::object_data, manager::error<manager::fetch_error_type>>;
-
-    object_data_result fetch_object_data(database &db, relation_map const &relation_models, db::value_map &attributes) {
-        db::value_vector_map relations;
-
-        for (auto const &rel_model_pair : relation_models) {
-            auto const &rel_name = rel_model_pair.first;
-            auto const &table_name = rel_model_pair.second.table_name;
-            std::string where_exprs =
-                joined({equal_field_expr(save_id_field), equal_field_expr(src_id_field)}, " and ");
-            db::select_option option{.where_exprs = where_exprs,
-                                     .arguments = {{save_id_field, attributes.at(save_id_field)},
-                                                   {src_id_field, attributes.at(object_id_field)}}};
-
-            auto const select_result = db::select(db, table_name, std::move(option));
-            if (select_result) {
-                auto const &result_relations = select_result.value();
-                db::value_vector rels;
-                rels.reserve(result_relations.size());
-                for (auto const &result_relation : result_relations) {
-                    rels.push_back(result_relation.at(tgt_id_field));
-                }
-                relations.emplace(std::make_pair(rel_name, std::move(rels)));
-            } else {
-                return object_data_result{make_error(manager::fetch_error_type::select_failed, select_result.error())};
-            }
-        }
-
-        return object_data_result{object_data{.attributes = std::move(attributes), .relations = std::move(relations)}};
-    }
-}
 }
 
 void db::manager::fetch_objects(std::string const &entity_name, db::select_option &&option,
