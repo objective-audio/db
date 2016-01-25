@@ -518,12 +518,12 @@ namespace yas {
 namespace db {
     using object_data_result = result<db::object_data, manager::error<manager::fetch_error_type>>;
 
-    object_data_result fetch_object_data(database &db, relation_map const &model_relations, db::value_map &attributes) {
+    object_data_result fetch_object_data(database &db, relation_map const &relation_models, db::value_map &attributes) {
         db::value_vector_map relations;
 
-        for (auto const &model_rel_pair : model_relations) {
-            auto const &rel_name = model_rel_pair.first;
-            auto const &table_name = model_rel_pair.second.table_name;
+        for (auto const &rel_model_pair : relation_models) {
+            auto const &rel_name = rel_model_pair.first;
+            auto const &table_name = rel_model_pair.second.table_name;
             std::string where_exprs =
                 joined({equal_field_expr(save_id_field), equal_field_expr(src_id_field)}, " and ");
             db::select_option option{.where_exprs = where_exprs,
@@ -555,7 +555,7 @@ void db::manager::fetch_objects(std::string const &entity_name, db::select_optio
                                                                                           operation const &) {
         auto &db = manager.database();
 
-        auto const &model_rels = manager.model().entities().at(entity_name).relations;
+        auto const &rel_models = manager.model().entities().at(entity_name).relations;
         using fetch_state = result<std::nullptr_t, error<fetch_error_type>>;
         fetch_state state{nullptr};
 
@@ -569,7 +569,7 @@ void db::manager::fetch_objects(std::string const &entity_name, db::select_optio
                 entity_datas.reserve(select_result.value().size());
 
                 for (value_map &attributes : select_result.value()) {
-                    auto object_data_result = fetch_object_data(db, model_rels, attributes);
+                    auto object_data_result = fetch_object_data(db, rel_models, attributes);
                     if (object_data_result) {
                         entity_datas.emplace_back(std::move(object_data_result.value()));
                     } else {
@@ -624,7 +624,7 @@ void db::manager::fetch_relation_objects(object_vector_map const &objects, fetch
         if (begin_result) {
             for (auto const &entity_pair : rel_ids) {
                 auto const &entity_name = entity_pair.first;
-                auto const &model_rels = manager.model().entities().at(entity_name).relations;
+                auto const &rel_models = manager.model().entities().at(entity_name).relations;
 
                 auto const &entity_rel_ids = entity_pair.second;
                 db::select_option option{
@@ -638,7 +638,7 @@ void db::manager::fetch_relation_objects(object_vector_map const &objects, fetch
                     entity_datas.reserve(select_result.value().size());
 
                     for (value_map &attributes : select_result.value()) {
-                        auto object_data_result = fetch_object_data(db, model_rels, attributes);
+                        auto object_data_result = fetch_object_data(db, rel_models, attributes);
                         if (object_data_result) {
                             entity_datas.emplace_back(std::move(object_data_result.value()));
                         } else {
@@ -706,7 +706,7 @@ void db::manager::save(save_completion_f &&completion) {
                     auto const &entity_name = entity_pair.first;
                     auto const &changed_entity_datas = entity_pair.second;
                     auto const sql = manager.model().entities().at(entity_name).sql_for_insert();
-                    auto const &model_relations = manager.model().entities().at(entity_name).relations;
+                    auto const &relation_models = manager.model().entities().at(entity_name).relations;
 
                     db::object_data_vector entity_saved_datas;
 
@@ -730,8 +730,8 @@ void db::manager::save(save_completion_f &&completion) {
                             for (auto const &rel_pair : data.relations) {
                                 auto const &rel_name = rel_pair.first;
                                 auto const &rel = rel_pair.second;
-                                auto const &model_relation = model_relations.at(rel_name);
-                                auto const &sql = model_relation.sql_for_insert();
+                                auto const &rel_model = relation_models.at(rel_name);
+                                auto const &sql = rel_model.sql_for_insert();
 
                                 for (auto const &rel_tgt_id : rel) {
                                     auto const tgt_id_pair = std::make_pair(tgt_id_field, rel_tgt_id);
