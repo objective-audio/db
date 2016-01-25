@@ -55,7 +55,7 @@ struct db::object::impl : public base::impl {
             for (auto const &pair : entity.attributes) {
                 auto const &attr_name = pair.first;
                 if (obj_data.attributes.count(attr_name)) {
-                    set_value(attr_name, obj_data.attributes.at(attr_name), true);
+                    set_attribute(attr_name, obj_data.attributes.at(attr_name), true);
                 }
             }
 
@@ -80,7 +80,7 @@ struct db::object::impl : public base::impl {
         return db::value::empty();
     }
 
-    void set_value(std::string const &attr_name, db::value const &value, bool const loading = false) {
+    void set_attribute(std::string const &attr_name, db::value const &value, bool const loading = false) {
         validate_attribute_name(attr_name);
 
         if (data.attributes.count(attr_name)) {
@@ -210,7 +210,7 @@ struct db::object::impl : public base::impl {
 
         data.relations.clear();
 
-        set_value(removed_field, db::value{true});
+        set_attribute(removed_field, db::value{true});
     }
 
     db::object_data data_for_save() {
@@ -301,8 +301,8 @@ db::value const &db::object::get_attribute(std::string const &attr_name) const {
     return impl_ptr<impl>()->get_attribute(attr_name);
 }
 
-void db::object::set_value(std::string const &attr_name, db::value const &value) {
-    impl_ptr<impl>()->set_value(attr_name, value);
+void db::object::set_attribute(std::string const &attr_name, db::value const &value) {
+    impl_ptr<impl>()->set_attribute(attr_name, value);
 }
 
 db::value_vector db::object::get_relation_ids(std::string const &rel_name) const {
