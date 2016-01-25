@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <set>
 #include <unordered_map>
 #include "yas_base.h"
 #include "yas_db_additional_protocol.h"
@@ -19,6 +20,9 @@ namespace db {
         value_vector_map relations;
     };
 
+    using integer_set = std::set<integer::type>;
+    using integer_set_map = std::unordered_map<std::string, integer_set>;
+
     class object : public base, public manageable {
         using super_class = base;
 
@@ -33,12 +37,17 @@ namespace db {
         value const &get_attribute(std::string const &attr_name) const;
         void set_value(std::string const &attr_name, value const &value);
 
-        value_vector get_relation(std::string const &rel_name) const;
-        value const &get_relation(std::string const &rel_name, std::size_t const idx) const;
+        value_vector get_relation_ids(std::string const &rel_name) const;
+        value const &get_relation_id(std::string const &rel_name, std::size_t const idx) const;
+        std::vector<db::object> get_relation_objects(std::string const &rel_name) const;
+        db::object get_relation_object(std::string const &rel_name, std::size_t const idx) const;
         std::size_t relation_size(std::string const &rel_name) const;
-        void set_relation(std::string const &rel_name, value_vector const &relation_ids);
-        void push_back_relation(std::string const &rel_name, value const &relation_id);
-        void erase_relation(std::string const &rel_name, value const &relation_id);
+        void set_relation_ids(std::string const &rel_name, value_vector const &relation_ids);
+        void push_back_relation_id(std::string const &rel_name, value const &relation_id);
+        void erase_relation_id(std::string const &rel_name, value const &relation_id);
+        void set_relation_object(std::string const &rel_name, std::vector<object> const &rel_objects);
+        void push_back_relation_object(std::string const &rel_name, object const &rel_object);
+        void erase_relation_object(std::string const &rel_name, object const &rel_object);
         void erase_relation(std::string const &rel_name, std::size_t const idx);
         void clear_relation(std::string const &rel_name);
 
@@ -55,6 +64,7 @@ namespace db {
         bool is_removed() const;
 
         object_data data_for_save() const;
+        integer_set_map relation_ids_for_fetch() const;
 
         static object const &empty();
 
@@ -70,5 +80,7 @@ namespace db {
     using weak_object_map_map = std::unordered_map<std::string, weak_object_map>;
     using object_data_vector = std::vector<object_data>;
     using object_data_vector_map = std::unordered_map<std::string, object_data_vector>;
+
+    integer_set_map relation_ids(db::object_vector_map const &);
 }
 }

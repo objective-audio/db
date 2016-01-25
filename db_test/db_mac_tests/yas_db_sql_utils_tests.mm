@@ -48,11 +48,15 @@ using namespace yas;
 }
 
 - (void)test_expr {
-    XCTAssertEqual(db::expr("abc", ":def", "="), "(abc = :def)");
+    XCTAssertEqual(db::expr("abc", "=", ":def"), "(abc = :def)");
 }
 
 - (void)test_field_expr {
     XCTAssertEqual(db::field_expr("abc", "="), "(abc = :abc)");
+}
+
+- (void)test_equal_field_expr {
+    XCTAssertEqual(db::equal_field_expr("abc"), "(abc = :abc)");
 }
 
 - (void)test_joined_orders {

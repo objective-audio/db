@@ -427,24 +427,65 @@ using namespace yas;
     db::database db = [yas_db_test_utils create_test_database];
     db.open();
 
-    auto const table = "table_a";
-    auto const field = "field_a";
+    auto const table_name = "table_a";
+    auto const field_name = "field_a";
+    std::vector<std::string> fields = {field_name};
 
-    XCTAssertTrue(db::create_table(db, table, {field}));
+    XCTAssertTrue(db::create_table(db, table_name, fields));
 
-    XCTAssertEqual(db::max(db, table, field), nullptr);
+    XCTAssertEqual(db::max(db, table_name, field_name), nullptr);
 
-    XCTAssertTrue(db.execute_update(db::insert_sql(table, {field}), {db::value{1}}));
+    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), {db::value{1}}));
 
-    XCTAssertEqual(db::max(db, table, field), db::value{1});
+    XCTAssertEqual(db::max(db, table_name, field_name), db::value{1});
 
-    XCTAssertTrue(db.execute_update(db::insert_sql(table, {field}), {db::value{10}}));
+    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), {db::value{10}}));
 
-    XCTAssertEqual(db::max(db, table, field), db::value{10});
+    XCTAssertEqual(db::max(db, table_name, field_name), db::value{10});
 
-    XCTAssertTrue(db.execute_update(db::insert_sql(table, {field}), {db::value{5}}));
+    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), {db::value{5}}));
 
-    XCTAssertEqual(db::max(db, table, field), db::value{10});
+    XCTAssertEqual(db::max(db, table_name, field_name), db::value{10});
+}
+
+- (void)test_select_in_object_ids {
+    db::database db = [yas_db_test_utils create_test_database];
+    db.open();
+
+    auto const table_name = "table_a";
+    auto const field_name = "field_a";
+    std::vector<std::string> const fields{db::object_id_field, field_name};
+
+    XCTAssertTrue(db::create_table(db, table_name, fields));
+
+    db::value_vector args;
+    args = {db::value{1}, db::value{"value_1"}};
+    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    args = {db::value{2}, db::value{"value_2"}};
+    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    args = {db::value{3}, db::value{"value_3"}};
+    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    args = {db::value{4}, db::value{"value_4"}};
+    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    args = {db::value{5}, db::value{"value_5"}};
+    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    args = {db::value{6}, db::value{"value_6"}};
+    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+
+    std::set<db::integer::type> obj_ids{2, 4, 6};
+
+    db::select_option option;
+    option.where_exprs = db::object_id_field + " in (" +
+                         joined(obj_ids, ",", [](auto const &obj_id) { return std::to_string(obj_id); }) + ")";
+    option.field_orders = {db::field_order{db::object_id_field, db::order::ascending}};
+
+    auto select_result = db::select(db, table_name, option);
+
+    XCTAssertTrue(select_result);
+    XCTAssertEqual(select_result.value().size(), 3);
+    XCTAssertEqual(select_result.value().at(0).at(field_name), db::value{"value_2"});
+    XCTAssertEqual(select_result.value().at(1).at(field_name), db::value{"value_4"});
+    XCTAssertEqual(select_result.value().at(2).at(field_name), db::value{"value_6"});
 }
 
 @end

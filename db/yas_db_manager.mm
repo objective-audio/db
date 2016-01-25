@@ -76,17 +76,20 @@ struct db::manager::impl : public base::impl {
                 if (objects.count(object_id) > 0) {
                     if (auto const &weak_object = objects.at(object_id)) {
                         object = weak_object.lock();
-                        if (object) {
-                            object.load_data(data);
+                        if (!object) {
+                            throw "cached object is released. entity_name (" + entity_name + ") object_id (" +
+                                std::to_string(object_id) + ")";
+                            ;
                         }
                     }
                 }
 
                 if (!object) {
                     object = db::object{manager, model, entity_name};
-                    object.load_data(data);
                     objects.emplace(std::make_pair(object_id, to_weak(object)));
                 }
+
+                object.load_data(data);
 
                 return object;
             }
@@ -175,7 +178,7 @@ struct db::manager::impl : public base::impl {
 
     void _object_did_erase(std::string const &entity_name, db::integer::type const object_id) {
         if (cached_objects.count(entity_name) > 0) {
-            auto objects = cached_objects.at(entity_name);
+            auto &objects = cached_objects.at(entity_name);
             if (objects.count(object_id)) {
                 objects.erase(object_id);
             }
@@ -450,7 +453,7 @@ void db::manager::insert_objects(entity_count_map const &counts, insert_completi
                     }
 
                     auto const &select_result =
-                        db::select(db, entity_name, {.where_exprs = db::field_expr(object_id_field, "="),
+                        db::select(db, entity_name, {.where_exprs = db::equal_field_expr(object_id_field),
                                                      .arguments = {{std::make_pair(object_id_field, obj_id_value)}}});
                     if (!select_result) {
                         state = insert_state{make_error(insert_error_type::select_failed)};
@@ -511,13 +514,48 @@ void db::manager::insert_objects(entity_count_map const &counts, insert_completi
         });
 }
 
+namespace yas {
+namespace db {
+    using object_data_result = result<db::object_data, manager::error<manager::fetch_error_type>>;
+
+    object_data_result fetch_object_data(database &db, relation_map const &model_relations, db::value_map &attributes) {
+        db::value_vector_map relations;
+
+        for (auto const &model_rel_pair : model_relations) {
+            auto const &rel_name = model_rel_pair.first;
+            auto const &table_name = model_rel_pair.second.table_name;
+            std::string where_exprs =
+                joined({equal_field_expr(save_id_field), equal_field_expr(src_id_field)}, " and ");
+            db::select_option option{.where_exprs = where_exprs,
+                                     .arguments = {{save_id_field, attributes.at(save_id_field)},
+                                                   {src_id_field, attributes.at(object_id_field)}}};
+
+            auto const select_result = db::select(db, table_name, std::move(option));
+            if (select_result) {
+                auto const &result_relations = select_result.value();
+                db::value_vector rels;
+                rels.reserve(result_relations.size());
+                for (auto const &result_relation : result_relations) {
+                    rels.push_back(result_relation.at(tgt_id_field));
+                }
+                relations.emplace(std::make_pair(rel_name, std::move(rels)));
+            } else {
+                return object_data_result{make_error(manager::fetch_error_type::select_failed, select_result.error())};
+            }
+        }
+
+        return object_data_result{object_data{.attributes = std::move(attributes), .relations = std::move(relations)}};
+    }
+}
+}
+
 void db::manager::fetch_objects(std::string const &entity_name, db::select_option &&option,
                                 fetch_completion_f &&completion) {
     execute([entity_name, option = std::move(option), completion = std::move(completion)](db::manager & manager,
                                                                                           operation const &) {
         auto &db = manager.database();
 
-        auto const &model_relations = manager.model().entities().at(entity_name).relations;
+        auto const &model_rels = manager.model().entities().at(entity_name).relations;
         using fetch_state = result<std::nullptr_t, error<fetch_error_type>>;
         fetch_state state{nullptr};
 
@@ -526,45 +564,22 @@ void db::manager::fetch_objects(std::string const &entity_name, db::select_optio
         auto begin_result = db::begin_transaction(db);
         if (begin_result) {
             auto select_result = db::select_last(db, entity_name, nullptr, option);
-            if (!select_result) {
-                state = fetch_state{make_error(fetch_error_type::select_failed, select_result.error())};
-            }
-
-            if (state) {
+            if (select_result) {
                 db::object_data_vector entity_datas;
                 entity_datas.reserve(select_result.value().size());
 
-                for (auto const &attributes : select_result.value()) {
-                    db::value_vector_map relations;
-
-                    for (auto const &model_rel_pair : model_relations) {
-                        auto const &rel_name = model_rel_pair.first;
-                        auto const &table_name = model_rel_pair.second.table_name;
-                        std::string where_exprs =
-                            joined({field_expr(save_id_field, "="), field_expr(src_id_field, "=")}, " and ");
-                        db::select_option option{.where_exprs = where_exprs,
-                                                 .arguments = {{save_id_field, attributes.at(save_id_field)},
-                                                               {src_id_field, attributes.at(object_id_field)}}};
-
-                        auto const select_result = db::select(db, table_name, std::move(option));
-                        if (select_result) {
-                            auto const &result_relations = select_result.value();
-                            db::value_vector rels;
-                            rels.reserve(result_relations.size());
-                            for (auto const &result_relation : result_relations) {
-                                rels.push_back(result_relation.at(tgt_id_field));
-                            }
-                            relations.emplace(std::make_pair(rel_name, std::move(rels)));
-                        } else {
-                            state = fetch_state{make_error(fetch_error_type::select_failed, select_result.error())};
-                        }
+                for (value_map &attributes : select_result.value()) {
+                    auto object_data_result = fetch_object_data(db, model_rels, attributes);
+                    if (object_data_result) {
+                        entity_datas.emplace_back(std::move(object_data_result.value()));
+                    } else {
+                        state = fetch_state{object_data_result.error()};
                     }
-
-                    entity_datas.emplace_back(
-                        db::object_data{.attributes = std::move(attributes), .relations = std::move(relations)});
                 }
 
                 fetched_datas.emplace(std::make_pair(entity_name, std::move(entity_datas)));
+            } else {
+                state = fetch_state{make_error(fetch_error_type::select_failed, select_result.error())};
             }
 
             if (state) {
@@ -594,10 +609,74 @@ void db::manager::fetch_objects(std::string const &entity_name, db::select_optio
     });
 }
 
+void db::manager::fetch_relation_objects(object_vector_map const &objects, fetch_completion_f &&completion) {
+    auto rel_ids = db::relation_ids(objects);
+
+    execute([completion = std::move(completion), rel_ids = std::move(rel_ids)](manager & manager, operation const &) {
+        auto &db = manager.database();
+
+        using fetch_state = result<std::nullptr_t, error<fetch_error_type>>;
+        fetch_state state{nullptr};
+
+        object_data_vector_map fetched_datas;
+
+        auto begin_result = db::begin_transaction(db);
+        if (begin_result) {
+            for (auto const &entity_pair : rel_ids) {
+                auto const &entity_name = entity_pair.first;
+                auto const &model_rels = manager.model().entities().at(entity_name).relations;
+
+                auto const &entity_rel_ids = entity_pair.second;
+                db::select_option option{
+                    .where_exprs =
+                        object_id_field + " in (" +
+                        joined(entity_rel_ids, ",", [](auto const &rel_id) { return std::to_string(rel_id); }) + ")"};
+
+                auto select_result = db::select_last(db, entity_name, nullptr, option);
+                if (select_result) {
+                    db::object_data_vector entity_datas;
+                    entity_datas.reserve(select_result.value().size());
+
+                    for (value_map &attributes : select_result.value()) {
+                        auto object_data_result = fetch_object_data(db, model_rels, attributes);
+                        if (object_data_result) {
+                            entity_datas.emplace_back(std::move(object_data_result.value()));
+                        } else {
+                            state = fetch_state{object_data_result.error()};
+                        }
+                    }
+
+                    fetched_datas.emplace(std::make_pair(entity_name, std::move(entity_datas)));
+                } else {
+                    state = fetch_state{make_error(fetch_error_type::select_failed, select_result.error())};
+                }
+            }
+        } else {
+            state = fetch_state{make_error(fetch_error_type::begin_failed, begin_result.error())};
+        }
+
+        auto lambda = [
+            manager,
+            completion = std::move(completion),
+            state = std::move(state),
+            fetched_datas = std::move(fetched_datas)
+        ]() mutable {
+            if (state) {
+                auto loaded_objects = manager.impl_ptr<impl>()->load_object_datas(fetched_datas);
+                completion(manager, fetch_result{std::move(loaded_objects)});
+            } else {
+                completion(manager, fetch_result{state.error()});
+            }
+        };
+
+        dispatch_sync(dispatch_get_main_queue(), std::move(lambda));
+    });
+}
+
 void db::manager::save(save_completion_f &&completion) {
     auto const changed_datas = impl_ptr<impl>()->changed_datas_for_save();
 
-    execute([completion = std::move(completion), changed_datas = std::move(changed_datas)](db::manager & manager,
+    execute([completion = std::move(completion), changed_datas = std::move(changed_datas)](manager & manager,
                                                                                            operation const &) {
         auto &db = manager.database();
 
@@ -720,6 +799,7 @@ void db::manager::save(save_completion_f &&completion) {
                 completion(manager, save_result{state.error()});
             }
         };
+
         dispatch_sync(dispatch_get_main_queue(), std::move(lambda));
     });
 }

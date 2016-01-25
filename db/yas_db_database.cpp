@@ -3,7 +3,6 @@
 //
 
 #include <mutex>
-#include <unordered_set>
 #include "yas_db_database.h"
 #include "yas_db_row_set.h"
 #include "yas_db_statement.h"
