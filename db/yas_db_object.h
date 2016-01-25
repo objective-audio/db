@@ -35,7 +35,7 @@ namespace db {
         void load_data(object_data const &obj_data);
 
         value const &get_attribute(std::string const &attr_name) const;
-        void set_value(std::string const &attr_name, value const &value);
+        void set_attribute(std::string const &attr_name, value const &value);
 
         value_vector get_relation_ids(std::string const &rel_name) const;
         value const &get_relation_id(std::string const &rel_name, std::size_t const idx) const;

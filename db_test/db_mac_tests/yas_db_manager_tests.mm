@@ -382,7 +382,7 @@ using namespace yas;
 
     XCTAssertEqual(manager.current_save_id(), 1);
     XCTAssertEqual(manager.last_save_id(), 1);
-    objects.at("sample_a").at(1).set_value("name", db::value{"value_1"});
+    objects.at("sample_a").at(1).set_attribute("name", db::value{"value_1"});
     objects.at("sample_a").at(1).push_back_relation_id("child", objects.at("sample_b").at(0).object_id());
 
     XCTestExpectation *exp2 = [self expectationWithDescription:@"2"];
@@ -427,7 +427,7 @@ using namespace yas;
 
     [self waitForExpectationsWithTimeout:1.0 handler:nil];
 
-    objects.at("sample_a").at(2).set_value("name", db::value{"value_2"});
+    objects.at("sample_a").at(2).set_attribute("name", db::value{"value_2"});
     objects.at("sample_a").at(2).clear_relation("child");
     objects.at("sample_a").at(2).push_back_relation_id("child", objects.at("sample_b").at(1).object_id());
     objects.at("sample_a").at(2).push_back_relation_id("child", objects.at("sample_b").at(0).object_id());
@@ -650,8 +650,8 @@ using namespace yas;
 
     XCTAssertEqual(main_objects.size(), 1);
     auto &object = main_objects.at(1);
-    object.set_value("name", db::value{"new_value"});
-    object.set_value("age", db::value{77});
+    object.set_attribute("name", db::value{"new_value"});
+    object.set_attribute("age", db::value{77});
     object.push_back_relation_id("child", db::value{100});
     object.push_back_relation_id("child", db::value{200});
     XCTAssertEqual(object.status(), db::object_status::changed);

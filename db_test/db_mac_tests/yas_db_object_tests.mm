@@ -94,9 +94,9 @@ using namespace yas;
     db::model model((__bridge CFDictionaryRef)model_dict);
     db::object obj{nullptr, model, "sample_a"};
 
-    obj.set_value("age", db::value{24});
-    obj.set_value("name", db::value{"nabe"});
-    obj.set_value("weight", db::value{5783.23});
+    obj.set_attribute("age", db::value{24});
+    obj.set_attribute("name", db::value{"nabe"});
+    obj.set_attribute("weight", db::value{5783.23});
 
     XCTAssertEqual(obj.get_attribute("age"), db::value{24});
     XCTAssertEqual(obj.get_attribute("name"), db::value{"nabe"});
@@ -151,9 +151,9 @@ using namespace yas;
     db::object obj_b1{nullptr, model, "sample_b"};
     db::object obj_b2{nullptr, model, "sample_b"};
     db::object obj_b3{nullptr, model, "sample_b"};
-    obj_b1.set_value(db::object_id_field, db::value{5});
-    obj_b2.set_value(db::object_id_field, db::value{6});
-    obj_b3.set_value(db::object_id_field, db::value{7});
+    obj_b1.set_attribute(db::object_id_field, db::value{5});
+    obj_b2.set_attribute(db::object_id_field, db::value{6});
+    obj_b3.set_attribute(db::object_id_field, db::value{7});
 
     obj.push_back_relation_object("child", obj_b1);
 
@@ -197,11 +197,11 @@ using namespace yas;
     db::model model((__bridge CFDictionaryRef)model_dict);
     db::object obj{nullptr, model, "sample_a"};
 
-    obj.set_value("age", db::value{1});
+    obj.set_attribute("age", db::value{1});
 
     XCTAssertEqual(obj.get_attribute("age"), db::value{1});
 
-    obj.set_value("age", db::value{5});
+    obj.set_attribute("age", db::value{5});
 
     XCTAssertEqual(obj.get_attribute("age"), db::value{5});
 }
@@ -213,9 +213,9 @@ using namespace yas;
 
     XCTAssertFalse(obj.is_removed());
 
-    obj.set_value(db::id_field, db::value{11});
-    obj.set_value(db::object_id_field, db::value{45});
-    obj.set_value("name", db::value{"tanaka"});
+    obj.set_attribute(db::id_field, db::value{11});
+    obj.set_attribute(db::object_id_field, db::value{45});
+    obj.set_attribute("name", db::value{"tanaka"});
     obj.set_relation_ids("child", {db::value{111}});
 
     XCTAssertEqual(obj.get_attribute(db::object_id_field), db::value{45});
@@ -236,13 +236,13 @@ using namespace yas;
     db::model model((__bridge CFDictionaryRef)model_dict);
     db::object obj{nullptr, model, "sample_a"};
 
-    obj.set_value(db::id_field, db::value{22});
-    obj.set_value(db::object_id_field, db::value{55});
-    obj.set_value("name", db::value{"suzuki"});
-    obj.set_value("age", db::value{32});
-    obj.set_value("weight", db::value{90.1});
-    obj.set_value("data", db::value::empty());
-    obj.set_value(db::save_id_field, db::value{100});
+    obj.set_attribute(db::id_field, db::value{22});
+    obj.set_attribute(db::object_id_field, db::value{55});
+    obj.set_attribute("name", db::value{"suzuki"});
+    obj.set_attribute("age", db::value{32});
+    obj.set_attribute("weight", db::value{90.1});
+    obj.set_attribute("data", db::value::empty());
+    obj.set_attribute(db::save_id_field, db::value{100});
 
     obj.set_relation_ids("child", db::value_vector{db::value{33}, db::value{44}});
 
