@@ -60,13 +60,14 @@ using namespace yas;
     XCTAssertEqual(save_id_attr.primary, false);
     XCTAssertEqual(save_id_attr.unique, false);
 
-    auto &removed_attr = attributes.at(db::removed_field);
-    XCTAssertEqual(removed_attr.name, "removed");
-    XCTAssertEqual(removed_attr.type, "integer");
-    XCTAssertTrue(removed_attr.default_value.type() == typeid(db::null));
-    XCTAssertEqual(removed_attr.not_null, false);
-    XCTAssertEqual(removed_attr.primary, false);
-    XCTAssertEqual(removed_attr.unique, false);
+    auto &action_attr = attributes.at(db::action_field);
+    XCTAssertEqual(action_attr.name, "action");
+    XCTAssertEqual(action_attr.type, "text");
+    XCTAssertTrue(action_attr.default_value.type() == typeid(db::text));
+    XCTAssertEqual(action_attr.default_value.get<db::text>(), "insert");
+    XCTAssertEqual(action_attr.not_null, true);
+    XCTAssertEqual(action_attr.primary, false);
+    XCTAssertEqual(action_attr.unique, false);
 
     auto &age = attributes.at("age");
     XCTAssertEqual(age.name, "age");
@@ -133,13 +134,14 @@ using namespace yas;
     XCTAssertEqual(save_id_attr_b.primary, false);
     XCTAssertEqual(save_id_attr_b.unique, false);
 
-    auto &removed_attr_b = attributes.at(db::removed_field);
-    XCTAssertEqual(removed_attr_b.name, "removed");
-    XCTAssertEqual(removed_attr_b.type, "integer");
-    XCTAssertTrue(removed_attr_b.default_value.type() == typeid(db::null));
-    XCTAssertEqual(removed_attr_b.not_null, false);
-    XCTAssertEqual(removed_attr_b.primary, false);
-    XCTAssertEqual(removed_attr_b.unique, false);
+    auto &action_attr_b = attributes.at(db::action_field);
+    XCTAssertEqual(action_attr_b.name, "action");
+    XCTAssertEqual(action_attr_b.type, "text");
+    XCTAssertTrue(action_attr_b.default_value.type() == typeid(db::text));
+    XCTAssertEqual(action_attr_b.default_value.get<db::text>(), "insert");
+    XCTAssertEqual(action_attr_b.not_null, true);
+    XCTAssertEqual(action_attr_b.primary, false);
+    XCTAssertEqual(action_attr_b.unique, false);
 
     auto &name_b = attributes_b.at("name");
     XCTAssertEqual(name_b.name, "name");

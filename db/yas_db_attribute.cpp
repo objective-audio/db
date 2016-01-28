@@ -82,7 +82,7 @@ db::attribute const &db::attribute::save_id_attribute() {
     return attr;
 }
 
-db::attribute const &db::attribute::removed_attribute() {
-    static db::attribute const attr{removed_field, db::integer::name, nullptr};
+db::attribute const &db::attribute::action_attribute() {
+    static db::attribute const attr{action_field, db::text::name, db::value{insert_action}, true};
     return attr;
 }

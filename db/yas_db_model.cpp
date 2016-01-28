@@ -71,8 +71,8 @@ struct db::model::impl : public base::impl {
             auto const &save_id_attr = attribute::save_id_attribute();
             attributes.emplace(std::make_pair(save_id_attr.name, save_id_attr));
 
-            auto const &removed_attr = attribute::removed_attribute();
-            attributes.emplace(std::make_pair(removed_attr.name, removed_attr));
+            auto const &action_attr = attribute::action_attribute();
+            attributes.emplace(std::make_pair(action_attr.name, action_attr));
 
             CFDictionaryRef cf_attributes = get<CFDictionaryRef>(cf_entity_dict, attributes_key);
             if (cf_attributes) {

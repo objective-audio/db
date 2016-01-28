@@ -43,9 +43,18 @@ namespace db {
 
         enum class insert_error_type { none, insert_failed, select_failed, save_id_not_found, update_save_id_failed };
 
-        enum class save_error_type { none, save_id_not_found, update_save_id_failed, insert_failed };
+        enum class save_error_type { none, save_id_not_found, update_save_id_failed, insert_failed, delete_failed };
 
         enum class fetch_error_type { none, begin_failed, select_failed };
+
+        enum class revert_error_type {
+            none,
+            begin_failed,
+            select_failed,
+            save_id_not_found,
+            out_of_range_save_id,
+            update_save_id_failed
+        };
 
         template <typename T>
         struct error {
@@ -68,11 +77,13 @@ namespace db {
         using insert_result = result<object_vector_map, error<insert_error_type>>;
         using fetch_result = result<object_vector_map, error<fetch_error_type>>;
         using save_result = result<object_vector_map, error<save_error_type>>;
+        using revert_result = result<object_vector_map, error<revert_error_type>>;
 
         using setup_completion_f = std::function<void(manager &, setup_result const &)>;
         using insert_completion_f = std::function<void(manager &, insert_result const &)>;
         using fetch_completion_f = std::function<void(manager &, fetch_result const &)>;
         using save_completion_f = std::function<void(manager &, save_result const &)>;
+        using revert_completion_f = std::function<void(manager &, revert_result const &)>;
         using execution_f = std::function<void(manager &, operation const &)>;
 
         explicit manager(std::string const &db_path, model const &model);
@@ -81,7 +92,7 @@ namespace db {
         void setup(setup_completion_f &&completion);
 
         std::string const &database_path() const;
-        db::database const &database() const;
+        database const &database() const;
         db::database &database();
         model const &model() const;
         integer::type current_save_id() const;
@@ -93,6 +104,7 @@ namespace db {
         void fetch_objects(std::string const &entity_name, select_option &&option, fetch_completion_f &&completion);
         void fetch_relation_objects(object_vector_map const &objects, fetch_completion_f &&completion);
         void save(save_completion_f &&completion);
+        void revert(db::integer::type const save_id, revert_completion_f &&completion);
 
         object cached_object(std::string const &entity_name, integer::type const object_id) const;
 
@@ -105,6 +117,8 @@ namespace db {
 std::string to_string(db::manager::setup_error_type const &);
 std::string to_string(db::manager::insert_error_type const &);
 std::string to_string(db::manager::save_error_type const &);
+std::string to_string(db::manager::fetch_error_type const &);
+std::string to_string(db::manager::revert_error_type const &);
 
 template <typename T>
 db::manager::error<T> make_error(T const &error_type, db::error const &error = nullptr) {

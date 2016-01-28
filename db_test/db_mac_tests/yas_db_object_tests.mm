@@ -231,6 +231,60 @@ using namespace yas;
     XCTAssertEqual(obj.get_relation_ids("child").size(), 0);
 }
 
+- (void)test_action {
+    NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
+    db::model model((__bridge CFDictionaryRef)model_dict);
+    db::object obj{nullptr, model, "sample_a"};
+    auto *manageable_obj = dynamic_cast<db::manageable *>(&obj);
+
+    XCTAssertEqual(obj.action(), db::value::empty());
+
+    db::object_data obj_data{
+        .attributes = db::value_map{std::make_pair(db::action_field, db::value{db::insert_action})},
+        .relations = db::value_vector_map{std::make_pair("child", db::value_vector{db::value{12}, db::value{34}})}};
+    obj.load_data(obj_data);
+    XCTAssertEqual(obj.action(), db::value{db::insert_action});
+
+    obj.set_attribute("name", db::value{"test_name"});
+    XCTAssertEqual(obj.action(), db::value{db::update_action});
+
+    manageable_obj->set_status(db::object_status::updating);
+    obj.load_data(obj_data);
+    XCTAssertEqual(obj.action(), db::value{db::insert_action});
+
+    obj.push_back_relation_id("child", db::value{2});
+    XCTAssertEqual(obj.action(), db::value{db::update_action});
+
+    manageable_obj->set_status(db::object_status::updating);
+    obj.load_data(obj_data);
+    XCTAssertEqual(obj.action(), db::value{db::insert_action});
+
+    obj.set_relation_ids("child", {db::value{1}});
+    XCTAssertEqual(obj.action(), db::value{db::update_action});
+
+    manageable_obj->set_status(db::object_status::updating);
+    obj.load_data(obj_data);
+    XCTAssertEqual(obj.action(), db::value{db::insert_action});
+
+    obj.erase_relation("child", 0);
+    XCTAssertEqual(obj.action(), db::value{db::update_action});
+
+    manageable_obj->set_status(db::object_status::updating);
+    obj.load_data(obj_data);
+    XCTAssertEqual(obj.action(), db::value{db::insert_action});
+
+    obj.clear_relation("child");
+    XCTAssertEqual(obj.action(), db::value{db::update_action});
+
+    manageable_obj->set_status(db::object_status::updating);
+    obj.load_data(obj_data);
+    XCTAssertEqual(obj.action(), db::value{db::insert_action});
+
+    obj.remove();
+    XCTAssertEqual(obj.action(), db::value{db::remove_action});
+    XCTAssertTrue(obj.is_removed());
+}
+
 - (void)test_data_for_save {
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
@@ -253,6 +307,8 @@ using namespace yas;
     XCTAssertEqual(data.attributes.at(db::id_field), db::value{22});
     XCTAssertEqual(data.attributes.count(db::object_id_field), 1);
     XCTAssertEqual(data.attributes.at(db::object_id_field), db::value{55});
+    XCTAssertEqual(data.attributes.count(db::action_field), 1);
+    XCTAssertEqual(data.attributes.at(db::action_field), db::value{db::update_action});
     XCTAssertEqual(data.attributes.count("name"), 1);
     XCTAssertEqual(data.attributes.at("name"), db::value{"suzuki"});
     XCTAssertEqual(data.attributes.count("age"), 1);
