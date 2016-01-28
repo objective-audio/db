@@ -27,7 +27,7 @@ std::string yas::db::drop_table_sql(std::string const &table) {
     return "drop table if exists " + table + ";";
 }
 
-std::string yas::db::insert_sql(const std::string &table, const std::vector<std::string> &fields) {
+std::string yas::db::insert_sql(std::string const &table, std::vector<std::string> const &fields) {
     std::ostringstream stream;
     stream << "insert into " + table;
     if (fields.size() > 0) {
@@ -41,8 +41,8 @@ std::string yas::db::insert_sql(const std::string &table, const std::vector<std:
     return stream.str();
 }
 
-std::string yas::db::update_sql(const std::string &table, const std::vector<std::string> &fields,
-                                const std::string &where_exprs) {
+std::string yas::db::update_sql(std::string const &table, std::vector<std::string> const &fields,
+                                std::string const &where_exprs) {
     std::ostringstream stream;
     stream << "update " << table << " set "
            << joined(map<std::string>(fields, [](std::string const &field) { return equal_field(field); }),
