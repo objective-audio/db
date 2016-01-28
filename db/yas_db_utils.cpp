@@ -136,13 +136,12 @@ bool db::column_exists(database const &db, std::string const &column_name, std::
     return false;
 }
 
-db::select_result db::select(db::database const &db, std::string const &table_name, select_option const &options) {
-    auto const sql =
-        select_sql(table_name, options.fields, options.where_exprs, options.field_orders, options.limit_range);
+db::select_result db::select(db::database const &db, std::string const &table_name, select_option const &option) {
+    auto const sql = select_sql(table_name, option.fields, option.where_exprs, option.field_orders, option.limit_range);
 
     db::value_map_vector value_map_vector;
 
-    auto query_result = db.execute_query(sql, options.arguments);
+    auto query_result = db.execute_query(sql, option.arguments);
     if (query_result) {
         auto row_set = query_result.value();
         while (row_set.next()) {
@@ -156,22 +155,90 @@ db::select_result db::select(db::database const &db, std::string const &table_na
 }
 
 db::select_result db::select_last(database const &db, std::string const &table_name, db::value const &save_id,
-                                  select_option const &options) {
-    auto edited_options = options;
+                                  select_option const &option) {
+    auto edited_option = option;
 
-    std::vector<std::string> sub_where_components;
+    std::vector<std::string> components;
+
     if (save_id) {
-        sub_where_components.emplace_back(expr(save_id_field, "<=", to_string(save_id)));
+        components.emplace_back(expr(save_id_field, "<=", to_string(save_id)));
     }
-    if (edited_options.where_exprs.size() > 0) {
-        sub_where_components.push_back(edited_options.where_exprs);
-    }
-    std::string sub_where = sub_where_components.size() > 0 ? " where " + joined(sub_where_components, " and ") : "";
 
-    edited_options.where_exprs =
+    if (edited_option.where_exprs.size() > 0) {
+        components.push_back(edited_option.where_exprs);
+    }
+
+    std::string sub_where = components.size() > 0 ? " where " + joined(components, " and ") : "";
+
+    edited_option.where_exprs =
         "rowid in (select max(rowid) from " + table_name + sub_where + " group by " + db::object_id_field + ")";
 
-    return select(db, table_name, edited_options);
+    return select(db, table_name, edited_option);
+}
+
+db::select_result db::select_undo(database const &db, std::string const &table_name, integer::type const revert_save_id,
+                                  integer::type const current_save_id) {
+    if (current_save_id <= revert_save_id) {
+        throw "revert_save_id greater than or equal to current_save_id";
+    }
+
+    std::vector<std::string> components;
+    components.emplace_back(object_id_field + " in (select distinct " + object_id_field + " from " + table_name +
+                            " where " + joined({expr(save_id_field, "<=", std::to_string(current_save_id)),
+                                                expr(save_id_field, ">", std::to_string(revert_save_id))},
+                                               " and ") +
+                            ")");
+    components.emplace_back(expr(save_id_field, "<=", std::to_string(revert_save_id)));
+
+    select_option option{.where_exprs = "rowid in (select max(rowid) from " + table_name + " where " +
+                                        joined(components, " and ") + " group by " + object_id_field + ")",
+                         .field_orders = {{object_id_field, order::ascending}}};
+
+    auto result = select(db, table_name, option);
+    if (!result) {
+        return select_result{result.error()};
+    }
+
+    select_option empty_option{.fields = {object_id_field},
+                               .where_exprs = joined({expr(save_id_field, "<=", std::to_string(current_save_id)),
+                                                      expr(save_id_field, ">", std::to_string(revert_save_id)),
+                                                      equal_field_expr(action_field)},
+                                                     " and "),
+                               .arguments = {{action_field, db::value{insert_action}}},
+                               .field_orders = {{object_id_field, order::ascending}}};
+    auto empty_result = select(db, table_name, empty_option);
+    if (!empty_result) {
+        return select_result{empty_result.error()};
+    }
+
+    auto vector = connect(std::move(result.value()), std::move(empty_result.value()));
+    return select_result{std::move(vector)};
+}
+
+db::select_result db::select_redo(database const &db, std::string const &table_name, integer::type const revert_save_id,
+                                  integer::type const current_save_id) {
+    if (revert_save_id <= current_save_id) {
+        throw "current_save_id greater than or equal to revert_save_id";
+    }
+
+    std::vector<std::string> components;
+    components.emplace_back(expr(save_id_field, ">", std::to_string(current_save_id)));
+
+    db::select_option option{.where_exprs = joined(components, " and "),
+                             .field_orders = {{object_id_field, db::order::ascending}}};
+
+    return select_last(db, table_name, db::value{revert_save_id}, option);
+}
+
+db::select_result db::select_revert(database const &db, std::string const &table_name,
+                                    integer::type const revert_save_id, integer::type const current_save_id) {
+    if (revert_save_id < current_save_id) {
+        return select_undo(db, table_name, revert_save_id, current_save_id);
+    } else if (current_save_id < revert_save_id) {
+        return select_redo(db, table_name, revert_save_id, current_save_id);
+    }
+
+    return select_result{value_map_vector{}};
 }
 
 db::select_single_result db::select_db_info(database const &db) {

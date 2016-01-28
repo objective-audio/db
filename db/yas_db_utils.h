@@ -37,6 +37,12 @@ namespace db {
     select_result select(database const &db, std::string const &table_name, select_option const &option = {});
     select_result select_last(database const &db, std::string const &table_name, value const &save_id = nullptr,
                               select_option const &option = {});
+    select_result select_undo(database const &db, std::string const &table_name, integer::type const revert_save_id,
+                              integer::type const current_save_id);
+    select_result select_redo(database const &db, std::string const &table_name, integer::type const revert_save_id,
+                              integer::type const current_save_id);
+    select_result select_revert(database const &db, std::string const &table_name, integer::type const revert_save_id,
+                                integer::type const current_save_id);
     select_single_result select_db_info(database const &db);
 
     value max(database const &db, std::string const &table_name, std::string const &field);

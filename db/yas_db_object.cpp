@@ -38,9 +38,9 @@ struct db::object::impl : public base::impl {
         status = db::object_status::invalid;
     }
 
-    bool is_removed() {
-        if (data.attributes.count(removed_field)) {
-            return data.attributes.at(removed_field).get<integer>() > 0;
+    bool is_equal_to_action(std::string const &action) {
+        if (data.attributes.count(action_field)) {
+            return data.attributes.at(action_field).get<text>() == action;
         }
 
         return false;
@@ -65,9 +65,13 @@ struct db::object::impl : public base::impl {
                     set_relation(rel_name, obj_data.relations.at(rel_name), true);
                 }
             }
-        }
 
-        status = db::object_status::saved;
+            if (obj_data.attributes.count(save_id_field)) {
+                status = db::object_status::saved;
+            } else {
+                status = db::object_status::invalid;
+            }
+        }
     }
 
     db::value const &get_attribute(std::string const &attr_name) {
@@ -87,6 +91,10 @@ struct db::object::impl : public base::impl {
             data.attributes.erase(attr_name);
         }
         data.attributes.emplace(std::make_pair(attr_name, value));
+
+        if (attr_name != action_field && !loading) {
+            set_update_action();
+        }
 
         status = db::object_status::changed;
 
@@ -133,6 +141,10 @@ struct db::object::impl : public base::impl {
         }
         data.relations.emplace(std::make_pair(rel_name, relation_ids));
 
+        if (!loading) {
+            set_update_action();
+        }
+
         status = db::object_status::changed;
 
         if (!loading) {
@@ -150,6 +162,8 @@ struct db::object::impl : public base::impl {
         auto &vector = data.relations.at(rel_name);
         vector.push_back(relation_id);
 
+        set_update_action();
+
         status = db::object_status::changed;
 
         notify_did_change();
@@ -161,6 +175,8 @@ struct db::object::impl : public base::impl {
         if (data.relations.count(rel_name)) {
             erase_if(data.relations.at(rel_name),
                      [relation_id](db::value const &object_id) { return object_id == relation_id; });
+
+            set_update_action();
 
             status = db::object_status::changed;
 
@@ -177,6 +193,8 @@ struct db::object::impl : public base::impl {
                 ids.erase(ids.begin() + idx);
             }
 
+            set_update_action();
+
             status = db::object_status::changed;
 
             notify_did_change();
@@ -192,17 +210,23 @@ struct db::object::impl : public base::impl {
 
         if (data.relations.count(rel_name)) {
             data.relations.erase(rel_name);
+
+            set_update_action();
+
+            status = db::object_status::changed;
+
+            notify_did_change();
         }
     }
 
     void remove() {
-        if (is_removed()) {
+        if (is_equal_to_action(remove_action)) {
             return;
         }
 
         erase_if(data.attributes, [](auto const &pair) {
             auto const &column_name = pair.first;
-            if (column_name == id_field || column_name == object_id_field || column_name == removed_field) {
+            if (column_name == id_field || column_name == object_id_field || column_name == action_field) {
                 return false;
             }
             return true;
@@ -210,7 +234,7 @@ struct db::object::impl : public base::impl {
 
         data.relations.clear();
 
-        set_attribute(removed_field, db::value{true});
+        set_attribute(action_field, db::value{remove_action});
     }
 
     db::object_data data_for_save() {
@@ -263,6 +287,12 @@ struct db::object::impl : public base::impl {
         }
 
         return relation_ids;
+    }
+
+    void set_update_action() {
+        if (!is_equal_to_action(remove_action) && !is_equal_to_action(update_action)) {
+            set_attribute(action_field, db::value{update_action}, true);
+        }
     }
 
     void notify_did_change() {
@@ -391,12 +421,16 @@ db::value const &db::object::save_id() const {
     return get_attribute(save_id_field);
 }
 
+db::value const &db::object::action() const {
+    return get_attribute(action_field);
+}
+
 void db::object::remove() {
     impl_ptr<impl>()->remove();
 }
 
 bool db::object::is_removed() const {
-    return impl_ptr<impl>()->is_removed();
+    return impl_ptr<impl>()->is_equal_to_action(remove_action);
 }
 
 db::object_data db::object::data_for_save() const {

@@ -255,6 +255,10 @@ using namespace yas;
                                XCTAssertEqual(objects.at(1).save_id(), db::value{1});
                                XCTAssertEqual(objects.at(2).save_id(), db::value{1});
 
+                               XCTAssertEqual(objects.at(0).action(), db::value{db::insert_action});
+                               XCTAssertEqual(objects.at(1).action(), db::value{db::insert_action});
+                               XCTAssertEqual(objects.at(2).action(), db::value{db::insert_action});
+
                                XCTAssertEqual(objects.at(0).manager(), manager);
                                XCTAssertEqual(objects.at(1).manager(), manager);
                                XCTAssertEqual(objects.at(2).manager(), manager);
@@ -286,6 +290,7 @@ using namespace yas;
 
                                XCTAssertEqual(objects.at(0).object_id(), db::value{4});
                                XCTAssertEqual(objects.at(0).save_id(), db::value{2});
+                               XCTAssertEqual(objects.at(0).action(), db::value{db::insert_action});
                                XCTAssertEqual(objects.at(0).manager(), manager);
 
                                [exp2 fulfill];
@@ -628,6 +633,7 @@ using namespace yas;
                                XCTAssertEqual(obj.save_id(), db::value{1});
                                XCTAssertEqual(obj.get_attribute("name"), db::value{"default_value"});
                                XCTAssertEqual(obj.status(), db::object_status::saved);
+                               XCTAssertEqual(obj.action(), db::value{db::insert_action});
 
                                [exp1 fulfill];
                            });
@@ -672,6 +678,7 @@ using namespace yas;
         XCTAssertEqual(obj.get_attribute("name"), db::value{"new_value"});
         XCTAssertEqual(obj.get_attribute("age"), db::value{77});
         XCTAssertEqual(obj.status(), db::object_status::saved);
+        XCTAssertEqual(obj.action(), db::value{db::update_action});
         XCTAssertEqual(obj.relation_size("child"), 2);
         XCTAssertEqual(obj.get_relation_ids("child").size(), 2);
         XCTAssertEqual(obj.get_relation_id("child", 0), db::value{100});
@@ -688,9 +695,11 @@ using namespace yas;
         XCTAssertEqual(selected_values.at(0).at("name"), db::value{"default_value"});
         XCTAssertEqual(selected_values.at(0).at("age"), db::value{10});
         XCTAssertEqual(selected_values.at(0).at(db::save_id_field), db::value{1});
+        XCTAssertEqual(selected_values.at(0).at(db::action_field), db::value{db::insert_action});
         XCTAssertEqual(selected_values.at(1).at("name"), db::value{"new_value"});
         XCTAssertEqual(selected_values.at(1).at("age"), db::value{77});
         XCTAssertEqual(selected_values.at(1).at(db::save_id_field), db::value{2});
+        XCTAssertEqual(selected_values.at(1).at(db::action_field), db::value{db::update_action});
 
         auto relation_result =
             db::select(db, manager.model().entities().at("sample_a").relations.at("child").table_name);
@@ -739,6 +748,7 @@ using namespace yas;
         XCTAssertEqual(obj.get_relation_ids("child").size(), 0);
         XCTAssertTrue(obj.is_removed());
         XCTAssertEqual(obj.status(), db::object_status::saved);
+        XCTAssertEqual(obj.action(), db::value{db::remove_action});
 
         [exp4 fulfill];
     });
@@ -763,6 +773,116 @@ using namespace yas;
 
     XCTAssertEqual(manager.current_save_id(), 3);
     XCTAssertEqual(manager.last_save_id(), 3);
+}
+
+- (void)test_revert_objects {
+    db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
+    auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
+
+    manager.setup([self, &manager](auto &, auto const &result) {
+        XCTAssertTrue(result);
+        XCTAssertEqual(manager.current_save_id(), 0);
+        XCTAssertEqual(manager.last_save_id(), 0);
+    });
+
+    db::object a_object{nullptr};
+
+    XCTestExpectation *exp1 = [self expectationWithDescription:@"1"];
+
+    manager.insert_objects({{"sample_a", 1}},
+                           [self, &a_object, exp1](auto &, db::manager::insert_result const &insert_result) {
+                               a_object = insert_result.value().at("sample_a").at(0);
+
+                               [exp1 fulfill];
+                           });
+
+    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+
+    XCTAssertEqual(a_object.save_id(), db::value{1});
+
+    a_object.set_attribute("name", db::value{"value_2"});
+
+    XCTestExpectation *exp2 = [self expectationWithDescription:@"2"];
+
+    manager.save([&exp2](auto &, auto const &) { [exp2 fulfill]; });
+
+    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+
+    XCTAssertEqual(a_object.save_id(), db::value{2});
+
+    a_object.remove();
+
+    XCTestExpectation *exp3 = [self expectationWithDescription:@"3"];
+
+    manager.save([&exp3](auto &, auto const &) { [exp3 fulfill]; });
+
+    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+
+    XCTAssertEqual(a_object.save_id(), db::value{3});
+    XCTAssertTrue(a_object.is_removed());
+
+    XCTestExpectation *exp4 = [self expectationWithDescription:@"4"];
+
+    manager.revert(2, [&exp4](auto &, auto const &) { [exp4 fulfill]; });
+
+    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+
+    XCTAssertEqual(a_object.save_id(), db::value{2});
+    XCTAssertEqual(a_object.get_attribute("name"), db::value{"value_2"});
+    XCTAssertFalse(a_object.is_removed());
+
+    XCTestExpectation *exp5 = [self expectationWithDescription:@"5"];
+
+    manager.revert(1, [&exp5](auto &, auto const &) { [exp5 fulfill]; });
+
+    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+
+    XCTAssertEqual(a_object.save_id(), db::value{1});
+    XCTAssertEqual(a_object.get_attribute("name"), db::value{"default_value"});
+
+    a_object.set_attribute("name", db::value{"value_b"});
+
+    XCTestExpectation *exp6 = [self expectationWithDescription:@"6"];
+
+    manager.save([&exp6](auto &, auto const &) { [exp6 fulfill]; });
+
+    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+
+    XCTestExpectation *exp7 = [self expectationWithDescription:@"7"];
+
+    manager.execute([self, &exp7](db::manager &manager, operation const &) {
+        auto &db = manager.database();
+
+        auto select_result =
+            db::select(db, "sample_a", db::select_option{.where_exprs = db::expr(db::save_id_field, "=", "3")});
+        XCTAssertTrue(select_result);
+        XCTAssertEqual(select_result.value().size(), 0);
+
+        select_result =
+            db::select(db, "sample_a", db::select_option{.where_exprs = db::expr(db::save_id_field, "=", "2")});
+        XCTAssertTrue(select_result);
+        XCTAssertEqual(select_result.value().size(), 1);
+
+        select_result =
+            db::select(db, "sample_a", db::select_option{.where_exprs = db::expr(db::save_id_field, "=", "1")});
+        XCTAssertTrue(select_result);
+        XCTAssertEqual(select_result.value().size(), 1);
+
+        [exp7 fulfill];
+    });
+
+    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+
+    XCTestExpectation *exp8 = [self expectationWithDescription:@"8"];
+
+    manager.revert(0, [&exp8](auto &, auto const &) { [exp8 fulfill]; });
+
+    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+
+    XCTAssertEqual(a_object.status(), db::object_status::invalid);
+    XCTAssertFalse(a_object.save_id());
+    XCTAssertFalse(a_object.action());
+    XCTAssertFalse(a_object.get_attribute("name"));
 }
 
 - (void)test_make_setup_error {
@@ -833,7 +953,23 @@ using namespace yas;
     XCTAssertEqual(to_string(db::manager::save_error_type::save_id_not_found), "save_id_not_found");
     XCTAssertEqual(to_string(db::manager::save_error_type::update_save_id_failed), "update_save_id_failed");
     XCTAssertEqual(to_string(db::manager::save_error_type::insert_failed), "insert_failed");
+    XCTAssertEqual(to_string(db::manager::save_error_type::delete_failed), "delete_failed");
     XCTAssertEqual(to_string(db::manager::save_error_type::none), "none");
+}
+
+- (void)test_to_string_from_fetch_error {
+    XCTAssertEqual(to_string(db::manager::fetch_error_type::begin_failed), "begin_failed");
+    XCTAssertEqual(to_string(db::manager::fetch_error_type::select_failed), "select_failed");
+    XCTAssertEqual(to_string(db::manager::fetch_error_type::none), "none");
+}
+
+- (void)test_to_string_from_revert_error {
+    XCTAssertEqual(to_string(db::manager::revert_error_type::begin_failed), "begin_failed");
+    XCTAssertEqual(to_string(db::manager::revert_error_type::select_failed), "select_failed");
+    XCTAssertEqual(to_string(db::manager::revert_error_type::save_id_not_found), "save_id_not_found");
+    XCTAssertEqual(to_string(db::manager::revert_error_type::out_of_range_save_id), "out_of_range_save_id");
+    XCTAssertEqual(to_string(db::manager::revert_error_type::update_save_id_failed), "update_save_id_failed");
+    XCTAssertEqual(to_string(db::manager::revert_error_type::none), "none");
 }
 
 @end

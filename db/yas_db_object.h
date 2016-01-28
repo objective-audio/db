@@ -59,6 +59,7 @@ namespace db {
 
         value const &object_id() const;
         value const &save_id() const;
+        value const &action() const;
 
         void remove();
         bool is_removed() const;
