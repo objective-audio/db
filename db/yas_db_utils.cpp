@@ -120,14 +120,14 @@ db::row_set db::get_table_schema(database const &db, std::string const &table_na
     return nullptr;
 }
 
-bool db::column_exists(database const &db, std::string const &column_name, std::string const &table_name) {
-    std::string lower_table_name = to_lower(table_name);
-    std::string lower_column_name = to_lower(column_name);
+bool db::column_exists(database const &db, std::string column_name, std::string table_name) {
+    std::string lower_table_name = to_lower(std::move(table_name));
+    std::string lower_column_name = to_lower(std::move(column_name));
 
-    if (auto row_set = get_table_schema(db, table_name)) {
+    if (auto row_set = get_table_schema(db, lower_table_name)) {
         while (row_set.next()) {
             auto value = row_set.column_value("name");
-            if (to_lower(value.get<db::text>()) == column_name) {
+            if (to_lower(value.get<db::text>()) == lower_column_name) {
                 return true;
             }
         }

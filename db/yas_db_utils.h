@@ -32,7 +32,7 @@ namespace db {
     bool table_exists(database const &db, std::string const &table_name);
     row_set get_schema(database const &db);
     row_set get_table_schema(database const &db, std::string const &table_name);
-    bool column_exists(database const &db, std::string const &column_name, std::string const &table_name);
+    bool column_exists(database const &db, std::string column_name, std::string table_name);
 
     select_result select(database const &db, std::string const &table_name, select_option const &option = {});
     select_result select_last(database const &db, std::string const &table_name, value const &save_id = nullptr,
