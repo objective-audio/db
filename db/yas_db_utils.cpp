@@ -155,25 +155,23 @@ db::select_result db::select(db::database const &db, std::string const &table_na
 }
 
 db::select_result db::select_last(database const &db, std::string const &table_name, db::value const &save_id,
-                                  select_option const &option) {
-    auto edited_option = option;
-
+                                  select_option option) {
     std::vector<std::string> components;
 
     if (save_id) {
         components.emplace_back(expr(save_id_field, "<=", to_string(save_id)));
     }
 
-    if (edited_option.where_exprs.size() > 0) {
-        components.push_back(edited_option.where_exprs);
+    if (option.where_exprs.size() > 0) {
+        components.emplace_back(option.where_exprs);
     }
 
     std::string sub_where = components.size() > 0 ? " where " + joined(components, " and ") : "";
 
-    edited_option.where_exprs =
+    option.where_exprs =
         "rowid in (select max(rowid) from " + table_name + sub_where + " group by " + db::object_id_field + ")";
 
-    return select(db, table_name, edited_option);
+    return select(db, table_name, option);
 }
 
 db::select_result db::select_undo(database const &db, std::string const &table_name, integer::type const revert_save_id,
@@ -196,7 +194,7 @@ db::select_result db::select_undo(database const &db, std::string const &table_n
 
     auto result = select(db, table_name, option);
     if (!result) {
-        return select_result{result.error()};
+        return select_result{std::move(result.error())};
     }
 
     select_option empty_option{.fields = {object_id_field},
@@ -208,11 +206,10 @@ db::select_result db::select_undo(database const &db, std::string const &table_n
                                .field_orders = {{object_id_field, order::ascending}}};
     auto empty_result = select(db, table_name, empty_option);
     if (!empty_result) {
-        return select_result{empty_result.error()};
+        return select_result{std::move(empty_result.error())};
     }
 
-    auto vector = connect(std::move(result.value()), std::move(empty_result.value()));
-    return select_result{std::move(vector)};
+    return select_result{connect(std::move(result.value()), std::move(empty_result.value()))};
 }
 
 db::select_result db::select_redo(database const &db, std::string const &table_name, integer::type const revert_save_id,
@@ -227,7 +224,7 @@ db::select_result db::select_redo(database const &db, std::string const &table_n
     db::select_option option{.where_exprs = joined(components, " and "),
                              .field_orders = {{object_id_field, db::order::ascending}}};
 
-    return select_last(db, table_name, db::value{revert_save_id}, option);
+    return select_last(db, table_name, db::value{revert_save_id}, std::move(option));
 }
 
 db::select_result db::select_revert(database const &db, std::string const &table_name,
