@@ -586,17 +586,35 @@ void db::manager::fetch_objects(std::string const &entity_name, db::select_optio
 
         auto begin_result = db::begin_transaction(db);
         if (begin_result) {
-            auto select_result = db::select_last(db, entity_name, nullptr, std::move(option));
-            if (select_result) {
-                auto &entity_attributes = select_result.value();
-                auto object_datas_result = fetch_entity_object_datas(db, entity_name, rel_models, entity_attributes);
-                if (object_datas_result) {
-                    fetched_datas.emplace(std::make_pair(entity_name, std::move(object_datas_result.value())));
-                } else {
-                    state = fetch_state{make_error(fetch_error_type::select_failed, object_datas_result.error())};
+            db::value current_save_id{nullptr};
+            auto db_info_result = db::select_db_info(db);
+            if (db_info_result) {
+                auto const &db_info = db_info_result.value();
+                if (db_info.count(current_save_id_field)) {
+                    current_save_id = db_info.at(current_save_id_field);
+                }
+
+                if (!current_save_id || current_save_id.get<integer>() == 0) {
+                    state = fetch_state{make_error(fetch_error_type::save_id_not_found)};
                 }
             } else {
-                state = fetch_state{make_error(fetch_error_type::select_failed, select_result.error())};
+                state = fetch_state{make_error(fetch_error_type::select_failed, db_info_result.error())};
+            }
+
+            if (state) {
+                auto select_result = db::select_last(db, entity_name, current_save_id, std::move(option));
+                if (select_result) {
+                    auto &entity_attributes = select_result.value();
+                    auto object_datas_result =
+                        fetch_entity_object_datas(db, entity_name, rel_models, entity_attributes);
+                    if (object_datas_result) {
+                        fetched_datas.emplace(std::make_pair(entity_name, std::move(object_datas_result.value())));
+                    } else {
+                        state = fetch_state{make_error(fetch_error_type::select_failed, object_datas_result.error())};
+                    }
+                } else {
+                    state = fetch_state{make_error(fetch_error_type::select_failed, select_result.error())};
+                }
             }
 
             if (state) {
@@ -1050,6 +1068,8 @@ std::string yas::to_string(db::manager::fetch_error_type const &error) {
             return "begin_failed";
         case db::manager::fetch_error_type::select_failed:
             return "select_failed";
+        case db::manager::fetch_error_type::save_id_not_found:
+            return "save_id_not_found";
         case db::manager::fetch_error_type::none:
             return "none";
     }

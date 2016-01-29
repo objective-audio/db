@@ -45,7 +45,7 @@ namespace db {
 
         enum class save_error_type { none, save_id_not_found, update_save_id_failed, insert_failed, delete_failed };
 
-        enum class fetch_error_type { none, begin_failed, select_failed };
+        enum class fetch_error_type { none, begin_failed, select_failed, save_id_not_found };
 
         enum class revert_error_type {
             none,
