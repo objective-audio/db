@@ -46,13 +46,13 @@ namespace db {
         bool has_row();
 
         int column_count() const;
-        index_result column_index(std::string const &column_name) const;
+        index_result column_index(std::string column_name) const;
         std::string column_name(int const column_idx) const;
         bool column_is_null(int const column_idx);
-        bool column_is_null(std::string const column_name);
+        bool column_is_null(std::string column_name);
 
         db::value column_value(int const column_idx) const;
-        db::value column_value(std::string const column_name) const;
+        db::value column_value(std::string column_name) const;
 
         db::value_map value_map() const;
 

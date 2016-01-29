@@ -118,8 +118,8 @@ int db::row_set::column_count() const {
     return sqlite3_column_count(impl_ptr<impl>()->statement().stmt().value());
 }
 
-db::row_set::index_result db::row_set::column_index(std::string const &column_name) const {
-    std::string lower_column_name = to_lower(column_name);
+db::row_set::index_result db::row_set::column_index(std::string column_name) const {
+    std::string lower_column_name = to_lower(std::move(column_name));
 
     auto const &map = impl_ptr<impl>()->column_name_to_index_map();
 
@@ -138,8 +138,8 @@ bool db::row_set::column_is_null(int const column_idx) {
     return sqlite3_column_type(impl_ptr<impl>()->statement().stmt().value(), column_idx) == SQLITE_NULL;
 }
 
-bool db::row_set::column_is_null(std::string const column_name) {
-    if (auto const index_result = column_index(column_name)) {
+bool db::row_set::column_is_null(std::string column_name) {
+    if (auto const index_result = column_index(std::move(column_name))) {
         return column_is_null(index_result.value());
     }
     return true;
@@ -169,8 +169,8 @@ db::value db::row_set::column_value(int const column_idx) const {
     return db::value{nullptr};
 }
 
-db::value db::row_set::column_value(std::string const column_name) const {
-    if (auto index_result = column_index(column_name)) {
+db::value db::row_set::column_value(std::string column_name) const {
+    if (auto index_result = column_index(std::move(column_name))) {
         return column_value(index_result.value());
     }
     return db::value{nullptr};

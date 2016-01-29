@@ -206,7 +206,7 @@ namespace db {
                                          .arguments = {{save_id_field, attributes.at(save_id_field)},
                                                        {src_id_field, attributes.at(object_id_field)}}};
 
-                auto const select_result = db::select(db, table_name, std::move(option));
+                auto const select_result = db::select(db, table_name, option);
                 if (select_result) {
                     auto const &result_relations = select_result.value();
                     db::value_vector rels;
@@ -586,7 +586,7 @@ void db::manager::fetch_objects(std::string const &entity_name, db::select_optio
 
         auto begin_result = db::begin_transaction(db);
         if (begin_result) {
-            auto select_result = db::select_last(db, entity_name, nullptr, option);
+            auto select_result = db::select_last(db, entity_name, nullptr, std::move(option));
             if (select_result) {
                 auto &entity_attributes = select_result.value();
                 auto object_datas_result = fetch_entity_object_datas(db, entity_name, rel_models, entity_attributes);
@@ -649,7 +649,7 @@ void db::manager::fetch_relation_objects(object_vector_map const &objects, fetch
                         object_id_field + " in (" +
                         joined(entity_rel_ids, ",", [](auto const &rel_id) { return std::to_string(rel_id); }) + ")"};
 
-                auto select_result = db::select_last(db, entity_name, nullptr, option);
+                auto select_result = db::select_last(db, entity_name, nullptr, std::move(option));
                 if (select_result) {
                     auto &entity_attributes = select_result.value();
                     auto object_datas_result =
