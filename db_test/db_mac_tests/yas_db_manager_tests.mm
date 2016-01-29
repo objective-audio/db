@@ -946,6 +946,8 @@ using namespace yas;
     XCTAssertEqual(to_string(db::manager::insert_error_type::select_failed), "select_failed");
     XCTAssertEqual(to_string(db::manager::insert_error_type::save_id_not_found), "save_id_not_found");
     XCTAssertEqual(to_string(db::manager::insert_error_type::update_save_id_failed), "update_save_id_failed");
+    XCTAssertEqual(to_string(db::manager::insert_error_type::select_info_failed), "select_info_failed");
+    XCTAssertEqual(to_string(db::manager::insert_error_type::update_info_failed), "update_info_failed");
     XCTAssertEqual(to_string(db::manager::insert_error_type::none), "none");
 }
 
@@ -958,13 +960,14 @@ using namespace yas;
 }
 
 - (void)test_to_string_from_fetch_error {
-    XCTAssertEqual(to_string(db::manager::fetch_error_type::begin_failed), "begin_failed");
+    XCTAssertEqual(to_string(db::manager::fetch_error_type::begin_transaction_failed), "begin_transaction_failed");
     XCTAssertEqual(to_string(db::manager::fetch_error_type::select_failed), "select_failed");
+    XCTAssertEqual(to_string(db::manager::fetch_error_type::save_id_not_found), "save_id_not_found");
     XCTAssertEqual(to_string(db::manager::fetch_error_type::none), "none");
 }
 
 - (void)test_to_string_from_revert_error {
-    XCTAssertEqual(to_string(db::manager::revert_error_type::begin_failed), "begin_failed");
+    XCTAssertEqual(to_string(db::manager::revert_error_type::begin_transaction_failed), "begin_transaction_failed");
     XCTAssertEqual(to_string(db::manager::revert_error_type::select_failed), "select_failed");
     XCTAssertEqual(to_string(db::manager::revert_error_type::save_id_not_found), "save_id_not_found");
     XCTAssertEqual(to_string(db::manager::revert_error_type::out_of_range_save_id), "out_of_range_save_id");
