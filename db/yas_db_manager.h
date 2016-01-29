@@ -41,15 +41,38 @@ namespace db {
             create_relation_table_failed
         };
 
-        enum class insert_error_type { none, insert_failed, select_failed, save_id_not_found, update_save_id_failed };
+        enum class insert_error_type {
+            none,
+            insert_failed,
+            select_info_failed,
+            select_failed,
+            update_info_failed,
+            save_id_not_found,
+            update_save_id_failed
+        };
 
-        enum class save_error_type { none, save_id_not_found, update_save_id_failed, insert_failed, delete_failed };
+        enum class save_error_type {
+            none,
+            begin_transaction_failed,
+            select_info_failed,
+            save_id_not_found,
+            update_info_failed,
+            insert_failed,
+            delete_failed
+        };
 
-        enum class fetch_error_type { none, begin_failed, select_failed, save_id_not_found };
+        enum class fetch_error_type {
+            none,
+            begin_transaction_failed,
+            select_info_failed,
+            select_last_failed,
+            fetch_object_datas_failed,
+            save_id_not_found
+        };
 
         enum class revert_error_type {
             none,
-            begin_failed,
+            begin_transaction_failed,
             select_failed,
             save_id_not_found,
             out_of_range_save_id,
