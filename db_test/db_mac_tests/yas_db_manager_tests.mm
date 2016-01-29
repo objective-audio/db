@@ -953,6 +953,7 @@ using namespace yas;
 
 - (void)test_to_string_from_save_error {
     XCTAssertEqual(to_string(db::manager::save_error_type::begin_transaction_failed), "begin_transaction_failed");
+    XCTAssertEqual(to_string(db::manager::save_error_type::select_info_failed), "select_info_failed");
     XCTAssertEqual(to_string(db::manager::save_error_type::save_id_not_found), "save_id_not_found");
     XCTAssertEqual(to_string(db::manager::save_error_type::update_info_failed), "update_info_failed");
     XCTAssertEqual(to_string(db::manager::save_error_type::insert_failed), "insert_failed");

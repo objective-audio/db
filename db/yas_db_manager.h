@@ -54,6 +54,7 @@ namespace db {
         enum class save_error_type {
             none,
             begin_transaction_failed,
+            select_info_failed,
             save_id_not_found,
             update_info_failed,
             insert_failed,

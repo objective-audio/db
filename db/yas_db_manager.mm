@@ -729,26 +729,27 @@ void db::manager::save(save_completion_f &&completion) {
         if (changed_datas.size() > 0) {
             auto begin_result = db::begin_transaction(db);
             if (begin_result) {
-                db::integer::type current_save_id = 0;
-                db::integer::type next_save_id = 0;
-                db::integer::type last_save_id = 0;
+                db::value current_save_id{nullptr};
+                db::value next_save_id{nullptr};
+                db::value last_save_id{nullptr};
+
                 if (auto const select_result = db::select_db_info(db)) {
                     auto const &db_info = select_result.value();
                     if (db_info.count(current_save_id_field)) {
-                        current_save_id = db_info.at(current_save_id_field).get<integer>();
-                        next_save_id = current_save_id + 1;
+                        current_save_id = db_info.at(current_save_id_field);
+                        next_save_id = db::value{current_save_id.get<integer>() + 1};
                     }
                     if (db_info.count(last_save_id_field)) {
-                        last_save_id = db_info.at(last_save_id_field).get<integer>();
+                        last_save_id = db_info.at(last_save_id_field);
                     }
+                } else {
+                    state = save_state{make_error(save_error_type::select_info_failed, select_result.error())};
                 }
 
-                if (next_save_id == 0) {
-                    state = save_state{make_error(save_error_type::save_id_not_found)};
-                } else {
-                    if (current_save_id < last_save_id) {
-                        auto const delete_exprs = joined({expr(save_id_field, ">", std::to_string(current_save_id)),
-                                                          expr(save_id_field, "<=", std::to_string(last_save_id))},
+                if (state && next_save_id && current_save_id && last_save_id && next_save_id.get<integer>() > 0) {
+                    if (current_save_id.get<integer>() < last_save_id.get<integer>()) {
+                        auto const delete_exprs = joined({expr(save_id_field, ">", to_string(current_save_id)),
+                                                          expr(save_id_field, "<=", to_string(last_save_id))},
                                                          " and ");
 
                         auto const &entity_models = manager.model().entities();
@@ -777,10 +778,12 @@ void db::manager::save(save_completion_f &&completion) {
                             }
                         }
                     }
+                } else {
+                    state = save_state{make_error(save_error_type::save_id_not_found)};
                 }
 
                 if (state) {
-                    auto const &save_id_pair = std::make_pair(save_id_field, db::value{next_save_id});
+                    auto const &save_id_pair = std::make_pair(save_id_field, next_save_id);
 
                     for (auto const &entity_pair : changed_datas) {
                         auto const &entity_name = entity_pair.first;
@@ -841,9 +844,8 @@ void db::manager::save(save_completion_f &&completion) {
                 }
 
                 if (state) {
-                    db::value const save_id{next_save_id};
                     auto const sql = update_sql(info_table, {current_save_id_field, last_save_id_field}, "");
-                    db::value_vector const params{save_id, save_id};
+                    db::value_vector const params{next_save_id, next_save_id};
                     auto update_result = db.execute_update(sql, params);
                     if (!update_result) {
                         state = save_state{make_error(save_error_type::update_info_failed, update_result.error())};
@@ -1068,6 +1070,8 @@ std::string yas::to_string(db::manager::save_error_type const &error) {
     switch (error) {
         case db::manager::save_error_type::begin_transaction_failed:
             return "begin_transaction_failed";
+        case db::manager::save_error_type::select_info_failed:
+            return "select_info_failed";
         case db::manager::save_error_type::save_id_not_found:
             return "save_id_not_found";
         case db::manager::save_error_type::update_info_failed:
