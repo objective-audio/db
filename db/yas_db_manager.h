@@ -51,7 +51,14 @@ namespace db {
             update_save_id_failed
         };
 
-        enum class save_error_type { none, save_id_not_found, update_save_id_failed, insert_failed, delete_failed };
+        enum class save_error_type {
+            none,
+            begin_transaction_failed,
+            save_id_not_found,
+            update_info_failed,
+            insert_failed,
+            delete_failed
+        };
 
         enum class fetch_error_type {
             none,
