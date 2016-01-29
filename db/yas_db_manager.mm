@@ -479,22 +479,19 @@ void db::manager::insert_objects(entity_count_map const &counts, insert_completi
 
         db::begin_transaction(db);
 
-        db::integer::type next_save_id = 0;
+        db::value next_save_id{nullptr};
+
         auto const select_result = db::select_db_info(db);
         if (select_result) {
             auto const &db_info = select_result.value();
             if (db_info.count(current_save_id_field)) {
-                next_save_id = db_info.at(current_save_id_field).get<integer>() + 1;
-            }
-
-            if (next_save_id == 0) {
+                next_save_id = db::value{db_info.at(current_save_id_field).get<integer>() + 1};
+            } else {
                 state = insert_state{make_error(insert_error_type::save_id_not_found)};
             }
         } else {
             state = insert_state{make_error(insert_error_type::select_info_failed, select_result.error())};
         }
-
-        db::value const save_id_value{next_save_id};
 
         if (state) {
             for (auto const &count_pair : counts) {
@@ -510,7 +507,7 @@ void db::manager::insert_objects(entity_count_map const &counts, insert_completi
 
                     auto insert_result =
                         db.execute_update(db::insert_sql(entity_name, {object_id_field, save_id_field}),
-                                          db::value_vector{obj_id_value, save_id_value});
+                                          db::value_vector{obj_id_value, next_save_id});
                     if (!insert_result) {
                         state = insert_state{make_error(insert_error_type::insert_failed, insert_result.error())};
                         break;
@@ -538,7 +535,7 @@ void db::manager::insert_objects(entity_count_map const &counts, insert_completi
 
         if (state) {
             auto const sql = update_sql(info_table, {current_save_id_field, last_save_id_field}, "");
-            db::value_vector const params{save_id_value, save_id_value};
+            db::value_vector const params{next_save_id, next_save_id};
             auto update_result = db.execute_update(sql, params);
             if (update_result) {
                 auto const select_result = db::select_db_info(db);
