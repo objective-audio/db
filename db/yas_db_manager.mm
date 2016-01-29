@@ -602,7 +602,7 @@ void db::manager::fetch_objects(std::string const &entity_name, db::select_optio
                     state = fetch_state{make_error(fetch_error_type::save_id_not_found)};
                 }
             } else {
-                state = fetch_state{make_error(fetch_error_type::select_failed, db_info_result.error())};
+                state = fetch_state{make_error(fetch_error_type::select_info_failed, db_info_result.error())};
             }
 
             if (state) {
@@ -614,10 +614,11 @@ void db::manager::fetch_objects(std::string const &entity_name, db::select_optio
                     if (object_datas_result) {
                         fetched_datas.emplace(std::make_pair(entity_name, std::move(object_datas_result.value())));
                     } else {
-                        state = fetch_state{make_error(fetch_error_type::select_failed, object_datas_result.error())};
+                        state = fetch_state{
+                            make_error(fetch_error_type::fetch_object_datas_failed, object_datas_result.error())};
                     }
                 } else {
-                    state = fetch_state{make_error(fetch_error_type::select_failed, select_result.error())};
+                    state = fetch_state{make_error(fetch_error_type::select_last_failed, select_result.error())};
                 }
             }
 
@@ -679,11 +680,12 @@ void db::manager::fetch_relation_objects(object_vector_map const &objects, fetch
                     if (object_datas_result) {
                         fetched_datas.emplace(std::make_pair(entity_name, std::move(object_datas_result.value())));
                     } else {
-                        state = fetch_state{make_error(fetch_error_type::select_failed, object_datas_result.error())};
+                        state = fetch_state{
+                            make_error(fetch_error_type::fetch_object_datas_failed, object_datas_result.error())};
                         break;
                     }
                 } else {
-                    state = fetch_state{make_error(fetch_error_type::select_failed, select_result.error())};
+                    state = fetch_state{make_error(fetch_error_type::select_last_failed, select_result.error())};
                     break;
                 }
             }
@@ -1074,10 +1076,14 @@ std::string yas::to_string(db::manager::fetch_error_type const &error) {
     switch (error) {
         case db::manager::fetch_error_type::begin_transaction_failed:
             return "begin_transaction_failed";
-        case db::manager::fetch_error_type::select_failed:
-            return "select_failed";
+        case db::manager::fetch_error_type::select_last_failed:
+            return "select_last_failed";
+        case db::manager::fetch_error_type::select_info_failed:
+            return "select_info_failed";
         case db::manager::fetch_error_type::save_id_not_found:
             return "save_id_not_found";
+        case db::manager::fetch_error_type::fetch_object_datas_failed:
+            return "fetch_object_datas_failed";
         case db::manager::fetch_error_type::none:
             return "none";
     }

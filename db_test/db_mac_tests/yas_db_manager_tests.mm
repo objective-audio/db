@@ -961,8 +961,10 @@ using namespace yas;
 
 - (void)test_to_string_from_fetch_error {
     XCTAssertEqual(to_string(db::manager::fetch_error_type::begin_transaction_failed), "begin_transaction_failed");
-    XCTAssertEqual(to_string(db::manager::fetch_error_type::select_failed), "select_failed");
+    XCTAssertEqual(to_string(db::manager::fetch_error_type::select_last_failed), "select_last_failed");
+    XCTAssertEqual(to_string(db::manager::fetch_error_type::select_info_failed), "select_info_failed");
     XCTAssertEqual(to_string(db::manager::fetch_error_type::save_id_not_found), "save_id_not_found");
+    XCTAssertEqual(to_string(db::manager::fetch_error_type::fetch_object_datas_failed), "fetch_object_datas_failed");
     XCTAssertEqual(to_string(db::manager::fetch_error_type::none), "none");
 }
 
