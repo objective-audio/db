@@ -434,7 +434,7 @@ void db::manager::setup(completion_f &&completion) {
             }
         };
 
-        dispatch_async(dispatch_get_main_queue(), std::move(lambda));
+        dispatch_sync(dispatch_get_main_queue(), std::move(lambda));
     });
 }
 
@@ -1012,7 +1012,7 @@ void db::manager::revert(db::integer::type const rev_save_id, completion_f &&com
             }
         };
 
-        dispatch_async(dispatch_get_main_queue(), std::move(lambda));
+        dispatch_sync(dispatch_get_main_queue(), std::move(lambda));
     });
 }
 
