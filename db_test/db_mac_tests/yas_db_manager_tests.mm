@@ -352,7 +352,7 @@ using namespace yas;
     db::object_vector_map objects;
 
     manager.insert_objects({{"sample_a", 3}, {"sample_b", 2}},
-                           [self, exp1, &objects](auto &, db::manager::insert_result const &insert_result) {
+                           [self, exp1, &objects](auto &, db::manager::result_t const &insert_result) {
                                XCTAssertTrue(insert_result);
 
                                objects = std::move(insert_result.value());
@@ -392,7 +392,7 @@ using namespace yas;
 
     XCTestExpectation *exp2 = [self expectationWithDescription:@"2"];
 
-    manager.save([self, exp2](auto &, db::manager::save_result const &save_result) {
+    manager.save([self, exp2](auto &, db::manager::result_t const &save_result) {
         XCTAssertTrue(save_result);
 
         [exp2 fulfill];
@@ -406,7 +406,7 @@ using namespace yas;
     XCTestExpectation *exp3 = [self expectationWithDescription:@"3"];
 
     manager.fetch_objects("sample_a", {},
-                          [self, exp3](auto &, db::manager::fetch_result const &fetch_result) {
+                          [self, exp3](auto &, db::manager::result_t const &fetch_result) {
                               XCTAssertTrue(fetch_result);
 
                               auto const &objects = fetch_result.value();
@@ -454,7 +454,7 @@ using namespace yas;
                              .limit_range = db::range{0, 3}};
 
     manager.fetch_objects("sample_a", std::move(option),
-                          [self, exp5, &objects](auto &, db::manager::fetch_result const &fetch_result) {
+                          [self, exp5, &objects](auto &, db::manager::result_t const &fetch_result) {
                               XCTAssertTrue(fetch_result);
 
                               auto const &objects = fetch_result.value();
@@ -490,7 +490,7 @@ using namespace yas;
     XCTestExpectation *exp1 = [self expectationWithDescription:@"1"];
 
     manager.insert_objects({{"sample_a", 1}, {"sample_b", 1}, {"sample_c", 1}},
-                           [self, exp1](auto &, db::manager::insert_result const &insert_result) {
+                           [self, exp1](auto &, db::manager::result_t const &insert_result) {
                                XCTAssertTrue(insert_result);
 
                                auto const &objects = insert_result.value();
@@ -525,7 +525,7 @@ using namespace yas;
 
     XCTestExpectation *exp2 = [self expectationWithDescription:@"2"];
 
-    manager.save([self, exp2](db::manager &manager, db::manager::save_result const &save_result) {
+    manager.save([self, exp2](db::manager &manager, db::manager::result_t const &save_result) {
         XCTAssertTrue(save_result);
 
         auto const &objects = save_result.value();
@@ -620,7 +620,7 @@ using namespace yas;
     XCTestExpectation *exp1 = [self expectationWithDescription:@"1"];
 
     manager.insert_objects({{"sample_a", 1}},
-                           [self, &main_objects, exp1](auto &, db::manager::insert_result const &insert_result) {
+                           [self, &main_objects, exp1](auto &, db::manager::result_t const &insert_result) {
                                db::object_vector_map const &objects = insert_result.value();
                                db::object_vector const &a_objects = objects.at("sample_a");
                                for (auto const &obj : a_objects) {
@@ -645,7 +645,7 @@ using namespace yas;
 
     XCTestExpectation *exp2 = [self expectationWithDescription:@"2"];
 
-    manager.save([self, exp2](auto &, db::manager::save_result const &save_result) {
+    manager.save([self, exp2](auto &, db::manager::result_t const &save_result) {
         auto const &objects = save_result.value();
         XCTAssertEqual(objects.size(), 0);
 
@@ -664,7 +664,7 @@ using namespace yas;
 
     XCTestExpectation *exp3 = [self expectationWithDescription:@"3"];
 
-    manager.save([self, exp3](auto &, db::manager::save_result const &save_result) {
+    manager.save([self, exp3](auto &, db::manager::result_t const &save_result) {
         XCTAssertTrue(save_result);
 
         auto const &objects = save_result.value();
@@ -731,7 +731,7 @@ using namespace yas;
 
     XCTestExpectation *exp4 = [self expectationWithDescription:@"4"];
 
-    manager.save([self, exp4](auto &, db::manager::save_result const &save_result) {
+    manager.save([self, exp4](auto &, db::manager::result_t const &save_result) {
         XCTAssertTrue(save_result);
 
         auto const &objects = save_result.value();
@@ -760,7 +760,7 @@ using namespace yas;
 
     XCTestExpectation *exp5 = [self expectationWithDescription:@"5"];
 
-    manager.save([self, exp5](auto &, db::manager::save_result const &save_result) {
+    manager.save([self, exp5](auto &, db::manager::result_t const &save_result) {
         XCTAssertTrue(save_result);
 
         auto const &objects = save_result.value();
@@ -790,7 +790,7 @@ using namespace yas;
     XCTestExpectation *exp1 = [self expectationWithDescription:@"1"];
 
     manager.insert_objects({{"sample_a", 1}},
-                           [self, &a_object, exp1](auto &, db::manager::insert_result const &insert_result) {
+                           [self, &a_object, exp1](auto &, db::manager::result_t const &insert_result) {
                                a_object = insert_result.value().at("sample_a").at(0);
 
                                [exp1 fulfill];
@@ -885,98 +885,40 @@ using namespace yas;
     XCTAssertFalse(a_object.get_attribute("name"));
 }
 
-- (void)test_make_setup_error {
-    auto error = make_error(db::manager::setup_error_type::version_not_found);
+- (void)test_make_error {
+    auto error = db::manager::error{db::manager::error_type::version_not_found};
     XCTAssertTrue(error);
-    XCTAssertEqual(error.type(), db::manager::setup_error_type::version_not_found);
+    XCTAssertEqual(error.type(), db::manager::error_type::version_not_found);
 }
 
-- (void)test_setup_error_none {
-    db::manager::error<db::manager::setup_error_type> error{nullptr};
+- (void)test_error_none {
+    db::manager::error error{nullptr};
     XCTAssertFalse(error);
-    XCTAssertEqual(error.type(), db::manager::setup_error_type::none);
+    XCTAssertEqual(error.type(), db::manager::error_type::none);
 }
 
-- (void)test_make_insert_error {
-    auto error = make_error(db::manager::insert_error_type::select_failed);
-    XCTAssertTrue(error);
-    XCTAssertEqual(error.type(), db::manager::insert_error_type::select_failed);
-}
-
-- (void)test_insert_error_none {
-    db::manager::error<db::manager::insert_error_type> error{nullptr};
-    XCTAssertFalse(error);
-    XCTAssertEqual(error.type(), db::manager::insert_error_type::none);
-}
-
-- (void)test_make_save_error {
-    db::error database_error{db::error_type::closed, SQLITE_ERROR, "test_error_message"};
-
-    auto error = make_error(db::manager::save_error_type::insert_failed, database_error);
-    XCTAssertTrue(error);
-    XCTAssertEqual(error.type(), db::manager::save_error_type::insert_failed);
-    XCTAssertEqual(error.database_error().type(), db::error_type::closed);
-    XCTAssertEqual(error.database_error().code().raw_value(), SQLITE_ERROR);
-    XCTAssertEqual(error.database_error().message(), "test_error_message");
-}
-
-- (void)test_save_error_none {
-    db::manager::error<db::manager::save_error_type> error{nullptr};
-    XCTAssertFalse(error);
-    XCTAssertEqual(error.type(), db::manager::save_error_type::none);
-}
-
-- (void)test_to_string_from_setup_error {
-    XCTAssertEqual(to_string(db::manager::setup_error_type::begin_transaction_failed), "begin_transaction_failed");
-    XCTAssertEqual(to_string(db::manager::setup_error_type::select_info_failed), "select_info_failed");
-    XCTAssertEqual(to_string(db::manager::setup_error_type::update_info_failed), "update_info_failed");
-    XCTAssertEqual(to_string(db::manager::setup_error_type::version_not_found), "version_not_found");
-    XCTAssertEqual(to_string(db::manager::setup_error_type::invalid_version_text), "invalid_version_text");
-    XCTAssertEqual(to_string(db::manager::setup_error_type::alter_entity_table_failed), "alter_entity_table_failed");
-    XCTAssertEqual(to_string(db::manager::setup_error_type::create_info_table_failed), "create_info_table_failed");
-    XCTAssertEqual(to_string(db::manager::setup_error_type::insert_info_failed), "insert_info_failed");
-    XCTAssertEqual(to_string(db::manager::setup_error_type::create_entity_table_failed), "create_entity_table_failed");
-    XCTAssertEqual(to_string(db::manager::setup_error_type::create_relation_table_failed),
-                   "create_relation_table_failed");
-    XCTAssertEqual(to_string(db::manager::setup_error_type::none), "none");
-}
-
-- (void)test_to_string_from_insert_error {
-    XCTAssertEqual(to_string(db::manager::insert_error_type::insert_failed), "insert_failed");
-    XCTAssertEqual(to_string(db::manager::insert_error_type::select_failed), "select_failed");
-    XCTAssertEqual(to_string(db::manager::insert_error_type::save_id_not_found), "save_id_not_found");
-    XCTAssertEqual(to_string(db::manager::insert_error_type::update_save_id_failed), "update_save_id_failed");
-    XCTAssertEqual(to_string(db::manager::insert_error_type::select_info_failed), "select_info_failed");
-    XCTAssertEqual(to_string(db::manager::insert_error_type::update_info_failed), "update_info_failed");
-    XCTAssertEqual(to_string(db::manager::insert_error_type::none), "none");
-}
-
-- (void)test_to_string_from_save_error {
-    XCTAssertEqual(to_string(db::manager::save_error_type::begin_transaction_failed), "begin_transaction_failed");
-    XCTAssertEqual(to_string(db::manager::save_error_type::select_info_failed), "select_info_failed");
-    XCTAssertEqual(to_string(db::manager::save_error_type::save_id_not_found), "save_id_not_found");
-    XCTAssertEqual(to_string(db::manager::save_error_type::update_info_failed), "update_info_failed");
-    XCTAssertEqual(to_string(db::manager::save_error_type::insert_failed), "insert_failed");
-    XCTAssertEqual(to_string(db::manager::save_error_type::delete_failed), "delete_failed");
-    XCTAssertEqual(to_string(db::manager::save_error_type::none), "none");
-}
-
-- (void)test_to_string_from_fetch_error {
-    XCTAssertEqual(to_string(db::manager::fetch_error_type::begin_transaction_failed), "begin_transaction_failed");
-    XCTAssertEqual(to_string(db::manager::fetch_error_type::select_last_failed), "select_last_failed");
-    XCTAssertEqual(to_string(db::manager::fetch_error_type::select_info_failed), "select_info_failed");
-    XCTAssertEqual(to_string(db::manager::fetch_error_type::save_id_not_found), "save_id_not_found");
-    XCTAssertEqual(to_string(db::manager::fetch_error_type::fetch_object_datas_failed), "fetch_object_datas_failed");
-    XCTAssertEqual(to_string(db::manager::fetch_error_type::none), "none");
-}
-
-- (void)test_to_string_from_revert_error {
-    XCTAssertEqual(to_string(db::manager::revert_error_type::begin_transaction_failed), "begin_transaction_failed");
-    XCTAssertEqual(to_string(db::manager::revert_error_type::select_failed), "select_failed");
-    XCTAssertEqual(to_string(db::manager::revert_error_type::save_id_not_found), "save_id_not_found");
-    XCTAssertEqual(to_string(db::manager::revert_error_type::out_of_range_save_id), "out_of_range_save_id");
-    XCTAssertEqual(to_string(db::manager::revert_error_type::update_save_id_failed), "update_save_id_failed");
-    XCTAssertEqual(to_string(db::manager::revert_error_type::none), "none");
+- (void)test_to_string_from_error {
+    XCTAssertEqual(to_string(db::manager::error_type::begin_transaction_failed), "begin_transaction_failed");
+    XCTAssertEqual(to_string(db::manager::error_type::select_info_failed), "select_info_failed");
+    XCTAssertEqual(to_string(db::manager::error_type::update_info_failed), "update_info_failed");
+    XCTAssertEqual(to_string(db::manager::error_type::version_not_found), "version_not_found");
+    XCTAssertEqual(to_string(db::manager::error_type::invalid_version_text), "invalid_version_text");
+    XCTAssertEqual(to_string(db::manager::error_type::alter_entity_table_failed), "alter_entity_table_failed");
+    XCTAssertEqual(to_string(db::manager::error_type::create_info_table_failed), "create_info_table_failed");
+    XCTAssertEqual(to_string(db::manager::error_type::insert_info_failed), "insert_info_failed");
+    XCTAssertEqual(to_string(db::manager::error_type::create_entity_table_failed), "create_entity_table_failed");
+    XCTAssertEqual(to_string(db::manager::error_type::create_relation_table_failed), "create_relation_table_failed");
+    XCTAssertEqual(to_string(db::manager::error_type::insert_attributes_failed), "insert_attributes_failed");
+    XCTAssertEqual(to_string(db::manager::error_type::insert_relation_failed), "insert_relation_failed");
+    XCTAssertEqual(to_string(db::manager::error_type::save_id_not_found), "save_id_not_found");
+    XCTAssertEqual(to_string(db::manager::error_type::update_save_id_failed), "update_save_id_failed");
+    XCTAssertEqual(to_string(db::manager::error_type::delete_failed), "delete_failed");
+    XCTAssertEqual(to_string(db::manager::error_type::select_last_failed), "select_last_failed");
+    XCTAssertEqual(to_string(db::manager::error_type::select_revert_failed), "select_revert_failed");
+    XCTAssertEqual(to_string(db::manager::error_type::fetch_object_datas_failed), "fetch_object_datas_failed");
+    XCTAssertEqual(to_string(db::manager::error_type::out_of_range_save_id), "out_of_range_save_id");
+    XCTAssertEqual(to_string(db::manager::error_type::select_failed), "select_failed");
+    XCTAssertEqual(to_string(db::manager::error_type::none), "none");
 }
 
 @end

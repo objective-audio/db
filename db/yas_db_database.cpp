@@ -33,8 +33,8 @@ db::sqlite_result_code::operator bool() const {
 db::error::error(std::nullptr_t) : _type(error_type::none), _code(0), _message() {
 }
 
-db::error::error(error_type const type, sqlite_result_code const &code, std::string const &message)
-    : _type(type), _code(code), _message(message) {
+db::error::error(error_type const type, sqlite_result_code const &code, std::string message)
+    : _type(type), _code(code), _message(std::move(message)) {
 }
 
 db::error::operator bool() const {
