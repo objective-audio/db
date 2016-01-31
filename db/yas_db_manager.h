@@ -84,7 +84,7 @@ namespace db {
         explicit manager(std::string const &db_path, model const &model);
         manager(std::nullptr_t);
 
-        void setup(completion_f &&completion);
+        void setup(completion_f completion);
 
         std::string const &database_path() const;
         database const &database() const;
@@ -95,11 +95,11 @@ namespace db {
 
         void execute(execution_f &&execution);
 
-        void insert_objects(entity_count_map const &counts, completion_f &&completion);
-        void fetch_objects(std::string const &entity_name, select_option &&option, completion_f &&completion);
-        void fetch_relation_objects(object_vector_map const &objects, completion_f &&completion);
-        void save(completion_f &&completion);
-        void revert(db::integer::type const save_id, completion_f &&completion);
+        void insert_objects(entity_count_map const &counts, completion_f completion);
+        void fetch_objects(std::string const &entity_name, select_option option, completion_f completion);
+        void fetch_relation_objects(object_vector_map const &objects, completion_f completion);
+        void save(completion_f completion);
+        void revert(db::integer::type const save_id, completion_f completion);
 
         object cached_object(std::string const &entity_name, integer::type const object_id) const;
 

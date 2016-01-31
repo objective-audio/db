@@ -271,7 +271,7 @@ db::manager::manager(std::string const &db_path, db::model const &model)
 db::manager::manager(std::nullptr_t) : super_class(nullptr) {
 }
 
-void db::manager::setup(completion_f &&completion) {
+void db::manager::setup(completion_f completion) {
     execute([completion = std::move(completion), model = impl_ptr<impl>()->model](db::manager & manager,
                                                                                   operation const &op) {
         auto &db = manager.database();
@@ -483,7 +483,7 @@ void db::manager::execute(execution_f &&db_execution) {
     impl_ptr<impl>()->queue.add_operation(operation{std::move(execution)});
 }
 
-void db::manager::insert_objects(entity_count_map const &counts, completion_f &&completion) {
+void db::manager::insert_objects(entity_count_map const &counts, completion_f completion) {
     execute([completion = std::move(completion), counts = std::move(counts)](db::manager & manager,
                                                                              operation const &op) {
         auto &db = manager.database();
@@ -592,7 +592,7 @@ void db::manager::insert_objects(entity_count_map const &counts, completion_f &&
     });
 }
 
-void db::manager::fetch_objects(std::string const &entity_name, db::select_option &&option, completion_f &&completion) {
+void db::manager::fetch_objects(std::string const &entity_name, db::select_option option, completion_f completion) {
     execute([entity_name, option = std::move(option), completion = std::move(completion)](db::manager & manager,
                                                                                           operation const &) {
         auto &db = manager.database();
@@ -654,7 +654,7 @@ void db::manager::fetch_objects(std::string const &entity_name, db::select_optio
     });
 }
 
-void db::manager::fetch_relation_objects(object_vector_map const &objects, completion_f &&completion) {
+void db::manager::fetch_relation_objects(object_vector_map const &objects, completion_f completion) {
     auto rel_ids = db::relation_ids(objects);
 
     execute([completion = std::move(completion), rel_ids = std::move(rel_ids)](manager & manager, operation const &) {
@@ -724,7 +724,7 @@ void db::manager::fetch_relation_objects(object_vector_map const &objects, compl
     });
 }
 
-void db::manager::save(completion_f &&completion) {
+void db::manager::save(completion_f completion) {
     auto const changed_datas = impl_ptr<impl>()->changed_datas_for_save();
 
     execute([completion = std::move(completion), changed_datas = std::move(changed_datas)](manager & manager,
@@ -902,7 +902,7 @@ void db::manager::save(completion_f &&completion) {
     });
 }
 
-void db::manager::revert(db::integer::type const rev_save_id, completion_f &&completion) {
+void db::manager::revert(db::integer::type const rev_save_id, completion_f completion) {
     execute([rev_save_id, completion = std::move(completion)](manager & manager, operation const &) {
         auto &db = manager.database();
 
