@@ -13,6 +13,7 @@
 #include "yas_db_utils.h"
 #include "yas_each_index.h"
 #include "yas_operation.h"
+#include "yas_unless.h"
 #include "yas_version.h"
 
 using namespace yas;
@@ -318,32 +319,29 @@ void db::manager::setup(completion_f completion) {
                             for (auto const &attr_pair : entity.attributes) {
                                 if (!db::column_exists(db, attr_pair.first, entity_name)) {
                                     auto const &attr = attr_pair.second;
-                                    if (!db.execute_update(alter_table_sql(entity_name, attr.sql()))) {
-                                        state = state_t{error{error_type::alter_entity_table_failed}};
+                                    if (auto ul = unless(db.execute_update(alter_table_sql(entity_name, attr.sql())))) {
+                                        state = state_t{
+                                            error{error_type::alter_entity_table_failed, std::move(ul.value.error())}};
                                         break;
                                     }
                                 }
                             }
                         } else {
                             // create table
-                            auto update_result = db.execute_update(entity.sql_for_create());
-                            if (!update_result) {
-                                state = state_t{
-                                    error{error_type::create_entity_table_failed, std::move(update_result.error())}};
+                            if (auto ul = unless(db.execute_update(entity.sql_for_create()))) {
+                                state =
+                                    state_t{error{error_type::create_entity_table_failed, std::move(ul.value.error())}};
                                 break;
                             }
                         }
 
-                        if (!state) {
-                            break;
-                        }
-
-                        for (auto &rel_pair : entity.relations) {
-                            auto update_result = db.execute_update(rel_pair.second.sql_for_create());
-                            if (!update_result) {
-                                state = state_t{
-                                    error{error_type::create_relation_table_failed, std::move(update_result.error())}};
-                                break;
+                        if (state) {
+                            for (auto &rel_pair : entity.relations) {
+                                if (auto ul = unless(db.execute_update(rel_pair.second.sql_for_create()))) {
+                                    state = state_t{
+                                        error{error_type::create_relation_table_failed, std::move(ul.value.error())}};
+                                    break;
+                                }
                             }
                         }
 
@@ -358,9 +356,8 @@ void db::manager::setup(completion_f completion) {
                 if (auto create_result = db.execute_update(
                         db::create_table_sql(info_table, {version_field, current_save_id_field, last_save_id_field}))) {
                     db::value_map args{std::make_pair(version_field, db::value{model.version().str()})};
-                    auto const insert_result = db.execute_update(db::insert_sql(info_table, {version_field}), args);
-                    if (!insert_result) {
-                        state = state_t{error{error_type::insert_info_failed, std::move(insert_result.error())}};
+                    if (auto ul = unless(db.execute_update(db::insert_sql(info_table, {version_field}), args))) {
+                        state = state_t{error{error_type::insert_info_failed, std::move(ul.value.error())}};
                     }
                 } else {
                     state = state_t{error{error_type::create_info_table_failed, std::move(create_result.error())}};
@@ -372,18 +369,15 @@ void db::manager::setup(completion_f completion) {
                     auto const &entities = model.entities();
                     for (auto &entity_pair : entities) {
                         auto &entity = entity_pair.second;
-                        auto update_result = db.execute_update(entity.sql_for_create());
-                        if (!update_result) {
-                            state = state_t{
-                                error{error_type::create_entity_table_failed, std::move(update_result.error())}};
+                        if (auto ul = unless(db.execute_update(entity.sql_for_create()))) {
+                            state = state_t{error{error_type::create_entity_table_failed, std::move(ul.value.error())}};
                             break;
                         }
 
                         for (auto &rel_pair : entity.relations) {
-                            auto const update_result = db.execute_update(rel_pair.second.sql_for_create());
-                            if (!update_result) {
+                            if (auto ul = unless(db.execute_update(rel_pair.second.sql_for_create()))) {
                                 state = state_t{
-                                    error{error_type::create_relation_table_failed, std::move(update_result.error())}};
+                                    error{error_type::create_relation_table_failed, std::move(ul.value.error())}};
                                 break;
                             }
                         }
@@ -511,30 +505,31 @@ void db::manager::insert_objects(entity_count_map const &counts, completion_f co
 
                     for (auto const &idx : each_index<std::size_t>{count}) {
                         db::value obj_id_value{start_obj_id + idx};
+                        db::value_vector args{obj_id_value, next_save_id};
+                        auto sql = db::insert_sql(entity_name, {object_id_field, save_id_field});
 
-                        auto result_t = db.execute_update(db::insert_sql(entity_name, {object_id_field, save_id_field}),
-                                                          db::value_vector{obj_id_value, next_save_id});
-                        if (!result_t) {
-                            state = state_t{error{error_type::insert_attributes_failed, std::move(result_t.error())}};
+                        if (auto ul = unless(db.execute_update(std::move(sql), std::move(args)))) {
+                            state = state_t{error{error_type::insert_attributes_failed, std::move(ul.value.error())}};
                             break;
                         }
 
-                        auto select_result = db::select(
-                            db, entity_name, {.where_exprs = db::equal_field_expr(object_id_field),
-                                              .arguments = {{std::make_pair(object_id_field, obj_id_value)}}});
-                        if (!select_result) {
+                        db::select_option option{.where_exprs = db::equal_field_expr(object_id_field),
+                                                 .arguments = {{std::make_pair(object_id_field, obj_id_value)}}};
+
+                        auto select_result = db::select(db, entity_name, std::move(option));
+                        if (select_result) {
+                            if (inserted_datas.count(entity_name) == 0) {
+                                object_data_vector entity_datas{};
+                                entity_datas.reserve(count);
+                                inserted_datas.emplace(std::make_pair(entity_name, std::move(entity_datas)));
+                            }
+
+                            inserted_datas.at(entity_name)
+                                .emplace_back(object_data{.attributes = std::move(select_result.value().at(0))});
+                        } else {
                             state = state_t{error{error_type::select_failed, std::move(select_result.error())}};
                             break;
                         }
-
-                        if (inserted_datas.count(entity_name) == 0) {
-                            object_data_vector entity_datas{};
-                            entity_datas.reserve(count);
-                            inserted_datas.emplace(std::make_pair(entity_name, std::move(entity_datas)));
-                        }
-
-                        inserted_datas.at(entity_name)
-                            .emplace_back(object_data{.attributes = std::move(select_result.value().at(0))});
                     }
                 }
             }
@@ -753,11 +748,8 @@ void db::manager::save(completion_f completion) {
                                 for (auto const &rel_pair : entity_pair.second.relations) {
                                     auto const table_name = rel_pair.second.table_name;
 
-                                    auto const delete_rel_result =
-                                        db.execute_update(db::delete_sql(table_name, delete_exprs));
-                                    if (!delete_rel_result) {
-                                        state = state_t{
-                                            error{error_type::delete_failed, std::move(delete_rel_result.error())}};
+                                    if (auto ul = unless(db.execute_update(db::delete_sql(table_name, delete_exprs)))) {
+                                        state = state_t{error{error_type::delete_failed, std::move(ul.value.error())}};
                                         break;
                                     }
                                 }
@@ -803,12 +795,10 @@ void db::manager::save(completion_f completion) {
 
                                     for (auto const &rel_tgt_id : rel) {
                                         auto tgt_id_pair = std::make_pair(tgt_id_field, rel_tgt_id);
-                                        auto insert_rel_result = db.execute_update(
-                                            rel_insert_sql,
-                                            db::value_map{src_id_pair, std::move(tgt_id_pair), save_id_pair});
-                                        if (!insert_rel_result) {
-                                            state = state_t{error{error_type::insert_relation_failed,
-                                                                  std::move(insert_rel_result.error())}};
+                                        db::value_map args{src_id_pair, std::move(tgt_id_pair), save_id_pair};
+                                        if (auto ul = unless(db.execute_update(rel_insert_sql, std::move(args)))) {
+                                            state = state_t{
+                                                error{error_type::insert_relation_failed, std::move(ul.value.error())}};
                                             break;
                                         }
                                     }
@@ -834,9 +824,8 @@ void db::manager::save(completion_f completion) {
                 if (state) {
                     auto const sql = update_sql(info_table, {current_save_id_field, last_save_id_field}, "");
                     db::value_vector const params{next_save_id, next_save_id};
-                    auto update_info_result = db.execute_update(sql, params);
-                    if (!update_info_result) {
-                        state = state_t{error{error_type::update_info_failed, std::move(update_info_result.error())}};
+                    if (auto ul = unless(db.execute_update(sql, params))) {
+                        state = state_t{error{error_type::update_info_failed, std::move(ul.value.error())}};
                     }
                 }
 
