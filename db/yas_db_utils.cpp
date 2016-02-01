@@ -141,8 +141,7 @@ db::select_result db::select(db::database const &db, std::string const &table_na
 
     db::value_map_vector value_map_vector;
 
-    auto query_result = db.execute_query(sql, option.arguments);
-    if (query_result) {
+    if (auto query_result = db.execute_query(sql, option.arguments)) {
         auto row_set = query_result.value();
         while (row_set.next()) {
             value_map_vector.emplace_back(row_set.value_map());
