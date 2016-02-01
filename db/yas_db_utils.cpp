@@ -9,6 +9,7 @@
 #include "yas_db_select_option.h"
 #include "yas_db_sql_utils.h"
 #include "yas_db_utils.h"
+#include "yas_unless.h"
 
 using namespace yas;
 
@@ -76,9 +77,8 @@ db::update_result db::in_save_point(db::database &db, std::function<void(bool &r
     static unsigned long save_point_idx = 0;
     std::string const name = "db_save_point_" + std::to_string(save_point_idx++);
 
-    auto start_result = start_save_point(db, name);
-    if (!start_result) {
-        return start_result;
+    if (auto ul = unless(start_save_point(db, name))) {
+        return std::move(ul.value);
     }
 
     bool should_rollback = false;
