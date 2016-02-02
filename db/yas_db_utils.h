@@ -43,6 +43,8 @@ namespace db {
                               integer::type const current_save_id);
     select_result select_revert(database const &db, std::string const &table_name, integer::type const revert_save_id,
                                 integer::type const current_save_id);
+
+    select_single_result select_single(database const &db, std::string const &table_name, select_option option = {});
     select_single_result select_db_info(database const &db);
 
     value max(database const &db, std::string const &table_name, std::string const &field);
