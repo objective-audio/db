@@ -238,7 +238,8 @@ db::select_result db::select_revert(database const &db, std::string const &table
 }
 
 db::select_single_result db::select_db_info(database const &db) {
-    if (auto const &select_result = select(db, db::info_table)) {
+    select_option option{.limit_range = {.location = 0, .length = 1}};
+    if (auto const &select_result = select(db, db::info_table, option)) {
         if (select_result.value().size() > 0) {
             return select_single_result{std::move(select_result.value().at(0))};
         }
