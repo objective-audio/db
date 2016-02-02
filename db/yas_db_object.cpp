@@ -281,7 +281,7 @@ struct db::object::impl : public base::impl {
                 auto &rel_id_set = relation_ids.at(tgt_entity_name);
                 auto const &rel = data.relations.at(rel_name);
                 for (auto const &tgt_id : rel) {
-                    rel_id_set.insert(tgt_id.get<integer>());
+                    rel_id_set.emplace(tgt_id.get<integer>());
                 }
             }
         }
