@@ -247,11 +247,11 @@ struct db::object::impl : public base::impl {
             auto const &attr_name = pair.first;
             if (attr_name != save_id_field) {
                 if (data.attributes.count(attr_name)) {
-                    attributes.insert(std::make_pair(attr_name, data.attributes.at(attr_name)));
+                    attributes.emplace(std::make_pair(attr_name, data.attributes.at(attr_name)));
                 } else if (pair.second.not_null) {
-                    attributes.insert(std::make_pair(attr_name, pair.second.default_value));
+                    attributes.emplace(std::make_pair(attr_name, pair.second.default_value));
                 } else {
-                    attributes.insert(std::make_pair(attr_name, db::value::empty()));
+                    attributes.emplace(std::make_pair(attr_name, db::value::empty()));
                 }
             }
         }
@@ -259,7 +259,7 @@ struct db::object::impl : public base::impl {
         for (auto const &pair : entity.relations) {
             auto const &rel_name = pair.first;
             if (data.relations.count(rel_name)) {
-                relations.insert(std::make_pair(rel_name, data.relations.at(rel_name)));
+                relations.emplace(std::make_pair(rel_name, data.relations.at(rel_name)));
             }
         }
 
@@ -281,7 +281,7 @@ struct db::object::impl : public base::impl {
                 auto &rel_id_set = relation_ids.at(tgt_entity_name);
                 auto const &rel = data.relations.at(rel_name);
                 for (auto const &tgt_id : rel) {
-                    rel_id_set.insert(tgt_id.get<integer>());
+                    rel_id_set.emplace(tgt_id.get<integer>());
                 }
             }
         }

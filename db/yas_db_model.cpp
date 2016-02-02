@@ -17,10 +17,10 @@ using namespace yas;
 
 namespace yas {
 namespace db {
-    static auto constexpr version_key = "version";
-    static auto constexpr entities_key = "entities";
-    static auto constexpr attributes_key = "attributes";
-    static auto constexpr relations_key = "relations";
+    static std::string const version_key = "version";
+    static std::string const entities_key = "entities";
+    static std::string const attributes_key = "attributes";
+    static std::string const relations_key = "relations";
 }
 }
 

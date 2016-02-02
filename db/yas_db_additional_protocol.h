@@ -4,10 +4,16 @@
 
 #pragma once
 
+#include "yas_db_value.h"
+
 namespace yas {
 namespace db {
     class object;
-    class manager;
+
+    static std::string const info_table = "db_info";
+    static std::string const version_field = "version";
+    static std::string const current_save_id_field = "cur_save_id";
+    static std::string const last_save_id_field = "last_save_id";
 
     enum class object_status {
         invalid,

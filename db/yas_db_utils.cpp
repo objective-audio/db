@@ -2,9 +2,9 @@
 //  yas_db_utils.cpp
 //
 
+#include "yas_db_additional_protocol.h"
 #include "yas_db_attribute.h"
 #include "yas_db_database.h"
-#include "yas_db_manager.h"
 #include "yas_db_row_set.h"
 #include "yas_db_select_option.h"
 #include "yas_db_sql_utils.h"
@@ -237,13 +237,20 @@ db::select_result db::select_revert(database const &db, std::string const &table
     return select_result{value_map_vector{}};
 }
 
-db::select_single_result db::select_db_info(database const &db) {
-    if (auto const &select_result = select(db, db::info_table)) {
-        if (select_result.value().size() > 0) {
-            return select_single_result{std::move(select_result.value().at(0))};
+db::select_single_result db::select_single(database const &db, std::string const &table_name, select_option option) {
+    option.limit_range = {.location = 0, .length = 1};
+
+    if (auto result = select(db, table_name, option)) {
+        if (result.value().size() > 0) {
+            return select_single_result{std::move(result.value().at(0))};
         }
     }
+
     return select_single_result{nullptr};
+}
+
+db::select_single_result db::select_db_info(database const &db) {
+    return select_single(db, db::info_table);
 }
 
 db::value db::max(database const &db, std::string const &table_name, std::string const &field) {

@@ -13,8 +13,8 @@ using namespace yas;
 
 namespace yas {
 namespace db {
-    static auto constexpr target_key = "target";
-    static auto constexpr many_key = "many";
+    static std::string const target_key = "target";
+    static std::string const many_key = "many";
 }
 }
 
