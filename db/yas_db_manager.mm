@@ -196,7 +196,7 @@ namespace db {
                 std::string where_exprs =
                     joined({equal_field_expr(save_id_field), equal_field_expr(src_id_field)}, " and ");
                 db::select_option option{
-                    .where_exprs = where_exprs,
+                    .where_exprs = std::move(where_exprs),
                     .arguments = {{save_id_field, attrs.at(save_id_field)}, {src_id_field, attrs.at(object_id_field)}}};
 
                 if (auto select_result = db::select(db, table_name, option)) {
@@ -223,11 +223,10 @@ namespace db {
         entity_datas.reserve(entity_attrs.size());
 
         for (value_map attrs : entity_attrs) {
-            auto object_data_result = fetch_object_data(db, rel_models, attrs);
-            if (object_data_result) {
-                entity_datas.emplace_back(std::move(object_data_result.value()));
+            if (auto obj_data_result = fetch_object_data(db, rel_models, attrs)) {
+                entity_datas.emplace_back(std::move(obj_data_result.value()));
             } else {
-                return object_datas_result{std::move(object_data_result.error())};
+                return object_datas_result{std::move(obj_data_result.error())};
             }
         }
 
@@ -239,7 +238,7 @@ namespace db {
 
         db::value current_save_id{nullptr};
         if (auto db_info_result = db::select_db_info(db)) {
-            auto const &db_info = db_info_result.value();
+            auto &db_info = db_info_result.value();
             if (db_info.count(current_save_id_field)) {
                 current_save_id = db_info.at(current_save_id_field);
             }
