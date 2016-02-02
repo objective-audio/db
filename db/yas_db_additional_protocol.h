@@ -9,7 +9,6 @@
 namespace yas {
 namespace db {
     class object;
-    class manager;
 
     static std::string const info_table = "db_info";
     static std::string const version_field = "version";
