@@ -11,9 +11,9 @@ using namespace yas;
 
 namespace yas {
 namespace db {
-    static auto constexpr type_key = "type";
-    static auto constexpr default_key = "default";
-    static auto constexpr not_null_key = "not_null";
+    static std::string const type_key = "type";
+    static std::string const default_key = "default";
+    static std::string const not_null_key = "not_null";
 }
 }
 
