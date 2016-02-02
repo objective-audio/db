@@ -5,6 +5,7 @@
 #pragma once
 
 #include "yas_base.h"
+#include "yas_db_additional_protocol.h"
 #include "yas_db_database.h"
 #include "yas_db_object.h"
 
@@ -15,11 +16,6 @@ namespace db {
     class select_option;
     class model;
     class error;
-
-    static std::string const info_table = "db_info";
-    static std::string const version_field = "version";
-    static std::string const current_save_id_field = "cur_save_id";
-    static std::string const last_save_id_field = "last_save_id";
 
     class manager : public base, public object_observable {
         using super_class = base;
