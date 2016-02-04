@@ -667,4 +667,90 @@ using namespace yas;
     XCTAssertEqual(select_result.value().at(2).at(field_name), db::value{"value_6"});
 }
 
+- (void)test_to_map {
+    NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
+    db::model model((__bridge CFDictionaryRef)model_dict);
+
+    db::object obj_a0{nullptr, model, "sample_a"};
+    db::object obj_a1{nullptr, model, "sample_a"};
+
+    obj_a0.set_attribute(db::object_id_field, db::value{0});
+    obj_a0.set_attribute("name", db::value{"a0"});
+    obj_a1.set_attribute(db::object_id_field, db::value{1});
+    obj_a1.set_attribute("name", db::value{"a1"});
+
+    db::object_vector src_vec;
+    src_vec.emplace_back(std::move(obj_a0));
+    src_vec.emplace_back(std::move(obj_a1));
+
+    XCTAssertEqual(src_vec.size(), 2);
+    XCTAssertTrue(src_vec.at(0));
+    XCTAssertTrue(src_vec.at(1));
+
+    auto dst_map = to_map(std::move(src_vec));
+
+    XCTAssertEqual(dst_map.size(), 2);
+    XCTAssertEqual(dst_map.count(0), 1);
+    XCTAssertEqual(dst_map.count(1), 1);
+    XCTAssertEqual(dst_map.at(0).get_attribute("name"), db::value{"a0"});
+    XCTAssertEqual(dst_map.at(1).get_attribute("name"), db::value{"a1"});
+
+    XCTAssertEqual(src_vec.size(), 0);
+}
+
+- (void)test_to_map_map {
+    NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
+    db::model model((__bridge CFDictionaryRef)model_dict);
+
+    db::object obj_a0{nullptr, model, "sample_a"};
+    db::object obj_a1{nullptr, model, "sample_a"};
+    db::object obj_b0{nullptr, model, "sample_b"};
+    db::object obj_b1{nullptr, model, "sample_b"};
+
+    obj_a0.set_attribute(db::object_id_field, db::value{0});
+    obj_a0.set_attribute("name", db::value{"a0"});
+    obj_a1.set_attribute(db::object_id_field, db::value{1});
+    obj_a1.set_attribute("name", db::value{"a1"});
+    obj_b0.set_attribute(db::object_id_field, db::value{2});
+    obj_b0.set_attribute("name", db::value{"b2"});
+    obj_b1.set_attribute(db::object_id_field, db::value{3});
+    obj_b1.set_attribute("name", db::value{"b3"});
+
+    db::object_vector_map src_map;
+    db::object_vector object_as;
+    object_as.emplace_back(std::move(obj_a0));
+    object_as.emplace_back(std::move(obj_a1));
+    src_map.emplace(std::make_pair("sample_a", std::move(object_as)));
+    db::object_vector object_bs;
+    object_bs.emplace_back(std::move(obj_b0));
+    object_bs.emplace_back(std::move(obj_b1));
+    src_map.emplace(std::make_pair("sample_b", std::move(object_bs)));
+
+    XCTAssertEqual(src_map.size(), 2);
+    XCTAssertEqual(src_map.count("sample_a"), 1);
+    XCTAssertEqual(src_map.count("sample_b"), 1);
+    XCTAssertEqual(src_map.at("sample_a").size(), 2);
+    XCTAssertEqual(src_map.at("sample_b").size(), 2);
+    XCTAssertTrue(src_map.at("sample_a").at(0));
+    XCTAssertTrue(src_map.at("sample_a").at(1));
+    XCTAssertTrue(src_map.at("sample_b").at(0));
+    XCTAssertTrue(src_map.at("sample_b").at(1));
+
+    auto dst_map = to_map_map(std::move(src_map));
+
+    XCTAssertEqual(dst_map.size(), 2);
+    XCTAssertEqual(dst_map.count("sample_a"), 1);
+    XCTAssertEqual(dst_map.count("sample_b"), 1);
+    XCTAssertEqual(dst_map.at("sample_a").size(), 2);
+    XCTAssertEqual(dst_map.at("sample_b").size(), 2);
+    XCTAssertEqual(dst_map.at("sample_a").at(0).get_attribute("name"), db::value{"a0"});
+    XCTAssertEqual(dst_map.at("sample_a").at(1).get_attribute("name"), db::value{"a1"});
+    XCTAssertEqual(dst_map.at("sample_b").at(2).get_attribute("name"), db::value{"b2"});
+    XCTAssertEqual(dst_map.at("sample_b").at(3).get_attribute("name"), db::value{"b3"});
+
+    XCTAssertEqual(src_map.size(), 0);
+    XCTAssertEqual(src_map.count("sample_a"), 0);
+    XCTAssertEqual(src_map.count("sample_b"), 0);
+}
+
 @end

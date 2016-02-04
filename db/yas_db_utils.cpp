@@ -262,3 +262,34 @@ db::value db::max(database const &db, std::string const &table_name, std::string
     }
     return nullptr;
 }
+
+db::object_map_map yas::to_map_map(db::object_vector_map objects_vector) {
+    db::object_map_map objects_map;
+
+    for (auto &entity_pair : objects_vector) {
+        auto &entity_name = entity_pair.first;
+        auto entity_objects = to_map(std::move(entity_pair.second));
+        objects_map.emplace(std::make_pair(entity_name, std::move(entity_objects)));
+    }
+
+    objects_vector.clear();
+
+    return objects_map;
+}
+
+db::object_map yas::to_map(db::object_vector vec) {
+    db::object_map map;
+
+    auto it = vec.begin();
+    auto end = vec.end();
+    while (it != end) {
+        auto &obj = *it;
+        auto obj_id = obj.object_id().get<db::integer>();
+        map.emplace(std::make_pair(std::move(obj_id), std::move(obj)));
+        ++it;
+    }
+
+    vec.clear();
+
+    return map;
+}

@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include "yas_db_object.h"
+
 namespace yas {
 namespace db {
     class database;
@@ -49,4 +51,6 @@ namespace db {
 
     value max(database const &db, std::string const &table_name, std::string const &field);
 }
+db::object_map_map to_map_map(db::object_vector_map vec);
+db::object_map to_map(db::object_vector vec);
 }
