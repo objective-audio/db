@@ -13,6 +13,7 @@
 #include "yas_db_utils.h"
 #include "yas_each_index.h"
 #include "yas_operation.h"
+#include "yas_stl_utils.h"
 #include "yas_unless.h"
 #include "yas_version.h"
 
@@ -171,10 +172,7 @@ struct db::manager::impl : public base::impl {
 
     void _object_did_erase(std::string const &entity_name, db::integer::type const object_id) {
         if (cached_objects.count(entity_name) > 0) {
-            auto &objects = cached_objects.at(entity_name);
-            if (objects.count(object_id)) {
-                objects.erase(object_id);
-            }
+            erase_if_exists(cached_objects.at(entity_name), object_id);
         }
     }
 };
@@ -774,13 +772,8 @@ void db::manager::save(completion_f completion) {
                         db::object_data_vector entity_saved_datas;
 
                         for (auto data : changed_entity_datas) {
-                            if (data.attributes.count(save_id_field)) {
-                                data.attributes.erase(save_id_field);
-                            }
-                            if (data.attributes.count(id_field)) {
-                                data.attributes.erase(id_field);
-                            }
-                            data.attributes.insert(save_id_pair);
+                            erase_if_exists(data.attributes, id_field);
+                            replace(data.attributes, save_id_field, next_save_id);
 
                             if (auto insert_result = db.execute_update(entity_insert_sql, data.attributes)) {
                                 auto const src_id_pair =
