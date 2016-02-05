@@ -87,10 +87,7 @@ struct db::object::impl : public base::impl {
     void set_attribute(std::string const &attr_name, db::value const &value, bool const loading = false) {
         validate_attribute_name(attr_name);
 
-        if (data.attributes.count(attr_name)) {
-            data.attributes.erase(attr_name);
-        }
-        data.attributes.emplace(std::make_pair(attr_name, value));
+        replace(data.attributes, attr_name, value);
 
         if (attr_name != action_field && !loading) {
             set_update_action();
@@ -136,10 +133,7 @@ struct db::object::impl : public base::impl {
     void set_relation(std::string const &rel_name, value_vector const &relation_ids, bool const loading = false) {
         validate_relation_name(rel_name);
 
-        if (data.relations.count(rel_name) > 0) {
-            data.relations.erase(rel_name);
-        }
-        data.relations.emplace(std::make_pair(rel_name, relation_ids));
+        replace(data.relations, rel_name, relation_ids);
 
         if (!loading) {
             set_update_action();

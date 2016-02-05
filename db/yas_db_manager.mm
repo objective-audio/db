@@ -13,6 +13,7 @@
 #include "yas_db_utils.h"
 #include "yas_each_index.h"
 #include "yas_operation.h"
+#include "yas_stl_utils.h"
 #include "yas_unless.h"
 #include "yas_version.h"
 
@@ -774,13 +775,11 @@ void db::manager::save(completion_f completion) {
                         db::object_data_vector entity_saved_datas;
 
                         for (auto data : changed_entity_datas) {
-                            if (data.attributes.count(save_id_field)) {
-                                data.attributes.erase(save_id_field);
-                            }
                             if (data.attributes.count(id_field)) {
                                 data.attributes.erase(id_field);
                             }
-                            data.attributes.insert(save_id_pair);
+
+                            replace(data.attributes, save_id_field, next_save_id);
 
                             if (auto insert_result = db.execute_update(entity_insert_sql, data.attributes)) {
                                 auto const src_id_pair =
