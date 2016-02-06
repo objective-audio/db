@@ -367,4 +367,13 @@ using namespace yas;
     XCTAssertFalse(row_set.next());
 }
 
+- (void)test_error_type_to_string {
+    XCTAssertEqual(to_string(db::error_type::closed), "closed");
+    XCTAssertEqual(to_string(db::error_type::in_use), "in_use");
+    XCTAssertEqual(to_string(db::error_type::invalid_query_count), "invalid_query_count");
+    XCTAssertEqual(to_string(db::error_type::invalid_argument), "invalid_argument");
+    XCTAssertEqual(to_string(db::error_type::sqlite), "sqlite");
+    XCTAssertEqual(to_string(db::error_type::none), "none");
+}
+
 @end
