@@ -160,6 +160,14 @@ using namespace yas;
     XCTAssertEqual(child.target_entity_name, "sample_b");
 }
 
+- (void)test_get_entity {
+    NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
+    db::model model((__bridge CFDictionaryRef)model_dict);
+
+    XCTAssertEqual(model.entity("sample_a").attributes.size(), 8);
+    XCTAssertEqual(model.entity("sample_a").relations.size(), 1);
+}
+
 - (void)test_get_attributes_by_entity_name {
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
