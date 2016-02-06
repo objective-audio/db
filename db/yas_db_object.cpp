@@ -64,7 +64,7 @@ struct db::const_object::impl : public base::impl {
         return db::value::empty();
     }
 
-    db::value_vector get_relation(std::string const &rel_name) {
+    db::value_vector get_relation_ids(std::string const &rel_name) {
         validate_relation_name(rel_name);
 
         if (data.relations.count(rel_name) > 0) {
@@ -73,7 +73,7 @@ struct db::const_object::impl : public base::impl {
         return {};
     }
 
-    db::value const &get_relation(std::string const &rel_name, std::size_t const idx) {
+    db::value const &get_relation_id(std::string const &rel_name, std::size_t const idx) {
         validate_relation_name(rel_name);
 
         if (data.relations.count(rel_name)) {
@@ -150,11 +150,11 @@ db::value const &db::const_object::get_attribute(std::string const &attr_name) c
 }
 
 db::value_vector db::const_object::get_relation_ids(std::string const &rel_name) const {
-    return impl_ptr<impl>()->get_relation(rel_name);
+    return impl_ptr<impl>()->get_relation_ids(rel_name);
 }
 
 db::value const &db::const_object::get_relation_id(std::string const &rel_name, std::size_t const idx) const {
-    return impl_ptr<impl>()->get_relation(rel_name, idx);
+    return impl_ptr<impl>()->get_relation_id(rel_name, idx);
 }
 
 std::size_t db::const_object::relation_size(std::string const &rel_name) const {
