@@ -185,6 +185,11 @@ db::integer_set_map db::const_object::relation_ids_for_fetch() const {
     return impl_ptr<impl>()->relation_ids_for_fetch();
 }
 
+db::const_object const &db::const_object::empty() {
+    static db::const_object const _empty_object{nullptr};
+    return _empty_object;
+}
+
 #pragma mark - db::object::impl
 
 class db::object::impl : public const_object::impl {

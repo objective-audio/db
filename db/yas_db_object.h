@@ -47,6 +47,8 @@ namespace db {
 
         integer_set_map relation_ids_for_fetch() const;
 
+        static const_object const &empty();
+
        protected:
         const_object(std::shared_ptr<impl> const &);
         const_object(std::shared_ptr<impl> &&);
