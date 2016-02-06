@@ -40,10 +40,12 @@ namespace db {
         value_vector get_relation_ids(std::string const &rel_name) const;
         value const &get_relation_id(std::string const &rel_name, std::size_t const idx) const;
         std::size_t relation_size(std::string const &rel_name) const;
-        
+
         value const &object_id() const;
         value const &save_id() const;
         value const &action() const;
+
+        integer_set_map relation_ids_for_fetch() const;
 
        protected:
         const_object(std::shared_ptr<impl> const &);
@@ -82,7 +84,6 @@ namespace db {
         bool is_removed() const;
 
         object_data data_for_save() const;
-        integer_set_map relation_ids_for_fetch() const;
 
         static object const &empty();
 

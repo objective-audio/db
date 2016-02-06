@@ -181,6 +181,10 @@ db::value const &db::const_object::action() const {
     return get_attribute(action_field);
 }
 
+db::integer_set_map db::const_object::relation_ids_for_fetch() const {
+    return impl_ptr<impl>()->relation_ids_for_fetch();
+}
+
 #pragma mark - db::object::impl
 
 class db::object::impl : public const_object::impl {
@@ -489,10 +493,6 @@ bool db::object::is_removed() const {
 
 db::object_data db::object::data_for_save() const {
     return impl_ptr<impl>()->data_for_save();
-}
-
-db::integer_set_map db::object::relation_ids_for_fetch() const {
-    return impl_ptr<impl>()->relation_ids_for_fetch();
 }
 
 db::object const &db::object::empty() {
