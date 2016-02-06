@@ -31,6 +31,8 @@ namespace db {
 
         attribute_map const &attributes(std::string const &entity_name) const;
         relation_map const &relations(std::string const &entity_name) const;
+        attribute const &attribute(std::string const &entity_name, std::string const &attr_name) const;
+        relation const &relation(std::string const &entity_name, std::string const &rel_name) const;
 
         bool entity_exists(std::string const &entity_name) const;
         bool attribute_exists(std::string const &entity_name, std::string const &attr_name) const;

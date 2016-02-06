@@ -121,6 +121,14 @@ db::relation_map const &db::model::relations(std::string const &entity_name) con
     return entities().at(entity_name).relations;
 }
 
+db::attribute const &db::model::attribute(std::string const &entity_name, std::string const &attr_name) const {
+    return entities().at(entity_name).attributes.at(attr_name);
+}
+
+db::relation const &db::model::relation(std::string const &entity_name, std::string const &rel_name) const {
+    return entities().at(entity_name).relations.at(rel_name);
+}
+
 bool db::model::entity_exists(std::string const &entity_name) const {
     if (entities().count(entity_name) > 0) {
         return true;
