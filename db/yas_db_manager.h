@@ -93,11 +93,13 @@ namespace db {
 
         void execute(execution_f &&execution, priority_t const priority = 0);
 
-        void insert_objects(entity_count_map const &counts, completion_f completion);
-        void fetch_objects(std::string const &entity_name, select_option option, completion_f completion);
-        void fetch_relation_objects(object_vector_map const &objects, completion_f completion);
-        void save(completion_f completion);
-        void revert(db::integer::type const save_id, completion_f completion);
+        void insert_objects(entity_count_map const &counts, completion_f completion, priority_t const priority = 0);
+        void fetch_objects(std::string const &entity_name, select_option option, completion_f completion,
+                           priority_t const priority = 0);
+        void fetch_relation_objects(object_vector_map const &objects, completion_f completion,
+                                    priority_t const priority = 0);
+        void save(completion_f completion, priority_t const priority = 0);
+        void revert(db::integer::type const save_id, completion_f completion, priority_t const priority = 0);
 
         object cached_object(std::string const &entity_name, integer::type const object_id) const;
 
