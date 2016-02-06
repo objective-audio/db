@@ -23,25 +23,52 @@ namespace db {
     using integer_set = std::set<integer::type>;
     using integer_set_map = std::unordered_map<std::string, integer_set>;
 
-    class object : public base, public manageable {
+    class const_object : public base {
         using super_class = base;
 
        public:
         class impl;
 
-        object(manager const &manager, model const &model, std::string const &entity_name);
+        const_object(model const &model, std::string const &entity_name, object_data const &obj_data);
+        const_object(std::nullptr_t);
+
+        model const &model() const;
+        std::string const &entity_name() const;
+
+        value const &get_attribute(std::string const &attr_name) const;
+
+        value_vector get_relation_ids(std::string const &rel_name) const;
+        value const &get_relation_id(std::string const &rel_name, std::size_t const idx) const;
+        std::size_t relation_size(std::string const &rel_name) const;
+
+        value const &object_id() const;
+        value const &save_id() const;
+        value const &action() const;
+
+        integer_set_map relation_ids_for_fetch() const;
+
+        static const_object const &empty();
+
+       protected:
+        const_object(std::shared_ptr<impl> const &);
+        const_object(std::shared_ptr<impl> &&);
+    };
+
+    class object : public const_object, public manageable {
+        using super_class = const_object;
+
+       public:
+        class impl;
+
+        object(manager const &manager, db::model const &model, std::string const &entity_name);
         object(std::nullptr_t);
 
         void load_data(object_data const &obj_data);
 
-        value const &get_attribute(std::string const &attr_name) const;
         void set_attribute(std::string const &attr_name, value const &value);
 
-        value_vector get_relation_ids(std::string const &rel_name) const;
-        value const &get_relation_id(std::string const &rel_name, std::size_t const idx) const;
         std::vector<db::object> get_relation_objects(std::string const &rel_name) const;
         db::object get_relation_object(std::string const &rel_name, std::size_t const idx) const;
-        std::size_t relation_size(std::string const &rel_name) const;
         void set_relation_ids(std::string const &rel_name, value_vector const &relation_ids);
         void push_back_relation_id(std::string const &rel_name, value const &relation_id);
         void erase_relation_id(std::string const &rel_name, value const &relation_id);
@@ -52,20 +79,13 @@ namespace db {
         void clear_relation(std::string const &rel_name);
 
         manager const &manager() const;
-        model const &model() const;
-        std::string const &entity_name() const;
 
         object_status status() const;
-
-        value const &object_id() const;
-        value const &save_id() const;
-        value const &action() const;
 
         void remove();
         bool is_removed() const;
 
         object_data data_for_save() const;
-        integer_set_map relation_ids_for_fetch() const;
 
         static object const &empty();
 
