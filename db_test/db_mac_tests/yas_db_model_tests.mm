@@ -160,4 +160,63 @@ using namespace yas;
     XCTAssertEqual(child.target_entity_name, "sample_b");
 }
 
+- (void)test_get_attributes_by_entity_name {
+    NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
+    db::model model((__bridge CFDictionaryRef)model_dict);
+
+    XCTAssertEqual(model.attributes("sample_a").size(), 8);
+    XCTAssertEqual(model.attributes("sample_a").count("id"), 1);
+    XCTAssertEqual(model.attributes("sample_a").count("obj_id"), 1);
+    XCTAssertEqual(model.attributes("sample_a").count("save_id"), 1);
+    XCTAssertEqual(model.attributes("sample_a").count("action"), 1);
+    XCTAssertEqual(model.attributes("sample_a").count("age"), 1);
+    XCTAssertEqual(model.attributes("sample_a").count("name"), 1);
+    XCTAssertEqual(model.attributes("sample_a").count("weight"), 1);
+    XCTAssertEqual(model.attributes("sample_a").count("data"), 1);
+}
+
+- (void)test_get_relations_by_entity_name {
+    NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
+    db::model model((__bridge CFDictionaryRef)model_dict);
+
+    XCTAssertEqual(model.relations("sample_a").size(), 1);
+    XCTAssertEqual(model.relations("sample_a").count("child"), 1);
+}
+
+- (void)test_entity_exists {
+    NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
+    db::model model((__bridge CFDictionaryRef)model_dict);
+
+    XCTAssertTrue(model.entity_exists("sample_a"));
+    XCTAssertTrue(model.entity_exists("sample_b"));
+
+    XCTAssertFalse(model.entity_exists("sample_c"));
+}
+
+- (void)test_attribute_exists {
+    NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
+    db::model model((__bridge CFDictionaryRef)model_dict);
+
+    XCTAssertTrue(model.attribute_exists("sample_a", "age"));
+    XCTAssertTrue(model.attribute_exists("sample_b", "name"));
+
+    XCTAssertFalse(model.attribute_exists("sample_a", "child"));
+}
+
+- (void)test_relation_exists {
+    NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
+    db::model model((__bridge CFDictionaryRef)model_dict);
+
+    XCTAssertTrue(model.relation_exists("sample_a", "child"));
+
+    XCTAssertFalse(model.relation_exists("sample_a", "name"));
+}
+
+- (void)test_get_target_entity_name {
+    NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
+    db::model model((__bridge CFDictionaryRef)model_dict);
+
+    XCTAssertEqual(model.target_entity_name("sample_a", "child"), "sample_b");
+}
+
 @end
