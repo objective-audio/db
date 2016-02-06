@@ -131,7 +131,8 @@ struct db::manager::impl : public base::impl {
     db::object_map_map changed_objects;
     db::value_map db_info;
 
-    impl(std::string const &path, db::model const &model) : database(path), model(model), queue(), cached_objects() {
+    impl(std::string const &path, db::model const &model, priority_t const priority_count)
+        : database(path), model(model), queue(priority_count), cached_objects() {
     }
 
     db::object load_object_data(std::string const &entity_name, db::object_data const &data) {
@@ -257,7 +258,7 @@ struct db::manager::impl : public base::impl {
         }
     }
 
-    void execute(execution_f &&execution) {
+    void execute(execution_f &&execution, priority_t const priority = 0) {
         auto op_lambda = [execution = std::move(execution), manager = cast<manager>()](operation const &op) mutable {
             if (!op.is_canceled()) {
                 auto &db = manager.impl_ptr<impl>()->database;
@@ -267,7 +268,7 @@ struct db::manager::impl : public base::impl {
             }
         };
 
-        queue.add_operation(operation{std::move(op_lambda)});
+        queue.add_operation(operation{std::move(op_lambda)}, priority);
     }
 
     void execute_insert_objects(
@@ -711,8 +712,8 @@ struct db::manager::impl : public base::impl {
 
 #pragma mark - manager
 
-db::manager::manager(std::string const &db_path, db::model const &model)
-    : super_class(std::make_unique<impl>(db_path, model)) {
+db::manager::manager(std::string const &db_path, db::model const &model, size_t const priority_count)
+    : super_class(std::make_unique<impl>(db_path, model, priority_count)) {
 }
 
 db::manager::manager(std::nullptr_t) : super_class(nullptr) {
@@ -904,8 +905,8 @@ db::integer::type db::manager::last_save_id() const {
     return 0;
 }
 
-void db::manager::execute(execution_f &&db_execution) {
-    impl_ptr<impl>()->execute(std::move(db_execution));
+void db::manager::execute(execution_f &&execution, priority_t const priority) {
+    impl_ptr<impl>()->execute(std::move(execution), priority);
 }
 
 void db::manager::insert_objects(entity_count_map const &counts, completion_f completion) {
