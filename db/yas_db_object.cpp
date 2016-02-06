@@ -132,7 +132,7 @@ struct db::const_object::impl : public base::impl {
 
 #pragma mark - db::const_object
 
-db::const_object::const_object(model const &model, std::string const &entity_name, object_data const &obj_data)
+db::const_object::const_object(db::model const &model, std::string const &entity_name, object_data const &obj_data)
     : super_class(std::make_unique<impl>(model, entity_name, obj_data)) {
 }
 
@@ -143,6 +143,14 @@ db::const_object::const_object(std::shared_ptr<impl> const &impl) : super_class(
 }
 
 db::const_object::const_object(std::shared_ptr<impl> &&impl) : super_class(std::move(impl)) {
+}
+
+db::model const &db::const_object::model() const {
+    return impl_ptr<impl>()->model;
+}
+
+std::string const &db::const_object::entity_name() const {
+    return impl_ptr<impl>()->entity_name;
 }
 
 db::value const &db::const_object::get_attribute(std::string const &attr_name) const {
@@ -159,6 +167,18 @@ db::value const &db::const_object::get_relation_id(std::string const &rel_name, 
 
 std::size_t db::const_object::relation_size(std::string const &rel_name) const {
     return impl_ptr<impl>()->relation_size(rel_name);
+}
+
+db::value const &db::const_object::object_id() const {
+    return get_attribute(object_id_field);
+}
+
+db::value const &db::const_object::save_id() const {
+    return get_attribute(save_id_field);
+}
+
+db::value const &db::const_object::action() const {
+    return get_attribute(action_field);
 }
 
 #pragma mark - db::object::impl
@@ -451,32 +471,12 @@ db::manager const &db::object::manager() const {
     return impl_ptr<impl>()->manager;
 }
 
-db::model const &db::object::model() const {
-    return impl_ptr<impl>()->model;
-}
-
-std::string const &db::object::entity_name() const {
-    return impl_ptr<impl>()->entity_name;
-}
-
 enum db::object_status db::object::status() const {
     return impl_ptr<impl>()->status;
 }
 
 void db::object::set_status(object_status const &stat) {
     impl_ptr<impl>()->status = stat;
-}
-
-db::value const &db::object::object_id() const {
-    return get_attribute(object_id_field);
-}
-
-db::value const &db::object::save_id() const {
-    return get_attribute(save_id_field);
-}
-
-db::value const &db::object::action() const {
-    return get_attribute(action_field);
 }
 
 void db::object::remove() {
