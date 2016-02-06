@@ -50,6 +50,11 @@ namespace db {
     select_single_result select_db_info(database const &db);
 
     value max(database const &db, std::string const &table_name, std::string const &field);
+
+    std::vector<object> get_relation_objects(object_map_map const &objects, object const &object,
+                                             std::string const &rel_name);
+    db::object get_relation_object(object_map_map const &objects, object const &object, std::string const &rel_name,
+                                   std::size_t const idx);
 }
 db::object_map_map to_map_map(db::object_vector_map vec);
 db::object_map to_map(db::object_vector vec);

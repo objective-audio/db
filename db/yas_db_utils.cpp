@@ -5,6 +5,7 @@
 #include "yas_db_additional_protocol.h"
 #include "yas_db_attribute.h"
 #include "yas_db_database.h"
+#include "yas_db_model.h"
 #include "yas_db_row_set.h"
 #include "yas_db_select_option.h"
 #include "yas_db_sql_utils.h"
@@ -261,6 +262,39 @@ db::value db::max(database const &db, std::string const &table_name, std::string
         }
     }
     return nullptr;
+}
+
+std::vector<db::object> db::get_relation_objects(object_map_map const &objects, object const &object,
+                                                 std::string const &rel_name) {
+    auto const rel_ids = object.get_relation_ids(rel_name);
+    std::string const &tgt_entity_name = object.model().relation(object.entity_name(), rel_name).target_entity_name;
+
+    if (objects.count(tgt_entity_name) > 0) {
+        auto const &entity_objects = objects.at(tgt_entity_name);
+        return map<db::object>(rel_ids, [&entity_objects, entity_name = object.entity_name()](db::value const &id) {
+            if (entity_objects.count(id.get<integer>())) {
+                return entity_objects.at(id.get<integer>());
+            }
+            return db::object::empty();
+        });
+    }
+
+    return {};
+}
+
+db::object db::get_relation_object(object_map_map const &objects, object const &object, std::string const &rel_name,
+                                   std::size_t const idx) {
+    auto const rel_ids = object.get_relation_ids(rel_name);
+    std::string const &tgt_entity_name = object.model().relation(object.entity_name(), rel_name).target_entity_name;
+
+    if (objects.count(tgt_entity_name) > 0) {
+        auto const &entity_objects = objects.at(tgt_entity_name);
+        if (entity_objects.count(idx)) {
+            return entity_objects.at(idx);
+        }
+    }
+
+    return db::object::empty();
 }
 
 db::object_map_map yas::to_map_map(db::object_vector_map objects_vector) {
