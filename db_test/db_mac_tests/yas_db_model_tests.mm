@@ -175,12 +175,26 @@ using namespace yas;
     XCTAssertEqual(model.attributes("sample_a").count("data"), 1);
 }
 
+- (void)test_get_attribute {
+    NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
+    db::model model((__bridge CFDictionaryRef)model_dict);
+
+    XCTAssertEqual(model.attribute("sample_a", "age").name, "age");
+}
+
 - (void)test_get_relations_by_entity_name {
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
 
     XCTAssertEqual(model.relations("sample_a").size(), 1);
     XCTAssertEqual(model.relations("sample_a").count("child"), 1);
+}
+
+- (void)test_get_relation {
+    NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
+    db::model model((__bridge CFDictionaryRef)model_dict);
+
+    XCTAssertEqual(model.relation("sample_a", "child").name, "child");
 }
 
 - (void)test_entity_exists {
