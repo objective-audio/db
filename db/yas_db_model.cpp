@@ -113,11 +113,11 @@ db::model::entity_map const &db::model::entities() const {
     return impl_ptr<impl>()->entities;
 }
 
-db::attribute_map db::model::attributes(std::string const &entity_name) {
+db::attribute_map const &db::model::attributes(std::string const &entity_name) const {
     return entities().at(entity_name).attributes;
 }
 
-db::relation_map db::model::relations(std::string const &entity_name) {
+db::relation_map const &db::model::relations(std::string const &entity_name) const {
     return entities().at(entity_name).relations;
 }
 

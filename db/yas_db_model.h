@@ -29,8 +29,8 @@ namespace db {
         yas::version const &version() const;
         entity_map const &entities() const;
 
-        attribute_map attributes(std::string const &entity_name);
-        relation_map relations(std::string const &entity_name);
+        attribute_map const &attributes(std::string const &entity_name) const;
+        relation_map const &relations(std::string const &entity_name) const;
 
         bool entity_exists(std::string const &entity_name) const;
         bool attribute_exists(std::string const &entity_name, std::string const &attr_name) const;
