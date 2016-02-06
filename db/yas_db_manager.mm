@@ -373,7 +373,7 @@ struct db::manager::impl : public base::impl {
                                                                                               operation const &) {
             auto &db = manager.database();
 
-            auto const &rel_models = manager.model().entities().at(entity_name).relations;
+            auto const &rel_models = manager.model().relations(entity_name);
             state_t state{nullptr};
 
             object_data_vector_map fetched_datas;
@@ -433,7 +433,7 @@ struct db::manager::impl : public base::impl {
 
                     for (auto const &entity_pair : rel_ids) {
                         auto const &entity_name = entity_pair.first;
-                        auto const &rel_models = manager.model().entities().at(entity_name).relations;
+                        auto const &rel_models = manager.model().relations(entity_name);
 
                         auto const &entity_rel_ids = entity_pair.second;
                         db::select_option option{
@@ -537,8 +537,8 @@ struct db::manager::impl : public base::impl {
                         for (auto const &entity_pair : changed_datas) {
                             auto const &entity_name = entity_pair.first;
                             auto const &changed_entity_datas = entity_pair.second;
-                            auto const entity_insert_sql = manager.model().entities().at(entity_name).sql_for_insert();
-                            auto const &rel_models = manager.model().entities().at(entity_name).relations;
+                            auto const entity_insert_sql = manager.model().entity(entity_name).sql_for_insert();
+                            auto const &rel_models = manager.model().relations(entity_name);
 
                             db::object_data_vector entity_saved_datas;
 
@@ -665,7 +665,7 @@ struct db::manager::impl : public base::impl {
                     for (auto const &entity_attrs_pair : reverted_attrs) {
                         auto const &entity_name = entity_attrs_pair.first;
                         auto const &entity_attrs = entity_attrs_pair.second;
-                        auto const &rel_models = manager.model().entities().at(entity_name).relations;
+                        auto const &rel_models = manager.model().relations(entity_name);
 
                         if (auto obj_datas_result =
                                 fetch_entity_object_datas(db, entity_name, rel_models, entity_attrs)) {

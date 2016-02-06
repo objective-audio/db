@@ -50,7 +50,7 @@ struct db::object::impl : public base::impl {
         if (status != db::object_status::changed) {
             clear();
 
-            db::entity const &entity = model.entities().at(entity_name);
+            db::entity const &entity = model.entity(entity_name);
 
             for (auto const &pair : entity.attributes) {
                 auto const &attr_name = pair.first;
@@ -198,7 +198,7 @@ struct db::object::impl : public base::impl {
     void clear_relation(std::string const &rel_name) {
         validate_relation_name(rel_name);
 
-        if (model.entities().at(entity_name).relations.count(rel_name) == 0) {
+        if (!model.relation_exists(entity_name, rel_name)) {
             throw "relation name (" + rel_name + ") not found";
         }
 
@@ -235,7 +235,7 @@ struct db::object::impl : public base::impl {
         db::value_map attributes;
         db::value_vector_map relations;
 
-        db::entity const &entity = model.entities().at(entity_name);
+        db::entity const &entity = model.entity(entity_name);
 
         for (auto const &pair : entity.attributes) {
             auto const &attr_name = pair.first;
@@ -263,7 +263,7 @@ struct db::object::impl : public base::impl {
     integer_set_map relation_ids_for_fetch() {
         integer_set_map relation_ids;
 
-        db::entity const &entity = model.entities().at(entity_name);
+        db::entity const &entity = model.entity(entity_name);
         for (auto const &pair : entity.relations) {
             auto const &rel_name = pair.first;
             if (data.relations.count(rel_name)) {
@@ -298,13 +298,13 @@ struct db::object::impl : public base::impl {
     }
 
     void validate_attribute_name(std::string const &attr_name) {
-        if (model.entities().at(entity_name).attributes.count(attr_name) == 0) {
+        if (!model.attribute_exists(entity_name, attr_name)) {
             throw "attribute name (" + attr_name + ") not found in " + entity_name + ".";
         }
     }
 
     void validate_relation_name(std::string const &rel_name) {
-        if (model.entities().at(entity_name).relations.count(rel_name) == 0) {
+        if (!model.relation_exists(entity_name, rel_name)) {
             throw "relation name (" + rel_name + ") not found in " + entity_name + ".";
         }
     }
@@ -345,7 +345,7 @@ std::vector<db::object> db::object::get_relation_objects(std::string const &rel_
 }
 
 db::object db::object::get_relation_object(std::string const &rel_name, std::size_t const idx) const {
-    std::string const &tgt_entity_name = model().entities().at(entity_name()).relations.at(rel_name).target_entity_name;
+    std::string const &tgt_entity_name = model().relation(entity_name(), rel_name).target_entity_name;
     return manager().cached_object(tgt_entity_name, get_relation_id(rel_name, idx).get<integer>());
 }
 

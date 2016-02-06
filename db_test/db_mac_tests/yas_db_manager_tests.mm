@@ -701,8 +701,7 @@ using namespace yas;
         XCTAssertEqual(selected_values.at(1).at(db::save_id_field), db::value{2});
         XCTAssertEqual(selected_values.at(1).at(db::action_field), db::value{db::update_action});
 
-        auto relation_result =
-            db::select(db, manager.model().entities().at("sample_a").relations.at("child").table_name);
+        auto relation_result = db::select(db, manager.model().relation("sample_a", "child").table_name);
         auto const &selected_relations = relation_result.value();
 
         XCTAssertEqual(selected_relations.size(), 2);
