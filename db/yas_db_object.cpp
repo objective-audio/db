@@ -402,7 +402,7 @@ void db::object::set_attribute(std::string const &attr_name, db::value const &va
 }
 
 std::vector<db::object> db::object::get_relation_objects(std::string const &rel_name) const {
-    auto const &rel_ids = impl_ptr<impl>()->get_relation(rel_name);
+    auto const &rel_ids = impl_ptr<impl>()->get_relation_ids(rel_name);
     return map<db::object>(rel_ids, [manager = manager(), entity_name = entity_name()](db::value const &id) {
         return manager.cached_object(entity_name, id.get<integer>());
     });
