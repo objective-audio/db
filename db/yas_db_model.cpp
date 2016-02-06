@@ -5,11 +5,8 @@
 #include <unordered_map>
 #include <vector>
 #include "yas_cf_utils.h"
-#include "yas_db_attribute.h"
 #include "yas_db_cf_utils.h"
-#include "yas_db_entity.h"
 #include "yas_db_model.h"
-#include "yas_db_relation.h"
 #include "yas_each_dictionary.h"
 #include "yas_version.h"
 
@@ -114,4 +111,41 @@ yas::version const &db::model::version() const {
 
 db::model::entity_map const &db::model::entities() const {
     return impl_ptr<impl>()->entities;
+}
+
+db::attribute_map db::model::attributes(std::string const &entity_name) {
+    return entities().at(entity_name).attributes;
+}
+
+db::relation_map db::model::relations(std::string const &entity_name) {
+    return entities().at(entity_name).relations;
+}
+
+bool db::model::entity_exists(std::string const &entity_name) const {
+    if (entities().count(entity_name) > 0) {
+        return true;
+    }
+    return false;
+}
+
+bool db::model::attribute_exists(std::string const &entity_name, std::string const &attr_name) const {
+    if (entity_exists(entity_name)) {
+        if (entities().at(entity_name).attributes.count(attr_name) > 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool db::model::relation_exists(std::string const &entity_name, std::string const &rel_name) const {
+    if (entity_exists(entity_name)) {
+        if (entities().at(entity_name).relations.count(rel_name) > 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
+std::string const &db::model::target_entity_name(std::string const &entity_name, std::string const &rel_name) const {
+    return entities().at(entity_name).relations.at(rel_name).target_entity_name;
 }
