@@ -153,7 +153,3 @@ bool db::model::relation_exists(std::string const &entity_name, std::string cons
     }
     return false;
 }
-
-std::string const &db::model::target_entity_name(std::string const &entity_name, std::string const &rel_name) const {
-    return entities().at(entity_name).relations.at(rel_name).target_entity_name;
-}

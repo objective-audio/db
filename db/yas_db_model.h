@@ -38,8 +38,6 @@ namespace db {
         bool attribute_exists(std::string const &entity_name, std::string const &attr_name) const;
         bool relation_exists(std::string const &entity_name, std::string const &rel_name) const;
 
-        std::string const &target_entity_name(std::string const &entity_name, std::string const &rel_name) const;
-
        private:
         class impl;
     };

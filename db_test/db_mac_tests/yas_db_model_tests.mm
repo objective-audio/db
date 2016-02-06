@@ -226,11 +226,4 @@ using namespace yas;
     XCTAssertFalse(model.relation_exists("sample_a", "name"));
 }
 
-- (void)test_get_target_entity_name {
-    NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
-    db::model model((__bridge CFDictionaryRef)model_dict);
-
-    XCTAssertEqual(model.target_entity_name("sample_a", "child"), "sample_b");
-}
-
 @end
