@@ -113,12 +113,24 @@ db::model::entity_map const &db::model::entities() const {
     return impl_ptr<impl>()->entities;
 }
 
-db::attribute_map db::model::attributes(std::string const &entity_name) {
+db::entity const &db::model::entity(std::string const &entity_name) const {
+    return entities().at(entity_name);
+}
+
+db::attribute_map const &db::model::attributes(std::string const &entity_name) const {
     return entities().at(entity_name).attributes;
 }
 
-db::relation_map db::model::relations(std::string const &entity_name) {
+db::relation_map const &db::model::relations(std::string const &entity_name) const {
     return entities().at(entity_name).relations;
+}
+
+db::attribute const &db::model::attribute(std::string const &entity_name, std::string const &attr_name) const {
+    return entities().at(entity_name).attributes.at(attr_name);
+}
+
+db::relation const &db::model::relation(std::string const &entity_name, std::string const &rel_name) const {
+    return entities().at(entity_name).relations.at(rel_name);
 }
 
 bool db::model::entity_exists(std::string const &entity_name) const {
@@ -144,8 +156,4 @@ bool db::model::relation_exists(std::string const &entity_name, std::string cons
         }
     }
     return false;
-}
-
-std::string const &db::model::target_entity_name(std::string const &entity_name, std::string const &rel_name) const {
-    return entities().at(entity_name).relations.at(rel_name).target_entity_name;
 }
