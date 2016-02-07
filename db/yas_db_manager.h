@@ -70,6 +70,8 @@ namespace db {
             db::error _db_error;
         };
 
+        using priority_t = UInt32;
+
         using entity_count_map = std::unordered_map<std::string, std::size_t>;
 
         using state_t = result<std::nullptr_t, error>;
@@ -77,8 +79,11 @@ namespace db {
         using completion_f = std::function<void(manager &, result_t)>;
         using execution_f = std::function<void(manager &, operation const &)>;
 
-        explicit manager(std::string const &db_path, model const &model);
+        explicit manager(std::string const &db_path, model const &model, size_t const priority_count = 1);
         manager(std::nullptr_t);
+        
+        void suspend();
+        void resume();
 
         void setup(completion_f completion);
 
@@ -89,13 +94,15 @@ namespace db {
         integer::type current_save_id() const;
         integer::type last_save_id() const;
 
-        void execute(execution_f &&execution);
+        void execute(execution_f &&execution, priority_t const priority = 0);
 
-        void insert_objects(entity_count_map const &counts, completion_f completion);
-        void fetch_objects(std::string const &entity_name, select_option option, completion_f completion);
-        void fetch_relation_objects(object_vector_map const &objects, completion_f completion);
-        void save(completion_f completion);
-        void revert(db::integer::type const save_id, completion_f completion);
+        void insert_objects(entity_count_map const &counts, completion_f completion, priority_t const priority = 0);
+        void fetch_objects(std::string const &entity_name, select_option option, completion_f completion,
+                           priority_t const priority = 0);
+        void fetch_relation_objects(object_vector_map const &objects, completion_f completion,
+                                    priority_t const priority = 0);
+        void save(completion_f completion, priority_t const priority = 0);
+        void revert(db::integer::type const save_id, completion_f completion, priority_t const priority = 0);
 
         object cached_object(std::string const &entity_name, integer::type const object_id) const;
 
