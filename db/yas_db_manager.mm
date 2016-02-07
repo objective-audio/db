@@ -234,6 +234,26 @@ struct db::manager::impl : public base::impl {
         return loaded_objects;
     }
 
+    object_map_map load_map_object_datas(object_data_vector_map const &datas) {
+        object_map_map loaded_objects;
+        for (auto const &entity_pair : datas) {
+            auto const &entity_name = entity_pair.first;
+            auto const &entity_datas = entity_pair.second;
+
+            object_map objects;
+            objects.reserve(entity_datas.size());
+
+            for (auto const &data : entity_datas) {
+                if (auto const obj = load_object_data(entity_name, data)) {
+                    objects.emplace(std::make_pair(obj.object_id().get<integer>(), std::move(obj)));
+                }
+            }
+
+            loaded_objects.emplace(std::make_pair(entity_name, std::move(objects)));
+        }
+        return loaded_objects;
+    }
+
     void set_db_info(db::value_map const &info) {
         db_info = info;
     }
@@ -1049,7 +1069,7 @@ void db::manager::fetch_const_objects(std::string const &entity_name, select_opt
     impl_ptr<impl>()->execute_fetch_object_datas(entity_name, std::move(option), std::move(impl_completion), priority);
 }
 
-void db::manager::fetch_objects(integer_set_map rel_ids, completion_f completion, priority_t const priority) {
+void db::manager::fetch_objects(integer_set_map rel_ids, map_completion_f completion, priority_t const priority) {
     auto impl_completion = [completion = std::move(completion)](db::manager & manager, state_t && state,
                                                                 object_data_vector_map && fetched_datas) {
         auto lambda = [
@@ -1059,10 +1079,10 @@ void db::manager::fetch_objects(integer_set_map rel_ids, completion_f completion
             fetched_datas = std::move(fetched_datas)
         ]() mutable {
             if (state) {
-                auto loaded_objects = manager.impl_ptr<impl>()->load_object_datas(fetched_datas);
-                completion(manager, result_t{std::move(loaded_objects)});
+                auto loaded_objects = manager.impl_ptr<impl>()->load_map_object_datas(fetched_datas);
+                completion(manager, map_result_t{std::move(loaded_objects)});
             } else {
-                completion(manager, result_t{std::move(state.error())});
+                completion(manager, map_result_t{std::move(state.error())});
             }
         };
 
