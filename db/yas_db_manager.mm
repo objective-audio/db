@@ -289,7 +289,7 @@ struct db::manager::impl : public base::impl {
         queue.add_operation(operation{std::move(op_lambda)}, priority);
     }
 
-    void execute_insert_objects(
+    void execute_insert(
         entity_count_map const &counts,
         std::function<void(db::manager &, state_t &&, object_data_vector_map &&, db::value_map &&)> &&completion,
         priority_t const priority) {
@@ -387,7 +387,7 @@ struct db::manager::impl : public base::impl {
                 priority);
     }
 
-    void execute_fetch_objects(
+    void execute_fetch_object_datas(
         std::string const &entity_name, db::select_option &&option,
         std::function<void(db::manager &manager, state_t &&state, object_data_vector_map &&fetched_datas)> &&completion,
         priority_t const priority) {
@@ -440,7 +440,7 @@ struct db::manager::impl : public base::impl {
                 priority);
     }
 
-    void execute_fetch_relation_objects(
+    void execute_fetch_relation_object_datas(
         db::integer_set_map &&rel_ids,
         std::function<void(db::manager &manager, state_t &&state, object_data_vector_map &&fetched_datas)> &&completion,
         priority_t const priority) {
@@ -979,7 +979,7 @@ void db::manager::insert_objects(entity_count_map const &counts, completion_f co
         dispatch_sync(dispatch_get_main_queue(), std::move(lambda));
     };
 
-    impl_ptr<impl>()->execute_insert_objects(counts, std::move(impl_completion), priority);
+    impl_ptr<impl>()->execute_insert(counts, std::move(impl_completion), priority);
 }
 
 void db::manager::fetch_objects(std::string const &entity_name, db::select_option option, completion_f completion,
@@ -1003,7 +1003,7 @@ void db::manager::fetch_objects(std::string const &entity_name, db::select_optio
         dispatch_sync(dispatch_get_main_queue(), std::move(lambda));
     };
 
-    impl_ptr<impl>()->execute_fetch_objects(entity_name, std::move(option), std::move(impl_completion), priority);
+    impl_ptr<impl>()->execute_fetch_object_datas(entity_name, std::move(option), std::move(impl_completion), priority);
 }
 
 void db::manager::fetch_const_objects(std::string const &entity_name, select_option option,
@@ -1026,7 +1026,7 @@ void db::manager::fetch_const_objects(std::string const &entity_name, select_opt
         dispatch_sync(dispatch_get_main_queue(), std::move(lambda));
     };
 
-    impl_ptr<impl>()->execute_fetch_objects(entity_name, std::move(option), std::move(impl_completion), priority);
+    impl_ptr<impl>()->execute_fetch_object_datas(entity_name, std::move(option), std::move(impl_completion), priority);
 }
 
 void db::manager::fetch_relation_objects(object_vector_map const &objects, completion_f completion,
@@ -1052,7 +1052,7 @@ void db::manager::fetch_relation_objects(object_vector_map const &objects, compl
         dispatch_sync(dispatch_get_main_queue(), std::move(lambda));
     };
 
-    impl_ptr<impl>()->execute_fetch_relation_objects(std::move(rel_ids), std::move(impl_completion), priority);
+    impl_ptr<impl>()->execute_fetch_relation_object_datas(std::move(rel_ids), std::move(impl_completion), priority);
 }
 
 void db::manager::save(completion_f completion, priority_t const priority) {
