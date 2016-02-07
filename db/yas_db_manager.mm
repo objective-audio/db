@@ -1052,8 +1052,8 @@ void db::manager::fetch_objects(integer_set_map rel_ids, completion_f completion
     impl_ptr<impl>()->execute_fetch_object_datas(std::move(rel_ids), std::move(impl_completion), priority);
 }
 
-void db::manager::fetch_const_relation_objects(integer_set_map rel_ids, const_completion_f completion,
-                                               priority_t const priority) {
+void db::manager::fetch_const_objects(integer_set_map obj_ids, const_completion_f completion,
+                                      priority_t const priority) {
     auto impl_completion = [completion = std::move(completion)](db::manager & manager, state_t && state,
                                                                 object_data_vector_map && fetched_datas) {
         auto lambda = [
@@ -1072,7 +1072,7 @@ void db::manager::fetch_const_relation_objects(integer_set_map rel_ids, const_co
         dispatch_sync(dispatch_get_main_queue(), std::move(lambda));
     };
 
-    impl_ptr<impl>()->execute_fetch_object_datas(std::move(rel_ids), std::move(impl_completion), priority);
+    impl_ptr<impl>()->execute_fetch_object_datas(std::move(obj_ids), std::move(impl_completion), priority);
 }
 
 void db::manager::save(completion_f completion, priority_t const priority) {
