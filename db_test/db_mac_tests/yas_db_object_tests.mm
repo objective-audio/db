@@ -402,7 +402,7 @@ using namespace yas;
     db::object obj2{nullptr, model, "sample_a"};
     obj2.set_relation_ids("child", db::value_vector{db::value{5}, db::value{4}, db::value{3}});
 
-    auto rel_ids = db::relation_ids({std::make_pair("sample_a", db::object_vector{obj1, obj2})});
+    auto rel_ids = db::relation_ids(db::object_vector_map{std::make_pair("sample_a", db::object_vector{obj1, obj2})});
 
     XCTAssertEqual(rel_ids.count("sample_b"), 1);
 

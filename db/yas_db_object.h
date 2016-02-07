@@ -103,7 +103,5 @@ namespace db {
     using weak_object_map_map = std::unordered_map<std::string, weak_object_map>;
     using object_data_vector = std::vector<object_data>;
     using object_data_vector_map = std::unordered_map<std::string, object_data_vector>;
-
-    integer_set_map relation_ids(db::object_vector_map const &);
 }
 }

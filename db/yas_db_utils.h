@@ -55,6 +55,29 @@ namespace db {
                                              std::string const &rel_name);
     db::object get_relation_object(object_map_map const &objects, object const &object, std::string const &rel_name,
                                    std::size_t const idx);
+
+    template <typename T>
+    db::integer_set_map relation_ids(T const &objects) {
+        db::integer_set_map rel_ids;
+
+        for (auto const &entity_pair : objects) {
+            for (auto const &object : entity_pair.second) {
+                auto obj_rel_ids = object.relation_ids_for_fetch();
+                for (auto &obj_rel_pair : obj_rel_ids) {
+                    auto const &entity_name = obj_rel_pair.first;
+                    if (rel_ids.count(entity_name) == 0) {
+                        rel_ids.emplace(std::make_pair(entity_name, integer_set{}));
+                    }
+
+                    for (auto &tgt_id : obj_rel_pair.second) {
+                        rel_ids.at(entity_name).emplace(tgt_id);
+                    }
+                }
+            }
+        }
+
+        return rel_ids;
+    }
 }
 db::object_map_map to_map_map(db::object_vector_map vec);
 db::object_map to_map(db::object_vector vec);
