@@ -32,8 +32,8 @@ std::string yas::db::insert_sql(std::string const &table, std::vector<std::strin
     stream << "insert into " + table;
     if (fields.size() > 0) {
         std::string const joined_fields = joined(fields, field_separator);
-        std::string const joined_values =
-            joined(map<std::string>(fields, [](std::string const &field) { return ":" + field; }), field_separator);
+        std::string const joined_values = joined(
+            to_vector<std::string>(fields, [](std::string const &field) { return ":" + field; }), field_separator);
         stream << "(" + joined_fields + ") values(" + joined_values + ");";
     } else {
         stream << " default values;";
@@ -45,7 +45,7 @@ std::string yas::db::update_sql(std::string const &table, std::vector<std::strin
                                 std::string const &where_exprs) {
     std::ostringstream stream;
     stream << "update " << table << " set "
-           << joined(map<std::string>(fields, [](std::string const &field) { return equal_field(field); }),
+           << joined(to_vector<std::string>(fields, [](std::string const &field) { return equal_field(field); }),
                      field_separator);
     if (where_exprs.size() > 0) {
         stream << " where " << where_exprs;
@@ -81,7 +81,7 @@ std::string yas::db::equal_field(std::string const &field) {
 }
 
 std::string yas::db::joined_orders(std::vector<field_order> const &orders) {
-    auto mapped = map<std::string>(orders, [](auto const &order) { return order.sql(); });
+    auto mapped = to_vector<std::string>(orders, [](auto const &order) { return order.sql(); });
     return joined(mapped, field_separator);
 }
 

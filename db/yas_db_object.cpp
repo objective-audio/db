@@ -432,7 +432,7 @@ void db::object::set_attribute(std::string const &attr_name, db::value const &va
 
 std::vector<db::object> db::object::get_relation_objects(std::string const &rel_name) const {
     auto const &rel_ids = impl_ptr<impl>()->get_relation_ids(rel_name);
-    return map<db::object>(rel_ids, [manager = manager(), entity_name = entity_name()](db::value const &id) {
+    return to_vector<db::object>(rel_ids, [manager = manager(), entity_name = entity_name()](db::value const &id) {
         return manager.cached_object(entity_name, id.get<integer>());
     });
 }
@@ -457,7 +457,7 @@ void db::object::erase_relation_id(std::string const &rel_name, db::value const 
 void db::object::set_relation_object(std::string const &rel_name, object_vector const &rel_objects) {
     impl_ptr<impl>()->set_relation(
         rel_name,
-        map<db::value>(rel_objects, [entity_name = entity_name()](auto const &obj) { return obj.object_id(); }));
+        to_vector<db::value>(rel_objects, [entity_name = entity_name()](auto const &obj) { return obj.object_id(); }));
 }
 
 void db::object::push_back_relation_object(std::string const &rel_name, object const &rel_object) {
