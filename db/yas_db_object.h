@@ -97,6 +97,8 @@ namespace db {
     using object_map_map = std::unordered_map<std::string, object_map>;
     using object_vector = std::vector<object>;
     using object_vector_map = std::unordered_map<std::string, object_vector>;
+    using const_object_map = std::unordered_map<integer::type, const_object>;
+    using const_object_map_map = std::unordered_map<std::string, const_object_map>;
     using const_object_vector = std::vector<const_object>;
     using const_object_vector_map = std::unordered_map<std::string, const_object_vector>;
     using weak_object_map = std::unordered_map<integer::type, weak<object>>;
