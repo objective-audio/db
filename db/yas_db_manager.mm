@@ -390,7 +390,10 @@ struct db::manager::impl : public base::impl {
                         auto &entity_attrs = select_result.value();
                         if (auto obj_datas_result =
                                 fetch_entity_object_datas(db, entity_name, rel_models, entity_attrs)) {
-                            fetched_datas.emplace(std::make_pair(entity_name, std::move(obj_datas_result.value())));
+                            auto &entity_obj_datas = obj_datas_result.value();
+                            if (entity_obj_datas.size() > 0) {
+                                fetched_datas.emplace(std::make_pair(entity_name, std::move(entity_obj_datas)));
+                            }
                         } else {
                             state = state_t{
                                 error{error_type::fetch_object_datas_failed, std::move(obj_datas_result.error())}};
