@@ -1029,10 +1029,8 @@ void db::manager::fetch_const_objects(std::string const &entity_name, select_opt
     impl_ptr<impl>()->execute_fetch_object_datas(entity_name, std::move(option), std::move(impl_completion), priority);
 }
 
-void db::manager::fetch_relation_objects(object_vector_map const &objects, completion_f completion,
+void db::manager::fetch_relation_objects(integer_set_map rel_ids, completion_f completion,
                                          priority_t const priority) {
-    auto rel_ids = db::relation_ids(objects);
-
     auto impl_completion = [completion = std::move(completion)](db::manager & manager, state_t && state,
                                                                 object_data_vector_map && fetched_datas) {
         auto lambda = [
