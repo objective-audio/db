@@ -1055,6 +1055,29 @@ void db::manager::fetch_relation_objects(object_vector_map const &objects, compl
     impl_ptr<impl>()->execute_fetch_relation_object_datas(std::move(rel_ids), std::move(impl_completion), priority);
 }
 
+void db::manager::fetch_const_relation_objects(integer_set_map rel_ids, const_completion_f completion,
+                                               priority_t const priority) {
+    auto impl_completion = [completion = std::move(completion)](db::manager & manager, state_t && state,
+                                                                object_data_vector_map && fetched_datas) {
+        auto lambda = [
+            manager,
+            completion = std::move(completion),
+            state = std::move(state),
+            fetched_datas = std::move(fetched_datas)
+        ]() mutable {
+            if (state) {
+                completion(manager, const_result_t{load_const_object_datas(manager.model(), fetched_datas)});
+            } else {
+                completion(manager, const_result_t{std::move(state.error())});
+            }
+        };
+
+        dispatch_sync(dispatch_get_main_queue(), std::move(lambda));
+    };
+
+    impl_ptr<impl>()->execute_fetch_relation_object_datas(std::move(rel_ids), std::move(impl_completion), priority);
+}
+
 void db::manager::save(completion_f completion, priority_t const priority) {
     auto changed_datas = impl_ptr<impl>()->changed_datas_for_save();
 
