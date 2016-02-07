@@ -76,7 +76,9 @@ namespace db {
 
         using state_t = result<std::nullptr_t, error>;
         using result_t = result<object_vector_map, error>;
+        using const_result_t = result<const_object_vector_map, error>;
         using completion_f = std::function<void(manager &, result_t)>;
+        using const_completion_f = std::function<void(manager &, const_result_t)>;
         using execution_f = std::function<void(manager &, operation const &)>;
 
         explicit manager(std::string const &db_path, model const &model, size_t const priority_count = 1);
@@ -101,6 +103,8 @@ namespace db {
                            priority_t const priority = 0);
         void fetch_relation_objects(object_vector_map const &objects, completion_f completion,
                                     priority_t const priority = 0);
+        void fetch_const_objects(std::string const &entity_name, select_option option, const_completion_f completion,
+                                 priority_t const priority = 0);
         void save(completion_f completion, priority_t const priority = 0);
         void revert(db::integer::type const save_id, completion_f completion, priority_t const priority = 0);
 

@@ -116,6 +116,26 @@ namespace db {
             return result<db::value, db::manager::error>{state.error()};
         }
     }
+
+    const_object_vector_map load_const_object_datas(db::model const &model, object_data_vector_map const &datas) {
+        const_object_vector_map loaded_objects;
+        for (auto const &entity_pair : datas) {
+            auto const &entity_name = entity_pair.first;
+            auto const &entity_datas = entity_pair.second;
+
+            const_object_vector objects;
+            objects.reserve(entity_datas.size());
+
+            for (auto const &data : entity_datas) {
+                if (const_object obj{model, entity_name, data}) {
+                    objects.emplace_back(std::move(obj));
+                }
+            }
+
+            loaded_objects.emplace(std::make_pair(entity_name, std::move(objects)));
+        }
+        return loaded_objects;
+    }
 }
 }
 
@@ -977,6 +997,29 @@ void db::manager::fetch_objects(std::string const &entity_name, db::select_optio
                 completion(manager, result_t{std::move(loaded_objects)});
             } else {
                 completion(manager, result_t{std::move(state.error())});
+            }
+        };
+
+        dispatch_sync(dispatch_get_main_queue(), std::move(lambda));
+    };
+
+    impl_ptr<impl>()->execute_fetch_objects(entity_name, std::move(option), std::move(impl_completion), priority);
+}
+
+void db::manager::fetch_const_objects(std::string const &entity_name, select_option option,
+                                      const_completion_f completion, priority_t const priority) {
+    auto impl_completion = [completion = std::move(completion)](db::manager & manager, state_t && state,
+                                                                object_data_vector_map && fetched_datas) {
+        auto lambda = [
+            state = std::move(state),
+            completion = std::move(completion),
+            fetched_datas = std::move(fetched_datas),
+            manager
+        ]() mutable {
+            if (state) {
+                completion(manager, const_result_t{load_const_object_datas(manager.model(), fetched_datas)});
+            } else {
+                completion(manager, const_result_t{std::move(state.error())});
             }
         };
 
