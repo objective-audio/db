@@ -81,6 +81,9 @@ namespace db {
 
         explicit manager(std::string const &db_path, model const &model, size_t const priority_count = 1);
         manager(std::nullptr_t);
+        
+        void suspend();
+        void resume();
 
         void setup(completion_f completion);
 

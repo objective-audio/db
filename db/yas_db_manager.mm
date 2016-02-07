@@ -729,6 +729,14 @@ db::manager::manager(std::string const &db_path, db::model const &model, size_t 
 db::manager::manager(std::nullptr_t) : super_class(nullptr) {
 }
 
+void db::manager::suspend() {
+    impl_ptr<impl>()->queue.suspend();
+}
+
+void db::manager::resume() {
+    impl_ptr<impl>()->queue.resume();
+}
+
 void db::manager::setup(completion_f completion) {
     execute([completion = std::move(completion), model = impl_ptr<impl>()->model](db::manager & manager,
                                                                                   operation const &op) {
