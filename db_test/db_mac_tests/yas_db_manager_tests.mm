@@ -1034,6 +1034,9 @@ using namespace yas;
     }
 }
 
+- (void)test_priority_and_suspend {
+}
+
 - (void)test_make_error {
     auto error = db::manager::error{db::manager::error_type::version_not_found};
     XCTAssertTrue(error);
