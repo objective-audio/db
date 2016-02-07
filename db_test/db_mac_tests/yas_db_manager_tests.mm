@@ -673,6 +673,71 @@ using namespace yas;
     [self waitForExpectationsWithTimeout:1.0 handler:nil];
 }
 
+- (void)test_fetch_const_objects_by_ids {
+    db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
+    auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
+
+    XCTestExpectation *exp = [self expectationWithDescription:@"1"];
+
+    yas::chain(nullptr, {[self, manager](auto context) mutable {
+                             manager.setup([self, context](auto &manager, auto result) mutable {
+                                 XCTAssertTrue(result);
+
+                                 context.next();
+                             });
+                         },
+                         [self, manager](auto context) mutable {
+                             manager.insert_objects(
+                                 {{"sample_a", 3}},
+                                 [self, context](auto &manager, db::manager::result_t result) mutable {
+                                     XCTAssertTrue(result);
+                                     auto &objects = result.value();
+
+                                     XCTAssertEqual(manager.current_save_id(), 1);
+                                     XCTAssertEqual(manager.last_save_id(), 1);
+
+                                     objects.at("sample_a").at(0).set_attribute("name", db::value{"value_1"});
+                                     objects.at("sample_a").at(1).set_attribute("name", db::value{"value_2"});
+                                     objects.at("sample_a").at(2).set_attribute("name", db::value{"value_3"});
+
+                                     XCTAssertEqual(objects.at("sample_a").at(0).object_id(), db::value{1});
+                                     XCTAssertEqual(objects.at("sample_a").at(1).object_id(), db::value{2});
+                                     XCTAssertEqual(objects.at("sample_a").at(2).object_id(), db::value{3});
+
+                                     context.next();
+                                 });
+                         },
+                         [self, manager](auto context) mutable {
+                             manager.save([self, context](auto &, db::manager::result_t save_result) mutable {
+                                 XCTAssertTrue(save_result);
+
+                                 context.next();
+                             });
+                         },
+                         [self, manager, exp](auto context) mutable {
+                             db::integer_set_map obj_ids{{"sample_a", {2}}};
+
+                             manager.fetch_const_objects(
+                                 std::move(obj_ids),
+                                 [self, exp, context](auto &, db::manager::const_result_t fetch_result) mutable {
+                                     XCTAssertTrue(fetch_result);
+
+                                     auto const &objects = fetch_result.value();
+                                     XCTAssertEqual(objects.count("sample_a"), 1);
+                                     auto &a_objects = objects.at("sample_a");
+                                     XCTAssertEqual(a_objects.size(), 1);
+                                     XCTAssertEqual(a_objects.at(0).object_id().get<db::integer>(), 2);
+                                     XCTAssertEqual(a_objects.at(0).get_attribute("name"), db::value{"value_2"});
+
+                                     context.next();
+
+                                     [exp fulfill];
+                                 });
+                         }});
+
+    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+}
+
 - (void)test_save_objects {
     db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
