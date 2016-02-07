@@ -1034,7 +1034,46 @@ using namespace yas;
     }
 }
 
-- (void)test_priority_and_suspend {
+- (void)test_suspend_and_priority {
+    db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
+    auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1) priority_count:2];
+
+    XCTestExpectation *exp1 = [self expectationWithDescription:@"1"];
+    manager.setup([exp1](auto &, auto) { [exp1 fulfill]; });
+
+    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+
+    XCTestExpectation *exp2 = [self expectationWithDescription:@"2"];
+
+    manager.suspend();
+
+    int call_count = 0;
+    int fetched_object_count = 0;
+
+    manager.insert_objects({{"sample_a", 1}},
+                           [&call_count, exp2](auto &, auto) {
+                               call_count++;
+                               if (call_count == 2) {
+                                   [exp2 fulfill];
+                               }
+                           },
+                           1);
+
+    manager.fetch_objects("sample_a", {},
+                          [&call_count, exp2, &fetched_object_count, self](auto &, db::manager::result_t result) {
+                              XCTAssertTrue(result);
+                              XCTAssertEqual(result.value().count("sample_a"), 0);
+
+                              call_count++;
+                              if (call_count == 2) {
+                                  [exp2 fulfill];
+                              }
+                          },
+                          0);
+
+    manager.resume();
+
+    [self waitForExpectationsWithTimeout:1.0 handler:nil];
 }
 
 - (void)test_make_error {
