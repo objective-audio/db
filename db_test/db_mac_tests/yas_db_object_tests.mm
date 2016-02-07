@@ -21,7 +21,7 @@ using namespace yas;
     [super tearDown];
 }
 
-- (void)test_create {
+- (void)test_create_object {
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
 
@@ -48,6 +48,27 @@ using namespace yas;
     db::object_data obj_data{.attributes = std::move(attributes), .relations = std::move(relations)};
 
     obj.load_data(obj_data);
+
+    XCTAssertEqual(obj.get_attribute("age"), db::value{10});
+    XCTAssertEqual(obj.get_attribute("name"), db::value{"name_val"});
+    XCTAssertEqual(obj.get_attribute("weight"), db::value{53.4});
+    XCTAssertThrows(obj.get_attribute("hoge"));
+
+    XCTAssertEqual(obj.relation_size("child"), 2);
+    XCTAssertEqual(obj.get_relation_id("child", 0), db::value{12});
+    XCTAssertEqual(obj.get_relation_id("child", 1), db::value{34});
+}
+
+- (void)test_create_const_object {
+    NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
+    db::model model((__bridge CFDictionaryRef)model_dict);
+
+    db::value_map attributes{std::make_pair("age", db::value{10}), std::make_pair("name", db::value{"name_val"}),
+                             std::make_pair("weight", db::value{53.4}), std::make_pair("hoge", db::value{"hage"})};
+    db::value_vector_map relations{std::make_pair("child", db::value_vector{db::value{12}, db::value{34}})};
+    db::object_data obj_data{.attributes = std::move(attributes), .relations = std::move(relations)};
+
+    db::const_object obj{model, "sample_a", obj_data};
 
     XCTAssertEqual(obj.get_attribute("age"), db::value{10});
     XCTAssertEqual(obj.get_attribute("name"), db::value{"name_val"});
