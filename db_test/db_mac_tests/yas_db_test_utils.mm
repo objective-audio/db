@@ -19,9 +19,13 @@ using namespace yas;
 }
 
 + (db::manager)create_test_manager:(db::model &&)model {
+    return [self create_test_manager:std::move(model) priority_count:1];
+}
+
++ (yas::db::manager)create_test_manager:(yas::db::model &&)model priority_count:(size_t)count {
     NSString *databasePath = [[self class] databasePath];
     std::string db_path = yas::to_string((__bridge CFStringRef)databasePath);
-    return db::manager{db_path, std::move(model)};
+    return db::manager{db_path, std::move(model), count};
 }
 
 + (std::string)database_path {

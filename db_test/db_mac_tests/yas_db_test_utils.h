@@ -14,6 +14,7 @@
 + (yas::db::database)create_test_database;
 + (yas::db::manager)create_test_manager;
 + (yas::db::manager)create_test_manager:(yas::db::model &&)model;
++ (yas::db::manager)create_test_manager:(yas::db::model &&)model priority_count:(size_t)count;
 + (std::string)database_path;
 + (NSString *)databasePath;
 + (void)deleteDatabase;
