@@ -719,15 +719,15 @@ using namespace yas;
 
                              manager.fetch_const_objects(
                                  std::move(obj_ids),
-                                 [self, exp, context](auto &, db::manager::const_result_t fetch_result) mutable {
+                                 [self, exp, context](auto &, db::manager::const_map_result_t fetch_result) mutable {
                                      XCTAssertTrue(fetch_result);
 
                                      auto const &objects = fetch_result.value();
                                      XCTAssertEqual(objects.count("sample_a"), 1);
                                      auto &a_objects = objects.at("sample_a");
                                      XCTAssertEqual(a_objects.size(), 1);
-                                     XCTAssertEqual(a_objects.at(0).object_id().get<db::integer>(), 2);
-                                     XCTAssertEqual(a_objects.at(0).get_attribute("name"), db::value{"value_2"});
+                                     XCTAssertEqual(a_objects.at(2).object_id().get<db::integer>(), 2);
+                                     XCTAssertEqual(a_objects.at(2).get_attribute("name"), db::value{"value_2"});
 
                                      context.next();
 
