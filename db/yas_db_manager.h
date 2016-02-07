@@ -76,9 +76,13 @@ namespace db {
 
         using state_t = result<std::nullptr_t, error>;
         using result_t = result<object_vector_map, error>;
+        using map_result_t = result<object_map_map, error>;
         using const_result_t = result<const_object_vector_map, error>;
+        using const_map_result_t = result<const_object_map_map, error>;
         using completion_f = std::function<void(manager &, result_t)>;
+        using map_completion_f = std::function<void(manager &, map_result_t)>;
         using const_completion_f = std::function<void(manager &, const_result_t)>;
+        using const_map_completion_f = std::function<void(manager &, const_map_result_t)>;
         using execution_f = std::function<void(manager &, operation const &)>;
 
         explicit manager(std::string const &db_path, model const &model, size_t const priority_count = 1);
