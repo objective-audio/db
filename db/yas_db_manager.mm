@@ -102,9 +102,7 @@ namespace db {
             auto &db_info = db_info_result.value();
             if (db_info.count(current_save_id_field)) {
                 current_save_id = db_info.at(current_save_id_field);
-            }
-
-            if (!current_save_id || current_save_id.get<integer>() == 0) {
+            } else {
                 state = manager::state_t{manager::error{manager::error_type::save_id_not_found}};
             }
         } else {
@@ -500,9 +498,14 @@ struct db::manager::impl : public base::impl {
                         if (db_info.count(current_save_id_field)) {
                             current_save_id = db_info.at(current_save_id_field);
                             next_save_id = db::value{current_save_id.get<integer>() + 1};
+                        } else {
+                            state = state_t{error{error_type::save_id_not_found}};
                         }
+
                         if (db_info.count(last_save_id_field)) {
                             last_save_id = db_info.at(last_save_id_field);
+                        } else {
+                            state = state_t{error{error_type::save_id_not_found}};
                         }
                     } else {
                         state = state_t{error{error_type::select_info_failed, std::move(select_result.error())}};
@@ -615,7 +618,7 @@ struct db::manager::impl : public base::impl {
                 if (auto const select_result = db::select_db_info(db)) {
                     db_info = std::move(select_result.value());
                 } else {
-                    state = state_t{error{error_type::save_id_not_found}};
+                    state = state_t{error{error_type::select_info_failed, std::move(select_result.error())}};
                 }
             }
 
@@ -642,7 +645,7 @@ struct db::manager::impl : public base::impl {
                 db::integer::type last_save_id = 0;
                 db::integer::type current_save_id = 0;
 
-                if (auto const select_result = db::select_db_info(db)) {
+                if (auto select_result = db::select_db_info(db)) {
                     auto const &db_info = select_result.value();
                     if (db_info.count(current_save_id_field)) {
                         current_save_id = db_info.at(current_save_id_field).get<integer>();
@@ -650,13 +653,13 @@ struct db::manager::impl : public base::impl {
                     if (db_info.count(last_save_id_field)) {
                         last_save_id = db_info.at(last_save_id_field).get<integer>();
                     }
+                } else {
+                    state = state_t{error{error_type::select_info_failed, std::move(select_result.error())}};
                 }
 
                 auto const &entity_models = manager.model().entities();
 
-                if (last_save_id == 0 || current_save_id == 0) {
-                    state = state_t{error{error_type::save_id_not_found}};
-                } else if (last_save_id < rev_save_id) {
+                if (rev_save_id == current_save_id || last_save_id < rev_save_id) {
                     state = state_t{error{error_type::out_of_range_save_id}};
                 } else {
                     for (auto const &entity_model_pair : entity_models) {
@@ -822,8 +825,12 @@ void db::manager::setup(completion_f completion) {
 
                 if (auto create_result = db.execute_update(
                         db::create_table_sql(info_table, {version_field, current_save_id_field, last_save_id_field}))) {
-                    db::value_map args{std::make_pair(version_field, db::value{model.version().str()})};
-                    if (auto ul = unless(db.execute_update(db::insert_sql(info_table, {version_field}), args))) {
+                    db::value_map args{std::make_pair(version_field, db::value{model.version().str()}),
+                                       std::make_pair(current_save_id_field, db::value{0}),
+                                       std::make_pair(last_save_id_field, db::value{0})};
+                    if (auto ul = unless(db.execute_update(
+                            db::insert_sql(info_table, {version_field, current_save_id_field, last_save_id_field}),
+                            args))) {
                         state = state_t{error{error_type::insert_info_failed, std::move(ul.value.error())}};
                     }
                 } else {
