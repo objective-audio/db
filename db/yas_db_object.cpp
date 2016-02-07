@@ -504,27 +504,3 @@ db::object const &db::object::empty() {
     static db::object const _empty_object{nullptr};
     return _empty_object;
 }
-
-#pragma mark -
-
-db::integer_set_map db::relation_ids(db::object_vector_map const &objects) {
-    db::integer_set_map rel_ids;
-
-    for (auto const &entity_pair : objects) {
-        for (auto const &object : entity_pair.second) {
-            auto obj_rel_ids = object.relation_ids_for_fetch();
-            for (auto &obj_rel_pair : obj_rel_ids) {
-                auto const &entity_name = obj_rel_pair.first;
-                if (rel_ids.count(entity_name) == 0) {
-                    rel_ids.emplace(std::make_pair(entity_name, integer_set{}));
-                }
-
-                for (auto &tgt_id : obj_rel_pair.second) {
-                    rel_ids.at(entity_name).emplace(tgt_id);
-                }
-            }
-        }
-    }
-
-    return rel_ids;
-}
