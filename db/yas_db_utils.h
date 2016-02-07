@@ -51,10 +51,11 @@ namespace db {
 
     value max(database const &db, std::string const &table_name, std::string const &field);
 
-    std::vector<object> get_relation_objects(object_map_map const &objects, object const &object,
-                                             std::string const &rel_name);
-    db::object get_relation_object(object_map_map const &objects, object const &object, std::string const &rel_name,
-                                   std::size_t const idx);
+    std::vector<const_object> get_const_relation_objects(const_object const &object,
+                                                         const_object_map_map const &objects,
+                                                         std::string const &rel_name);
+    db::const_object get_const_relation_object(const_object const &object, const_object_map_map const &objects,
+                                               std::string const &rel_name, std::size_t const idx);
 
     template <typename T>
     db::integer_set_map relation_ids(T const &objects) {
