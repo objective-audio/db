@@ -271,12 +271,13 @@ std::vector<db::object> db::get_relation_objects(object_map_map const &objects, 
 
     if (objects.count(tgt_entity_name) > 0) {
         auto const &entity_objects = objects.at(tgt_entity_name);
-        return map<db::object>(rel_ids, [&entity_objects, entity_name = object.entity_name()](db::value const &id) {
-            if (entity_objects.count(id.get<integer>())) {
-                return entity_objects.at(id.get<integer>());
-            }
-            return db::object::empty();
-        });
+        return to_vector<db::object>(rel_ids,
+                                     [&entity_objects, entity_name = object.entity_name()](db::value const &id) {
+                                         if (entity_objects.count(id.get<integer>())) {
+                                             return entity_objects.at(id.get<integer>());
+                                         }
+                                         return db::object::empty();
+                                     });
     }
 
     return {};

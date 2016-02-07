@@ -15,12 +15,12 @@ db::entity::entity(std::string const &name, attribute_map &&attributes, relation
 }
 
 std::string db::entity::sql_for_create() const {
-    auto mapped_attrs = map<std::string>(attributes, [](auto const &pair) { return pair.second.sql(); });
+    auto mapped_attrs = to_vector<std::string>(attributes, [](auto const &pair) { return pair.second.sql(); });
     return db::create_table_sql(name, mapped_attrs);
 }
 
 std::string db::entity::sql_for_update() const {
-    auto mapped_fields = map<std::string>(attributes, [](auto const &pair) { return pair.first; });
+    auto mapped_fields = to_vector<std::string>(attributes, [](auto const &pair) { return pair.first; });
     return db::update_sql(name, mapped_fields, equal_field_expr(id_field));
 }
 
