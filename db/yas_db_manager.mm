@@ -440,11 +440,11 @@ struct db::manager::impl : public base::impl {
                 priority);
     }
 
-    void execute_fetch_relation_object_datas(
-        db::integer_set_map &&rel_ids,
+    void execute_fetch_object_datas(
+        db::integer_set_map &&obj_ids,
         std::function<void(db::manager &manager, state_t &&state, object_data_vector_map &&fetched_datas)> &&completion,
         priority_t const priority) {
-        execute([completion = std::move(completion), rel_ids = std::move(rel_ids)](manager & manager,
+        execute([completion = std::move(completion), obj_ids = std::move(obj_ids)](manager & manager,
                                                                                    operation const &) {
             auto &db = manager.database();
 
@@ -458,15 +458,15 @@ struct db::manager::impl : public base::impl {
                 if (cur_save_id_result) {
                     current_save_id = std::move(cur_save_id_result.value());
 
-                    for (auto const &entity_pair : rel_ids) {
+                    for (auto const &entity_pair : obj_ids) {
                         auto const &entity_name = entity_pair.first;
                         auto const &rel_models = manager.model().relations(entity_name);
 
-                        auto const &entity_rel_ids = entity_pair.second;
+                        auto const &entity_obj_ids = entity_pair.second;
                         db::select_option option{
                             .where_exprs =
                                 object_id_field + " in (" +
-                                joined(entity_rel_ids, ",", [](auto const &rel_id) { return std::to_string(rel_id); }) +
+                                joined(entity_obj_ids, ",", [](auto const &rel_id) { return std::to_string(rel_id); }) +
                                 ")"};
 
                         if (auto select_result = db::select_last(db, entity_name, current_save_id, std::move(option))) {
@@ -1029,8 +1029,7 @@ void db::manager::fetch_const_objects(std::string const &entity_name, select_opt
     impl_ptr<impl>()->execute_fetch_object_datas(entity_name, std::move(option), std::move(impl_completion), priority);
 }
 
-void db::manager::fetch_relation_objects(integer_set_map rel_ids, completion_f completion,
-                                         priority_t const priority) {
+void db::manager::fetch_objects(integer_set_map rel_ids, completion_f completion, priority_t const priority) {
     auto impl_completion = [completion = std::move(completion)](db::manager & manager, state_t && state,
                                                                 object_data_vector_map && fetched_datas) {
         auto lambda = [
@@ -1050,11 +1049,11 @@ void db::manager::fetch_relation_objects(integer_set_map rel_ids, completion_f c
         dispatch_sync(dispatch_get_main_queue(), std::move(lambda));
     };
 
-    impl_ptr<impl>()->execute_fetch_relation_object_datas(std::move(rel_ids), std::move(impl_completion), priority);
+    impl_ptr<impl>()->execute_fetch_object_datas(std::move(rel_ids), std::move(impl_completion), priority);
 }
 
-void db::manager::fetch_const_relation_objects(integer_set_map rel_ids, const_completion_f completion,
-                                               priority_t const priority) {
+void db::manager::fetch_const_objects(integer_set_map obj_ids, const_completion_f completion,
+                                      priority_t const priority) {
     auto impl_completion = [completion = std::move(completion)](db::manager & manager, state_t && state,
                                                                 object_data_vector_map && fetched_datas) {
         auto lambda = [
@@ -1073,7 +1072,7 @@ void db::manager::fetch_const_relation_objects(integer_set_map rel_ids, const_co
         dispatch_sync(dispatch_get_main_queue(), std::move(lambda));
     };
 
-    impl_ptr<impl>()->execute_fetch_relation_object_datas(std::move(rel_ids), std::move(impl_completion), priority);
+    impl_ptr<impl>()->execute_fetch_object_datas(std::move(obj_ids), std::move(impl_completion), priority);
 }
 
 void db::manager::save(completion_f completion, priority_t const priority) {
