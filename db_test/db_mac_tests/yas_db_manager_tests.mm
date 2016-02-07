@@ -648,7 +648,7 @@ using namespace yas;
 
     XCTestExpectation *exp4 = [self expectationWithDescription:@"4"];
 
-    manager.fetch_relation_objects(
+    manager.fetch_objects(
         db::relation_ids(db::object_vector_map{std::make_pair("sample_a", db::object_vector{object_a})}),
         [self, exp4, object_a](db::manager &manager, auto const &fetch_result) {
             XCTAssertTrue(fetch_result);
@@ -1072,8 +1072,8 @@ using namespace yas;
              },
              [self, manager](auto context) mutable {
 
-                 manager.fetch_relation_objects(db::relation_ids(context.get()), [self, context](auto &manager,
-                                                                                                 auto result) mutable {
+                 manager.fetch_objects(db::relation_ids(context.get()), [self, context](auto &manager,
+                                                                                        auto result) mutable {
                      XCTAssertTrue(result);
 
                      auto &rel_objects = result.value();
