@@ -286,13 +286,13 @@ std::vector<db::const_object> db::get_const_relation_objects(const_object const 
 
 db::const_object db::get_const_relation_object(const_object const &object, const_object_map_map const &objects,
                                                std::string const &rel_name, std::size_t const idx) {
-    auto const rel_ids = object.get_relation_ids(rel_name);
+    auto const rel_id = object.get_relation_ids(rel_name).at(idx).get<integer>();
     std::string const &tgt_entity_name = object.model().relation(object.entity_name(), rel_name).target_entity_name;
 
     if (objects.count(tgt_entity_name) > 0) {
         auto const &entity_objects = objects.at(tgt_entity_name);
-        if (entity_objects.count(idx)) {
-            return entity_objects.at(idx);
+        if (entity_objects.count(rel_id)) {
+            return entity_objects.at(rel_id);
         }
     }
 
