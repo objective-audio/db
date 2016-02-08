@@ -286,25 +286,25 @@ std::vector<db::const_object> db::get_const_relation_objects(const_object const 
 
 db::const_object db::get_const_relation_object(const_object const &object, const_object_map_map const &objects,
                                                std::string const &rel_name, std::size_t const idx) {
-    auto const rel_ids = object.get_relation_ids(rel_name);
+    auto const rel_id = object.get_relation_ids(rel_name).at(idx).get<integer>();
     std::string const &tgt_entity_name = object.model().relation(object.entity_name(), rel_name).target_entity_name;
 
     if (objects.count(tgt_entity_name) > 0) {
         auto const &entity_objects = objects.at(tgt_entity_name);
-        if (entity_objects.count(idx)) {
-            return entity_objects.at(idx);
+        if (entity_objects.count(rel_id)) {
+            return entity_objects.at(rel_id);
         }
     }
 
     return db::const_object::empty();
 }
 
-db::object_map_map yas::to_map_map(db::object_vector_map objects_vector) {
+db::object_map_map yas::to_object_map_map(db::object_vector_map objects_vector) {
     db::object_map_map objects_map;
 
     for (auto &entity_pair : objects_vector) {
         auto &entity_name = entity_pair.first;
-        auto entity_objects = to_map(std::move(entity_pair.second));
+        auto entity_objects = to_object_map(std::move(entity_pair.second));
         objects_map.emplace(std::make_pair(entity_name, std::move(entity_objects)));
     }
 
@@ -313,7 +313,7 @@ db::object_map_map yas::to_map_map(db::object_vector_map objects_vector) {
     return objects_map;
 }
 
-db::object_map yas::to_map(db::object_vector vec) {
+db::object_map yas::to_object_map(db::object_vector vec) {
     db::object_map map;
 
     auto it = vec.begin();
