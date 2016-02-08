@@ -75,11 +75,11 @@ namespace db {
         using entity_count_map = std::unordered_map<std::string, std::size_t>;
 
         using state_t = result<std::nullptr_t, error>;
-        using result_t = result<object_vector_map, error>;
+        using vector_result_t = result<object_vector_map, error>;
         using map_result_t = result<object_map_map, error>;
         using const_result_t = result<const_object_vector_map, error>;
         using const_map_result_t = result<const_object_map_map, error>;
-        using completion_f = std::function<void(manager &, result_t)>;
+        using vector_completion_f = std::function<void(manager &, vector_result_t)>;
         using map_completion_f = std::function<void(manager &, map_result_t)>;
         using const_completion_f = std::function<void(manager &, const_result_t)>;
         using const_map_completion_f = std::function<void(manager &, const_map_result_t)>;
@@ -91,7 +91,7 @@ namespace db {
         void suspend();
         void resume();
 
-        void setup(completion_f completion);
+        void setup(vector_completion_f completion);
 
         std::string const &database_path() const;
         database const &database() const;
@@ -102,16 +102,17 @@ namespace db {
 
         void execute(execution_f &&execution, priority_t const priority = 0);
 
-        void insert_objects(entity_count_map const &counts, completion_f completion, priority_t const priority = 0);
-        void fetch_objects(std::string const &entity_name, select_option option, completion_f completion,
+        void insert_objects(entity_count_map const &counts, vector_completion_f completion,
+                            priority_t const priority = 0);
+        void fetch_objects(std::string const &entity_name, select_option option, vector_completion_f completion,
                            priority_t const priority = 0);
         void fetch_objects(integer_set_map obj_ids, map_completion_f completion, priority_t const priority = 0);
         void fetch_const_objects(std::string const &entity_name, select_option option, const_completion_f completion,
                                  priority_t const priority = 0);
         void fetch_const_objects(integer_set_map obj_ids, const_map_completion_f completion,
                                  priority_t const priority = 0);
-        void save(completion_f completion, priority_t const priority = 0);
-        void revert(db::integer::type const save_id, completion_f completion, priority_t const priority = 0);
+        void save(vector_completion_f completion, priority_t const priority = 0);
+        void revert(db::integer::type const save_id, vector_completion_f completion, priority_t const priority = 0);
 
         object cached_object(std::string const &entity_name, integer::type const object_id) const;
 

@@ -763,7 +763,7 @@ using namespace yas;
                     [manager, self](auto context) mutable {
                         manager.insert_objects(
                             {{"sample_a", 2}, {"sample_b", 2}},
-                            [context, self](auto &, db::manager::result_t result) mutable {
+                            [context, self](auto &, auto result) mutable {
                                 XCTAssertTrue(result);
 
                                 auto &objects = result.value();

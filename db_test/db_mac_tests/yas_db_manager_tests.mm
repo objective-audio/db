@@ -353,7 +353,7 @@ using namespace yas;
     db::object_vector_map objects;
 
     manager.insert_objects({{"sample_a", 3}, {"sample_b", 2}},
-                           [self, exp1, &objects](auto &, db::manager::result_t result) {
+                           [self, exp1, &objects](auto &, db::manager::vector_result_t result) {
                                XCTAssertTrue(result);
 
                                objects = std::move(result.value());
@@ -393,7 +393,7 @@ using namespace yas;
 
     XCTestExpectation *exp2 = [self expectationWithDescription:@"2"];
 
-    manager.save([self, exp2](auto &, db::manager::result_t save_result) {
+    manager.save([self, exp2](auto &, auto save_result) {
         XCTAssertTrue(save_result);
 
         [exp2 fulfill];
@@ -407,7 +407,7 @@ using namespace yas;
     XCTestExpectation *exp3 = [self expectationWithDescription:@"3"];
 
     manager.fetch_objects("sample_a", {},
-                          [self, exp3](auto &, db::manager::result_t fetch_result) {
+                          [self, exp3](auto &, db::manager::vector_result_t fetch_result) {
                               XCTAssertTrue(fetch_result);
 
                               auto const &objects = fetch_result.value();
@@ -455,7 +455,7 @@ using namespace yas;
                              .limit_range = db::range{0, 3}};
 
     manager.fetch_objects("sample_a", std::move(option),
-                          [self, exp5, &objects](auto &, db::manager::result_t fetch_result) {
+                          [self, exp5, &objects](auto &, db::manager::vector_result_t fetch_result) {
                               XCTAssertTrue(fetch_result);
 
                               auto const &objects = fetch_result.value();
@@ -498,7 +498,7 @@ using namespace yas;
                          [self, manager](auto context) mutable {
                              manager.insert_objects(
                                  {{"sample_a", 1}, {"sample_b", 1}},
-                                 [self, context](auto &manager, db::manager::result_t result) mutable {
+                                 [self, context](auto &manager, db::manager::vector_result_t result) mutable {
                                      XCTAssertTrue(result);
                                      auto &objects = result.value();
 
@@ -516,7 +516,7 @@ using namespace yas;
                                  });
                          },
                          [self, manager](auto context) mutable {
-                             manager.save([self, context](auto &, db::manager::result_t save_result) mutable {
+                             manager.save([self, context](auto &, auto save_result) mutable {
                                  XCTAssertTrue(save_result);
 
                                  context.next();
@@ -558,7 +558,7 @@ using namespace yas;
     XCTestExpectation *exp1 = [self expectationWithDescription:@"1"];
 
     manager.insert_objects({{"sample_a", 1}, {"sample_b", 1}, {"sample_c", 1}},
-                           [self, exp1](auto &, db::manager::result_t result) {
+                           [self, exp1](auto &, db::manager::vector_result_t result) {
                                XCTAssertTrue(result);
 
                                auto const &objects = result.value();
@@ -593,7 +593,7 @@ using namespace yas;
 
     XCTestExpectation *exp2 = [self expectationWithDescription:@"2"];
 
-    manager.save([self, exp2](db::manager &manager, db::manager::result_t save_result) {
+    manager.save([self, exp2](db::manager &manager, db::manager::vector_result_t save_result) {
         XCTAssertTrue(save_result);
 
         auto const &objects = save_result.value();
@@ -691,7 +691,7 @@ using namespace yas;
                          [self, manager](auto context) mutable {
                              manager.insert_objects(
                                  {{"sample_a", 3}},
-                                 [self, context](auto &manager, db::manager::result_t result) mutable {
+                                 [self, context](auto &manager, db::manager::vector_result_t result) mutable {
                                      XCTAssertTrue(result);
                                      auto &objects = result.value();
 
@@ -710,7 +710,7 @@ using namespace yas;
                                  });
                          },
                          [self, manager](auto context) mutable {
-                             manager.save([self, context](auto &, db::manager::result_t save_result) mutable {
+                             manager.save([self, context](auto &, auto save_result) mutable {
                                  XCTAssertTrue(save_result);
 
                                  context.next();
@@ -755,7 +755,7 @@ using namespace yas;
     XCTestExpectation *exp1 = [self expectationWithDescription:@"1"];
 
     manager.insert_objects({{"sample_a", 1}},
-                           [self, &main_objects, exp1](auto &, db::manager::result_t result) {
+                           [self, &main_objects, exp1](auto &, db::manager::vector_result_t result) {
                                db::object_vector_map const &objects = result.value();
                                db::object_vector const &a_objects = objects.at("sample_a");
                                for (auto const &obj : a_objects) {
@@ -780,7 +780,7 @@ using namespace yas;
 
     XCTestExpectation *exp2 = [self expectationWithDescription:@"2"];
 
-    manager.save([self, exp2](auto &, db::manager::result_t save_result) {
+    manager.save([self, exp2](auto &, auto save_result) {
         auto const &objects = save_result.value();
         XCTAssertEqual(objects.size(), 0);
 
@@ -799,7 +799,7 @@ using namespace yas;
 
     XCTestExpectation *exp3 = [self expectationWithDescription:@"3"];
 
-    manager.save([self, exp3](auto &, db::manager::result_t save_result) {
+    manager.save([self, exp3](auto &, db::manager::vector_result_t save_result) {
         XCTAssertTrue(save_result);
 
         auto const &objects = save_result.value();
@@ -865,7 +865,7 @@ using namespace yas;
 
     XCTestExpectation *exp4 = [self expectationWithDescription:@"4"];
 
-    manager.save([self, exp4](auto &, db::manager::result_t save_result) {
+    manager.save([self, exp4](auto &, db::manager::vector_result_t save_result) {
         XCTAssertTrue(save_result);
 
         auto const &objects = save_result.value();
@@ -894,7 +894,7 @@ using namespace yas;
 
     XCTestExpectation *exp5 = [self expectationWithDescription:@"5"];
 
-    manager.save([self, exp5](auto &, db::manager::result_t save_result) {
+    manager.save([self, exp5](auto &, auto save_result) {
         XCTAssertTrue(save_result);
 
         auto const &objects = save_result.value();
@@ -927,7 +927,7 @@ using namespace yas;
                 },
                 [self, &manager](auto context) mutable {
                     manager.insert_objects({{"sample_a", 1}},
-                                           [self, context](auto &, db::manager::result_t result) mutable {
+                                           [self, context](auto &, auto result) mutable {
                                                auto &a_object = context.get();
                                                a_object = result.value().at("sample_a").at(0);
 
@@ -1124,7 +1124,7 @@ using namespace yas;
              },
              [self, manager](auto context) mutable {
                  manager.fetch_objects("sample_a", {},
-                                       [self, context](auto &manager, db::manager::result_t result) mutable {
+                                       [self, context](auto &manager, db::manager::vector_result_t result) mutable {
                                            XCTAssertTrue(result);
 
                                            auto &objects = context.get();
@@ -1200,7 +1200,7 @@ using namespace yas;
                            1);
 
     manager.fetch_objects("sample_a", {},
-                          [&call_count, exp2, &fetched_object_count, self](auto &, db::manager::result_t result) {
+                          [&call_count, exp2, &fetched_object_count, self](auto &, auto result) {
                               XCTAssertTrue(result);
                               XCTAssertEqual(result.value().count("sample_a"), 0);
 
