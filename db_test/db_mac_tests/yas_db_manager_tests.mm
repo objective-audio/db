@@ -605,8 +605,10 @@ using namespace yas;
 
         XCTAssertEqual(objects.at("sample_a").at(0).relation_size("child"), 1);
         XCTAssertEqual(objects.at("sample_a").at(0).get_relation_object("child", 0), objects.at("sample_b").at(0));
+        XCTAssertEqual(objects.at("sample_a").at(0).get_relation_id("child", 0), db::value{1});
         XCTAssertEqual(objects.at("sample_a").at(0).relation_size("friend"), 1);
         XCTAssertEqual(objects.at("sample_a").at(0).get_relation_object("friend", 0), objects.at("sample_c").at(0));
+        XCTAssertEqual(objects.at("sample_a").at(0).get_relation_id("friend", 0), db::value{1});
 
         XCTAssertEqual(objects.at("sample_b").at(0).relation_size("parent"), 1);
         XCTAssertEqual(objects.at("sample_b").at(0).get_relation_object("parent", 0), objects.at("sample_a").at(0));
@@ -660,12 +662,12 @@ using namespace yas;
             XCTAssertEqual(objects.count("sample_c"), 1);
 
             XCTAssertEqual(objects.at("sample_b").size(), 1);
-            XCTAssertEqual(object_a.get_relation_object("child", 0), objects.at("sample_b").at(0));
-            XCTAssertEqual(objects.at("sample_b").at(0).get_relation_object("parent", 0), object_a);
+            XCTAssertEqual(object_a.get_relation_object("child", 0), objects.at("sample_b").at(1));
+            XCTAssertEqual(objects.at("sample_b").at(1).get_relation_object("parent", 0), object_a);
 
             XCTAssertEqual(objects.at("sample_c").size(), 1);
-            XCTAssertEqual(object_a.get_relation_object("friend", 0), objects.at("sample_c").at(0));
-            XCTAssertEqual(objects.at("sample_c").at(0).get_relation_object("friend", 0), object_a);
+            XCTAssertEqual(object_a.get_relation_object("friend", 0), objects.at("sample_c").at(1));
+            XCTAssertEqual(objects.at("sample_c").at(1).get_relation_object("friend", 0), object_a);
 
             [exp4 fulfill];
         });
@@ -719,15 +721,15 @@ using namespace yas;
 
                              manager.fetch_const_objects(
                                  std::move(obj_ids),
-                                 [self, exp, context](auto &, db::manager::const_result_t fetch_result) mutable {
+                                 [self, exp, context](auto &, db::manager::const_map_result_t fetch_result) mutable {
                                      XCTAssertTrue(fetch_result);
 
                                      auto const &objects = fetch_result.value();
                                      XCTAssertEqual(objects.count("sample_a"), 1);
                                      auto &a_objects = objects.at("sample_a");
                                      XCTAssertEqual(a_objects.size(), 1);
-                                     XCTAssertEqual(a_objects.at(0).object_id().get<db::integer>(), 2);
-                                     XCTAssertEqual(a_objects.at(0).get_attribute("name"), db::value{"value_2"});
+                                     XCTAssertEqual(a_objects.at(2).object_id().get<db::integer>(), 2);
+                                     XCTAssertEqual(a_objects.at(2).get_attribute("name"), db::value{"value_2"});
 
                                      context.next();
 
@@ -1061,6 +1063,7 @@ using namespace yas;
                             objects.at("sample_a").at(0).set_attribute("name", db::value{"name_value_4"});
                             objects.at("sample_b").at(0).set_attribute("name", db::value{"name_value_5"});
                             objects.at("sample_a").at(0).set_relation_object("child", {objects.at("sample_b").at(0)});
+                            XCTAssertEqual(objects.at("sample_b").at(0).object_id(), db::value{1});
 
                             context.next();
                         });
@@ -1136,18 +1139,20 @@ using namespace yas;
                                        });
              },
              [self, manager](auto context) mutable {
-
                  manager.fetch_objects(db::relation_ids(context.get()), [self, context](auto &manager,
                                                                                         auto result) mutable {
                      XCTAssertTrue(result);
 
-                     auto &rel_objects = result.value();
+                     db::object_map_map &rel_objects = result.value();
 
                      XCTAssertEqual(rel_objects.count("sample_b"), 1);
-                     XCTAssertEqual(rel_objects.at("sample_b").at(0).get_attribute("name"), db::value{"name_value_5"});
+                     XCTAssertEqual(rel_objects.at("sample_b").at(1).get_attribute("name"), db::value{"name_value_5"});
 
                      auto &objects = context.get();
-                     objects.emplace(std::make_pair("sample_b", std::move(rel_objects.at("sample_b"))));
+
+                     auto sample_bs =
+                         to_vector<db::object>(rel_objects.at("sample_b"), [](auto &pair) { return pair.second; });
+                     objects.emplace(std::make_pair("sample_b", std::move(sample_bs)));
 
                      context.next();
                  });

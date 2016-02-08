@@ -264,27 +264,28 @@ db::value db::max(database const &db, std::string const &table_name, std::string
     return nullptr;
 }
 
-std::vector<db::object> db::get_relation_objects(object_map_map const &objects, object const &object,
-                                                 std::string const &rel_name) {
+std::vector<db::const_object> db::get_const_relation_objects(const_object const &object,
+                                                             const_object_map_map const &objects,
+                                                             std::string const &rel_name) {
     auto const rel_ids = object.get_relation_ids(rel_name);
     std::string const &tgt_entity_name = object.model().relation(object.entity_name(), rel_name).target_entity_name;
 
     if (objects.count(tgt_entity_name) > 0) {
         auto const &entity_objects = objects.at(tgt_entity_name);
-        return to_vector<db::object>(rel_ids,
-                                     [&entity_objects, entity_name = object.entity_name()](db::value const &id) {
-                                         if (entity_objects.count(id.get<integer>())) {
-                                             return entity_objects.at(id.get<integer>());
-                                         }
-                                         return db::object::empty();
-                                     });
+        return to_vector<db::const_object>(rel_ids,
+                                           [&entity_objects, entity_name = object.entity_name()](db::value const &id) {
+                                               if (entity_objects.count(id.get<integer>())) {
+                                                   return entity_objects.at(id.get<integer>());
+                                               }
+                                               return db::const_object::empty();
+                                           });
     }
 
     return {};
 }
 
-db::object db::get_relation_object(object_map_map const &objects, object const &object, std::string const &rel_name,
-                                   std::size_t const idx) {
+db::const_object db::get_const_relation_object(const_object const &object, const_object_map_map const &objects,
+                                               std::string const &rel_name, std::size_t const idx) {
     auto const rel_ids = object.get_relation_ids(rel_name);
     std::string const &tgt_entity_name = object.model().relation(object.entity_name(), rel_name).target_entity_name;
 
@@ -295,7 +296,7 @@ db::object db::get_relation_object(object_map_map const &objects, object const &
         }
     }
 
-    return db::object::empty();
+    return db::const_object::empty();
 }
 
 db::object_map_map yas::to_map_map(db::object_vector_map objects_vector) {

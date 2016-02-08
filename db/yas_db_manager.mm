@@ -136,6 +136,26 @@ namespace db {
         }
         return loaded_objects;
     }
+
+    const_object_map_map load_const_map_object_datas(db::model const &model, object_data_vector_map const &datas) {
+        const_object_map_map loaded_objects;
+        for (auto const &entity_pair : datas) {
+            auto const &entity_name = entity_pair.first;
+            auto const &entity_datas = entity_pair.second;
+
+            const_object_map objects;
+            objects.reserve(entity_datas.size());
+
+            for (auto const &data : entity_datas) {
+                if (const_object obj{model, entity_name, data}) {
+                    objects.emplace(std::make_pair(obj.object_id().get<integer>(), std::move(obj)));
+                }
+            }
+
+            loaded_objects.emplace(std::make_pair(entity_name, std::move(objects)));
+        }
+        return loaded_objects;
+    }
 }
 }
 
@@ -206,6 +226,26 @@ struct db::manager::impl : public base::impl {
             for (auto const &data : entity_datas) {
                 if (auto const obj = load_object_data(entity_name, data)) {
                     objects.emplace_back(std::move(obj));
+                }
+            }
+
+            loaded_objects.emplace(std::make_pair(entity_name, std::move(objects)));
+        }
+        return loaded_objects;
+    }
+
+    object_map_map load_map_object_datas(object_data_vector_map const &datas) {
+        object_map_map loaded_objects;
+        for (auto const &entity_pair : datas) {
+            auto const &entity_name = entity_pair.first;
+            auto const &entity_datas = entity_pair.second;
+
+            object_map objects;
+            objects.reserve(entity_datas.size());
+
+            for (auto const &data : entity_datas) {
+                if (auto const obj = load_object_data(entity_name, data)) {
+                    objects.emplace(std::make_pair(obj.object_id().get<integer>(), std::move(obj)));
                 }
             }
 
@@ -1029,7 +1069,7 @@ void db::manager::fetch_const_objects(std::string const &entity_name, select_opt
     impl_ptr<impl>()->execute_fetch_object_datas(entity_name, std::move(option), std::move(impl_completion), priority);
 }
 
-void db::manager::fetch_objects(integer_set_map rel_ids, completion_f completion, priority_t const priority) {
+void db::manager::fetch_objects(integer_set_map rel_ids, map_completion_f completion, priority_t const priority) {
     auto impl_completion = [completion = std::move(completion)](db::manager & manager, state_t && state,
                                                                 object_data_vector_map && fetched_datas) {
         auto lambda = [
@@ -1039,10 +1079,10 @@ void db::manager::fetch_objects(integer_set_map rel_ids, completion_f completion
             fetched_datas = std::move(fetched_datas)
         ]() mutable {
             if (state) {
-                auto loaded_objects = manager.impl_ptr<impl>()->load_object_datas(fetched_datas);
-                completion(manager, result_t{std::move(loaded_objects)});
+                auto loaded_objects = manager.impl_ptr<impl>()->load_map_object_datas(fetched_datas);
+                completion(manager, map_result_t{std::move(loaded_objects)});
             } else {
-                completion(manager, result_t{std::move(state.error())});
+                completion(manager, map_result_t{std::move(state.error())});
             }
         };
 
@@ -1052,7 +1092,7 @@ void db::manager::fetch_objects(integer_set_map rel_ids, completion_f completion
     impl_ptr<impl>()->execute_fetch_object_datas(std::move(rel_ids), std::move(impl_completion), priority);
 }
 
-void db::manager::fetch_const_objects(integer_set_map obj_ids, const_completion_f completion,
+void db::manager::fetch_const_objects(integer_set_map obj_ids, const_map_completion_f completion,
                                       priority_t const priority) {
     auto impl_completion = [completion = std::move(completion)](db::manager & manager, state_t && state,
                                                                 object_data_vector_map && fetched_datas) {
@@ -1063,9 +1103,9 @@ void db::manager::fetch_const_objects(integer_set_map obj_ids, const_completion_
             fetched_datas = std::move(fetched_datas)
         ]() mutable {
             if (state) {
-                completion(manager, const_result_t{load_const_object_datas(manager.model(), fetched_datas)});
+                completion(manager, const_map_result_t{load_const_map_object_datas(manager.model(), fetched_datas)});
             } else {
-                completion(manager, const_result_t{std::move(state.error())});
+                completion(manager, const_map_result_t{std::move(state.error())});
             }
         };
 

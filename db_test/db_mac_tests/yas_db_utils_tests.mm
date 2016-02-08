@@ -753,4 +753,34 @@ using namespace yas;
     XCTAssertEqual(src_map.count("sample_b"), 0);
 }
 
+- (void)test_get_const_relation_objects {
+    db::model model_0_0_2{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_2]};
+    auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_2)];
+
+    chain(nullptr, {[manager](auto context) mutable {
+                        manager.setup([context](auto &, auto const &) mutable { context.next(); });
+                    },
+                    [manager, self](auto context) mutable {
+                        manager.insert_objects(
+                            {{"sample_a", 2}, {"sample_b", 2}},
+                            [context, self](auto &, db::manager::result_t result) mutable {
+                                XCTAssertTrue(result);
+
+                                auto &objects = result.value();
+                                objects.at("sample_a").at(0).set_attribute("name", db::value{"value_1"});
+                                objects.at("sample_a")
+                                    .at(0)
+                                    .set_relation_object("child",
+                                                         {objects.at("sample_b").at(0), objects.at("sample_b").at(1)});
+                                objects.at("sample_a").at(1).set_attribute("name", db::value{"value_2"});
+
+                                objects.at("sample_b").at(0).set_attribute("name", db::value{"value_3"});
+                                objects.at("sample_b").at(1).set_attribute("name", db::value{"value_4"});
+
+                                context.next();
+                            });
+                    },
+                    [manager](auto context) mutable {}, [manager](auto context) mutable {}});
+}
+
 @end

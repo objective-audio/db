@@ -76,9 +76,13 @@ namespace db {
 
         using state_t = result<std::nullptr_t, error>;
         using result_t = result<object_vector_map, error>;
+        using map_result_t = result<object_map_map, error>;
         using const_result_t = result<const_object_vector_map, error>;
+        using const_map_result_t = result<const_object_map_map, error>;
         using completion_f = std::function<void(manager &, result_t)>;
+        using map_completion_f = std::function<void(manager &, map_result_t)>;
         using const_completion_f = std::function<void(manager &, const_result_t)>;
+        using const_map_completion_f = std::function<void(manager &, const_map_result_t)>;
         using execution_f = std::function<void(manager &, operation const &)>;
 
         explicit manager(std::string const &db_path, model const &model, size_t const priority_count = 1);
@@ -101,10 +105,11 @@ namespace db {
         void insert_objects(entity_count_map const &counts, completion_f completion, priority_t const priority = 0);
         void fetch_objects(std::string const &entity_name, select_option option, completion_f completion,
                            priority_t const priority = 0);
-        void fetch_objects(integer_set_map obj_ids, completion_f completion, priority_t const priority = 0);
+        void fetch_objects(integer_set_map obj_ids, map_completion_f completion, priority_t const priority = 0);
         void fetch_const_objects(std::string const &entity_name, select_option option, const_completion_f completion,
                                  priority_t const priority = 0);
-        void fetch_const_objects(integer_set_map obj_ids, const_completion_f completion, priority_t const priority = 0);
+        void fetch_const_objects(integer_set_map obj_ids, const_map_completion_f completion,
+                                 priority_t const priority = 0);
         void save(completion_f completion, priority_t const priority = 0);
         void revert(db::integer::type const save_id, completion_f completion, priority_t const priority = 0);
 
