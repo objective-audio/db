@@ -525,7 +525,7 @@ using namespace yas;
                          [self, manager, exp](auto context) mutable {
                              manager.fetch_const_objects(
                                  "sample_a", {},
-                                 [self, exp, context](auto &, db::manager::const_result_t fetch_result) mutable {
+                                 [self, exp, context](auto &, db::manager::const_vector_result_t fetch_result) mutable {
                                      XCTAssertTrue(fetch_result);
 
                                      auto const &objects = fetch_result.value();

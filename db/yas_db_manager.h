@@ -77,11 +77,11 @@ namespace db {
         using state_t = result<std::nullptr_t, error>;
         using vector_result_t = result<object_vector_map, error>;
         using map_result_t = result<object_map_map, error>;
-        using const_result_t = result<const_object_vector_map, error>;
+        using const_vector_result_t = result<const_object_vector_map, error>;
         using const_map_result_t = result<const_object_map_map, error>;
         using vector_completion_f = std::function<void(manager &, vector_result_t)>;
         using map_completion_f = std::function<void(manager &, map_result_t)>;
-        using const_completion_f = std::function<void(manager &, const_result_t)>;
+        using const_completion_f = std::function<void(manager &, const_vector_result_t)>;
         using const_map_completion_f = std::function<void(manager &, const_map_result_t)>;
         using execution_f = std::function<void(manager &, operation const &)>;
 

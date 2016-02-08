@@ -1058,9 +1058,9 @@ void db::manager::fetch_const_objects(std::string const &entity_name, select_opt
             manager
         ]() mutable {
             if (state) {
-                completion(manager, const_result_t{load_const_object_datas(manager.model(), fetched_datas)});
+                completion(manager, const_vector_result_t{load_const_object_datas(manager.model(), fetched_datas)});
             } else {
-                completion(manager, const_result_t{std::move(state.error())});
+                completion(manager, const_vector_result_t{std::move(state.error())});
             }
         };
 
