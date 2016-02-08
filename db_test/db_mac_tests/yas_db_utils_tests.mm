@@ -667,7 +667,7 @@ using namespace yas;
     XCTAssertEqual(select_result.value().at(2).at(field_name), db::value{"value_6"});
 }
 
-- (void)test_to_map {
+- (void)test_to_object_map {
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
 
@@ -687,7 +687,7 @@ using namespace yas;
     XCTAssertTrue(src_vec.at(0));
     XCTAssertTrue(src_vec.at(1));
 
-    auto dst_map = to_map(std::move(src_vec));
+    auto dst_map = to_object_map(std::move(src_vec));
 
     XCTAssertEqual(dst_map.size(), 2);
     XCTAssertEqual(dst_map.count(0), 1);
@@ -698,7 +698,7 @@ using namespace yas;
     XCTAssertEqual(src_vec.size(), 0);
 }
 
-- (void)test_to_map_map {
+- (void)test_to_object_map_map {
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
 
@@ -736,7 +736,7 @@ using namespace yas;
     XCTAssertTrue(src_map.at("sample_b").at(0));
     XCTAssertTrue(src_map.at("sample_b").at(1));
 
-    auto dst_map = to_map_map(std::move(src_map));
+    auto dst_map = to_object_map_map(std::move(src_map));
 
     XCTAssertEqual(dst_map.size(), 2);
     XCTAssertEqual(dst_map.count("sample_a"), 1);

@@ -80,6 +80,6 @@ namespace db {
         return rel_ids;
     }
 }
-db::object_map_map to_map_map(db::object_vector_map vec);
-db::object_map to_map(db::object_vector vec);
+db::object_map_map to_object_map_map(db::object_vector_map vec);
+db::object_map to_object_map(db::object_vector vec);
 }
