@@ -1048,7 +1048,7 @@ void db::manager::fetch_objects(std::string const &entity_name, db::select_optio
 }
 
 void db::manager::fetch_const_objects(std::string const &entity_name, select_option option,
-                                      const_completion_f completion, priority_t const priority) {
+                                      const_vector_completion_f completion, priority_t const priority) {
     auto impl_completion = [completion = std::move(completion)](db::manager & manager, state_t && state,
                                                                 object_data_vector_map && fetched_datas) {
         auto lambda = [

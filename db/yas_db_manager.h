@@ -81,7 +81,7 @@ namespace db {
         using const_map_result_t = result<const_object_map_map, error>;
         using vector_completion_f = std::function<void(manager &, vector_result_t)>;
         using map_completion_f = std::function<void(manager &, map_result_t)>;
-        using const_completion_f = std::function<void(manager &, const_vector_result_t)>;
+        using const_vector_completion_f = std::function<void(manager &, const_vector_result_t)>;
         using const_map_completion_f = std::function<void(manager &, const_map_result_t)>;
         using execution_f = std::function<void(manager &, operation const &)>;
 
@@ -107,8 +107,8 @@ namespace db {
         void fetch_objects(std::string const &entity_name, select_option option, vector_completion_f completion,
                            priority_t const priority = 0);
         void fetch_objects(integer_set_map obj_ids, map_completion_f completion, priority_t const priority = 0);
-        void fetch_const_objects(std::string const &entity_name, select_option option, const_completion_f completion,
-                                 priority_t const priority = 0);
+        void fetch_const_objects(std::string const &entity_name, select_option option,
+                                 const_vector_completion_f completion, priority_t const priority = 0);
         void fetch_const_objects(integer_set_map obj_ids, const_map_completion_f completion,
                                  priority_t const priority = 0);
         void save(vector_completion_f completion, priority_t const priority = 0);
