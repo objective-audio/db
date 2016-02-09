@@ -85,7 +85,7 @@ namespace db {
         using const_map_completion_f = std::function<void(manager &, const_map_result_t)>;
         using execution_f = std::function<void(manager &, operation const &)>;
 
-        explicit manager(std::string const &db_path, model const &model, size_t const priority_count = 1);
+        manager(std::string const &db_path, model const &model, size_t const priority_count = 1);
         manager(std::nullptr_t);
 
         void suspend();
