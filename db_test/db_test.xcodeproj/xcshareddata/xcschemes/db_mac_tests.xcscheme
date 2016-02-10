@@ -40,6 +40,15 @@
             </BuildableReference>
          </TestableReference>
       </Testables>
+      <MacroExpansion>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "B6E0F1561C1D66A80033AC60"
+            BuildableName = "db_mac_tests.xctest"
+            BlueprintName = "db_mac_tests"
+            ReferencedContainer = "container:db_test.xcodeproj">
+         </BuildableReference>
+      </MacroExpansion>
       <AdditionalOptions>
       </AdditionalOptions>
    </TestAction>
