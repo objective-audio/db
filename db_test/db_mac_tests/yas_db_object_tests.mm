@@ -489,4 +489,42 @@ using namespace yas;
     XCTAssertEqual(called_count, 4);
 }
 
+- (void)test_observe_loading {
+    NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
+    db::model model((__bridge CFDictionaryRef)model_dict);
+
+    db::object obj{nullptr, model, "sample_a"};
+
+    bool called = false;
+
+    auto observer = obj.subject().make_wild_card_observer(
+        [&called, self](std::string const &key, db::object::change_info const &info) {
+            XCTAssertEqual(key, db::loading_change_key);
+
+            auto const &obj = info.object;
+            auto const &name = info.name;
+
+            XCTAssertEqual(name.size(), 0);
+
+            XCTAssertEqual(obj.get_attribute("age"), db::value{10});
+            XCTAssertEqual(obj.get_attribute("name"), db::value{"name_val"});
+            XCTAssertEqual(obj.get_attribute("weight"), db::value{53.4});
+
+            XCTAssertEqual(obj.relation_size("child"), 2);
+            XCTAssertEqual(obj.get_relation_id("child", 0), db::value{55});
+            XCTAssertEqual(obj.get_relation_id("child", 1), db::value{66});
+
+            called = true;
+        });
+
+    db::value_map attributes{std::make_pair("age", db::value{10}), std::make_pair("name", db::value{"name_val"}),
+                             std::make_pair("weight", db::value{53.4})};
+    db::value_vector_map relations{std::make_pair("child", db::value_vector{db::value{55}, db::value{66}})};
+    db::object_data obj_data{.attributes = std::move(attributes), .relations = std::move(relations)};
+
+    obj.load_data(obj_data);
+
+    XCTAssertTrue(called);
+}
+
 @end
