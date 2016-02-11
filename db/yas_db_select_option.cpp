@@ -9,7 +9,7 @@ using namespace yas;
 #pragma mark - db::field_order
 
 std::string db::field_order::sql() const {
-    return field + (order == db::order::ascending ? " asc" : " desc");
+    return field + (order == db::order::ascending ? " ASC" : " DESC");
 }
 
 #pragma mark - db::range
