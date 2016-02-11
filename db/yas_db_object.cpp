@@ -198,6 +198,7 @@ class db::object::impl : public const_object::impl {
    public:
     enum db::object_status status = db::object_status::invalid;
     db::manager manager;
+    yas::subject<db::object::change_info> subject;
 
     impl(db::manager const &manager, db::model const &model, std::string const &entity_name)
         : super_class(model, entity_name), manager(manager) {
@@ -249,6 +250,8 @@ class db::object::impl : public const_object::impl {
             } else {
                 status = db::object_status::invalid;
             }
+
+            notify_did_change(loading_change_key, "", false);
         }
     }
 
@@ -264,7 +267,7 @@ class db::object::impl : public const_object::impl {
         status = db::object_status::changed;
 
         if (!loading) {
-            notify_did_change();
+            notify_did_change(attribute_change_key, attr_name, true);
         }
     }
 
@@ -280,7 +283,7 @@ class db::object::impl : public const_object::impl {
         status = db::object_status::changed;
 
         if (!loading) {
-            notify_did_change();
+            notify_did_change(relation_change_key, rel_name, true);
         }
     }
 
@@ -298,7 +301,7 @@ class db::object::impl : public const_object::impl {
 
         status = db::object_status::changed;
 
-        notify_did_change();
+        notify_did_change(relation_change_key, rel_name, true);
     }
 
     void erase_relation(std::string const &rel_name, db::value const &relation_id) {
@@ -312,7 +315,7 @@ class db::object::impl : public const_object::impl {
 
             status = db::object_status::changed;
 
-            notify_did_change();
+            notify_did_change(relation_change_key, rel_name, true);
         }
     }
 
@@ -329,7 +332,7 @@ class db::object::impl : public const_object::impl {
 
             status = db::object_status::changed;
 
-            notify_did_change();
+            notify_did_change(relation_change_key, rel_name, true);
         }
     }
 
@@ -347,7 +350,7 @@ class db::object::impl : public const_object::impl {
 
             status = db::object_status::changed;
 
-            notify_did_change();
+            notify_did_change(relation_change_key, rel_name, true);
         }
     }
 
@@ -404,14 +407,23 @@ class db::object::impl : public const_object::impl {
         }
     }
 
-    void notify_did_change() {
-        if (manager) {
+    void notify_did_change(std::string const &key, std::string const &name, bool const send_to_manager) {
+        if (subject.has_observer()) {
+            subject.notify(key, change_info{cast<db::object>(), name});
+        }
+
+        if (send_to_manager && manager) {
             if (auto observable = dynamic_cast<object_observable *>(&manager)) {
                 observable->_object_did_change(cast<db::object>());
             }
         }
     }
 };
+
+#pragma mark - db::object::change_info
+
+db::object::change_info::change_info(class object const &object, std::string const &name)
+    : object(object), name(name){};
 
 #pragma mark - db::object
 
@@ -420,6 +432,10 @@ db::object::object(db::manager const &manager, db::model const &model, std::stri
 }
 
 db::object::object(std::nullptr_t) : super_class(nullptr) {
+}
+
+subject<db::object::change_info> &db::object::subject() {
+    return impl_ptr<impl>()->subject;
 }
 
 void db::object::load_data(object_data const &obj_data) {

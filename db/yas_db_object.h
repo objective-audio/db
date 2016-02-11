@@ -54,14 +54,27 @@ namespace db {
         const_object(std::shared_ptr<impl> &&);
     };
 
+    static std::string const attribute_change_key = "yas.db.object.attribute_change";
+    static std::string const relation_change_key = "yas.db.object.relation_change";
+    static std::string const loading_change_key = "yas.db.object.loading_change";
+
     class object : public const_object, public manageable {
         using super_class = const_object;
 
        public:
         class impl;
 
+        struct change_info {
+            object const &object;
+            std::string const name;
+
+            change_info(class object const &, std::string const &);
+        };
+
         object(manager const &manager, db::model const &model, std::string const &entity_name);
         object(std::nullptr_t);
+
+        subject<change_info> &subject();
 
         void load_data(object_data const &obj_data);
 
