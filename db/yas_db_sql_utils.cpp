@@ -27,6 +27,15 @@ std::string yas::db::drop_table_sql(std::string const &table) {
     return "drop table if exists " + table + ";";
 }
 
+std::string db::create_index_sql(std::string const &index, std::string const &table,
+                                 std::vector<std::string> const &fields) {
+    return "CREATE INDEX IF NOT EXISTS " + index + " ON " + table + "(" + joined(fields, ",") + ");";
+}
+
+std::string db::drop_index_sql(std::string const &index) {
+    return "DROP INDEX IF NOT EXISTS " + index + ";";
+}
+
 std::string yas::db::insert_sql(std::string const &table, std::vector<std::string> const &fields) {
     std::ostringstream stream;
     stream << "insert into " + table;
