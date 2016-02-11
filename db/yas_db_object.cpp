@@ -434,6 +434,10 @@ db::object::object(db::manager const &manager, db::model const &model, std::stri
 db::object::object(std::nullptr_t) : super_class(nullptr) {
 }
 
+subject<db::object::change_info> const &db::object::subject() const {
+    return impl_ptr<impl>()->subject;
+}
+
 subject<db::object::change_info> &db::object::subject() {
     return impl_ptr<impl>()->subject;
 }

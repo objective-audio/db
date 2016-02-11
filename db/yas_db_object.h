@@ -74,7 +74,8 @@ namespace db {
         object(manager const &manager, db::model const &model, std::string const &entity_name);
         object(std::nullptr_t);
 
-        subject<change_info> &subject();
+        yas::subject<change_info> const &subject() const;
+        yas::subject<change_info> &subject();
 
         void load_data(object_data const &obj_data);
 
