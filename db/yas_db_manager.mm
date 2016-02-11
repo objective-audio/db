@@ -882,6 +882,20 @@ void db::manager::setup(vector_completion_f completion) {
                             break;
                         }
                     }
+
+                    if (state) {
+                        // create indices
+                        for (auto const &index_pair : model.indices()) {
+                            if (!db::index_exists(db, index_pair.first)) {
+                                auto &index = index_pair.second;
+                                if (auto ul = unless(db.execute_update(index.sql_for_create()))) {
+                                    state =
+                                        state_t{error{error_type::create_index_failed, std::move(ul.value.error())}};
+                                    break;
+                                }
+                            }
+                        }
+                    }
                 }
             } else {
                 // create information table
@@ -920,6 +934,18 @@ void db::manager::setup(vector_completion_f completion) {
                         }
 
                         if (!state) {
+                            break;
+                        }
+                    }
+                }
+
+                // create indices
+
+                if (state) {
+                    for (auto const &index_pair : model.indices()) {
+                        auto &index = index_pair.second;
+                        if (auto ul = unless(db.execute_update(index.sql_for_create()))) {
+                            state = state_t{error{error_type::create_index_failed, std::move(ul.value.error())}};
                             break;
                         }
                     }
@@ -1205,6 +1231,8 @@ std::string yas::to_string(db::manager::error_type const &error) {
             return "create_entity_table_failed";
         case db::manager::error_type::create_relation_table_failed:
             return "create_relation_table_failed";
+        case db::manager::error_type::create_index_failed:
+            return "create_index_failed";
         case db::manager::error_type::insert_attributes_failed:
             return "insert_attributes_failed";
         case db::manager::error_type::insert_relation_failed:
