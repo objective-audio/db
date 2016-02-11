@@ -194,6 +194,20 @@ using namespace yas;
     XCTAssertFalse(db::table_exists(db, "hoge"));
 }
 
+- (void)test_index_exists {
+    db::database db = [yas_db_test_utils create_test_database];
+    db.open();
+
+    XCTAssertTrue(db::create_table(db, "test_table", {"field"}));
+
+    XCTAssertFalse(db::index_exists(db, "test_index"));
+
+    XCTAssertTrue(db::create_index(db, "test_index", "test_table", {"field"}));
+
+    XCTAssertTrue(db::index_exists(db, "test_index"));
+    XCTAssertFalse(db::index_exists(db, "hoge"));
+}
+
 - (void)test_column_exists {
     db::database db = [yas_db_test_utils create_test_database];
     db.open();
@@ -276,6 +290,24 @@ using namespace yas;
     XCTAssertEqual(map.at("name").get<db::text>(), "field_b");
 
     XCTAssertFalse(row_set.next());
+}
+
+- (void)test_get_index_schema {
+    db::database db = [yas_db_test_utils create_test_database];
+    db.open();
+
+    XCTAssertTrue(db::create_table(db, "test_table", {"field_a", "field_b"}));
+    XCTAssertTrue(db::create_index(db, "test_index", "test_table", {"field_a"}));
+
+    auto row_set = db::get_index_schema(db, "test_index");
+    XCTAssertTrue(row_set);
+    XCTAssertTrue(row_set.next());
+
+    auto map = row_set.value_map();
+
+    XCTAssertEqual(map.at("type"), db::value{"index"});
+    XCTAssertEqual(map.at("name"), db::value{"test_index"});
+    XCTAssertEqual(map.at("tbl_name"), db::value{"test_table"});
 }
 
 - (void)test_select {
