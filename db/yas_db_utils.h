@@ -18,6 +18,10 @@ namespace db {
     update_result alter_table(database &db, std::string const &table_name, std::string const &field);
     update_result drop_table(database &db, std::string const &table_name);
 
+    update_result create_index(database &db, std::string const &index_name, std::string const &table_name,
+                               std::vector<std::string> const &fields);
+    update_result drop_index(database &db, std::string const &index_name);
+
     update_result begin_transaction(database &db);
     update_result begin_deferred_transaction(database &db);
     update_result commit(database &db);
@@ -32,8 +36,10 @@ namespace db {
 #endif
 
     bool table_exists(database const &db, std::string const &table_name);
+    bool index_exists(database const &db, std::string const &index_name);
     row_set get_schema(database const &db);
     row_set get_table_schema(database const &db, std::string const &table_name);
+    row_set get_index_schema(database const &db, std::string const &index_name);
     bool column_exists(database const &db, std::string column_name, std::string table_name);
 
     select_result select(database const &db, std::string const &table_name, select_option const &option = {});

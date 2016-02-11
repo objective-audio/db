@@ -27,6 +27,15 @@ db::update_result db::drop_table(db::database &db, std::string const &table_name
     return db.execute_update(drop_table_sql(table_name));
 }
 
+db::update_result db::create_index(database &db, std::string const &index_name, std::string const &table_name,
+                                   std::vector<std::string> const &fields) {
+    return db.execute_update(create_index_sql(index_name, table_name, fields));
+}
+
+db::update_result db::drop_index(database &db, std::string const &index_name) {
+    return db.execute_update(drop_index_sql(index_name));
+}
+
 db::update_result db::begin_transaction(db::database &db) {
     return db.execute_update("begin exclusive transaction");
 }
@@ -104,6 +113,15 @@ bool db::table_exists(database const &db, std::string const &table_name) {
     return false;
 }
 
+bool db::index_exists(database const &db, std::string const &index_name) {
+    if (auto row_set = get_index_schema(db, index_name)) {
+        if (row_set.next()) {
+            return true;
+        }
+    }
+    return false;
+}
+
 db::row_set db::get_schema(database const &db) {
     if (auto query_result = db.execute_query(
             "select type, name, tbl_name, rootpage, sql from (select * from sqlite_master union all select * from "
@@ -116,6 +134,14 @@ db::row_set db::get_schema(database const &db) {
 
 db::row_set db::get_table_schema(database const &db, std::string const &table_name) {
     if (auto query_result = db.execute_query("pragma table_info('" + table_name + "')")) {
+        return query_result.value();
+    }
+    return nullptr;
+}
+
+db::row_set db::get_index_schema(database const &db, std::string const &index_name) {
+    if (auto query_result =
+            db.execute_query("SELECT * FROM sqlite_master WHERE type = 'index' AND name = '" + index_name + "';")) {
         return query_result.value();
     }
     return nullptr;
