@@ -131,7 +131,7 @@ using namespace yas;
     NSDictionary *dict = @{ @"type": @"text", @"default": @"test_string", @"not_null": @YES };
     db::attribute attr{"test_name", (__bridge CFDictionaryRef)dict};
 
-    XCTAssertEqual(attr.sql(), "test_name text not null default 'test_string'");
+    XCTAssertEqual(attr.sql(), "test_name text NOT NULL DEFAULT 'test_string'");
 }
 
 - (void)test_sql_without_options {
@@ -144,13 +144,13 @@ using namespace yas;
 - (void)test_id_sql {
     auto const &attr = db::attribute::id_attribute();
 
-    XCTAssertEqual(attr.sql(), "id integer primary key");
+    XCTAssertEqual(attr.sql(), "id integer PRIMARY KEY");
 }
 
 - (void)test_full_sql {
     db::attribute attr{"test_name", db::integer::name, db::value{5}, true, true, true};
 
-    XCTAssertEqual(attr.sql(), "test_name integer primary key unique not null default 5");
+    XCTAssertEqual(attr.sql(), "test_name integer PRIMARY KEY UNIQUE NOT NULL DEFAULT 5");
 }
 
 @end

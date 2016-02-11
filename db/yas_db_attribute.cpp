@@ -53,16 +53,16 @@ std::string db::attribute::sql() const {
     std::ostringstream stream;
     stream << name << " " << type;
     if (primary) {
-        stream << " primary key";
+        stream << " PRIMARY KEY";
     }
     if (unique) {
-        stream << " unique";
+        stream << " UNIQUE";
     }
     if (not_null) {
-        stream << " not null";
+        stream << " NOT NULL";
     }
     if (default_value) {
-        stream << " default " << default_value.sql();
+        stream << " DEFAULT " << default_value.sql();
     }
     return stream.str();
 }

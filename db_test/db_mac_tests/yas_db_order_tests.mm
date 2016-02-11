@@ -35,8 +35,8 @@ using namespace yas;
 }
 
 - (void)test_sql {
-    XCTAssertEqual((db::field_order{"test_field_a", db::order::ascending}.sql()), "test_field_a asc");
-    XCTAssertEqual((db::field_order{"test_field_d", db::order::descending}.sql()), "test_field_d desc");
+    XCTAssertEqual((db::field_order{"test_field_a", db::order::ascending}.sql()), "test_field_a ASC");
+    XCTAssertEqual((db::field_order{"test_field_d", db::order::descending}.sql()), "test_field_d DESC");
 }
 
 @end
