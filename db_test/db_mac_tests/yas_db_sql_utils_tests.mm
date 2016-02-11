@@ -33,6 +33,15 @@ using namespace yas;
     XCTAssertEqual(db::drop_table_sql("test_table"), "drop table if exists test_table;");
 }
 
+- (void)test_create_index_sql {
+    XCTAssertEqual(db::create_index_sql("idx_name", "table_name", {"attr_a", "attr_b"}),
+                   "CREATE INDEX IF NOT EXISTS idx_name ON table_name(attr_a,attr_b);");
+}
+
+- (void)test_drop_index_sql {
+    XCTAssertEqual(db::drop_index_sql("idx_name"), "DROP INDEX IF NOT EXISTS idx_name;");
+}
+
 - (void)test_insert_sql {
     XCTAssertEqual(db::insert_sql("aaa", {"abc", "def"}), "insert into aaa(abc, def) values(:abc, :def);");
     XCTAssertEqual(db::insert_sql("bbb"), "insert into bbb default values;");

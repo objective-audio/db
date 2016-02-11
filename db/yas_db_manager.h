@@ -32,6 +32,7 @@ namespace db {
             create_entity_table_failed,
             alter_entity_table_failed,
             create_relation_table_failed,
+            create_index_failed,
 
             insert_info_failed,
             insert_attributes_failed,

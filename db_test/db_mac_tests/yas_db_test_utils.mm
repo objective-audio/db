@@ -60,6 +60,10 @@ using namespace yas;
                 @"relations": @{@"child": @{@"target": @"sample_b"}}
             },
             @"sample_b": @{@"attributes": @{@"name": @{@"type": @"text"}}, @"relations": @{}}
+        },
+        @"indices": @{
+            @"sample_a_name": @{@"entity": @"sample_a", @"attributes": @[@"name"]},
+            @"sample_a_others": @{@"entity": @"sample_a", @"attributes": @[@"age", @"weight"]}
         }
     };
 }
@@ -86,6 +90,11 @@ using namespace yas;
                 @"attributes": @{@"name": @{@"type": @"text"}},
                 @"relations": @{@"friend": @{@"target": @"sample_a"}}
             }
+        },
+        @"indices": @{
+            @"sample_a_name": @{@"entity": @"sample_a", @"attributes": @[@"name"]},
+            @"sample_a_others": @{@"entity": @"sample_a", @"attributes": @[@"age", @"weight"]},
+            @"sample_b_name": @{@"entity": @"sample_b", @"attributes": @[@"name"]}
         }
     };
 }

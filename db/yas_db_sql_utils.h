@@ -16,6 +16,10 @@ namespace db {
     std::string alter_table_sql(std::string const &table, std::string const &field);
     std::string drop_table_sql(std::string const &table);
 
+    std::string create_index_sql(std::string const &index, std::string const &table,
+                                 std::vector<std::string> const &fields);
+    std::string drop_index_sql(std::string const &index);
+
     std::string insert_sql(std::string const &table, std::vector<std::string> const &fields = {});
     std::string update_sql(std::string const &table, std::vector<std::string> const &fields,
                            std::string const &where_exprs);

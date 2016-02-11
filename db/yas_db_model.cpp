@@ -16,6 +16,7 @@ namespace yas {
 namespace db {
     static std::string const version_key = "version";
     static std::string const entities_key = "entities";
+    static std::string const indices_key = "indices";
     static std::string const attributes_key = "attributes";
     static std::string const relations_key = "relations";
 }
@@ -24,6 +25,7 @@ namespace db {
 struct db::model::impl : public base::impl {
     yas::version version;
     entity_map entities;
+    index_map indices;
 
     impl(CFDictionaryRef const &cf_dict) {
         if (!cf_dict) {
@@ -99,6 +101,25 @@ struct db::model::impl : public base::impl {
             db::entity entity{entity_name, std::move(attributes), std::move(relations)};
             entities.emplace(std::make_pair(entity_name, std::move(entity)));
         }
+
+        CFDictionaryRef cf_indices_dict = get<CFDictionaryRef>(cf_dict, indices_key);
+        if (cf_indices_dict) {
+            for (auto &cf_index_pair : each_dictionary{cf_indices_dict}) {
+                auto index_name = to_string((CFStringRef)cf_index_pair.first);
+                if (index_name.size() == 0) {
+                    throw "invalid index name";
+                    return;
+                }
+
+                CFDictionaryRef cf_index_dict = get<CFDictionaryRef>(cf_indices_dict, index_name);
+                if (!cf_index_dict) {
+                    throw "invalid index dictionary";
+                    return;
+                }
+
+                indices.emplace(std::make_pair(index_name, db::index{index_name, cf_index_dict}));
+            }
+        }
     }
 };
 
@@ -111,6 +132,10 @@ yas::version const &db::model::version() const {
 
 db::model::entity_map const &db::model::entities() const {
     return impl_ptr<impl>()->entities;
+}
+
+db::model::index_map const &db::model::indices() const {
+    return impl_ptr<impl>()->indices;
 }
 
 db::entity const &db::model::entity(std::string const &entity_name) const {

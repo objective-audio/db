@@ -102,6 +102,10 @@ using namespace yas;
         XCTAssertTrue(select_rels_result);
         XCTAssertEqual(select_rels_result.value().size(), 0);
 
+        XCTAssertTrue(db::index_exists(db, "sample_a_name"));
+        XCTAssertTrue(db::index_exists(db, "sample_a_others"));
+        XCTAssertFalse(db::index_exists(db, "sample_b_name"));
+
         [exp fulfill];
     });
 
@@ -217,6 +221,10 @@ using namespace yas;
         auto &rel = select_rels_result.value().at(0);
         XCTAssertEqual(rel.at(db::src_id_field), src_id);
         XCTAssertEqual(rel.at(db::tgt_id_field), tgt_id);
+
+        XCTAssertTrue(db::index_exists(db, "sample_a_name"));
+        XCTAssertTrue(db::index_exists(db, "sample_a_others"));
+        XCTAssertTrue(db::index_exists(db, "sample_b_name"));
 
         [exp2 fulfill];
     });
@@ -1237,6 +1245,7 @@ using namespace yas;
     XCTAssertEqual(to_string(db::manager::error_type::insert_info_failed), "insert_info_failed");
     XCTAssertEqual(to_string(db::manager::error_type::create_entity_table_failed), "create_entity_table_failed");
     XCTAssertEqual(to_string(db::manager::error_type::create_relation_table_failed), "create_relation_table_failed");
+    XCTAssertEqual(to_string(db::manager::error_type::create_index_failed), "create_index_failed");
     XCTAssertEqual(to_string(db::manager::error_type::insert_attributes_failed), "insert_attributes_failed");
     XCTAssertEqual(to_string(db::manager::error_type::insert_relation_failed), "insert_relation_failed");
     XCTAssertEqual(to_string(db::manager::error_type::save_id_not_found), "save_id_not_found");

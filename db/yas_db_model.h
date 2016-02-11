@@ -10,6 +10,7 @@
 #include "yas_base.h"
 #include "yas_db_attribute.h"
 #include "yas_db_entity.h"
+#include "yas_db_index.h"
 #include "yas_db_relation.h"
 
 namespace yas {
@@ -23,11 +24,13 @@ namespace db {
 
        public:
         using entity_map = std::unordered_map<std::string, entity>;
+        using index_map = std::unordered_map<std::string, index>;
 
         model(CFDictionaryRef const &dict);
 
         yas::version const &version() const;
         entity_map const &entities() const;
+        index_map const &indices() const;
 
         entity const &entity(std::string const &entity_name) const;
         attribute_map const &attributes(std::string const &entity_name) const;
