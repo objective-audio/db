@@ -206,6 +206,10 @@ using namespace yas;
 
     XCTAssertTrue(db::index_exists(db, "test_index"));
     XCTAssertFalse(db::index_exists(db, "hoge"));
+
+    XCTAssertTrue(db::drop_index(db, "test_index"));
+
+    XCTAssertFalse(db::index_exists(db, "test_index"));
 }
 
 - (void)test_column_exists {

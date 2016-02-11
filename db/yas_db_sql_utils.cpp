@@ -33,7 +33,7 @@ std::string db::create_index_sql(std::string const &index, std::string const &ta
 }
 
 std::string db::drop_index_sql(std::string const &index) {
-    return "DROP INDEX IF NOT EXISTS " + index + ";";
+    return "DROP INDEX IF EXISTS " + index + ";";
 }
 
 std::string yas::db::insert_sql(std::string const &table, std::vector<std::string> const &fields) {

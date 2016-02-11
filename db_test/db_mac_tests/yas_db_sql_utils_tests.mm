@@ -39,7 +39,7 @@ using namespace yas;
 }
 
 - (void)test_drop_index_sql {
-    XCTAssertEqual(db::drop_index_sql("idx_name"), "DROP INDEX IF NOT EXISTS idx_name;");
+    XCTAssertEqual(db::drop_index_sql("idx_name"), "DROP INDEX IF EXISTS idx_name;");
 }
 
 - (void)test_insert_sql {
