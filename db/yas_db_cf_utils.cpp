@@ -72,6 +72,16 @@ bool yas::get(CFDictionaryRef const dict, std::string const &key) {
 }
 
 template <>
+std::vector<std::string> yas::get(CFDictionaryRef const dict, std::string const &key) {
+    CFArrayRef array = (CFArrayRef)CFDictionaryGetValue(dict, to_cf_object(key));
+    if (CFGetTypeID(array) == CFArrayGetTypeID()) {
+        return to_vector<std::string>(array,
+                                      [](CFTypeRef const &cf_string) { return to_string((CFStringRef)cf_string); });
+    }
+    return {};
+}
+
+template <>
 CFDictionaryRef yas::get(CFDictionaryRef const dict, std::string const &key) {
     CFTypeRef cf_obj = CFDictionaryGetValue(dict, to_cf_object(key));
     if (cf_obj && CFGetTypeID(cf_obj) == CFDictionaryGetTypeID()) {
