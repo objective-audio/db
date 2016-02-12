@@ -22,15 +22,15 @@ using namespace yas;
 
 - (void)test_create_table_sql {
     XCTAssertEqual(db::create_table_sql("test_table", {"field_a", "field_b"}),
-                   "create table if not exists test_table (field_a, field_b);");
+                   "CREATE TABLE IF NOT EXISTS test_table (field_a, field_b);");
 }
 
 - (void)test_alter_table_sql {
-    XCTAssertEqual(db::alter_table_sql("test_table", "field_a"), "alter table test_table add column field_a;");
+    XCTAssertEqual(db::alter_table_sql("test_table", "field_a"), "ALTER TABLE test_table ADD COLUMN field_a;");
 }
 
 - (void)test_drop_table_sql {
-    XCTAssertEqual(db::drop_table_sql("test_table"), "drop table if exists test_table;");
+    XCTAssertEqual(db::drop_table_sql("test_table"), "DROP TABLE IF EXISTS test_table;");
 }
 
 - (void)test_create_index_sql {
@@ -39,21 +39,21 @@ using namespace yas;
 }
 
 - (void)test_drop_index_sql {
-    XCTAssertEqual(db::drop_index_sql("idx_name"), "DROP INDEX IF NOT EXISTS idx_name;");
+    XCTAssertEqual(db::drop_index_sql("idx_name"), "DROP INDEX IF EXISTS idx_name;");
 }
 
 - (void)test_insert_sql {
-    XCTAssertEqual(db::insert_sql("aaa", {"abc", "def"}), "insert into aaa(abc, def) values(:abc, :def);");
-    XCTAssertEqual(db::insert_sql("bbb"), "insert into bbb default values;");
+    XCTAssertEqual(db::insert_sql("aaa", {"abc", "def"}), "INSERT INTO aaa(abc, def) VALUES(:abc, :def);");
+    XCTAssertEqual(db::insert_sql("bbb"), "INSERT INTO bbb DEFAULT VALUES;");
 }
 
 - (void)test_update_sql {
     XCTAssertEqual(db::update_sql("ccc", {"qwe", "rty"}, "(uio = :uio)"),
-                   "update ccc set qwe = :qwe, rty = :rty where (uio = :uio);");
+                   "UPDATE ccc SET qwe = :qwe, rty = :rty WHERE (uio = :uio);");
 }
 
 - (void)test_delete_sql {
-    XCTAssertEqual(db::delete_sql("bbb", "xyz = :xyz"), "delete from bbb where xyz = :xyz;");
+    XCTAssertEqual(db::delete_sql("bbb", "xyz = :xyz"), "DELETE FROM bbb WHERE xyz = :xyz;");
 }
 
 - (void)test_expr {
@@ -70,7 +70,7 @@ using namespace yas;
 
 - (void)test_joined_orders {
     auto joined_orders = db::joined_orders({{"field_a", db::order::ascending}, {"field_b", db::order::descending}});
-    XCTAssertEqual(joined_orders, "field_a asc, field_b desc");
+    XCTAssertEqual(joined_orders, "field_a ASC, field_b DESC");
 }
 
 - (void)test_select_sql {
@@ -78,7 +78,7 @@ using namespace yas;
                                      {{"field_c", db::order::ascending}, {"field_d", db::order::descending}}, {10, 20});
     XCTAssertEqual(
         select_sql,
-        "select field_a, field_b from test_table where abc = :def order by field_c asc, field_d desc limit 10, 20;");
+        "SELECT field_a, field_b FROM test_table WHERE abc = :def ORDER BY field_c ASC, field_d DESC LIMIT 10, 20;");
 }
 
 @end

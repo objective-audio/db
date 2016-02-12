@@ -16,15 +16,15 @@ namespace db {
 
 std::string yas::db::create_table_sql(std::string const &table, std::vector<std::string> const &fields) {
     std::string const joined_fields = joined(fields, field_separator);
-    return "create table if not exists " + table + " (" + joined_fields + ");";
+    return "CREATE TABLE IF NOT EXISTS " + table + " (" + joined_fields + ");";
 }
 
 std::string yas::db::alter_table_sql(std::string const &table, std::string const &field) {
-    return "alter table " + table + " add column " + field + ";";
+    return "ALTER TABLE " + table + " ADD COLUMN " + field + ";";
 }
 
 std::string yas::db::drop_table_sql(std::string const &table) {
-    return "drop table if exists " + table + ";";
+    return "DROP TABLE IF EXISTS " + table + ";";
 }
 
 std::string db::create_index_sql(std::string const &index, std::string const &table,
@@ -33,19 +33,19 @@ std::string db::create_index_sql(std::string const &index, std::string const &ta
 }
 
 std::string db::drop_index_sql(std::string const &index) {
-    return "DROP INDEX IF NOT EXISTS " + index + ";";
+    return "DROP INDEX IF EXISTS " + index + ";";
 }
 
 std::string yas::db::insert_sql(std::string const &table, std::vector<std::string> const &fields) {
     std::ostringstream stream;
-    stream << "insert into " + table;
+    stream << "INSERT INTO " + table;
     if (fields.size() > 0) {
         std::string const joined_fields = joined(fields, field_separator);
         std::string const joined_values = joined(
             to_vector<std::string>(fields, [](std::string const &field) { return ":" + field; }), field_separator);
-        stream << "(" + joined_fields + ") values(" + joined_values + ");";
+        stream << "(" + joined_fields + ") VALUES(" + joined_values + ");";
     } else {
-        stream << " default values;";
+        stream << " DEFAULT VALUES;";
     }
     return stream.str();
 }
@@ -53,11 +53,11 @@ std::string yas::db::insert_sql(std::string const &table, std::vector<std::strin
 std::string yas::db::update_sql(std::string const &table, std::vector<std::string> const &fields,
                                 std::string const &where_exprs) {
     std::ostringstream stream;
-    stream << "update " << table << " set "
+    stream << "UPDATE " << table << " SET "
            << joined(to_vector<std::string>(fields, [](std::string const &field) { return equal_field(field); }),
                      field_separator);
     if (where_exprs.size() > 0) {
-        stream << " where " << where_exprs;
+        stream << " WHERE " << where_exprs;
     }
     stream << ";";
     return stream.str();
@@ -65,9 +65,9 @@ std::string yas::db::update_sql(std::string const &table, std::vector<std::strin
 
 std::string yas::db::delete_sql(const std::string &table, const std::string &where_exprs) {
     std::ostringstream stream;
-    stream << "delete from " << table;
+    stream << "DELETE FROM " << table;
     if (where_exprs.size() > 0) {
-        stream << " where " << where_exprs;
+        stream << " WHERE " << where_exprs;
     }
     stream << ";";
     return stream.str();
@@ -101,18 +101,18 @@ std::string yas::db::select_sql(std::string const &table_name, std::vector<std::
 
     std::string const joined_fields = joined(fields, field_separator);
 
-    stream << "select " << joined_fields << " from " << table_name;
+    stream << "SELECT " << joined_fields << " FROM " << table_name;
 
     if (where_exprs.size() > 0) {
-        stream << " where " << where_exprs;
+        stream << " WHERE " << where_exprs;
     }
 
     if (orders.size() > 0) {
-        stream << " order by " << joined_orders(orders);
+        stream << " ORDER BY " << joined_orders(orders);
     }
 
     if (!limit_range.is_empty()) {
-        stream << " limit " << limit_range.sql();
+        stream << " LIMIT " << limit_range.sql();
     }
 
     stream << ";";
@@ -122,12 +122,12 @@ std::string yas::db::select_sql(std::string const &table_name, std::vector<std::
 std::string yas::db::foreign_key(std::string const &field, std::string const &ref_table, std::string const &ref_field,
                                  std::string const &on_update, std::string const &on_delete) {
     std::ostringstream stream;
-    stream << "foreign key (" + field + ") references " + ref_table + "(" + ref_field + ")";
+    stream << "FOREIGN KEY (" + field + ") REFERENCES " + ref_table + "(" + ref_field + ")";
     if (on_update.size() > 0) {
-        stream << " on update " << on_update;
+        stream << " ON UPDATE " << on_update;
     }
     if (on_delete.size() > 0) {
-        stream << " on delete " << on_delete;
+        stream << " ON DELETE " << on_delete;
     }
     return stream.str();
 }

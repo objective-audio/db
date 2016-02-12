@@ -42,7 +42,7 @@ using namespace yas;
     db::relation relation{"a", "b", (__bridge CFDictionaryRef)dict};
 
     XCTAssertEqual(relation.sql_for_create(),
-                   "create table if not exists rel_a_b (id integer primary key, src_id integer, tgt_id integer, "
+                   "CREATE TABLE IF NOT EXISTS rel_a_b (id integer PRIMARY KEY, src_id integer, tgt_id integer, "
                    "save_id integer);");
 }
 

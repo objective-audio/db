@@ -37,19 +37,19 @@ db::update_result db::drop_index(database &db, std::string const &index_name) {
 }
 
 db::update_result db::begin_transaction(db::database &db) {
-    return db.execute_update("begin exclusive transaction");
+    return db.execute_update("BEGIN EXCLUSIVE TRANSACTION");
 }
 
 db::update_result db::begin_deferred_transaction(db::database &db) {
-    return db.execute_update("begin deferred transaction");
+    return db.execute_update("BEGIN DEFERRED TRANSACTION");
 }
 
 db::update_result db::commit(db::database &db) {
-    return db.execute_update("commit transaction");
+    return db.execute_update("COMMIT TRANSACTION");
 }
 
 db::update_result db::rollback(db::database &db) {
-    return db.execute_update("rollback transaction");
+    return db.execute_update("ROLLBACK TRANSACTION");
 }
 
 #if SQLITE_VERSION_NUMBER >= 3007000
@@ -66,21 +66,21 @@ db::update_result db::start_save_point(db::database &db, std::string const &name
     if (name.size() == 0) {
         return update_result{error{error_type::invalid_argument}};
     }
-    return db.execute_update("savepoint '" + escape_save_point_name(name) + "';");
+    return db.execute_update("SAVEPOINT '" + escape_save_point_name(name) + "';");
 }
 
 db::update_result db::release_save_point(db::database &db, std::string const &name) {
     if (name.size() == 0) {
         return update_result{error{error_type::invalid_argument}};
     }
-    return db.execute_update("release savepoint '" + escape_save_point_name(name) + "';");
+    return db.execute_update("RELEASE SAVEPOINT '" + escape_save_point_name(name) + "';");
 }
 
 db::update_result db::rollback_save_point(db::database &db, std::string const &name) {
     if (name.size() == 0) {
         return update_result{error{error_type::invalid_argument}};
     }
-    return db.execute_update("rollback transaction to savepoint '" + escape_save_point_name(name) + "';");
+    return db.execute_update("ROLLBACK TRANSACTION TO SAVEPOINT '" + escape_save_point_name(name) + "';");
 }
 
 db::update_result db::in_save_point(db::database &db, std::function<void(bool &rollback)> const function) {
@@ -133,7 +133,7 @@ db::row_set db::get_schema(database const &db) {
 }
 
 db::row_set db::get_table_schema(database const &db, std::string const &table_name) {
-    if (auto query_result = db.execute_query("pragma table_info('" + table_name + "')")) {
+    if (auto query_result = db.execute_query("PRAGMA table_info('" + table_name + "')")) {
         return query_result.value();
     }
     return nullptr;
@@ -192,10 +192,10 @@ db::select_result db::select_last(database const &db, std::string const &table_n
         components.emplace_back(option.where_exprs);
     }
 
-    std::string sub_where = components.size() > 0 ? " where " + joined(components, " and ") : "";
+    std::string sub_where = components.size() > 0 ? " WHERE " + joined(components, " AND ") : "";
 
     option.where_exprs =
-        "rowid in (select max(rowid) from " + table_name + sub_where + " group by " + db::object_id_field + ")";
+        "rowid IN (SELECT MAX(rowid) FROM " + table_name + sub_where + " GROUP BY " + db::object_id_field + ")";
 
     return select(db, table_name, option);
 }
@@ -207,15 +207,15 @@ db::select_result db::select_undo(database const &db, std::string const &table_n
     }
 
     std::vector<std::string> components;
-    components.emplace_back(object_id_field + " in (select distinct " + object_id_field + " from " + table_name +
-                            " where " + joined({expr(save_id_field, "<=", std::to_string(current_save_id)),
+    components.emplace_back(object_id_field + " IN (SELECT DISTINCT " + object_id_field + " FROM " + table_name +
+                            " WHERE " + joined({expr(save_id_field, "<=", std::to_string(current_save_id)),
                                                 expr(save_id_field, ">", std::to_string(revert_save_id))},
-                                               " and ") +
+                                               " AND ") +
                             ")");
     components.emplace_back(expr(save_id_field, "<=", std::to_string(revert_save_id)));
 
-    select_option option{.where_exprs = "rowid in (select max(rowid) from " + table_name + " where " +
-                                        joined(components, " and ") + " group by " + object_id_field + ")",
+    select_option option{.where_exprs = "rowid IN (SELECT MAX(rowid) FROM " + table_name + " WHERE " +
+                                        joined(components, " AND ") + " GROUP BY " + object_id_field + ")",
                          .field_orders = {{object_id_field, order::ascending}}};
 
     auto result = select(db, table_name, option);
@@ -227,7 +227,7 @@ db::select_result db::select_undo(database const &db, std::string const &table_n
                                .where_exprs = joined({expr(save_id_field, "<=", std::to_string(current_save_id)),
                                                       expr(save_id_field, ">", std::to_string(revert_save_id)),
                                                       equal_field_expr(action_field)},
-                                                     " and "),
+                                                     " AND "),
                                .arguments = {{action_field, db::value{insert_action}}},
                                .field_orders = {{object_id_field, order::ascending}}};
     auto empty_result = select(db, table_name, empty_option);
@@ -247,7 +247,7 @@ db::select_result db::select_redo(database const &db, std::string const &table_n
     std::vector<std::string> components;
     components.emplace_back(expr(save_id_field, ">", std::to_string(current_save_id)));
 
-    db::select_option option{.where_exprs = joined(components, " and "),
+    db::select_option option{.where_exprs = joined(components, " AND "),
                              .field_orders = {{object_id_field, db::order::ascending}}};
 
     return select_last(db, table_name, db::value{revert_save_id}, std::move(option));
@@ -281,7 +281,7 @@ db::select_single_result db::select_db_info(database const &db) {
 }
 
 db::value db::max(database const &db, std::string const &table_name, std::string const &field) {
-    if (auto query_result = db.execute_query("select max(" + field + ") from " + table_name + ";")) {
+    if (auto query_result = db.execute_query("SELECT MAX(" + field + ") FROM " + table_name + ";")) {
         auto &row_set = query_result.value();
         if (row_set.next()) {
             return row_set.column_value(0);
