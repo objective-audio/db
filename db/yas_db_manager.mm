@@ -537,157 +537,169 @@ struct db::manager::impl : public base::impl {
     }
 
     void execute_save(
-        db::object_data_vector_map &&changed_datas,
         std::function<void(db::manager &manager, state_t &&state, db::object_data_vector_map &&saved_datas,
                            db::value_map &&db_info)> &&completion,
         priority_t const priority) {
-        execute([changed_datas = std::move(changed_datas), completion = std::move(completion)](manager & manager,
-                                                                                               operation const &) {
-            auto &db = manager.database();
+        execute(
+            [completion = std::move(completion)](manager & manager, operation const &) {
+                db::object_data_vector_map changed_datas;
+                auto manager_impl = manager.impl_ptr<impl>();
 
-            db::value_map db_info;
-            db::object_data_vector_map saved_datas;
+                auto get_change_lambda = [&manager_impl, &changed_datas]() {
+                    changed_datas = manager_impl->changed_datas_for_save();
+                };
 
-            state_t state{nullptr};
+                dispatch_sync(dispatch_get_main_queue(), get_change_lambda);
 
-            if (changed_datas.size() > 0) {
-                if (auto begin_result = db::begin_transaction(db)) {
-                    db::value current_save_id{nullptr};
-                    db::value next_save_id{nullptr};
-                    db::value last_save_id{nullptr};
+                auto &db = manager.database();
 
-                    if (auto select_result = db::select_db_info(db)) {
-                        auto const &db_info = select_result.value();
-                        if (db_info.count(current_save_id_field)) {
-                            current_save_id = db_info.at(current_save_id_field);
-                            next_save_id = db::value{current_save_id.get<integer>() + 1};
-                        } else {
-                            state = state_t{error{error_type::save_id_not_found}};
-                        }
+                db::value_map db_info;
+                db::object_data_vector_map saved_datas;
 
-                        if (db_info.count(last_save_id_field)) {
-                            last_save_id = db_info.at(last_save_id_field);
-                        } else {
-                            state = state_t{error{error_type::save_id_not_found}};
-                        }
-                    } else {
-                        state = state_t{error{error_type::select_info_failed, std::move(select_result.error())}};
-                    }
+                state_t state{nullptr};
 
-                    if (state && next_save_id && current_save_id && last_save_id && next_save_id.get<integer>() > 0) {
-                        if (current_save_id.get<integer>() < last_save_id.get<integer>()) {
-                            auto const delete_exprs = joined({expr(save_id_field, ">", to_string(current_save_id)),
-                                                              expr(save_id_field, "<=", to_string(last_save_id))},
-                                                             " and ");
+                if (changed_datas.size() > 0) {
+                    if (auto begin_result = db::begin_transaction(db)) {
+                        db::value current_save_id{nullptr};
+                        db::value next_save_id{nullptr};
+                        db::value last_save_id{nullptr};
 
-                            auto const &entity_models = manager.model().entities();
-                            for (auto const &entity_pair : entity_models) {
-                                auto const &entity_name = entity_pair.first;
-
-                                if (auto delete_result = db.execute_update(db::delete_sql(entity_name, delete_exprs))) {
-                                    for (auto const &rel_pair : entity_pair.second.relations) {
-                                        auto const table_name = rel_pair.second.table_name;
-
-                                        if (auto ul =
-                                                unless(db.execute_update(db::delete_sql(table_name, delete_exprs)))) {
-                                            state =
-                                                state_t{error{error_type::delete_failed, std::move(ul.value.error())}};
-                                            break;
-                                        }
-                                    }
-                                } else {
-                                    state = state_t{error{error_type::delete_failed, std::move(delete_result.error())}};
-                                    break;
-                                }
+                        if (auto select_result = db::select_db_info(db)) {
+                            auto const &db_info = select_result.value();
+                            if (db_info.count(current_save_id_field)) {
+                                current_save_id = db_info.at(current_save_id_field);
+                                next_save_id = db::value{current_save_id.get<integer>() + 1};
+                            } else {
+                                state = state_t{error{error_type::save_id_not_found}};
                             }
+
+                            if (db_info.count(last_save_id_field)) {
+                                last_save_id = db_info.at(last_save_id_field);
+                            } else {
+                                state = state_t{error{error_type::save_id_not_found}};
+                            }
+                        } else {
+                            state = state_t{error{error_type::select_info_failed, std::move(select_result.error())}};
                         }
-                    } else {
-                        state = state_t{error{error_type::save_id_not_found}};
-                    }
 
-                    if (state) {
-                        auto const &save_id_pair = std::make_pair(save_id_field, next_save_id);
+                        if (state && next_save_id && current_save_id && last_save_id &&
+                            next_save_id.get<integer>() > 0) {
+                            if (current_save_id.get<integer>() < last_save_id.get<integer>()) {
+                                auto const delete_exprs = joined({expr(save_id_field, ">", to_string(current_save_id)),
+                                                                  expr(save_id_field, "<=", to_string(last_save_id))},
+                                                                 " and ");
 
-                        for (auto const &entity_pair : changed_datas) {
-                            auto const &entity_name = entity_pair.first;
-                            auto const &changed_entity_datas = entity_pair.second;
-                            auto const entity_insert_sql = manager.model().entity(entity_name).sql_for_insert();
-                            auto const &rel_models = manager.model().relations(entity_name);
+                                auto const &entity_models = manager.model().entities();
+                                for (auto const &entity_pair : entity_models) {
+                                    auto const &entity_name = entity_pair.first;
 
-                            db::object_data_vector entity_saved_datas;
+                                    if (auto delete_result =
+                                            db.execute_update(db::delete_sql(entity_name, delete_exprs))) {
+                                        for (auto const &rel_pair : entity_pair.second.relations) {
+                                            auto const table_name = rel_pair.second.table_name;
 
-                            for (auto data : changed_entity_datas) {
-                                erase_if_exists(data.attributes, id_field);
-                                replace(data.attributes, save_id_field, next_save_id);
-
-                                if (auto insert_result = db.execute_update(entity_insert_sql, data.attributes)) {
-                                    auto const src_id_pair =
-                                        std::make_pair(src_id_field, data.attributes.at(object_id_field));
-
-                                    for (auto const &rel_pair : data.relations) {
-                                        auto const &rel_name = rel_pair.first;
-                                        auto const &rel = rel_pair.second;
-                                        auto const &rel_model = rel_models.at(rel_name);
-                                        auto const &rel_insert_sql = rel_model.sql_for_insert();
-
-                                        for (auto const &rel_tgt_id : rel) {
-                                            auto tgt_id_pair = std::make_pair(tgt_id_field, rel_tgt_id);
-                                            db::value_map args{src_id_pair, std::move(tgt_id_pair), save_id_pair};
-                                            if (auto ul = unless(db.execute_update(rel_insert_sql, std::move(args)))) {
-                                                state = state_t{error{error_type::insert_relation_failed,
-                                                                      std::move(ul.value.error())}};
+                                            if (auto ul = unless(
+                                                    db.execute_update(db::delete_sql(table_name, delete_exprs)))) {
+                                                state = state_t{
+                                                    error{error_type::delete_failed, std::move(ul.value.error())}};
                                                 break;
                                             }
                                         }
+                                    } else {
+                                        state =
+                                            state_t{error{error_type::delete_failed, std::move(delete_result.error())}};
+                                        break;
                                     }
-                                } else {
-                                    state = state_t{
-                                        error{error_type::insert_attributes_failed, std::move(insert_result.error())}};
-                                }
-
-                                if (state) {
-                                    entity_saved_datas.emplace_back(std::move(data));
                                 }
                             }
+                        } else {
+                            state = state_t{error{error_type::save_id_not_found}};
+                        }
 
-                            if (!state) {
-                                break;
+                        if (state) {
+                            auto const &save_id_pair = std::make_pair(save_id_field, next_save_id);
+
+                            for (auto const &entity_pair : changed_datas) {
+                                auto const &entity_name = entity_pair.first;
+                                auto const &changed_entity_datas = entity_pair.second;
+                                auto const entity_insert_sql = manager.model().entity(entity_name).sql_for_insert();
+                                auto const &rel_models = manager.model().relations(entity_name);
+
+                                db::object_data_vector entity_saved_datas;
+
+                                for (auto data : changed_entity_datas) {
+                                    erase_if_exists(data.attributes, id_field);
+                                    replace(data.attributes, save_id_field, next_save_id);
+
+                                    if (auto insert_result = db.execute_update(entity_insert_sql, data.attributes)) {
+                                        auto const src_id_pair =
+                                            std::make_pair(src_id_field, data.attributes.at(object_id_field));
+
+                                        for (auto const &rel_pair : data.relations) {
+                                            auto const &rel_name = rel_pair.first;
+                                            auto const &rel = rel_pair.second;
+                                            auto const &rel_model = rel_models.at(rel_name);
+                                            auto const &rel_insert_sql = rel_model.sql_for_insert();
+
+                                            for (auto const &rel_tgt_id : rel) {
+                                                auto tgt_id_pair = std::make_pair(tgt_id_field, rel_tgt_id);
+                                                db::value_map args{src_id_pair, std::move(tgt_id_pair), save_id_pair};
+                                                if (auto ul =
+                                                        unless(db.execute_update(rel_insert_sql, std::move(args)))) {
+                                                    state = state_t{error{error_type::insert_relation_failed,
+                                                                          std::move(ul.value.error())}};
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                    } else {
+                                        state = state_t{error{error_type::insert_attributes_failed,
+                                                              std::move(insert_result.error())}};
+                                    }
+
+                                    if (state) {
+                                        entity_saved_datas.emplace_back(std::move(data));
+                                    }
+                                }
+
+                                if (!state) {
+                                    break;
+                                }
+
+                                saved_datas.emplace(std::make_pair(entity_name, std::move(entity_saved_datas)));
                             }
-
-                            saved_datas.emplace(std::make_pair(entity_name, std::move(entity_saved_datas)));
                         }
-                    }
 
-                    if (state) {
-                        auto const sql = update_sql(info_table, {current_save_id_field, last_save_id_field}, "");
-                        db::value_vector const params{next_save_id, next_save_id};
-                        if (auto ul = unless(db.execute_update(sql, params))) {
-                            state = state_t{error{error_type::update_info_failed, std::move(ul.value.error())}};
+                        if (state) {
+                            auto const sql = update_sql(info_table, {current_save_id_field, last_save_id_field}, "");
+                            db::value_vector const params{next_save_id, next_save_id};
+                            if (auto ul = unless(db.execute_update(sql, params))) {
+                                state = state_t{error{error_type::update_info_failed, std::move(ul.value.error())}};
+                            }
                         }
-                    }
 
-                    if (state) {
-                        db::commit(db);
+                        if (state) {
+                            db::commit(db);
+                        } else {
+                            db::rollback(db);
+                            saved_datas.clear();
+                        }
                     } else {
-                        db::rollback(db);
-                        saved_datas.clear();
+                        state = state_t{error{error_type::begin_transaction_failed, std::move(begin_result.error())}};
                     }
-                } else {
-                    state = state_t{error{error_type::begin_transaction_failed, std::move(begin_result.error())}};
                 }
-            }
 
-            if (state) {
-                if (auto const select_result = db::select_db_info(db)) {
-                    db_info = std::move(select_result.value());
-                } else {
-                    state = state_t{error{error_type::select_info_failed, std::move(select_result.error())}};
+                if (state) {
+                    if (auto const select_result = db::select_db_info(db)) {
+                        db_info = std::move(select_result.value());
+                    } else {
+                        state = state_t{error{error_type::select_info_failed, std::move(select_result.error())}};
+                    }
                 }
-            }
 
-            completion(manager, std::move(state), std::move(saved_datas), std::move(db_info));
-        },
-                priority);
+                completion(manager, std::move(state), std::move(saved_datas), std::move(db_info));
+            },
+            priority);
     }
 
     void execute_revert(
@@ -1143,7 +1155,7 @@ void db::manager::fetch_const_objects(integer_set_map obj_ids, const_map_complet
 }
 
 void db::manager::save(vector_completion_f completion, priority_t const priority) {
-    auto changed_datas = impl_ptr<impl>()->changed_datas_for_save();
+    //    auto changed_datas = impl_ptr<impl>()->changed_datas_for_save();
 
     auto impl_completion = [completion = std::move(completion)](
         db::manager & manager, state_t && state, db::object_data_vector_map && saved_datas, db::value_map && db_info) {
@@ -1167,7 +1179,7 @@ void db::manager::save(vector_completion_f completion, priority_t const priority
         dispatch_sync(dispatch_get_main_queue(), std::move(lambda));
     };
 
-    impl_ptr<impl>()->execute_save(std::move(changed_datas), std::move(impl_completion), priority);
+    impl_ptr<impl>()->execute_save(std::move(impl_completion), priority);
 }
 
 void db::manager::revert(db::integer::type const rev_save_id, vector_completion_f completion,
