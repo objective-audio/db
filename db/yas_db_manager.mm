@@ -330,11 +330,19 @@ struct db::manager::impl : public base::impl {
     }
 
     void execute_insert(
-        entity_count_map const &counts,
+        insert_prepare_f &&prepare,
         std::function<void(db::manager &, state_t &&, object_data_vector_map &&, db::value_map &&)> &&completion,
         priority_t const priority) {
-        execute([counts = std::move(counts), completion = std::move(completion)](db::manager & manager,
-                                                                                 operation const &op) {
+        execute([prepare = std::move(prepare), completion = std::move(completion)](db::manager & manager,
+                                                                                   operation const &op) {
+            entity_count_map counts;
+
+            auto prepare_lambda = [&counts, &manager, prepare = std::move(prepare)]() {
+                counts = prepare(manager);
+            };
+
+            dispatch_sync(dispatch_get_main_queue(), std::move(prepare_lambda));
+
             auto &db = manager.database();
 
             db::value_map db_info;
@@ -1035,8 +1043,7 @@ void db::manager::execute(execution_f &&execution, priority_t const priority) {
     impl_ptr<impl>()->execute(std::move(execution), priority);
 }
 
-void db::manager::insert_objects(entity_count_map const &counts, vector_completion_f completion,
-                                 priority_t const priority) {
+void db::manager::insert_objects(insert_prepare_f prepare, vector_completion_f completion, priority_t const priority) {
     auto impl_completion = [completion = std::move(completion)](
         db::manager & manager, state_t && state, object_data_vector_map && inserted_datas, db::value_map && db_info) {
         auto lambda = [
@@ -1058,7 +1065,15 @@ void db::manager::insert_objects(entity_count_map const &counts, vector_completi
         dispatch_sync(dispatch_get_main_queue(), std::move(lambda));
     };
 
-    impl_ptr<impl>()->execute_insert(counts, std::move(impl_completion), priority);
+    impl_ptr<impl>()->execute_insert(std::move(prepare), std::move(impl_completion), priority);
+}
+
+void db::manager::insert_objects(entity_count_map counts, vector_completion_f completion, priority_t const priority) {
+    auto impl_prepare = [counts = std::move(counts)](auto &) {
+        return std::move(counts);
+    };
+
+    insert_objects(std::move(impl_prepare), std::move(completion), priority);
 }
 
 void db::manager::fetch_objects(std::string const &entity_name, db::select_option option,
