@@ -111,10 +111,10 @@ namespace db {
         void insert_objects(insert_prepare_f prepare, vector_completion_f completion, priority_t const priority = 0);
         void fetch_objects(std::string const &entity_name, select_option option, vector_completion_f completion,
                            priority_t const priority = 0);
-        void fetch_objects(integer_set_map obj_ids, map_completion_f completion, priority_t const priority = 0);
+        void fetch_objects(fetch_prepare_f prepare, map_completion_f completion, priority_t const priority = 0);
         void fetch_const_objects(std::string const &entity_name, select_option option,
                                  const_vector_completion_f completion, priority_t const priority = 0);
-        void fetch_const_objects(integer_set_map obj_ids, const_map_completion_f completion,
+        void fetch_const_objects(fetch_prepare_f prepare, const_map_completion_f completion,
                                  priority_t const priority = 0);
         void save(vector_completion_f completion, priority_t const priority = 0);
         void revert(db::integer::type const save_id, vector_completion_f completion, priority_t const priority = 0);

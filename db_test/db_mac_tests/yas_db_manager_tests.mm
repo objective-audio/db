@@ -675,7 +675,9 @@ using namespace yas;
     XCTestExpectation *exp4 = [self expectationWithDescription:@"4"];
 
     manager.fetch_objects(
-        db::relation_ids(db::object_vector_map{std::make_pair("sample_a", db::object_vector{object_a})}),
+        [object_a](auto &) {
+            return db::relation_ids(db::object_vector_map{std::make_pair("sample_a", db::object_vector{object_a})});
+        },
         [self, exp4, object_a](db::manager &manager, auto const &fetch_result) {
             XCTAssertTrue(fetch_result);
 
@@ -743,10 +745,11 @@ using namespace yas;
                              });
                          },
                          [self, manager, exp](auto context) mutable {
-                             db::integer_set_map obj_ids{{"sample_a", {2}}};
-
                              manager.fetch_const_objects(
-                                 std::move(obj_ids), [self, exp, context](auto &, auto fetch_result) mutable {
+                                 [](auto &) {
+                                     return db::integer_set_map{{"sample_a", {2}}};
+                                 },
+                                 [self, exp, context](auto &, auto fetch_result) mutable {
                                      XCTAssertTrue(fetch_result);
 
                                      auto const &objects = fetch_result.value();
@@ -1172,23 +1175,24 @@ using namespace yas;
                                        });
              },
              [self, manager](auto context) mutable {
-                 manager.fetch_objects(db::relation_ids(context.get()), [self, context](auto &manager,
-                                                                                        auto result) mutable {
-                     XCTAssertTrue(result);
+                 manager.fetch_objects([context](auto &) { return db::relation_ids(context.get()); },
+                                       [self, context](auto &manager, auto result) mutable {
+                                           XCTAssertTrue(result);
 
-                     db::object_map_map &rel_objects = result.value();
+                                           db::object_map_map &rel_objects = result.value();
 
-                     XCTAssertEqual(rel_objects.count("sample_b"), 1);
-                     XCTAssertEqual(rel_objects.at("sample_b").at(1).get_attribute("name"), db::value{"name_value_5"});
+                                           XCTAssertEqual(rel_objects.count("sample_b"), 1);
+                                           XCTAssertEqual(rel_objects.at("sample_b").at(1).get_attribute("name"),
+                                                          db::value{"name_value_5"});
 
-                     auto &objects = context.get();
+                                           auto &objects = context.get();
 
-                     auto sample_bs =
-                         to_vector<db::object>(rel_objects.at("sample_b"), [](auto &pair) { return pair.second; });
-                     objects.emplace(std::make_pair("sample_b", std::move(sample_bs)));
+                                           auto sample_bs = to_vector<db::object>(
+                                               rel_objects.at("sample_b"), [](auto &pair) { return pair.second; });
+                                           objects.emplace(std::make_pair("sample_b", std::move(sample_bs)));
 
-                     context.next();
-                 });
+                                           context.next();
+                                       });
              },
              [self, exp2](auto context) mutable {
                  auto &objects = context.get();

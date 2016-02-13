@@ -839,38 +839,40 @@ using namespace yas;
                    });
            },
            [manager, self, exp](auto context) mutable {
-               manager.fetch_const_objects(context.get().second, [context, self, exp](auto &, auto result) mutable {
-                   XCTAssertTrue(result);
+               manager.fetch_const_objects(
+                   [context](auto &) { return context.get().second; },
+                   [context, self, exp](auto &, auto result) mutable {
+                       XCTAssertTrue(result);
 
-                   auto &objects = result.value();
-                   XCTAssertEqual(objects.count("sample_b"), 1);
-                   XCTAssertEqual(objects.at("sample_b").size(), 2);
-                   XCTAssertEqual(objects.at("sample_b").count(1), 1);
-                   XCTAssertEqual(objects.at("sample_b").at(1).get_attribute("name"), db::value{"value_3"});
-                   XCTAssertEqual(objects.at("sample_b").count(2), 1);
-                   XCTAssertEqual(objects.at("sample_b").at(2).get_attribute("name"), db::value{"value_4"});
+                       auto &objects = result.value();
+                       XCTAssertEqual(objects.count("sample_b"), 1);
+                       XCTAssertEqual(objects.at("sample_b").size(), 2);
+                       XCTAssertEqual(objects.at("sample_b").count(1), 1);
+                       XCTAssertEqual(objects.at("sample_b").at(1).get_attribute("name"), db::value{"value_3"});
+                       XCTAssertEqual(objects.at("sample_b").count(2), 1);
+                       XCTAssertEqual(objects.at("sample_b").at(2).get_attribute("name"), db::value{"value_4"});
 
-                   auto const &object_a = context.get().first;
-                   XCTAssertEqual(object_a.get_attribute("name"), db::value{"value_1"});
-                   XCTAssertEqual(object_a.relation_size("child"), 2);
-                   XCTAssertEqual(object_a.get_relation_id("child", 0), db::value{1});
-                   XCTAssertEqual(object_a.get_relation_id("child", 1), db::value{2});
+                       auto const &object_a = context.get().first;
+                       XCTAssertEqual(object_a.get_attribute("name"), db::value{"value_1"});
+                       XCTAssertEqual(object_a.relation_size("child"), 2);
+                       XCTAssertEqual(object_a.get_relation_id("child", 0), db::value{1});
+                       XCTAssertEqual(object_a.get_relation_id("child", 1), db::value{2});
 
-                   auto const_objects = db::get_const_relation_objects(object_a, objects, "child");
-                   XCTAssertEqual(const_objects.size(), 2);
-                   XCTAssertEqual(const_objects.at(0).get_attribute("name"), db::value{"value_3"});
-                   XCTAssertEqual(const_objects.at(1).get_attribute("name"), db::value{"value_4"});
+                       auto const_objects = db::get_const_relation_objects(object_a, objects, "child");
+                       XCTAssertEqual(const_objects.size(), 2);
+                       XCTAssertEqual(const_objects.at(0).get_attribute("name"), db::value{"value_3"});
+                       XCTAssertEqual(const_objects.at(1).get_attribute("name"), db::value{"value_4"});
 
-                   auto const_object_b0 = db::get_const_relation_object(object_a, objects, "child", 0);
-                   XCTAssertEqual(const_object_b0.get_attribute("name"), db::value{"value_3"});
+                       auto const_object_b0 = db::get_const_relation_object(object_a, objects, "child", 0);
+                       XCTAssertEqual(const_object_b0.get_attribute("name"), db::value{"value_3"});
 
-                   auto const_object_b1 = db::get_const_relation_object(object_a, objects, "child", 1);
-                   XCTAssertEqual(const_object_b1.get_attribute("name"), db::value{"value_4"});
+                       auto const_object_b1 = db::get_const_relation_object(object_a, objects, "child", 1);
+                       XCTAssertEqual(const_object_b1.get_attribute("name"), db::value{"value_4"});
 
-                   context.next();
+                       context.next();
 
-                   [exp fulfill];
-               });
+                       [exp fulfill];
+                   });
            }});
 
     [self waitForExpectationsWithTimeout:1.0 handler:nil];
