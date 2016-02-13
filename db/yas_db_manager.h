@@ -109,7 +109,6 @@ namespace db {
         void execute(execution_f &&execution, priority_t const priority = 0);
 
         void insert_objects(insert_prepare_f prepare, vector_completion_f completion, priority_t const priority = 0);
-        void insert_objects(entity_count_map counts, vector_completion_f completion, priority_t const priority = 0);
         void fetch_objects(std::string const &entity_name, select_option option, vector_completion_f completion,
                            priority_t const priority = 0);
         void fetch_objects(integer_set_map obj_ids, map_completion_f completion, priority_t const priority = 0);

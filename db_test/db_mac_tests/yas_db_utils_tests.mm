@@ -801,7 +801,9 @@ using namespace yas;
            },
            [manager, self](auto context) mutable {
                manager.insert_objects(
-                   {{"sample_a", 2}, {"sample_b", 2}},
+                   [](auto &) {
+                       return db::entity_count_map{{"sample_a", 2}, {"sample_b", 2}};
+                   },
                    [manager, context, self](auto &, auto result) mutable {
                        XCTAssertTrue(result);
 

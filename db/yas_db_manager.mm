@@ -1068,14 +1068,6 @@ void db::manager::insert_objects(insert_prepare_f prepare, vector_completion_f c
     impl_ptr<impl>()->execute_insert(std::move(prepare), std::move(impl_completion), priority);
 }
 
-void db::manager::insert_objects(entity_count_map counts, vector_completion_f completion, priority_t const priority) {
-    auto impl_prepare = [counts = std::move(counts)](auto &) {
-        return std::move(counts);
-    };
-
-    insert_objects(std::move(impl_prepare), std::move(completion), priority);
-}
-
 void db::manager::fetch_objects(std::string const &entity_name, db::select_option option,
                                 vector_completion_f completion, priority_t const priority) {
     auto impl_completion = [completion = std::move(completion)](db::manager & manager, state_t && state,
