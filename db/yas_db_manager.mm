@@ -211,7 +211,7 @@ struct db::manager::impl : public base::impl {
             throw "object_id not found.";
         }
 
-        return db::object::empty();
+        return db::object::null_object();
     }
 
     object_vector_map load_object_datas(object_data_vector_map const &datas) {
@@ -298,7 +298,7 @@ struct db::manager::impl : public base::impl {
                 }
             }
         }
-        return db::object::empty();
+        return db::object::null_object();
     }
 
     void _object_did_change(db::object const &object) {

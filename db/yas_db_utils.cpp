@@ -303,7 +303,7 @@ std::vector<db::const_object> db::get_const_relation_objects(const_object const 
                                                if (entity_objects.count(id.get<integer>())) {
                                                    return entity_objects.at(id.get<integer>());
                                                }
-                                               return db::const_object::empty();
+                                               return db::const_object::null_object();
                                            });
     }
 
@@ -322,7 +322,7 @@ db::const_object db::get_const_relation_object(const_object const &object, const
         }
     }
 
-    return db::const_object::empty();
+    return db::const_object::null_object();
 }
 
 db::object_map_map yas::to_object_map_map(db::object_vector_map objects_vector) {

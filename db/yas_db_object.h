@@ -47,7 +47,7 @@ namespace db {
 
         integer_set_map relation_ids_for_fetch() const;
 
-        static const_object const &empty();
+        static const_object const &null_object();
 
        protected:
         const_object(std::shared_ptr<impl> const &);
@@ -101,7 +101,7 @@ namespace db {
 
         object_data data_for_save() const;
 
-        static object const &empty();
+        static object const &null_object();
 
        private:
         void set_status(object_status const &);

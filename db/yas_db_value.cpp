@@ -184,9 +184,9 @@ std::string db::value::sql() const {
     return nullptr;
 }
 
-db::value const &db::value::empty() {
-    static db::value null_value{nullptr};
-    return null_value;
+db::value const &db::value::null_value() {
+    static db::value _null_value{nullptr};
+    return _null_value;
 }
 
 #pragma mark -
