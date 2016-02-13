@@ -337,11 +337,11 @@ struct db::manager::impl : public base::impl {
                                                                                    operation const &op) {
             entity_count_map counts;
 
-            auto prepare_lambda = [&counts, &manager, prepare = std::move(prepare)]() {
+            auto prepare_on_main = [&counts, &manager, prepare = std::move(prepare)]() {
                 counts = prepare(manager);
             };
 
-            dispatch_sync(dispatch_get_main_queue(), std::move(prepare_lambda));
+            dispatch_sync(dispatch_get_main_queue(), std::move(prepare_on_main));
 
             auto &db = manager.database();
 
@@ -489,11 +489,19 @@ struct db::manager::impl : public base::impl {
     }
 
     void execute_fetch_object_datas(
-        db::integer_set_map &&obj_ids,
+        fetch_prepare_f &&prepare,
         std::function<void(db::manager &manager, state_t &&state, object_data_vector_map &&fetched_datas)> &&completion,
         priority_t const priority) {
-        execute([completion = std::move(completion), obj_ids = std::move(obj_ids)](manager & manager,
+        execute([completion = std::move(completion), prepare = std::move(prepare)](manager & manager,
                                                                                    operation const &) {
+            db::integer_set_map obj_ids;
+
+            auto prepare_on_main = [&obj_ids, &manager, prepare = std::move(prepare)]() {
+                obj_ids = prepare(manager);
+            };
+
+            dispatch_sync(dispatch_get_main_queue(), std::move(prepare_on_main));
+
             auto &db = manager.database();
 
             state_t state{nullptr};
@@ -1068,14 +1076,6 @@ void db::manager::insert_objects(insert_prepare_f prepare, vector_completion_f c
     impl_ptr<impl>()->execute_insert(std::move(prepare), std::move(impl_completion), priority);
 }
 
-void db::manager::insert_objects(entity_count_map counts, vector_completion_f completion, priority_t const priority) {
-    auto impl_prepare = [counts = std::move(counts)](auto &) {
-        return std::move(counts);
-    };
-
-    insert_objects(std::move(impl_prepare), std::move(completion), priority);
-}
-
 void db::manager::fetch_objects(std::string const &entity_name, db::select_option option,
                                 vector_completion_f completion, priority_t const priority) {
     auto impl_completion = [completion = std::move(completion)](db::manager & manager, state_t && state,
@@ -1123,7 +1123,7 @@ void db::manager::fetch_const_objects(std::string const &entity_name, select_opt
     impl_ptr<impl>()->execute_fetch_object_datas(entity_name, std::move(option), std::move(impl_completion), priority);
 }
 
-void db::manager::fetch_objects(integer_set_map rel_ids, map_completion_f completion, priority_t const priority) {
+void db::manager::fetch_objects(fetch_prepare_f prepare, map_completion_f completion, priority_t const priority) {
     auto impl_completion = [completion = std::move(completion)](db::manager & manager, state_t && state,
                                                                 object_data_vector_map && fetched_datas) {
         auto lambda = [
@@ -1143,10 +1143,10 @@ void db::manager::fetch_objects(integer_set_map rel_ids, map_completion_f comple
         dispatch_sync(dispatch_get_main_queue(), std::move(lambda));
     };
 
-    impl_ptr<impl>()->execute_fetch_object_datas(std::move(rel_ids), std::move(impl_completion), priority);
+    impl_ptr<impl>()->execute_fetch_object_datas(std::move(prepare), std::move(impl_completion), priority);
 }
 
-void db::manager::fetch_const_objects(integer_set_map obj_ids, const_map_completion_f completion,
+void db::manager::fetch_const_objects(fetch_prepare_f prepare, const_map_completion_f completion,
                                       priority_t const priority) {
     auto impl_completion = [completion = std::move(completion)](db::manager & manager, state_t && state,
                                                                 object_data_vector_map && fetched_datas) {
@@ -1166,12 +1166,10 @@ void db::manager::fetch_const_objects(integer_set_map obj_ids, const_map_complet
         dispatch_sync(dispatch_get_main_queue(), std::move(lambda));
     };
 
-    impl_ptr<impl>()->execute_fetch_object_datas(std::move(obj_ids), std::move(impl_completion), priority);
+    impl_ptr<impl>()->execute_fetch_object_datas(std::move(prepare), std::move(impl_completion), priority);
 }
 
 void db::manager::save(vector_completion_f completion, priority_t const priority) {
-    //    auto changed_datas = impl_ptr<impl>()->changed_datas_for_save();
-
     auto impl_completion = [completion = std::move(completion)](
         db::manager & manager, state_t && state, db::object_data_vector_map && saved_datas, db::value_map && db_info) {
         auto lambda = [

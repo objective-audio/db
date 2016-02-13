@@ -17,6 +17,8 @@ namespace db {
     class model;
     class error;
 
+    using entity_count_map = std::unordered_map<std::string, std::size_t>;
+
     class manager : public base, public object_observable {
         using super_class = base;
 
@@ -73,8 +75,6 @@ namespace db {
 
         using priority_t = UInt32;
 
-        using entity_count_map = std::unordered_map<std::string, std::size_t>;
-
         using state_t = result<std::nullptr_t, error>;
         using vector_result_t = result<object_vector_map, error>;
         using map_result_t = result<object_map_map, error>;
@@ -109,13 +109,12 @@ namespace db {
         void execute(execution_f &&execution, priority_t const priority = 0);
 
         void insert_objects(insert_prepare_f prepare, vector_completion_f completion, priority_t const priority = 0);
-        void insert_objects(entity_count_map counts, vector_completion_f completion, priority_t const priority = 0);
         void fetch_objects(std::string const &entity_name, select_option option, vector_completion_f completion,
                            priority_t const priority = 0);
-        void fetch_objects(integer_set_map obj_ids, map_completion_f completion, priority_t const priority = 0);
+        void fetch_objects(fetch_prepare_f prepare, map_completion_f completion, priority_t const priority = 0);
         void fetch_const_objects(std::string const &entity_name, select_option option,
                                  const_vector_completion_f completion, priority_t const priority = 0);
-        void fetch_const_objects(integer_set_map obj_ids, const_map_completion_f completion,
+        void fetch_const_objects(fetch_prepare_f prepare, const_map_completion_f completion,
                                  priority_t const priority = 0);
         void save(vector_completion_f completion, priority_t const priority = 0);
         void revert(db::integer::type const save_id, vector_completion_f completion, priority_t const priority = 0);
