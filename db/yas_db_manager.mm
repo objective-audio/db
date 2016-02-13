@@ -1162,8 +1162,6 @@ void db::manager::fetch_const_objects(integer_set_map obj_ids, const_map_complet
 }
 
 void db::manager::save(vector_completion_f completion, priority_t const priority) {
-    //    auto changed_datas = impl_ptr<impl>()->changed_datas_for_save();
-
     auto impl_completion = [completion = std::move(completion)](
         db::manager & manager, state_t && state, db::object_data_vector_map && saved_datas, db::value_map && db_info) {
         auto lambda = [
