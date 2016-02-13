@@ -80,11 +80,16 @@ namespace db {
         using map_result_t = result<object_map_map, error>;
         using const_vector_result_t = result<const_object_vector_map, error>;
         using const_map_result_t = result<const_object_map_map, error>;
+
+        using execution_f = std::function<void(manager &, operation const &)>;
+
+        using insert_prepare_f = std::function<entity_count_map(manager &)>;
+        using fetch_prepare_f = std::function<integer_set_map(manager &)>;
+
         using vector_completion_f = std::function<void(manager &, vector_result_t)>;
         using map_completion_f = std::function<void(manager &, map_result_t)>;
         using const_vector_completion_f = std::function<void(manager &, const_vector_result_t)>;
         using const_map_completion_f = std::function<void(manager &, const_map_result_t)>;
-        using execution_f = std::function<void(manager &, operation const &)>;
 
         manager(std::string const &db_path, model const &model, size_t const priority_count = 1);
         manager(std::nullptr_t);
@@ -103,8 +108,8 @@ namespace db {
 
         void execute(execution_f &&execution, priority_t const priority = 0);
 
-        void insert_objects(entity_count_map const &counts, vector_completion_f completion,
-                            priority_t const priority = 0);
+        void insert_objects(insert_prepare_f prepare, vector_completion_f completion, priority_t const priority = 0);
+        void insert_objects(entity_count_map counts, vector_completion_f completion, priority_t const priority = 0);
         void fetch_objects(std::string const &entity_name, select_option option, vector_completion_f completion,
                            priority_t const priority = 0);
         void fetch_objects(integer_set_map obj_ids, map_completion_f completion, priority_t const priority = 0);
