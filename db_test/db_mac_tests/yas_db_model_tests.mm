@@ -36,7 +36,7 @@ using namespace yas;
 
     auto &id_attr = attributes.at(db::id_field);
     XCTAssertEqual(id_attr.name, "id");
-    XCTAssertEqual(id_attr.type, "integer");
+    XCTAssertEqual(id_attr.type, "INTEGER");
     XCTAssertTrue(id_attr.default_value.type() == typeid(db::null));
     XCTAssertEqual(id_attr.not_null, false);
     XCTAssertEqual(id_attr.primary, true);
@@ -44,7 +44,7 @@ using namespace yas;
 
     auto &object_id_attr = attributes.at(db::object_id_field);
     XCTAssertEqual(object_id_attr.name, "obj_id");
-    XCTAssertEqual(object_id_attr.type, "integer");
+    XCTAssertEqual(object_id_attr.type, "INTEGER");
     XCTAssertTrue(object_id_attr.default_value.type() == typeid(db::integer));
     XCTAssertEqual(object_id_attr.default_value.get<db::integer>(), 0);
     XCTAssertEqual(object_id_attr.not_null, true);
@@ -53,7 +53,7 @@ using namespace yas;
 
     auto &save_id_attr = attributes.at(db::save_id_field);
     XCTAssertEqual(save_id_attr.name, "save_id");
-    XCTAssertEqual(save_id_attr.type, "integer");
+    XCTAssertEqual(save_id_attr.type, "INTEGER");
     XCTAssertTrue(save_id_attr.default_value.type() == typeid(db::integer));
     XCTAssertEqual(save_id_attr.default_value.get<db::integer>(), 0);
     XCTAssertEqual(save_id_attr.not_null, true);
@@ -62,7 +62,7 @@ using namespace yas;
 
     auto &action_attr = attributes.at(db::action_field);
     XCTAssertEqual(action_attr.name, "action");
-    XCTAssertEqual(action_attr.type, "text");
+    XCTAssertEqual(action_attr.type, "TEXT");
     XCTAssertTrue(action_attr.default_value.type() == typeid(db::text));
     XCTAssertEqual(action_attr.default_value.get<db::text>(), "insert");
     XCTAssertEqual(action_attr.not_null, true);
@@ -71,7 +71,7 @@ using namespace yas;
 
     auto &age = attributes.at("age");
     XCTAssertEqual(age.name, "age");
-    XCTAssertEqual(age.type, "integer");
+    XCTAssertEqual(age.type, "INTEGER");
     XCTAssertTrue(age.default_value.type() == typeid(db::integer));
     XCTAssertEqual(age.default_value.get<db::integer>(), 10);
     XCTAssertEqual(age.not_null, true);
@@ -80,7 +80,7 @@ using namespace yas;
 
     auto &name = attributes.at("name");
     XCTAssertEqual(name.name, "name");
-    XCTAssertEqual(name.type, "text");
+    XCTAssertEqual(name.type, "TEXT");
     XCTAssertTrue(name.default_value.type() == typeid(db::text));
     XCTAssertEqual(name.default_value.get<db::text>(), "default_value");
     XCTAssertEqual(name.not_null, false);
@@ -89,7 +89,7 @@ using namespace yas;
 
     auto &weight = attributes.at("weight");
     XCTAssertEqual(weight.name, "weight");
-    XCTAssertEqual(weight.type, "real");
+    XCTAssertEqual(weight.type, "REAL");
     XCTAssertTrue(weight.default_value.type() == typeid(db::real));
     XCTAssertEqual(weight.default_value.get<db::real>(), 65.4);
     XCTAssertEqual(weight.not_null, false);
@@ -98,7 +98,7 @@ using namespace yas;
 
     auto &data = attributes.at("data");
     XCTAssertEqual(data.name, "data");
-    XCTAssertEqual(data.type, "blob");
+    XCTAssertEqual(data.type, "BLOB");
     XCTAssertTrue(data.default_value.type() == typeid(db::null));
     XCTAssertEqual(data.not_null, false);
     XCTAssertEqual(data.primary, false);
@@ -110,7 +110,7 @@ using namespace yas;
 
     auto &id_attr_b = attributes_b.at(db::id_field);
     XCTAssertEqual(id_attr_b.name, "id");
-    XCTAssertEqual(id_attr_b.type, "integer");
+    XCTAssertEqual(id_attr_b.type, "INTEGER");
     XCTAssertTrue(id_attr_b.default_value.type() == typeid(db::null));
     XCTAssertEqual(id_attr_b.not_null, false);
     XCTAssertEqual(id_attr_b.primary, true);
@@ -118,7 +118,7 @@ using namespace yas;
 
     auto &object_id_attr_b = attributes.at(db::object_id_field);
     XCTAssertEqual(object_id_attr_b.name, "obj_id");
-    XCTAssertEqual(object_id_attr_b.type, "integer");
+    XCTAssertEqual(object_id_attr_b.type, "INTEGER");
     XCTAssertTrue(object_id_attr_b.default_value.type() == typeid(db::integer));
     XCTAssertEqual(object_id_attr_b.default_value.get<db::integer>(), 0);
     XCTAssertEqual(object_id_attr_b.not_null, true);
@@ -127,7 +127,7 @@ using namespace yas;
 
     auto &save_id_attr_b = attributes.at(db::save_id_field);
     XCTAssertEqual(save_id_attr_b.name, "save_id");
-    XCTAssertEqual(save_id_attr_b.type, "integer");
+    XCTAssertEqual(save_id_attr_b.type, "INTEGER");
     XCTAssertTrue(save_id_attr_b.default_value.type() == typeid(db::integer));
     XCTAssertEqual(save_id_attr_b.default_value.get<db::integer>(), 0);
     XCTAssertEqual(save_id_attr_b.not_null, true);
@@ -136,7 +136,7 @@ using namespace yas;
 
     auto &action_attr_b = attributes.at(db::action_field);
     XCTAssertEqual(action_attr_b.name, "action");
-    XCTAssertEqual(action_attr_b.type, "text");
+    XCTAssertEqual(action_attr_b.type, "TEXT");
     XCTAssertTrue(action_attr_b.default_value.type() == typeid(db::text));
     XCTAssertEqual(action_attr_b.default_value.get<db::text>(), "insert");
     XCTAssertEqual(action_attr_b.not_null, true);
@@ -145,7 +145,7 @@ using namespace yas;
 
     auto &name_b = attributes_b.at("name");
     XCTAssertEqual(name_b.name, "name");
-    XCTAssertEqual(name_b.type, "text");
+    XCTAssertEqual(name_b.type, "TEXT");
     XCTAssertTrue(name_b.default_value.type() == typeid(db::null));
     XCTAssertEqual(name_b.not_null, false);
     XCTAssertEqual(name_b.primary, false);

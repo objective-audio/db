@@ -52,14 +52,14 @@ using namespace yas;
         @"entities": @{
             @"sample_a": @{
                 @"attributes": @{
-                    @"age": @{@"type": @"integer", @"default": @10, @"not_null": @YES},
-                    @"name": @{@"type": @"text", @"default": @"default_value"},
-                    @"weight": @{@"type": @"real", @"default": @65.4},
-                    @"data": @{@"type": @"blob"}
+                    @"age": @{@"type": @"INTEGER", @"default": @10, @"not_null": @YES},
+                    @"name": @{@"type": @"TEXT", @"default": @"default_value"},
+                    @"weight": @{@"type": @"REAL", @"default": @65.4},
+                    @"data": @{@"type": @"BLOB"}
                 },
                 @"relations": @{@"child": @{@"target": @"sample_b"}}
             },
-            @"sample_b": @{@"attributes": @{@"name": @{@"type": @"text"}}, @"relations": @{}}
+            @"sample_b": @{@"attributes": @{@"name": @{@"type": @"TEXT"}}, @"relations": @{}}
         },
         @"indices": @{
             @"sample_a_name": @{@"entity": @"sample_a", @"attributes": @[@"name"]},
@@ -74,20 +74,20 @@ using namespace yas;
         @"entities": @{
             @"sample_a": @{
                 @"attributes": @{
-                    @"age": @{@"type": @"integer", @"default": @10, @"not_null": @YES},
-                    @"name": @{@"type": @"text", @"default": @"default_value"},
-                    @"weight": @{@"type": @"real", @"default": @65.4},
-                    @"tall": @{@"type": @"real", @"default": @172.4},
-                    @"data": @{@"type": @"blob"}
+                    @"age": @{@"type": @"INTEGER", @"default": @10, @"not_null": @YES},
+                    @"name": @{@"type": @"TEXT", @"default": @"default_value"},
+                    @"weight": @{@"type": @"REAL", @"default": @65.4},
+                    @"tall": @{@"type": @"REAL", @"default": @172.4},
+                    @"data": @{@"type": @"BLOB"}
                 },
                 @"relations": @{@"child": @{@"target": @"sample_b"}, @"friend": @{@"target": @"sample_c"}}
             },
             @"sample_b": @{
-                @"attributes": @{@"name": @{@"type": @"text"}},
+                @"attributes": @{@"name": @{@"type": @"TEXT"}},
                 @"relations": @{@"parent": @{@"target": @"sample_a"}}
             },
             @"sample_c": @{
-                @"attributes": @{@"name": @{@"type": @"text"}},
+                @"attributes": @{@"name": @{@"type": @"TEXT"}},
                 @"relations": @{@"friend": @{@"target": @"sample_a"}}
             }
         },
