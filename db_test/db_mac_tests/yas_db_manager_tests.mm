@@ -507,65 +507,54 @@ using namespace yas;
 
     XCTestExpectation *exp = [self expectationWithDescription:@"1"];
 
-    yas::chain(nullptr, {[self, manager](auto context) mutable {
-                             manager.setup([self, context](auto &manager, auto result) mutable {
-                                 XCTAssertTrue(result);
+    manager.setup([self](auto &manager, auto result) mutable {
+        XCTAssertTrue(result);
 
-                                 context.next();
-                             });
-                         },
-                         [self, manager](auto context) mutable {
-                             manager.insert_objects(
-                                 [](auto &) {
-                                     return db::entity_count_map{{"sample_a", 1}, {"sample_b", 1}};
-                                 },
-                                 [self, context](auto &manager, auto result) mutable {
-                                     XCTAssertTrue(result);
-                                     auto &objects = result.value();
+    });
 
-                                     XCTAssertEqual(manager.current_save_id(), 1);
-                                     XCTAssertEqual(manager.last_save_id(), 1);
+    manager.insert_objects(
+        [](auto &) {
+            return db::entity_count_map{{"sample_a", 1}, {"sample_b", 1}};
+        },
+        [self](auto &manager, auto result) mutable {
+            XCTAssertTrue(result);
+            auto &objects = result.value();
 
-                                     objects.at("sample_a").at(0).set_attribute("name", db::value{"value_0"});
+            XCTAssertEqual(manager.current_save_id(), 1);
+            XCTAssertEqual(manager.last_save_id(), 1);
 
-                                     auto &object_b = objects.at("sample_b").at(0);
-                                     objects.at("sample_a").at(0).push_back_relation_id("child", object_b.object_id());
+            objects.at("sample_a").at(0).set_attribute("name", db::value{"value_0"});
 
-                                     XCTAssertEqual(object_b.object_id(), db::value{1});
+            auto &object_b = objects.at("sample_b").at(0);
+            objects.at("sample_a").at(0).push_back_relation_id("child", object_b.object_id());
 
-                                     context.next();
-                                 });
-                         },
-                         [self, manager](auto context) mutable {
-                             manager.save([self, context](auto &, auto save_result) mutable {
-                                 XCTAssertTrue(save_result);
+            XCTAssertEqual(object_b.object_id(), db::value{1});
 
-                                 context.next();
-                             });
-                         },
-                         [self, manager, exp](auto context) mutable {
-                             manager.fetch_const_objects(
-                                 "sample_a", {},
-                                 [self, exp, context](auto &, db::manager::const_vector_result_t fetch_result) mutable {
-                                     XCTAssertTrue(fetch_result);
+        });
 
-                                     auto const &objects = fetch_result.value();
-                                     XCTAssertGreaterThan(objects.count("sample_a"), 0);
-                                     auto &a_objects = objects.at("sample_a");
-                                     XCTAssertEqual(a_objects.size(), 1);
-                                     XCTAssertEqual(a_objects.at(0).object_id().get<db::integer>(), 1);
-                                     XCTAssertEqual(a_objects.at(0).save_id().get<db::integer>(), 2);
-                                     XCTAssertEqual(a_objects.at(0).get_attribute("name"), db::value{"value_0"});
+    manager.save([self](auto &, auto save_result) mutable {
+        XCTAssertTrue(save_result);
 
-                                     XCTAssertEqual(a_objects.at(0).relation_size("child"), 1);
-                                     XCTAssertEqual(a_objects.at(0).get_relation_ids("child").size(), 1);
-                                     XCTAssertEqual(a_objects.at(0).get_relation_id("child", 0), db::value{1});
+    });
 
-                                     context.next();
+    manager.fetch_const_objects("sample_a", {},
+                                [self, exp](auto &, db::manager::const_vector_result_t fetch_result) mutable {
+                                    XCTAssertTrue(fetch_result);
 
-                                     [exp fulfill];
-                                 });
-                         }});
+                                    auto const &objects = fetch_result.value();
+                                    XCTAssertGreaterThan(objects.count("sample_a"), 0);
+                                    auto &a_objects = objects.at("sample_a");
+                                    XCTAssertEqual(a_objects.size(), 1);
+                                    XCTAssertEqual(a_objects.at(0).object_id().get<db::integer>(), 1);
+                                    XCTAssertEqual(a_objects.at(0).save_id().get<db::integer>(), 2);
+                                    XCTAssertEqual(a_objects.at(0).get_attribute("name"), db::value{"value_0"});
+
+                                    XCTAssertEqual(a_objects.at(0).relation_size("child"), 1);
+                                    XCTAssertEqual(a_objects.at(0).get_relation_ids("child").size(), 1);
+                                    XCTAssertEqual(a_objects.at(0).get_relation_id("child", 0), db::value{1});
+
+                                    [exp fulfill];
+                                });
 
     [self waitForExpectationsWithTimeout:1.0 handler:nil];
 }
@@ -707,63 +696,46 @@ using namespace yas;
 
     XCTestExpectation *exp = [self expectationWithDescription:@"1"];
 
-    yas::chain(nullptr, {[self, manager](auto context) mutable {
-                             manager.setup([self, context](auto &manager, auto result) mutable {
-                                 XCTAssertTrue(result);
+    manager.setup([self](auto &manager, auto result) mutable { XCTAssertTrue(result); });
 
-                                 context.next();
-                             });
-                         },
-                         [self, manager](auto context) mutable {
-                             manager.insert_objects(
-                                 [](auto &) {
-                                     return db::entity_count_map{{"sample_a", 3}};
-                                 },
-                                 [self, context](auto &manager, auto result) mutable {
-                                     XCTAssertTrue(result);
-                                     auto &objects = result.value();
+    manager.insert_objects(
+        [](auto &) {
+            return db::entity_count_map{{"sample_a", 3}};
+        },
+        [self](auto &manager, auto result) mutable {
+            XCTAssertTrue(result);
+            auto &objects = result.value();
 
-                                     XCTAssertEqual(manager.current_save_id(), 1);
-                                     XCTAssertEqual(manager.last_save_id(), 1);
+            XCTAssertEqual(manager.current_save_id(), 1);
+            XCTAssertEqual(manager.last_save_id(), 1);
 
-                                     objects.at("sample_a").at(0).set_attribute("name", db::value{"value_1"});
-                                     objects.at("sample_a").at(1).set_attribute("name", db::value{"value_2"});
-                                     objects.at("sample_a").at(2).set_attribute("name", db::value{"value_3"});
+            objects.at("sample_a").at(0).set_attribute("name", db::value{"value_1"});
+            objects.at("sample_a").at(1).set_attribute("name", db::value{"value_2"});
+            objects.at("sample_a").at(2).set_attribute("name", db::value{"value_3"});
 
-                                     XCTAssertEqual(objects.at("sample_a").at(0).object_id(), db::value{1});
-                                     XCTAssertEqual(objects.at("sample_a").at(1).object_id(), db::value{2});
-                                     XCTAssertEqual(objects.at("sample_a").at(2).object_id(), db::value{3});
+            XCTAssertEqual(objects.at("sample_a").at(0).object_id(), db::value{1});
+            XCTAssertEqual(objects.at("sample_a").at(1).object_id(), db::value{2});
+            XCTAssertEqual(objects.at("sample_a").at(2).object_id(), db::value{3});
+        });
 
-                                     context.next();
-                                 });
-                         },
-                         [self, manager](auto context) mutable {
-                             manager.save([self, context](auto &, auto save_result) mutable {
-                                 XCTAssertTrue(save_result);
+    manager.save([self](auto &, auto save_result) mutable { XCTAssertTrue(save_result); });
 
-                                 context.next();
-                             });
-                         },
-                         [self, manager, exp](auto context) mutable {
-                             manager.fetch_const_objects(
-                                 [](auto &) {
-                                     return db::integer_set_map{{"sample_a", {2}}};
-                                 },
-                                 [self, exp, context](auto &, auto fetch_result) mutable {
-                                     XCTAssertTrue(fetch_result);
+    manager.fetch_const_objects(
+        [](auto &) {
+            return db::integer_set_map{{"sample_a", {2}}};
+        },
+        [self, exp](auto &, auto fetch_result) mutable {
+            XCTAssertTrue(fetch_result);
 
-                                     auto const &objects = fetch_result.value();
-                                     XCTAssertEqual(objects.count("sample_a"), 1);
-                                     auto &a_objects = objects.at("sample_a");
-                                     XCTAssertEqual(a_objects.size(), 1);
-                                     XCTAssertEqual(a_objects.at(2).object_id(), db::value{2});
-                                     XCTAssertEqual(a_objects.at(2).get_attribute("name"), db::value{"value_2"});
+            auto const &objects = fetch_result.value();
+            XCTAssertEqual(objects.count("sample_a"), 1);
+            auto &a_objects = objects.at("sample_a");
+            XCTAssertEqual(a_objects.size(), 1);
+            XCTAssertEqual(a_objects.at(2).object_id(), db::value{2});
+            XCTAssertEqual(a_objects.at(2).get_attribute("name"), db::value{"value_2"});
 
-                                     context.next();
-
-                                     [exp fulfill];
-                                 });
-                         }});
+            [exp fulfill];
+        });
 
     [self waitForExpectationsWithTimeout:1.0 handler:nil];
 }
@@ -946,110 +918,89 @@ using namespace yas;
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
 
-    yas::chain(db::object{nullptr},
-               {[self, &manager](auto context) mutable {
-                    manager.setup([self](auto &manager, auto result) {
-                        XCTAssertTrue(result);
-                        XCTAssertEqual(manager.current_save_id(), 0);
-                        XCTAssertEqual(manager.last_save_id(), 0);
-                    });
+    db::object a_object{nullptr};
 
-                    context.next();
-                },
-                [self, &manager](auto context) mutable {
-                    manager.insert_objects(
-                        [](auto &) {
-                            return db::entity_count_map{{"sample_a", 1}};
-                        },
-                        [self, context](auto &, auto result) mutable {
-                            auto &a_object = context.get();
-                            a_object = result.value().at("sample_a").at(0);
+    manager.setup([self](auto &manager, auto result) {
+        XCTAssertTrue(result);
+        XCTAssertEqual(manager.current_save_id(), 0);
+        XCTAssertEqual(manager.last_save_id(), 0);
+    });
 
-                            context.next();
-                        });
-                },
-                [self, &manager](auto context) mutable {
-                    auto &a_object = context.get();
+    manager.insert_objects(
+        [](auto &) {
+            return db::entity_count_map{{"sample_a", 1}};
+        },
+        [self, &a_object](auto &, auto result) mutable {
+            a_object = result.value().at("sample_a").at(0);
 
-                    XCTAssertEqual(a_object.save_id(), db::value{1});
+            XCTAssertEqual(a_object.save_id(), db::value{1});
 
-                    a_object.set_attribute("name", db::value{"value_2"});
+            a_object.set_attribute("name", db::value{"value_2"});
+        });
 
-                    manager.save([context](auto &, auto) mutable { context.next(); });
-                },
-                [self, &manager](auto context) mutable {
-                    auto &a_object = context.get();
+    manager.save([self, &a_object](auto &, auto result) mutable {
+        XCTAssertTrue(result);
 
-                    XCTAssertEqual(a_object.save_id(), db::value{2});
+        XCTAssertEqual(a_object.save_id(), db::value{2});
 
-                    a_object.remove();
+        a_object.remove();
+    });
 
-                    manager.save([context](auto &, auto const &) mutable { context.next(); });
-                },
-                [self, &manager](auto context) mutable {
-                    auto &a_object = context.get();
+    manager.save([self, &a_object](auto &, auto result) mutable {
+        XCTAssertTrue(result);
 
-                    XCTAssertEqual(a_object.save_id(), db::value{3});
-                    XCTAssertTrue(a_object.is_removed());
+        XCTAssertEqual(a_object.save_id(), db::value{3});
+        XCTAssertTrue(a_object.is_removed());
+    });
 
-                    manager.revert(2, [context](auto &, auto const &) mutable { context.next(); });
-                },
-                [self, &manager](auto context) mutable {
-                    auto &a_object = context.get();
+    manager.revert(2, [self, &a_object](auto &, auto result) mutable {
+        XCTAssertTrue(result);
 
-                    XCTAssertEqual(a_object.save_id(), db::value{2});
-                    XCTAssertEqual(a_object.get_attribute("name"), db::value{"value_2"});
-                    XCTAssertFalse(a_object.is_removed());
+        XCTAssertEqual(a_object.save_id(), db::value{2});
+        XCTAssertEqual(a_object.get_attribute("name"), db::value{"value_2"});
+        XCTAssertFalse(a_object.is_removed());
+    });
 
-                    manager.revert(1, [context](auto &, auto const &) mutable { context.next(); });
-                },
-                [self, &manager](auto context) mutable {
-                    auto &a_object = context.get();
+    manager.revert(1, [self, &a_object](auto &, auto result) mutable {
+        XCTAssertTrue(result);
 
-                    XCTAssertEqual(a_object.save_id(), db::value{1});
-                    XCTAssertEqual(a_object.get_attribute("name"), db::value{"default_value"});
+        XCTAssertEqual(a_object.save_id(), db::value{1});
+        XCTAssertEqual(a_object.get_attribute("name"), db::value{"default_value"});
 
-                    a_object.set_attribute("name", db::value{"value_b"});
+        a_object.set_attribute("name", db::value{"value_b"});
+    });
 
-                    manager.save([context](auto &, auto const &) mutable { context.next(); });
-                },
-                [self, &manager](auto context) mutable {
-                    manager.execute([self, context](db::manager &manager, operation const &) mutable {
-                        auto &db = manager.database();
+    manager.save([self](auto &, auto result) mutable { XCTAssertTrue(result); });
 
-                        auto select_result = db::select(
-                            db, "sample_a", db::select_option{.where_exprs = db::expr(db::save_id_field, "=", "3")});
-                        XCTAssertTrue(select_result);
-                        XCTAssertEqual(select_result.value().size(), 0);
+    manager.execute([self](db::manager &manager, operation const &) mutable {
+        auto &db = manager.database();
 
-                        select_result = db::select(
-                            db, "sample_a", db::select_option{.where_exprs = db::expr(db::save_id_field, "=", "2")});
-                        XCTAssertTrue(select_result);
-                        XCTAssertEqual(select_result.value().size(), 1);
+        auto select_result =
+            db::select(db, "sample_a", db::select_option{.where_exprs = db::expr(db::save_id_field, "=", "3")});
+        XCTAssertTrue(select_result);
+        XCTAssertEqual(select_result.value().size(), 0);
 
-                        select_result = db::select(
-                            db, "sample_a", db::select_option{.where_exprs = db::expr(db::save_id_field, "=", "1")});
-                        XCTAssertTrue(select_result);
-                        XCTAssertEqual(select_result.value().size(), 1);
+        select_result =
+            db::select(db, "sample_a", db::select_option{.where_exprs = db::expr(db::save_id_field, "=", "2")});
+        XCTAssertTrue(select_result);
+        XCTAssertEqual(select_result.value().size(), 1);
 
-                        context.next();
-                    });
-                },
-                [self, &manager](auto context) mutable {
-                    manager.revert(0, [context](auto &, auto const &) mutable { context.next(); });
-                },
-                [self, &manager, exp](auto context) mutable {
-                    auto &a_object = context.get();
+        select_result =
+            db::select(db, "sample_a", db::select_option{.where_exprs = db::expr(db::save_id_field, "=", "1")});
+        XCTAssertTrue(select_result);
+        XCTAssertEqual(select_result.value().size(), 1);
+    });
 
-                    XCTAssertEqual(a_object.status(), db::object_status::invalid);
-                    XCTAssertFalse(a_object.save_id());
-                    XCTAssertFalse(a_object.action());
-                    XCTAssertFalse(a_object.get_attribute("name"));
+    manager.revert(0, [self, &a_object, exp](auto &, auto result) mutable {
+        XCTAssertTrue(result);
 
-                    context.next();
+        XCTAssertEqual(a_object.status(), db::object_status::invalid);
+        XCTAssertFalse(a_object.save_id());
+        XCTAssertFalse(a_object.action());
+        XCTAssertFalse(a_object.get_attribute("name"));
 
-                    [exp fulfill];
-                }});
+        [exp fulfill];
+    });
 
     [self waitForExpectationsWithTimeout:1.0 handler:nil];
 }
@@ -1059,85 +1010,64 @@ using namespace yas;
     if (auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)]) {
         XCTestExpectation *exp1 = [self expectationWithDescription:@"exp1"];
 
-        yas::chain(db::object_vector_map{},
-                   {[self, manager](auto context) mutable {
-                        manager.setup([self, context](auto &manager, auto result) mutable {
-                            XCTAssertTrue(result);
-                            XCTAssertEqual(manager.current_save_id(), 0);
-                            XCTAssertEqual(manager.last_save_id(), 0);
+        db::object_vector_map objects;
 
-                            context.next();
-                        });
-                    },
-                    [self, manager](auto context) mutable {
-                        manager.insert_objects(
-                            [](auto &) {
-                                return db::entity_count_map{{"sample_a", 1}, {"sample_b", 2}};
-                            },
-                            [self, context](auto &manager, auto result) mutable {
-                                XCTAssertTrue(result);
-                                XCTAssertEqual(manager.current_save_id(), 1);
-                                XCTAssertEqual(manager.last_save_id(), 1);
+        manager.setup([self](auto &manager, auto result) mutable {
+            XCTAssertTrue(result);
+            XCTAssertEqual(manager.current_save_id(), 0);
+            XCTAssertEqual(manager.last_save_id(), 0);
+        });
 
-                                auto &objects = context.get();
-                                objects = std::move(result.value());
+        manager.insert_objects(
+            [](auto &) {
+                return db::entity_count_map{{"sample_a", 1}, {"sample_b", 2}};
+            },
+            [self, &objects](auto &manager, auto result) mutable {
+                XCTAssertTrue(result);
+                XCTAssertEqual(manager.current_save_id(), 1);
+                XCTAssertEqual(manager.last_save_id(), 1);
 
-                                objects.at("sample_a").at(0).set_attribute("name", db::value{"name_value_1"});
-                                objects.at("sample_b").at(0).set_attribute("name", db::value{"name_value_2"});
-                                objects.at("sample_b").at(1).set_attribute("name", db::value{"name_value_3"});
+                objects = std::move(result.value());
 
-                                context.next();
-                            });
-                    },
-                    [self, manager](auto context) mutable {
-                        manager.save([self, context](auto &manager, auto result) mutable {
-                            XCTAssertTrue(result);
-                            XCTAssertEqual(manager.current_save_id(), 2);
-                            XCTAssertEqual(manager.last_save_id(), 2);
+                objects.at("sample_a").at(0).set_attribute("name", db::value{"name_value_1"});
+                objects.at("sample_b").at(0).set_attribute("name", db::value{"name_value_2"});
+                objects.at("sample_b").at(1).set_attribute("name", db::value{"name_value_3"});
+            });
 
-                            auto &objects = context.get();
-                            objects.at("sample_a").at(0).set_attribute("name", db::value{"name_value_4"});
-                            objects.at("sample_b").at(0).set_attribute("name", db::value{"name_value_5"});
-                            objects.at("sample_a").at(0).set_relation_object("child", {objects.at("sample_b").at(0)});
-                            XCTAssertEqual(objects.at("sample_b").at(0).object_id(), db::value{1});
+        manager.save([self, &objects](auto &manager, auto result) mutable {
+            XCTAssertTrue(result);
+            XCTAssertEqual(manager.current_save_id(), 2);
+            XCTAssertEqual(manager.last_save_id(), 2);
 
-                            context.next();
-                        });
-                    },
-                    [self, manager](auto context) mutable {
-                        manager.save([self, context](auto &manager, auto result) mutable {
-                            XCTAssertTrue(result);
-                            XCTAssertEqual(manager.current_save_id(), 3);
-                            XCTAssertEqual(manager.last_save_id(), 3);
+            objects.at("sample_a").at(0).set_attribute("name", db::value{"name_value_4"});
+            objects.at("sample_b").at(0).set_attribute("name", db::value{"name_value_5"});
+            objects.at("sample_a").at(0).set_relation_object("child", {objects.at("sample_b").at(0)});
+            XCTAssertEqual(objects.at("sample_b").at(0).object_id(), db::value{1});
+        });
 
-                            auto &objects = context.get();
+        manager.save([self, &objects](auto &manager, auto result) mutable {
+            XCTAssertTrue(result);
+            XCTAssertEqual(manager.current_save_id(), 3);
+            XCTAssertEqual(manager.last_save_id(), 3);
 
-                            objects.at("sample_a").at(0).set_attribute("name", db::value{"name_value_6"});
-                            objects.at("sample_b").at(1).set_attribute("name", db::value{"name_value_7"});
-                            objects.at("sample_a").at(0).set_relation_object("child", {objects.at("sample_b").at(1)});
+            objects.at("sample_a").at(0).set_attribute("name", db::value{"name_value_6"});
+            objects.at("sample_b").at(1).set_attribute("name", db::value{"name_value_7"});
+            objects.at("sample_a").at(0).set_relation_object("child", {objects.at("sample_b").at(1)});
+        });
 
-                            context.next();
-                        });
-                    },
-                    [self, manager](auto context) mutable {
-                        manager.save([self, context](auto &manager, auto result) mutable {
-                            XCTAssertTrue(result);
-                            XCTAssertEqual(manager.current_save_id(), 4);
-                            XCTAssertEqual(manager.last_save_id(), 4);
+        manager.save([self](auto &manager, auto result) mutable {
+            XCTAssertTrue(result);
+            XCTAssertEqual(manager.current_save_id(), 4);
+            XCTAssertEqual(manager.last_save_id(), 4);
+        });
 
-                            context.next();
-                        });
-                    },
-                    [self, manager](auto context) mutable {
-                        manager.revert(3, [self, context](auto &manager, auto result) mutable {
-                            XCTAssertTrue(result);
-                            XCTAssertEqual(manager.current_save_id(), 3);
-                            XCTAssertEqual(manager.last_save_id(), 4);
+        manager.revert(3, [self, exp1](auto &manager, auto result) mutable {
+            XCTAssertTrue(result);
+            XCTAssertEqual(manager.current_save_id(), 3);
+            XCTAssertEqual(manager.last_save_id(), 4);
 
-                            context.next();
-                        });
-                    },
-                    [self, manager, exp1](auto context) mutable { [exp1 fulfill]; }});
+            [exp1 fulfill];
+        });
 
         [self waitForExpectationsWithTimeout:1.0 handler:nil];
     } else {
@@ -1147,63 +1077,45 @@ using namespace yas;
     if (auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)]) {
         XCTestExpectation *exp2 = [self expectationWithDescription:@"exp2"];
 
-        yas::chain(
-            db::object_vector_map{},
-            {[self, manager](auto context) mutable {
-                 manager.setup([self, context](auto &manager, auto result) mutable {
-                     XCTAssertTrue(result);
-                     XCTAssertEqual(manager.current_save_id(), 3);
-                     XCTAssertEqual(manager.last_save_id(), 4);
+        db::object_vector_map objects{};
 
-                     context.next();
-                 });
-             },
-             [self, manager](auto context) mutable {
-                 manager.fetch_objects("sample_a", {},
-                                       [self, context](auto &manager, auto result) mutable {
-                                           XCTAssertTrue(result);
+        manager.setup([self](auto &manager, auto result) mutable {
+            XCTAssertTrue(result);
+            XCTAssertEqual(manager.current_save_id(), 3);
+            XCTAssertEqual(manager.last_save_id(), 4);
+        });
 
-                                           auto &objects = context.get();
-                                           objects = std::move(result.value());
+        manager.fetch_objects("sample_a", {},
+                              [self, &objects](auto &manager, auto result) mutable {
+                                  XCTAssertTrue(result);
 
-                                           XCTAssertEqual(objects.count("sample_a"), 1);
-                                           XCTAssertEqual(objects.at("sample_a").at(0).get_attribute("name"),
-                                                          db::value{"name_value_4"});
-                                           XCTAssertEqual(objects.at("sample_a").at(0).relation_size("child"), 1);
+                                  objects = std::move(result.value());
 
-                                           context.next();
-                                       });
-             },
-             [self, manager](auto context) mutable {
-                 manager.fetch_objects([context](auto &) { return db::relation_ids(context.get()); },
-                                       [self, context](auto &manager, auto result) mutable {
-                                           XCTAssertTrue(result);
+                                  XCTAssertEqual(objects.count("sample_a"), 1);
+                                  XCTAssertEqual(objects.at("sample_a").at(0).get_attribute("name"),
+                                                 db::value{"name_value_4"});
+                                  XCTAssertEqual(objects.at("sample_a").at(0).relation_size("child"), 1);
+                              });
 
-                                           db::object_map_map &rel_objects = result.value();
+        manager.fetch_objects(
+            [&objects](auto &) { return db::relation_ids(objects); },
+            [self, &objects, exp2](auto &manager, auto result) mutable {
+                XCTAssertTrue(result);
 
-                                           XCTAssertEqual(rel_objects.count("sample_b"), 1);
-                                           XCTAssertEqual(rel_objects.at("sample_b").at(1).get_attribute("name"),
-                                                          db::value{"name_value_5"});
+                db::object_map_map &rel_objects = result.value();
 
-                                           auto &objects = context.get();
+                XCTAssertEqual(rel_objects.count("sample_b"), 1);
+                XCTAssertEqual(rel_objects.at("sample_b").at(1).get_attribute("name"), db::value{"name_value_5"});
 
-                                           auto sample_bs = to_vector<db::object>(
-                                               rel_objects.at("sample_b"), [](auto &pair) { return pair.second; });
-                                           objects.emplace(std::make_pair("sample_b", std::move(sample_bs)));
+                auto sample_bs =
+                    to_vector<db::object>(rel_objects.at("sample_b"), [](auto &pair) { return pair.second; });
+                objects.emplace(std::make_pair("sample_b", std::move(sample_bs)));
 
-                                           context.next();
-                                       });
-             },
-             [self, exp2](auto context) mutable {
-                 auto &objects = context.get();
+                XCTAssertEqual(objects.at("sample_a").at(0).get_relation_object("child", 0).get_attribute("name"),
+                               db::value{"name_value_5"});
 
-                 XCTAssertEqual(objects.at("sample_a").at(0).get_relation_object("child", 0).get_attribute("name"),
-                                db::value{"name_value_5"});
-
-                 context.next();
-
-                 [exp2 fulfill];
-             }});
+                [exp2 fulfill];
+            });
 
         [self waitForExpectationsWithTimeout:1.0 handler:nil];
     } else {

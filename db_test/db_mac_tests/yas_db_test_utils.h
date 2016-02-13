@@ -4,7 +4,6 @@
 
 #import <XCTest/XCTest.h>
 #import "yas_cf_utils.h"
-#import "yas_chain.h"
 #import "yas_db.h"
 #import "yas_operation.h"
 #import "yas_version.h"
