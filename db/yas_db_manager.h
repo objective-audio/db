@@ -17,6 +17,8 @@ namespace db {
     class model;
     class error;
 
+    using entity_count_map = std::unordered_map<std::string, std::size_t>;
+
     class manager : public base, public object_observable {
         using super_class = base;
 
@@ -72,8 +74,6 @@ namespace db {
         };
 
         using priority_t = UInt32;
-
-        using entity_count_map = std::unordered_map<std::string, std::size_t>;
 
         using state_t = result<std::nullptr_t, error>;
         using vector_result_t = result<object_vector_map, error>;
