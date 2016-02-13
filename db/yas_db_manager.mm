@@ -489,7 +489,7 @@ struct db::manager::impl : public base::impl {
     }
 
     void execute_fetch_object_datas(
-        fetch_prepare_f &&prepare,
+        fetch_prepare_ids_f &&prepare,
         std::function<void(db::manager &manager, state_t &&state, object_data_vector_map &&fetched_datas)> &&completion,
         priority_t const priority) {
         execute([completion = std::move(completion), prepare = std::move(prepare)](manager & manager,
@@ -1123,7 +1123,7 @@ void db::manager::fetch_const_objects(std::string const &entity_name, select_opt
     impl_ptr<impl>()->execute_fetch_object_datas(entity_name, std::move(option), std::move(impl_completion), priority);
 }
 
-void db::manager::fetch_objects(fetch_prepare_f prepare, map_completion_f completion, priority_t const priority) {
+void db::manager::fetch_objects(fetch_prepare_ids_f prepare, map_completion_f completion, priority_t const priority) {
     auto impl_completion = [completion = std::move(completion)](db::manager & manager, state_t && state,
                                                                 object_data_vector_map && fetched_datas) {
         auto lambda = [
@@ -1146,7 +1146,7 @@ void db::manager::fetch_objects(fetch_prepare_f prepare, map_completion_f comple
     impl_ptr<impl>()->execute_fetch_object_datas(std::move(prepare), std::move(impl_completion), priority);
 }
 
-void db::manager::fetch_const_objects(fetch_prepare_f prepare, const_map_completion_f completion,
+void db::manager::fetch_const_objects(fetch_prepare_ids_f prepare, const_map_completion_f completion,
                                       priority_t const priority) {
     auto impl_completion = [completion = std::move(completion)](db::manager & manager, state_t && state,
                                                                 object_data_vector_map && fetched_datas) {
