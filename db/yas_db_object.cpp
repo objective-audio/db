@@ -61,7 +61,7 @@ struct db::const_object::impl : public base::impl {
             return data.attributes.at(attr_name);
         }
 
-        return db::value::empty();
+        return db::value::null_value();
     }
 
     db::value_vector get_relation_ids(std::string const &rel_name) {
@@ -82,7 +82,7 @@ struct db::const_object::impl : public base::impl {
                 return ids.at(idx);
             }
         }
-        return db::value::empty();
+        return db::value::null_value();
     }
 
     std::size_t relation_size(std::string const &rel_name) {
@@ -386,7 +386,7 @@ class db::object::impl : public const_object::impl {
                 } else if (pair.second.not_null) {
                     attributes.emplace(std::make_pair(attr_name, pair.second.default_value));
                 } else {
-                    attributes.emplace(std::make_pair(attr_name, db::value::empty()));
+                    attributes.emplace(std::make_pair(attr_name, db::value::null_value()));
                 }
             }
         }
