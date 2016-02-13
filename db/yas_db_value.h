@@ -22,22 +22,22 @@ namespace db {
 
     struct integer {
         using type = sqlite3_int64;
-        static constexpr auto name = "integer";
+        static constexpr auto name = "INTEGER";
     };
 
     struct real {
         using type = Float64;
-        static constexpr auto name = "real";
+        static constexpr auto name = "REAL";
     };
 
     struct text {
         using type = std::string;
-        static constexpr auto name = "text";
+        static constexpr auto name = "TEXT";
     };
 
     struct blob {
         using type = blob;
-        static constexpr auto name = "blob";
+        static constexpr auto name = "BLOB";
 
         blob();
 
@@ -64,7 +64,7 @@ namespace db {
 
     struct null {
         using type = std::nullptr_t;
-        static constexpr auto name = "null";
+        static constexpr auto name = "NULL";
     };
 
     class value : public base {
