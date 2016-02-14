@@ -719,11 +719,20 @@ struct db::manager::impl : public base::impl {
     }
 
     void execute_revert(
-        db::integer::type const rev_save_id,
+        revert_prepare_f prepare,
         std::function<void(db::manager &manager, state_t &&state, object_data_vector_map &&reverted_datas,
                            db::value_map &&db_info)> &&completion,
         priority_t const priority) {
-        execute([rev_save_id, completion = std::move(completion)](manager & manager, operation const &) {
+        execute([prepare = std::move(prepare), completion = std::move(completion)](manager & manager,
+                                                                                   operation const &) {
+            db::integer::type rev_save_id;
+
+            auto prepare_on_main = [&manager, &rev_save_id, prepare = std::move(prepare)]() {
+                rev_save_id = prepare(manager);
+            };
+
+            dispatch_sync(dispatch_get_main_queue(), std::move(prepare_on_main));
+
             auto &db = manager.database();
 
             state_t state{nullptr};
@@ -1195,8 +1204,7 @@ void db::manager::save(vector_completion_f completion, priority_t const priority
     impl_ptr<impl>()->execute_save(std::move(impl_completion), priority);
 }
 
-void db::manager::revert(db::integer::type const rev_save_id, vector_completion_f completion,
-                         priority_t const priority) {
+void db::manager::revert(revert_prepare_f prepare, vector_completion_f completion, priority_t const priority) {
     auto impl_completion = [completion = std::move(completion)](
         db::manager & manager, state_t && state, object_data_vector_map && reverted_datas, db::value_map && db_info) {
         auto lambda = [
@@ -1219,7 +1227,7 @@ void db::manager::revert(db::integer::type const rev_save_id, vector_completion_
         dispatch_sync(dispatch_get_main_queue(), std::move(lambda));
     };
 
-    impl_ptr<impl>()->execute_revert(rev_save_id, std::move(impl_completion), priority);
+    impl_ptr<impl>()->execute_revert(std::move(prepare), std::move(impl_completion), priority);
 }
 
 db::object db::manager::cached_object(std::string const &entity_name, db::integer::type const object_id) const {

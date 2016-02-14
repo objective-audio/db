@@ -953,22 +953,24 @@ using namespace yas;
         XCTAssertTrue(a_object.is_removed());
     });
 
-    manager.revert(2, [self, &a_object](auto &, auto result) mutable {
-        XCTAssertTrue(result);
+    manager.revert([](auto &) { return 2; },
+                   [self, &a_object](auto &, auto result) mutable {
+                       XCTAssertTrue(result);
 
-        XCTAssertEqual(a_object.save_id(), db::value{2});
-        XCTAssertEqual(a_object.get_attribute("name"), db::value{"value_2"});
-        XCTAssertFalse(a_object.is_removed());
-    });
+                       XCTAssertEqual(a_object.save_id(), db::value{2});
+                       XCTAssertEqual(a_object.get_attribute("name"), db::value{"value_2"});
+                       XCTAssertFalse(a_object.is_removed());
+                   });
 
-    manager.revert(1, [self, &a_object](auto &, auto result) mutable {
-        XCTAssertTrue(result);
+    manager.revert([](auto &) { return 1; },
+                   [self, &a_object](auto &, auto result) mutable {
+                       XCTAssertTrue(result);
 
-        XCTAssertEqual(a_object.save_id(), db::value{1});
-        XCTAssertEqual(a_object.get_attribute("name"), db::value{"default_value"});
+                       XCTAssertEqual(a_object.save_id(), db::value{1});
+                       XCTAssertEqual(a_object.get_attribute("name"), db::value{"default_value"});
 
-        a_object.set_attribute("name", db::value{"value_b"});
-    });
+                       a_object.set_attribute("name", db::value{"value_b"});
+                   });
 
     manager.save([self](auto &, auto result) mutable { XCTAssertTrue(result); });
 
@@ -991,16 +993,17 @@ using namespace yas;
         XCTAssertEqual(select_result.value().size(), 1);
     });
 
-    manager.revert(0, [self, &a_object, exp](auto &, auto result) mutable {
-        XCTAssertTrue(result);
+    manager.revert([](auto &) { return 0; },
+                   [self, &a_object, exp](auto &, auto result) mutable {
+                       XCTAssertTrue(result);
 
-        XCTAssertEqual(a_object.status(), db::object_status::invalid);
-        XCTAssertFalse(a_object.save_id());
-        XCTAssertFalse(a_object.action());
-        XCTAssertFalse(a_object.get_attribute("name"));
+                       XCTAssertEqual(a_object.status(), db::object_status::invalid);
+                       XCTAssertFalse(a_object.save_id());
+                       XCTAssertFalse(a_object.action());
+                       XCTAssertFalse(a_object.get_attribute("name"));
 
-        [exp fulfill];
-    });
+                       [exp fulfill];
+                   });
 
     [self waitForExpectationsWithTimeout:1.0 handler:nil];
 }
@@ -1061,13 +1064,14 @@ using namespace yas;
             XCTAssertEqual(manager.last_save_id(), 4);
         });
 
-        manager.revert(3, [self, exp1](auto &manager, auto result) mutable {
-            XCTAssertTrue(result);
-            XCTAssertEqual(manager.current_save_id(), 3);
-            XCTAssertEqual(manager.last_save_id(), 4);
+        manager.revert([](auto &) { return 3; },
+                       [self, exp1](auto &manager, auto result) mutable {
+                           XCTAssertTrue(result);
+                           XCTAssertEqual(manager.current_save_id(), 3);
+                           XCTAssertEqual(manager.last_save_id(), 4);
 
-            [exp1 fulfill];
-        });
+                           [exp1 fulfill];
+                       });
 
         [self waitForExpectationsWithTimeout:1.0 handler:nil];
     } else {
