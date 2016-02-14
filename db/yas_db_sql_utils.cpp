@@ -97,6 +97,10 @@ std::string yas::db::joined_orders(std::vector<field_order> const &orders) {
 std::string yas::db::select_sql(std::string const &table_name, std::vector<std::string> const &fields,
                                 std::string const &where_exprs, std::vector<field_order> const &orders,
                                 range const &limit_range) {
+    if (table_name.size() == 0) {
+        throw "table_name size is zero.";
+    }
+
     std::ostringstream stream;
 
     std::string const joined_fields = joined(fields, field_separator);

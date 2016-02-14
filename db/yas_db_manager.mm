@@ -57,10 +57,11 @@ namespace db {
                 std::string where_exprs =
                     joined({equal_field_expr(save_id_field), equal_field_expr(src_id_field)}, " and ");
                 db::select_option option{
+                    .table = table_name,
                     .where_exprs = std::move(where_exprs),
                     .arguments = {{save_id_field, attrs.at(save_id_field)}, {src_id_field, attrs.at(object_id_field)}}};
 
-                if (auto select_result = db::select(db, table_name, option)) {
+                if (auto select_result = db::select(db, option)) {
                     auto const &result_rels = select_result.value();
                     db::value_vector rel_tgts;
                     rel_tgts.reserve(result_rels.size());
@@ -337,9 +338,7 @@ struct db::manager::impl : public base::impl {
                                                                                    operation const &op) {
             entity_count_map counts;
 
-            auto prepare_on_main = [&counts, &manager, prepare = std::move(prepare)]() {
-                counts = prepare(manager);
-            };
+            auto prepare_on_main = [&counts, &manager, &prepare]() { counts = prepare(manager); };
 
             dispatch_sync(dispatch_get_main_queue(), std::move(prepare_on_main));
 
@@ -385,10 +384,11 @@ struct db::manager::impl : public base::impl {
                                 break;
                             }
 
-                            db::select_option option{.where_exprs = db::equal_field_expr(object_id_field),
+                            db::select_option option{.table = entity_name,
+                                                     .where_exprs = db::equal_field_expr(object_id_field),
                                                      .arguments = {{std::make_pair(object_id_field, obj_id_value)}}};
 
-                            auto select_result = db::select(db, entity_name, std::move(option));
+                            auto select_result = db::select(db, std::move(option));
                             if (select_result) {
                                 if (inserted_datas.count(entity_name) == 0) {
                                     object_data_vector entity_datas{};
@@ -436,11 +436,19 @@ struct db::manager::impl : public base::impl {
     }
 
     void execute_fetch_object_datas(
-        std::string const &entity_name, db::select_option &&option,
+        fetch_prepare_option_f &&prepare,
         std::function<void(db::manager &manager, state_t &&state, object_data_vector_map &&fetched_datas)> &&completion,
         priority_t const priority) {
-        execute([entity_name, option = std::move(option), completion = std::move(completion)](db::manager & manager,
-                                                                                              operation const &) {
+        execute([prepare = std::move(prepare), completion = std::move(completion)](db::manager & manager,
+                                                                                   operation const &) {
+            db::select_option option;
+
+            auto prepare_on_main = [&option, &manager, &prepare]() { option = prepare(manager); };
+
+            dispatch_sync(dispatch_get_main_queue(), std::move(prepare_on_main));
+
+            std::string const entity_name = option.table;
+
             auto &db = manager.database();
 
             auto const &rel_models = manager.model().relations(entity_name);
@@ -454,7 +462,7 @@ struct db::manager::impl : public base::impl {
                 if (cur_save_id_result) {
                     current_save_id = std::move(cur_save_id_result.value());
 
-                    if (auto select_result = db::select_last(db, entity_name, current_save_id, std::move(option))) {
+                    if (auto select_result = db::select_last(db, std::move(option), current_save_id)) {
                         auto &entity_attrs = select_result.value();
                         if (auto obj_datas_result =
                                 fetch_entity_object_datas(db, entity_name, rel_models, entity_attrs)) {
@@ -489,16 +497,14 @@ struct db::manager::impl : public base::impl {
     }
 
     void execute_fetch_object_datas(
-        fetch_prepare_f &&prepare,
+        fetch_prepare_ids_f &&prepare,
         std::function<void(db::manager &manager, state_t &&state, object_data_vector_map &&fetched_datas)> &&completion,
         priority_t const priority) {
         execute([completion = std::move(completion), prepare = std::move(prepare)](manager & manager,
                                                                                    operation const &) {
             db::integer_set_map obj_ids;
 
-            auto prepare_on_main = [&obj_ids, &manager, prepare = std::move(prepare)]() {
-                obj_ids = prepare(manager);
-            };
+            auto prepare_on_main = [&obj_ids, &manager, &prepare]() { obj_ids = prepare(manager); };
 
             dispatch_sync(dispatch_get_main_queue(), std::move(prepare_on_main));
 
@@ -520,12 +526,13 @@ struct db::manager::impl : public base::impl {
 
                         auto const &entity_obj_ids = entity_pair.second;
                         db::select_option option{
+                            .table = entity_name,
                             .where_exprs =
                                 object_id_field + " in (" +
                                 joined(entity_obj_ids, ",", [](auto const &rel_id) { return std::to_string(rel_id); }) +
                                 ")"};
 
-                        if (auto select_result = db::select_last(db, entity_name, current_save_id, std::move(option))) {
+                        if (auto select_result = db::select_last(db, std::move(option), current_save_id)) {
                             auto &entity_attrs = select_result.value();
                             if (auto obj_datas_result =
                                     fetch_entity_object_datas(db, entity_name, rel_models, entity_attrs)) {
@@ -719,11 +726,18 @@ struct db::manager::impl : public base::impl {
     }
 
     void execute_revert(
-        db::integer::type const rev_save_id,
+        revert_prepare_f prepare,
         std::function<void(db::manager &manager, state_t &&state, object_data_vector_map &&reverted_datas,
                            db::value_map &&db_info)> &&completion,
         priority_t const priority) {
-        execute([rev_save_id, completion = std::move(completion)](manager & manager, operation const &) {
+        execute([prepare = std::move(prepare), completion = std::move(completion)](manager & manager,
+                                                                                   operation const &) {
+            db::integer::type rev_save_id;
+
+            auto prepare_on_main = [&manager, &rev_save_id, &prepare]() { rev_save_id = prepare(manager); };
+
+            dispatch_sync(dispatch_get_main_queue(), std::move(prepare_on_main));
+
             auto &db = manager.database();
 
             state_t state{nullptr};
@@ -843,8 +857,8 @@ void db::manager::setup(vector_completion_f completion) {
             if (db::table_exists(db, info_table)) {
                 bool needs_migration = false;
 
-                if (auto select_result =
-                        db::select(db, {info_table}, {.fields = {version_field}, .limit_range = db::range{0, 1}})) {
+                if (auto select_result = db::select(
+                        db, {.table = info_table, .fields = {version_field}, .limit_range = db::range{0, 1}})) {
                     auto const update_info_result = db.execute_update(update_sql(info_table, {version_field}, ""),
                                                                       {db::value{model.version().str()}});
                     if (update_info_result) {
@@ -1076,8 +1090,8 @@ void db::manager::insert_objects(insert_prepare_f prepare, vector_completion_f c
     impl_ptr<impl>()->execute_insert(std::move(prepare), std::move(impl_completion), priority);
 }
 
-void db::manager::fetch_objects(std::string const &entity_name, db::select_option option,
-                                vector_completion_f completion, priority_t const priority) {
+void db::manager::fetch_objects(fetch_prepare_option_f prepare, vector_completion_f completion,
+                                priority_t const priority) {
     auto impl_completion = [completion = std::move(completion)](db::manager & manager, state_t && state,
                                                                 object_data_vector_map && fetched_datas) {
         auto lambda = [
@@ -1097,11 +1111,11 @@ void db::manager::fetch_objects(std::string const &entity_name, db::select_optio
         dispatch_sync(dispatch_get_main_queue(), std::move(lambda));
     };
 
-    impl_ptr<impl>()->execute_fetch_object_datas(entity_name, std::move(option), std::move(impl_completion), priority);
+    impl_ptr<impl>()->execute_fetch_object_datas(std::move(prepare), std::move(impl_completion), priority);
 }
 
-void db::manager::fetch_const_objects(std::string const &entity_name, select_option option,
-                                      const_vector_completion_f completion, priority_t const priority) {
+void db::manager::fetch_const_objects(fetch_prepare_option_f prepare, const_vector_completion_f completion,
+                                      priority_t const priority) {
     auto impl_completion = [completion = std::move(completion)](db::manager & manager, state_t && state,
                                                                 object_data_vector_map && fetched_datas) {
         auto lambda = [
@@ -1120,10 +1134,10 @@ void db::manager::fetch_const_objects(std::string const &entity_name, select_opt
         dispatch_sync(dispatch_get_main_queue(), std::move(lambda));
     };
 
-    impl_ptr<impl>()->execute_fetch_object_datas(entity_name, std::move(option), std::move(impl_completion), priority);
+    impl_ptr<impl>()->execute_fetch_object_datas(std::move(prepare), std::move(impl_completion), priority);
 }
 
-void db::manager::fetch_objects(fetch_prepare_f prepare, map_completion_f completion, priority_t const priority) {
+void db::manager::fetch_objects(fetch_prepare_ids_f prepare, map_completion_f completion, priority_t const priority) {
     auto impl_completion = [completion = std::move(completion)](db::manager & manager, state_t && state,
                                                                 object_data_vector_map && fetched_datas) {
         auto lambda = [
@@ -1146,7 +1160,7 @@ void db::manager::fetch_objects(fetch_prepare_f prepare, map_completion_f comple
     impl_ptr<impl>()->execute_fetch_object_datas(std::move(prepare), std::move(impl_completion), priority);
 }
 
-void db::manager::fetch_const_objects(fetch_prepare_f prepare, const_map_completion_f completion,
+void db::manager::fetch_const_objects(fetch_prepare_ids_f prepare, const_map_completion_f completion,
                                       priority_t const priority) {
     auto impl_completion = [completion = std::move(completion)](db::manager & manager, state_t && state,
                                                                 object_data_vector_map && fetched_datas) {
@@ -1195,8 +1209,7 @@ void db::manager::save(vector_completion_f completion, priority_t const priority
     impl_ptr<impl>()->execute_save(std::move(impl_completion), priority);
 }
 
-void db::manager::revert(db::integer::type const rev_save_id, vector_completion_f completion,
-                         priority_t const priority) {
+void db::manager::revert(revert_prepare_f prepare, vector_completion_f completion, priority_t const priority) {
     auto impl_completion = [completion = std::move(completion)](
         db::manager & manager, state_t && state, object_data_vector_map && reverted_datas, db::value_map && db_info) {
         auto lambda = [
@@ -1219,7 +1232,7 @@ void db::manager::revert(db::integer::type const rev_save_id, vector_completion_
         dispatch_sync(dispatch_get_main_queue(), std::move(lambda));
     };
 
-    impl_ptr<impl>()->execute_revert(rev_save_id, std::move(impl_completion), priority);
+    impl_ptr<impl>()->execute_revert(std::move(prepare), std::move(impl_completion), priority);
 }
 
 db::object db::manager::cached_object(std::string const &entity_name, db::integer::type const object_id) const {

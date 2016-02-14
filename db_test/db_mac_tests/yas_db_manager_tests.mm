@@ -87,18 +87,18 @@ using namespace yas;
         auto &db = manager.database();
 
         XCTAssertTrue(db::table_exists(db, db::info_table));
-        auto select_infos_result = db::select(db, db::info_table);
+        auto select_infos_result = db::select(db, db::select_option{.table = db::info_table});
         XCTAssertTrue(select_infos_result);
         XCTAssertEqual(select_infos_result.value().size(), 1);
         XCTAssertEqual(select_infos_result.value().at(0).at(db::version_field).get<db::text>(), "0.0.1");
 
         XCTAssertTrue(db::table_exists(db, "sample_a"));
-        auto select_result_a = db::select(db, "sample_a");
+        auto select_result_a = db::select(db, db::select_option{.table = "sample_a"});
         XCTAssertTrue(select_result_a);
         XCTAssertEqual(select_result_a.value().size(), 0);
 
         XCTAssertTrue(db::table_exists(db, "rel_sample_a_child"));
-        auto select_rels_result = db::select(db, "rel_sample_a_child");
+        auto select_rels_result = db::select(db, db::select_option{.table = "rel_sample_a_child"});
         XCTAssertTrue(select_rels_result);
         XCTAssertEqual(select_rels_result.value().size(), 0);
 
@@ -136,12 +136,12 @@ using namespace yas;
             rollback = true;
         }
 
-        db::select_option option{.fields = {db::id_field}};
-
-        auto select_result_a = db::select(db, "sample_a", option);
+        db::select_option option_a{.table = "sample_a", .fields = {db::id_field}};
+        auto select_result_a = db::select(db, option_a);
         auto &src_id = select_result_a.value().at(0).at(db::id_field);
 
-        auto select_result_b = db::select(db, "sample_b", option);
+        db::select_option option_b{.table = "sample_b", .fields = {db::id_field}};
+        auto select_result_b = db::select(db, option_b);
         auto &tgt_id = select_result_b.value().at(0).at(db::id_field);
 
         auto sql = db::insert_sql("rel_sample_a_child", {db::src_id_field, db::tgt_id_field});
@@ -181,7 +181,7 @@ using namespace yas;
         auto &db = manager.database();
 
         XCTAssertTrue(db::table_exists(db, db::info_table));
-        auto select_infos_result = db::select(db, db::info_table);
+        auto select_infos_result = db::select(db, db::select_option{.table = db::info_table});
         XCTAssertTrue(select_infos_result);
         XCTAssertEqual(select_infos_result.value().size(), 1);
         XCTAssertEqual(select_infos_result.value().at(0).at(db::version_field).get<db::text>(), "0.0.2");
@@ -189,7 +189,7 @@ using namespace yas;
         XCTAssertEqual(select_infos_result.value().at(0).at(db::last_save_id_field).get<db::integer>(), 100);
 
         XCTAssertTrue(db::table_exists(db, "sample_a"));
-        auto select_result_a = db::select(db, "sample_a");
+        auto select_result_a = db::select(db, db::select_option{.table = "sample_a"});
         XCTAssertTrue(select_result_a);
         XCTAssertEqual(select_result_a.value().size(), 1);
 
@@ -199,7 +199,7 @@ using namespace yas;
         XCTAssertEqual(sample_a.at("weight").get<db::real>(), 451.2);
 
         XCTAssertTrue(db::table_exists(db, "sample_b"));
-        auto select_result_b = db::select(db, "sample_b");
+        auto select_result_b = db::select(db, db::select_option{.table = "sample_b"});
         XCTAssertTrue(select_result_b);
         XCTAssertEqual(select_result_b.value().size(), 1);
 
@@ -207,12 +207,12 @@ using namespace yas;
         XCTAssertEqual(sample_b.at("name").get<db::text>(), "qwerty");
 
         XCTAssertTrue(db::table_exists(db, "sample_c"));
-        auto select_result_c = db::select(db, "sample_c");
+        auto select_result_c = db::select(db, db::select_option{.table = "sample_c"});
         XCTAssertTrue(select_result_c);
         XCTAssertEqual(select_result_c.value().size(), 0);
 
         XCTAssertTrue(db::table_exists(db, "rel_sample_a_child"));
-        auto select_rels_result = db::select(db, "rel_sample_a_child");
+        auto select_rels_result = db::select(db, db::select_option{.table = "rel_sample_a_child"});
         XCTAssertEqual(select_rels_result.value().size(), 1);
 
         auto &src_id = sample_a.at(db::id_field);
@@ -426,7 +426,7 @@ using namespace yas;
 
     XCTestExpectation *exp3 = [self expectationWithDescription:@"3"];
 
-    manager.fetch_objects("sample_a", {},
+    manager.fetch_objects([](auto &) { return db::select_option{.table = "sample_a"}; },
                           [self, exp3](auto &, auto fetch_result) {
                               XCTAssertTrue(fetch_result);
 
@@ -469,34 +469,37 @@ using namespace yas;
 
     XCTestExpectation *exp5 = [self expectationWithDescription:@"4"];
 
-    db::select_option option{.where_exprs = db::field_expr("name", "like"),
-                             .arguments = {{"name", db::value{"value_%"}}},
-                             .field_orders = {{db::object_id_field, db::order::descending}},
-                             .limit_range = db::range{0, 3}};
+    manager.fetch_objects(
+        [](auto &) {
+            return db::select_option{.table = "sample_a",
+                                     .where_exprs = db::field_expr("name", "like"),
+                                     .arguments = {{"name", db::value{"value_%"}}},
+                                     .field_orders = {{db::object_id_field, db::order::descending}},
+                                     .limit_range = db::range{0, 3}};
+        },
+        [self, exp5, &objects](auto &, auto fetch_result) {
+            XCTAssertTrue(fetch_result);
 
-    manager.fetch_objects("sample_a", std::move(option), [self, exp5, &objects](auto &, auto fetch_result) {
-        XCTAssertTrue(fetch_result);
+            auto const &objects = fetch_result.value();
+            XCTAssertGreaterThan(objects.count("sample_a"), 0);
+            auto &a_objects = objects.at("sample_a");
+            XCTAssertEqual(a_objects.size(), 2);
 
-        auto const &objects = fetch_result.value();
-        XCTAssertGreaterThan(objects.count("sample_a"), 0);
-        auto &a_objects = objects.at("sample_a");
-        XCTAssertEqual(a_objects.size(), 2);
+            XCTAssertEqual(a_objects.at(0).object_id(), db::value{3});
+            XCTAssertEqual(a_objects.at(0).save_id(), db::value{3});
+            XCTAssertEqual(a_objects.at(0).get_attribute("name"), db::value{"value_2"});
 
-        XCTAssertEqual(a_objects.at(0).object_id(), db::value{3});
-        XCTAssertEqual(a_objects.at(0).save_id(), db::value{3});
-        XCTAssertEqual(a_objects.at(0).get_attribute("name"), db::value{"value_2"});
+            XCTAssertEqual(a_objects.at(1).object_id(), db::value{2});
+            XCTAssertEqual(a_objects.at(1).save_id(), db::value{2});
+            XCTAssertEqual(a_objects.at(1).get_attribute("name"), db::value{"value_1"});
 
-        XCTAssertEqual(a_objects.at(1).object_id(), db::value{2});
-        XCTAssertEqual(a_objects.at(1).save_id(), db::value{2});
-        XCTAssertEqual(a_objects.at(1).get_attribute("name"), db::value{"value_1"});
+            XCTAssertEqual(a_objects.at(0).relation_size("child"), 2);
+            XCTAssertEqual(a_objects.at(0).get_relation_ids("child").size(), 2);
+            XCTAssertEqual(a_objects.at(0).get_relation_id("child", 0), db::value{2});
+            XCTAssertEqual(a_objects.at(0).get_relation_id("child", 1), db::value{1});
 
-        XCTAssertEqual(a_objects.at(0).relation_size("child"), 2);
-        XCTAssertEqual(a_objects.at(0).get_relation_ids("child").size(), 2);
-        XCTAssertEqual(a_objects.at(0).get_relation_id("child", 0), db::value{2});
-        XCTAssertEqual(a_objects.at(0).get_relation_id("child", 1), db::value{1});
-
-        [exp5 fulfill];
-    });
+            [exp5 fulfill];
+        });
 
     [self waitForExpectationsWithTimeout:1.0 handler:nil];
 }
@@ -537,7 +540,7 @@ using namespace yas;
 
     });
 
-    manager.fetch_const_objects("sample_a", {},
+    manager.fetch_const_objects([](auto &) { return db::select_option{.table = "sample_a"}; },
                                 [self, exp](auto &, db::manager::const_vector_result_t fetch_result) mutable {
                                     XCTAssertTrue(fetch_result);
 
@@ -642,7 +645,7 @@ using namespace yas;
 
     db::object object_a{nullptr};
 
-    manager.fetch_objects("sample_a", db::select_option{},
+    manager.fetch_objects([](auto &) { return db::select_option{.table = "sample_a"}; },
                           [self, exp3, &object_a](auto &, auto const &fetch_result) {
                               XCTAssertTrue(fetch_result);
 
@@ -826,7 +829,7 @@ using namespace yas;
     manager.execute([self, exp3](db::manager &manager, operation const &) {
         auto &db = manager.database();
 
-        auto value_result = db::select(db, "sample_a");
+        auto value_result = db::select(db, db::select_option{.table = "sample_a"});
         auto const &selected_values = value_result.value();
 
         XCTAssertEqual(selected_values.size(), 2);
@@ -839,7 +842,8 @@ using namespace yas;
         XCTAssertEqual(selected_values.at(1).at(db::save_id_field), db::value{2});
         XCTAssertEqual(selected_values.at(1).at(db::action_field), db::value{db::update_action});
 
-        auto relation_result = db::select(db, manager.model().relation("sample_a", "child").table_name);
+        auto relation_result =
+            db::select(db, db::select_option{.table = manager.model().relation("sample_a", "child").table_name});
         auto const &selected_relations = relation_result.value();
 
         XCTAssertEqual(selected_relations.size(), 2);
@@ -953,54 +957,57 @@ using namespace yas;
         XCTAssertTrue(a_object.is_removed());
     });
 
-    manager.revert(2, [self, &a_object](auto &, auto result) mutable {
-        XCTAssertTrue(result);
+    manager.revert([](auto &) { return 2; },
+                   [self, &a_object](auto &, auto result) mutable {
+                       XCTAssertTrue(result);
 
-        XCTAssertEqual(a_object.save_id(), db::value{2});
-        XCTAssertEqual(a_object.get_attribute("name"), db::value{"value_2"});
-        XCTAssertFalse(a_object.is_removed());
-    });
+                       XCTAssertEqual(a_object.save_id(), db::value{2});
+                       XCTAssertEqual(a_object.get_attribute("name"), db::value{"value_2"});
+                       XCTAssertFalse(a_object.is_removed());
+                   });
 
-    manager.revert(1, [self, &a_object](auto &, auto result) mutable {
-        XCTAssertTrue(result);
+    manager.revert([](auto &) { return 1; },
+                   [self, &a_object](auto &, auto result) mutable {
+                       XCTAssertTrue(result);
 
-        XCTAssertEqual(a_object.save_id(), db::value{1});
-        XCTAssertEqual(a_object.get_attribute("name"), db::value{"default_value"});
+                       XCTAssertEqual(a_object.save_id(), db::value{1});
+                       XCTAssertEqual(a_object.get_attribute("name"), db::value{"default_value"});
 
-        a_object.set_attribute("name", db::value{"value_b"});
-    });
+                       a_object.set_attribute("name", db::value{"value_b"});
+                   });
 
     manager.save([self](auto &, auto result) mutable { XCTAssertTrue(result); });
 
     manager.execute([self](db::manager &manager, operation const &) mutable {
         auto &db = manager.database();
 
-        auto select_result =
-            db::select(db, "sample_a", db::select_option{.where_exprs = db::expr(db::save_id_field, "=", "3")});
+        auto select_result = db::select(
+            db, db::select_option{.table = "sample_a", .where_exprs = db::expr(db::save_id_field, "=", "3")});
         XCTAssertTrue(select_result);
         XCTAssertEqual(select_result.value().size(), 0);
 
-        select_result =
-            db::select(db, "sample_a", db::select_option{.where_exprs = db::expr(db::save_id_field, "=", "2")});
+        select_result = db::select(
+            db, db::select_option{.table = "sample_a", .where_exprs = db::expr(db::save_id_field, "=", "2")});
         XCTAssertTrue(select_result);
         XCTAssertEqual(select_result.value().size(), 1);
 
-        select_result =
-            db::select(db, "sample_a", db::select_option{.where_exprs = db::expr(db::save_id_field, "=", "1")});
+        select_result = db::select(
+            db, db::select_option{.table = "sample_a", .where_exprs = db::expr(db::save_id_field, "=", "1")});
         XCTAssertTrue(select_result);
         XCTAssertEqual(select_result.value().size(), 1);
     });
 
-    manager.revert(0, [self, &a_object, exp](auto &, auto result) mutable {
-        XCTAssertTrue(result);
+    manager.revert([](auto &) { return 0; },
+                   [self, &a_object, exp](auto &, auto result) mutable {
+                       XCTAssertTrue(result);
 
-        XCTAssertEqual(a_object.status(), db::object_status::invalid);
-        XCTAssertFalse(a_object.save_id());
-        XCTAssertFalse(a_object.action());
-        XCTAssertFalse(a_object.get_attribute("name"));
+                       XCTAssertEqual(a_object.status(), db::object_status::invalid);
+                       XCTAssertFalse(a_object.save_id());
+                       XCTAssertFalse(a_object.action());
+                       XCTAssertFalse(a_object.get_attribute("name"));
 
-        [exp fulfill];
-    });
+                       [exp fulfill];
+                   });
 
     [self waitForExpectationsWithTimeout:1.0 handler:nil];
 }
@@ -1061,13 +1068,14 @@ using namespace yas;
             XCTAssertEqual(manager.last_save_id(), 4);
         });
 
-        manager.revert(3, [self, exp1](auto &manager, auto result) mutable {
-            XCTAssertTrue(result);
-            XCTAssertEqual(manager.current_save_id(), 3);
-            XCTAssertEqual(manager.last_save_id(), 4);
+        manager.revert([](auto &) { return 3; },
+                       [self, exp1](auto &manager, auto result) mutable {
+                           XCTAssertTrue(result);
+                           XCTAssertEqual(manager.current_save_id(), 3);
+                           XCTAssertEqual(manager.last_save_id(), 4);
 
-            [exp1 fulfill];
-        });
+                           [exp1 fulfill];
+                       });
 
         [self waitForExpectationsWithTimeout:1.0 handler:nil];
     } else {
@@ -1085,7 +1093,7 @@ using namespace yas;
             XCTAssertEqual(manager.last_save_id(), 4);
         });
 
-        manager.fetch_objects("sample_a", {},
+        manager.fetch_objects([](auto &) { return db::select_option{.table = "sample_a"}; },
                               [self, &objects](auto &manager, auto result) mutable {
                                   XCTAssertTrue(result);
 
@@ -1151,7 +1159,7 @@ using namespace yas;
         },
         1);
 
-    manager.fetch_objects("sample_a", {},
+    manager.fetch_objects([](auto &) { return db::select_option{.table = "sample_a"}; },
                           [&call_count, exp2, &fetched_object_count, self](auto &, auto result) {
                               XCTAssertTrue(result);
                               XCTAssertEqual(result.value().count("sample_a"), 0);

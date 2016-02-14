@@ -34,6 +34,7 @@ namespace db {
     };
 
     struct select_option {
+        std::string table = "";
         std::vector<std::string> fields = {"*"};
         std::string where_exprs = "";
         value_map arguments = {};

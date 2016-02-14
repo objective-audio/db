@@ -330,9 +330,10 @@ using namespace yas;
     db::value_vector args_2{db::value{"value_a_2"}, db::value{"value_b_2"}};
     XCTAssertTrue(db.execute_update(db::insert_sql(table, {field_a, field_b}), std::move(args_2)));
 
-    auto const select_result = db::select(db, table, {.fields = {field_a, field_b},
-                                                      .arguments = {std::make_pair(field_a, db::value{"value_a_2"})},
-                                                      .where_exprs = db::field_expr(field_a, "=")});
+    auto const select_result = db::select(db, {.table = table,
+                                               .fields = {field_a, field_b},
+                                               .arguments = {std::make_pair(field_a, db::value{"value_a_2"})},
+                                               .where_exprs = db::field_expr(field_a, "=")});
 
     XCTAssertTrue(select_result);
     XCTAssertEqual(select_result.value().size(), 1);
@@ -355,7 +356,7 @@ using namespace yas;
     args = {db::value{2}, db::value{"value_2"}};
     XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
 
-    auto select_result = db::select_last(db, table_name);
+    auto select_result = db::select_last(db, db::select_option{.table = table_name});
     XCTAssertTrue(select_result);
     XCTAssertEqual(select_result.value().size(), 2);
     XCTAssertEqual(select_result.value().at(0).at(field_name).get<db::text>(), "value_1");
@@ -364,7 +365,7 @@ using namespace yas;
     args = {db::value{1}, db::value{"value_1_1"}};
     XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
 
-    select_result = db::select_last(db, table_name);
+    select_result = db::select_last(db, db::select_option{.table = table_name});
     XCTAssertTrue(select_result);
     XCTAssertEqual(select_result.value().size(), 2);
     XCTAssertEqual(select_result.value().at(0).at(field_name).get<db::text>(), "value_2");
@@ -395,25 +396,25 @@ using namespace yas;
     args = {db::value{2}, db::value{"value_2_c"}, db::value{4}};
     XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
 
-    auto select_result = db::select_last(db, table_name, db::value{4});
+    auto select_result = db::select_last(db, db::select_option{.table = table_name}, db::value{4});
     XCTAssertTrue(select_result);
     XCTAssertEqual(select_result.value().size(), 2);
     XCTAssertEqual(select_result.value().at(0).at(field_name).get<db::text>(), "value_1_c");
     XCTAssertEqual(select_result.value().at(1).at(field_name).get<db::text>(), "value_2_c");
 
-    select_result = db::select_last(db, table_name, db::value{2});
+    select_result = db::select_last(db, db::select_option{.table = table_name}, db::value{2});
     XCTAssertTrue(select_result);
     XCTAssertEqual(select_result.value().size(), 2);
     XCTAssertEqual(select_result.value().at(0).at(field_name).get<db::text>(), "value_1_b");
     XCTAssertEqual(select_result.value().at(1).at(field_name).get<db::text>(), "value_2_b");
 
-    select_result = db::select_last(db, table_name, db::value{3});
+    select_result = db::select_last(db, db::select_option{.table = table_name}, db::value{3});
     XCTAssertTrue(select_result);
     XCTAssertEqual(select_result.value().size(), 2);
     XCTAssertEqual(select_result.value().at(0).at(field_name).get<db::text>(), "value_2_b");
     XCTAssertEqual(select_result.value().at(1).at(field_name).get<db::text>(), "value_1_c");
 
-    select_result = db::select_last(db, table_name, db::value{1});
+    select_result = db::select_last(db, db::select_option{.table = table_name}, db::value{1});
     XCTAssertTrue(select_result);
     XCTAssertEqual(select_result.value().size(), 2);
     XCTAssertEqual(select_result.value().at(0).at(field_name).get<db::text>(), "value_1_a");
@@ -444,16 +445,19 @@ using namespace yas;
     args = {db::value{2}, db::value{"value_2_c"}, db::value{4}};
     XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
 
-    auto select_result =
-        db::select_last(db, table_name, db::value{3}, {.field_orders = {{db::object_id_field, db::order::ascending}}});
+    auto select_result = db::select_last(
+        db, db::select_option{.table = table_name, .field_orders = {{db::object_id_field, db::order::ascending}}},
+        db::value{3});
     XCTAssertTrue(select_result);
     XCTAssertEqual(select_result.value().size(), 2);
     XCTAssertEqual(select_result.value().at(0).at(field_name).get<db::text>(), "value_1_c");
     XCTAssertEqual(select_result.value().at(1).at(field_name).get<db::text>(), "value_2_b");
 
-    select_result =
-        db::select_last(db, table_name, db::value{3},
-                        {.field_orders = {{db::object_id_field, db::order::descending}}, .limit_range = {0, 1}});
+    select_result = db::select_last(
+        db,
+        db::select_option{
+            .table = table_name, .field_orders = {{db::object_id_field, db::order::descending}}, .limit_range = {0, 1}},
+        db::value{3});
     XCTAssertTrue(select_result);
     XCTAssertEqual(select_result.value().size(), 1);
     XCTAssertEqual(select_result.value().at(0).at(field_name).get<db::text>(), "value_2_b");
@@ -690,11 +694,12 @@ using namespace yas;
     std::set<db::integer::type> obj_ids{2, 4, 6};
 
     db::select_option option;
+    option.table = table_name;
     option.where_exprs = db::object_id_field + " in (" +
                          joined(obj_ids, ",", [](auto const &obj_id) { return std::to_string(obj_id); }) + ")";
     option.field_orders = {db::field_order{db::object_id_field, db::order::ascending}};
 
-    auto select_result = db::select(db, table_name, option);
+    auto select_result = db::select(db, option);
 
     XCTAssertTrue(select_result);
     XCTAssertEqual(select_result.value().size(), 3);
@@ -820,17 +825,21 @@ using namespace yas;
 
     manager.save([self](auto &, auto result) mutable { XCTAssertTrue(result); });
 
-    manager.fetch_const_objects("sample_a", db::select_option{.where_exprs = db::equal_field_expr(db::object_id_field),
-                                                              .arguments = {{db::object_id_field, db::value{1}}}},
-                                [self, &pair](auto &manager, auto result) mutable {
-                                    XCTAssertTrue(result);
+    manager.fetch_const_objects(
+        [](auto &) {
+            return db::select_option{.table = "sample_a",
+                                     .where_exprs = db::equal_field_expr(db::object_id_field),
+                                     .arguments = {{db::object_id_field, db::value{1}}}};
+        },
+        [self, &pair](auto &manager, auto result) mutable {
+            XCTAssertTrue(result);
 
-                                    auto &objects = result.value();
-                                    XCTAssertEqual(objects.count("sample_a"), 1);
-                                    XCTAssertEqual(objects.at("sample_a").size(), 1);
+            auto &objects = result.value();
+            XCTAssertEqual(objects.count("sample_a"), 1);
+            XCTAssertEqual(objects.at("sample_a").size(), 1);
 
-                                    pair = std::make_pair(objects.at("sample_a").at(0), db::relation_ids(objects));
-                                });
+            pair = std::make_pair(objects.at("sample_a").at(0), db::relation_ids(objects));
+        });
 
     manager.fetch_const_objects(
         [&pair](auto &) { return pair.second; },
