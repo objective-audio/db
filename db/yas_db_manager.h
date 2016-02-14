@@ -83,10 +83,10 @@ namespace db {
 
         using execution_f = std::function<void(manager &, operation const &)>;
 
-        using insert_prepare_f = std::function<entity_count_map(manager &)>;
-        using fetch_prepare_option_f = std::function<select_option(manager &)>;
-        using fetch_prepare_ids_f = std::function<integer_set_map(manager &)>;
-        using revert_prepare_f = std::function<integer::type(manager &)>;
+        using insert_preparation_f = std::function<entity_count_map(manager &)>;
+        using fetch_preparation_option_f = std::function<select_option(manager &)>;
+        using fetch_preparation_ids_f = std::function<integer_set_map(manager &)>;
+        using revert_preparation_f = std::function<integer::type(manager &)>;
 
         using vector_completion_f = std::function<void(manager &, vector_result_t)>;
         using map_completion_f = std::function<void(manager &, map_result_t)>;
@@ -110,16 +110,18 @@ namespace db {
 
         void execute(execution_f &&execution, priority_t const priority = 0);
 
-        void insert_objects(insert_prepare_f prepare, vector_completion_f completion, priority_t const priority = 0);
-        void fetch_objects(fetch_prepare_option_f prepare, vector_completion_f completion,
+        void insert_objects(insert_preparation_f preparation, vector_completion_f completion,
+                            priority_t const priority = 0);
+        void fetch_objects(fetch_preparation_option_f preparation, vector_completion_f completion,
                            priority_t const priority = 0);
-        void fetch_objects(fetch_prepare_ids_f prepare, map_completion_f completion, priority_t const priority = 0);
-        void fetch_const_objects(fetch_prepare_option_f prepare, const_vector_completion_f completion,
+        void fetch_objects(fetch_preparation_ids_f preparation, map_completion_f completion,
+                           priority_t const priority = 0);
+        void fetch_const_objects(fetch_preparation_option_f preparation, const_vector_completion_f completion,
                                  priority_t const priority = 0);
-        void fetch_const_objects(fetch_prepare_ids_f prepare, const_map_completion_f completion,
+        void fetch_const_objects(fetch_preparation_ids_f preparation, const_map_completion_f completion,
                                  priority_t const priority = 0);
         void save(vector_completion_f completion, priority_t const priority = 0);
-        void revert(revert_prepare_f prepare, vector_completion_f completion, priority_t const priority = 0);
+        void revert(revert_preparation_f preparation, vector_completion_f completion, priority_t const priority = 0);
 
         object cached_object(std::string const &entity_name, integer::type const object_id) const;
 
