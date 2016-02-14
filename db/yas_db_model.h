@@ -37,10 +37,12 @@ namespace db {
         relation_map const &relations(std::string const &entity_name) const;
         attribute const &attribute(std::string const &entity_name, std::string const &attr_name) const;
         relation const &relation(std::string const &entity_name, std::string const &rel_name) const;
+        index const &index(std::string const &index_name) const;
 
         bool entity_exists(std::string const &entity_name) const;
         bool attribute_exists(std::string const &entity_name, std::string const &attr_name) const;
         bool relation_exists(std::string const &entity_name, std::string const &rel_name) const;
+        bool index_exists(std::string const &index_name) const;
 
        private:
         class impl;
