@@ -163,8 +163,9 @@ bool db::column_exists(database const &db, std::string column_name, std::string 
     return false;
 }
 
-db::select_result db::select(db::database const &db, std::string const &table_name, select_option const &option) {
-    auto const sql = select_sql(table_name, option.fields, option.where_exprs, option.field_orders, option.limit_range);
+db::select_result db::select(db::database const &db, select_option const &option) {
+    auto const sql =
+        select_sql(option.table, option.fields, option.where_exprs, option.field_orders, option.limit_range);
 
     db::value_map_vector value_map_vector;
 
@@ -180,8 +181,7 @@ db::select_result db::select(db::database const &db, std::string const &table_na
     return select_result{value_map_vector};
 }
 
-db::select_result db::select_last(database const &db, std::string const &table_name, db::value const &save_id,
-                                  select_option option) {
+db::select_result db::select_last(database const &db, select_option option, value const &save_id) {
     std::vector<std::string> components;
 
     if (save_id) {
@@ -195,9 +195,9 @@ db::select_result db::select_last(database const &db, std::string const &table_n
     std::string sub_where = components.size() > 0 ? " WHERE " + joined(components, " AND ") : "";
 
     option.where_exprs =
-        "rowid IN (SELECT MAX(rowid) FROM " + table_name + sub_where + " GROUP BY " + db::object_id_field + ")";
+        "rowid IN (SELECT MAX(rowid) FROM " + option.table + sub_where + " GROUP BY " + db::object_id_field + ")";
 
-    return select(db, table_name, option);
+    return select(db, option);
 }
 
 db::select_result db::select_undo(database const &db, std::string const &table_name, integer::type const revert_save_id,
@@ -214,23 +214,25 @@ db::select_result db::select_undo(database const &db, std::string const &table_n
                             ")");
     components.emplace_back(expr(save_id_field, "<=", std::to_string(revert_save_id)));
 
-    select_option option{.where_exprs = "rowid IN (SELECT MAX(rowid) FROM " + table_name + " WHERE " +
+    select_option option{.table = table_name,
+                         .where_exprs = "rowid IN (SELECT MAX(rowid) FROM " + table_name + " WHERE " +
                                         joined(components, " AND ") + " GROUP BY " + object_id_field + ")",
                          .field_orders = {{object_id_field, order::ascending}}};
 
-    auto result = select(db, table_name, option);
+    auto result = select(db, option);
     if (!result) {
         return select_result{std::move(result.error())};
     }
 
-    select_option empty_option{.fields = {object_id_field},
+    select_option empty_option{.table = table_name,
+                               .fields = {object_id_field},
                                .where_exprs = joined({expr(save_id_field, "<=", std::to_string(current_save_id)),
                                                       expr(save_id_field, ">", std::to_string(revert_save_id)),
                                                       equal_field_expr(action_field)},
                                                      " AND "),
                                .arguments = {{action_field, db::value{insert_action}}},
                                .field_orders = {{object_id_field, order::ascending}}};
-    auto empty_result = select(db, table_name, empty_option);
+    auto empty_result = select(db, empty_option);
     if (!empty_result) {
         return select_result{std::move(empty_result.error())};
     }
@@ -247,10 +249,11 @@ db::select_result db::select_redo(database const &db, std::string const &table_n
     std::vector<std::string> components;
     components.emplace_back(expr(save_id_field, ">", std::to_string(current_save_id)));
 
-    db::select_option option{.where_exprs = joined(components, " AND "),
+    db::select_option option{.table = table_name,
+                             .where_exprs = joined(components, " AND "),
                              .field_orders = {{object_id_field, db::order::ascending}}};
 
-    return select_last(db, table_name, db::value{revert_save_id}, std::move(option));
+    return select_last(db, std::move(option), db::value{revert_save_id});
 }
 
 db::select_result db::select_revert(database const &db, std::string const &table_name,
@@ -264,10 +267,10 @@ db::select_result db::select_revert(database const &db, std::string const &table
     return select_result{value_map_vector{}};
 }
 
-db::select_single_result db::select_single(database const &db, std::string const &table_name, select_option option) {
+db::select_single_result db::select_single(database const &db, select_option option) {
     option.limit_range = {.location = 0, .length = 1};
 
-    if (auto result = select(db, table_name, option)) {
+    if (auto result = select(db, option)) {
         if (result.value().size() > 0) {
             return select_single_result{std::move(result.value().at(0))};
         }
@@ -277,7 +280,7 @@ db::select_single_result db::select_single(database const &db, std::string const
 }
 
 db::select_single_result db::select_db_info(database const &db) {
-    return select_single(db, db::info_table);
+    return select_single(db, db::select_option{.table = db::info_table});
 }
 
 db::value db::max(database const &db, std::string const &table_name, std::string const &field) {
