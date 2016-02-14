@@ -96,11 +96,6 @@ namespace db {
         manager(std::string const &db_path, model const &model, size_t const priority_count = 1);
         manager(std::nullptr_t);
 
-        void suspend();
-        void resume();
-
-        void setup(vector_completion_f completion);
-
         std::string const &database_path() const;
         database const &database() const;
         db::database &database();
@@ -108,8 +103,12 @@ namespace db {
         integer::type current_save_id() const;
         integer::type last_save_id() const;
 
+        void suspend();
+        void resume();
+
         void execute(execution_f &&execution, priority_t const priority = 0);
 
+        void setup(vector_completion_f completion);
         void insert_objects(insert_preparation_f preparation, vector_completion_f completion,
                             priority_t const priority = 0);
         void fetch_objects(fetch_preparation_option_f preparation, vector_completion_f completion,
