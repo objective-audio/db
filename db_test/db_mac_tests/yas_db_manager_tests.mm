@@ -426,7 +426,7 @@ using namespace yas;
 
     XCTestExpectation *exp3 = [self expectationWithDescription:@"3"];
 
-    manager.fetch_objects("sample_a", {},
+    manager.fetch_objects([](auto &) { return std::make_pair("sample_a", db::select_option{}); },
                           [self, exp3](auto &, auto fetch_result) {
                               XCTAssertTrue(fetch_result);
 
@@ -469,34 +469,37 @@ using namespace yas;
 
     XCTestExpectation *exp5 = [self expectationWithDescription:@"4"];
 
-    db::select_option option{.where_exprs = db::field_expr("name", "like"),
-                             .arguments = {{"name", db::value{"value_%"}}},
-                             .field_orders = {{db::object_id_field, db::order::descending}},
-                             .limit_range = db::range{0, 3}};
+    manager.fetch_objects(
+        [](auto &) {
+            return std::make_pair("sample_a",
+                                  db::select_option{.where_exprs = db::field_expr("name", "like"),
+                                                    .arguments = {{"name", db::value{"value_%"}}},
+                                                    .field_orders = {{db::object_id_field, db::order::descending}},
+                                                    .limit_range = db::range{0, 3}});
+        },
+        [self, exp5, &objects](auto &, auto fetch_result) {
+            XCTAssertTrue(fetch_result);
 
-    manager.fetch_objects("sample_a", std::move(option), [self, exp5, &objects](auto &, auto fetch_result) {
-        XCTAssertTrue(fetch_result);
+            auto const &objects = fetch_result.value();
+            XCTAssertGreaterThan(objects.count("sample_a"), 0);
+            auto &a_objects = objects.at("sample_a");
+            XCTAssertEqual(a_objects.size(), 2);
 
-        auto const &objects = fetch_result.value();
-        XCTAssertGreaterThan(objects.count("sample_a"), 0);
-        auto &a_objects = objects.at("sample_a");
-        XCTAssertEqual(a_objects.size(), 2);
+            XCTAssertEqual(a_objects.at(0).object_id(), db::value{3});
+            XCTAssertEqual(a_objects.at(0).save_id(), db::value{3});
+            XCTAssertEqual(a_objects.at(0).get_attribute("name"), db::value{"value_2"});
 
-        XCTAssertEqual(a_objects.at(0).object_id(), db::value{3});
-        XCTAssertEqual(a_objects.at(0).save_id(), db::value{3});
-        XCTAssertEqual(a_objects.at(0).get_attribute("name"), db::value{"value_2"});
+            XCTAssertEqual(a_objects.at(1).object_id(), db::value{2});
+            XCTAssertEqual(a_objects.at(1).save_id(), db::value{2});
+            XCTAssertEqual(a_objects.at(1).get_attribute("name"), db::value{"value_1"});
 
-        XCTAssertEqual(a_objects.at(1).object_id(), db::value{2});
-        XCTAssertEqual(a_objects.at(1).save_id(), db::value{2});
-        XCTAssertEqual(a_objects.at(1).get_attribute("name"), db::value{"value_1"});
+            XCTAssertEqual(a_objects.at(0).relation_size("child"), 2);
+            XCTAssertEqual(a_objects.at(0).get_relation_ids("child").size(), 2);
+            XCTAssertEqual(a_objects.at(0).get_relation_id("child", 0), db::value{2});
+            XCTAssertEqual(a_objects.at(0).get_relation_id("child", 1), db::value{1});
 
-        XCTAssertEqual(a_objects.at(0).relation_size("child"), 2);
-        XCTAssertEqual(a_objects.at(0).get_relation_ids("child").size(), 2);
-        XCTAssertEqual(a_objects.at(0).get_relation_id("child", 0), db::value{2});
-        XCTAssertEqual(a_objects.at(0).get_relation_id("child", 1), db::value{1});
-
-        [exp5 fulfill];
-    });
+            [exp5 fulfill];
+        });
 
     [self waitForExpectationsWithTimeout:1.0 handler:nil];
 }
@@ -537,7 +540,7 @@ using namespace yas;
 
     });
 
-    manager.fetch_const_objects("sample_a", {},
+    manager.fetch_const_objects([](auto &) { return std::make_pair("sample_a", db::select_option{}); },
                                 [self, exp](auto &, db::manager::const_vector_result_t fetch_result) mutable {
                                     XCTAssertTrue(fetch_result);
 
@@ -642,7 +645,7 @@ using namespace yas;
 
     db::object object_a{nullptr};
 
-    manager.fetch_objects("sample_a", db::select_option{},
+    manager.fetch_objects([](auto &) { return std::make_pair("sample_a", db::select_option{}); },
                           [self, exp3, &object_a](auto &, auto const &fetch_result) {
                               XCTAssertTrue(fetch_result);
 
@@ -1089,7 +1092,7 @@ using namespace yas;
             XCTAssertEqual(manager.last_save_id(), 4);
         });
 
-        manager.fetch_objects("sample_a", {},
+        manager.fetch_objects([](auto &) { return std::make_pair("sample_a", db::select_option{}); },
                               [self, &objects](auto &manager, auto result) mutable {
                                   XCTAssertTrue(result);
 
@@ -1155,7 +1158,7 @@ using namespace yas;
         },
         1);
 
-    manager.fetch_objects("sample_a", {},
+    manager.fetch_objects([](auto &) { return std::make_pair("sample_a", db::select_option{}); },
                           [&call_count, exp2, &fetched_object_count, self](auto &, auto result) {
                               XCTAssertTrue(result);
                               XCTAssertEqual(result.value().count("sample_a"), 0);

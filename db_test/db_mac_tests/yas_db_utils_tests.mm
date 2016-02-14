@@ -820,17 +820,21 @@ using namespace yas;
 
     manager.save([self](auto &, auto result) mutable { XCTAssertTrue(result); });
 
-    manager.fetch_const_objects("sample_a", db::select_option{.where_exprs = db::equal_field_expr(db::object_id_field),
-                                                              .arguments = {{db::object_id_field, db::value{1}}}},
-                                [self, &pair](auto &manager, auto result) mutable {
-                                    XCTAssertTrue(result);
+    manager.fetch_const_objects(
+        [](auto &) {
+            return std::make_pair("sample_a",
+                                  db::select_option{.where_exprs = db::equal_field_expr(db::object_id_field),
+                                                    .arguments = {{db::object_id_field, db::value{1}}}});
+        },
+        [self, &pair](auto &manager, auto result) mutable {
+            XCTAssertTrue(result);
 
-                                    auto &objects = result.value();
-                                    XCTAssertEqual(objects.count("sample_a"), 1);
-                                    XCTAssertEqual(objects.at("sample_a").size(), 1);
+            auto &objects = result.value();
+            XCTAssertEqual(objects.count("sample_a"), 1);
+            XCTAssertEqual(objects.at("sample_a").size(), 1);
 
-                                    pair = std::make_pair(objects.at("sample_a").at(0), db::relation_ids(objects));
-                                });
+            pair = std::make_pair(objects.at("sample_a").at(0), db::relation_ids(objects));
+        });
 
     manager.fetch_const_objects(
         [&pair](auto &) { return pair.second; },

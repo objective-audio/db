@@ -84,6 +84,7 @@ namespace db {
         using execution_f = std::function<void(manager &, operation const &)>;
 
         using insert_prepare_f = std::function<entity_count_map(manager &)>;
+        using fetch_prepare_entity_f = std::function<std::pair<std::string, select_option>(manager &)>;
         using fetch_prepare_ids_f = std::function<integer_set_map(manager &)>;
         using revert_prepare_f = std::function<integer::type(manager &)>;
 
@@ -110,11 +111,11 @@ namespace db {
         void execute(execution_f &&execution, priority_t const priority = 0);
 
         void insert_objects(insert_prepare_f prepare, vector_completion_f completion, priority_t const priority = 0);
-        void fetch_objects(std::string const &entity_name, select_option option, vector_completion_f completion,
+        void fetch_objects(fetch_prepare_entity_f prepare, vector_completion_f completion,
                            priority_t const priority = 0);
         void fetch_objects(fetch_prepare_ids_f prepare, map_completion_f completion, priority_t const priority = 0);
-        void fetch_const_objects(std::string const &entity_name, select_option option,
-                                 const_vector_completion_f completion, priority_t const priority = 0);
+        void fetch_const_objects(fetch_prepare_entity_f prepare, const_vector_completion_f completion,
+                                 priority_t const priority = 0);
         void fetch_const_objects(fetch_prepare_ids_f prepare, const_map_completion_f completion,
                                  priority_t const priority = 0);
         void save(vector_completion_f completion, priority_t const priority = 0);
