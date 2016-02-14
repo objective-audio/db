@@ -205,6 +205,13 @@ using namespace yas;
     XCTAssertEqual(model.relation("sample_a", "child").name, "child");
 }
 
+- (void)test_get_index {
+    NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
+    db::model model((__bridge CFDictionaryRef)model_dict);
+
+    XCTAssertEqual(model.index("sample_a_name").name, "sample_a_name");
+}
+
 - (void)test_entity_exists {
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
@@ -232,6 +239,14 @@ using namespace yas;
     XCTAssertTrue(model.relation_exists("sample_a", "child"));
 
     XCTAssertFalse(model.relation_exists("sample_a", "name"));
+}
+
+- (void)test_index_exists {
+    NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
+    db::model model((__bridge CFDictionaryRef)model_dict);
+
+    XCTAssertTrue(model.index_exists("sample_a_name"));
+    XCTAssertFalse(model.index_exists("sample_b_name"));
 }
 
 @end

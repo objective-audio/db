@@ -158,11 +158,12 @@ db::relation const &db::model::relation(std::string const &entity_name, std::str
     return entities().at(entity_name).relations.at(rel_name);
 }
 
+db::index const &db::model::index(std::string const &index_name) const {
+    return indices().at(index_name);
+}
+
 bool db::model::entity_exists(std::string const &entity_name) const {
-    if (entities().count(entity_name) > 0) {
-        return true;
-    }
-    return false;
+    return entities().count(entity_name) > 0;
 }
 
 bool db::model::attribute_exists(std::string const &entity_name, std::string const &attr_name) const {
@@ -181,4 +182,8 @@ bool db::model::relation_exists(std::string const &entity_name, std::string cons
         }
     }
     return false;
+}
+
+bool db::model::index_exists(std::string const &index_name) const {
+    return indices().count(index_name) > 0;
 }
