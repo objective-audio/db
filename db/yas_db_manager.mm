@@ -330,6 +330,184 @@ struct db::manager::impl : public base::impl {
         queue.add_operation(operation{std::move(op_lambda)}, priority);
     }
 
+    void execute_setup(std::function<void(manager &, state_t &&, value_map &&)> &&completion) {
+        execute(
+            [completion = std::move(completion)](db::manager & manager, operation const &op) {
+                auto &db = manager.database();
+                auto const &model = manager.model();
+
+                db::value_map db_info;
+                state_t state{nullptr};
+
+                if (auto begin_result = db::begin_transaction(db)) {
+                    if (db::table_exists(db, info_table)) {
+                        bool needs_migration = false;
+
+                        if (auto select_result = db::select(
+                                db, {.table = info_table, .fields = {version_field}, .limit_range = db::range{0, 1}})) {
+                            auto const update_info_result = db.execute_update(
+                                update_sql(info_table, {version_field}, ""), {db::value{model.version().str()}});
+                            if (update_info_result) {
+                                auto const &infos = select_result.value();
+                                auto const &info = *infos.rbegin();
+                                if (info.count(version_field) == 0) {
+                                    state = state_t{error{error_type::version_not_found}};
+                                } else {
+                                    auto db_version_str = info.at(version_field).get<text>();
+                                    if (db_version_str.size() == 0) {
+                                        state = state_t{error{error_type::invalid_version_text}};
+                                    } else {
+                                        auto const db_version = yas::version{db_version_str};
+                                        if (db_version < model.version()) {
+                                            needs_migration = true;
+                                        }
+                                    }
+                                }
+                            } else {
+                                state = state_t{
+                                    error{error_type::update_info_failed, std::move(update_info_result.error())}};
+                            }
+                        } else {
+                            state = state_t{error{error_type::select_info_failed, std::move(select_result.error())}};
+                        }
+
+                        if (state && needs_migration) {
+                            for (auto const &entity_pair : model.entities()) {
+                                auto const &entity_name = entity_pair.first;
+                                auto const &entity = entity_pair.second;
+
+                                if (db::table_exists(db, entity_name)) {
+                                    // alter table
+                                    for (auto const &attr_pair : entity.attributes) {
+                                        if (!db::column_exists(db, attr_pair.first, entity_name)) {
+                                            auto const &attr = attr_pair.second;
+                                            if (auto ul = unless(
+                                                    db.execute_update(alter_table_sql(entity_name, attr.sql())))) {
+                                                state = state_t{error{error_type::alter_entity_table_failed,
+                                                                      std::move(ul.value.error())}};
+                                                break;
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    // create table
+                                    if (auto ul = unless(db.execute_update(entity.sql_for_create()))) {
+                                        state = state_t{
+                                            error{error_type::create_entity_table_failed, std::move(ul.value.error())}};
+                                        break;
+                                    }
+                                }
+
+                                if (state) {
+                                    for (auto &rel_pair : entity.relations) {
+                                        if (auto ul = unless(db.execute_update(rel_pair.second.sql_for_create()))) {
+                                            state = state_t{error{error_type::create_relation_table_failed,
+                                                                  std::move(ul.value.error())}};
+                                            break;
+                                        }
+                                    }
+                                }
+
+                                if (!state) {
+                                    break;
+                                }
+                            }
+
+                            if (state) {
+                                // create indices
+                                for (auto const &index_pair : model.indices()) {
+                                    if (!db::index_exists(db, index_pair.first)) {
+                                        auto &index = index_pair.second;
+                                        if (auto ul = unless(db.execute_update(index.sql_for_create()))) {
+                                            state = state_t{
+                                                error{error_type::create_index_failed, std::move(ul.value.error())}};
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        // create information table
+
+                        if (auto create_result = db.execute_update(db::create_table_sql(
+                                info_table, {version_field, current_save_id_field, last_save_id_field}))) {
+                            db::value_map args{std::make_pair(version_field, db::value{model.version().str()}),
+                                               std::make_pair(current_save_id_field, db::value{0}),
+                                               std::make_pair(last_save_id_field, db::value{0})};
+                            if (auto ul = unless(db.execute_update(
+                                    db::insert_sql(info_table,
+                                                   {version_field, current_save_id_field, last_save_id_field}),
+                                    args))) {
+                                state = state_t{error{error_type::insert_info_failed, std::move(ul.value.error())}};
+                            }
+                        } else {
+                            state =
+                                state_t{error{error_type::create_info_table_failed, std::move(create_result.error())}};
+                        }
+
+                        // create entity tables
+
+                        if (state) {
+                            auto const &entities = model.entities();
+                            for (auto &entity_pair : entities) {
+                                auto &entity = entity_pair.second;
+                                if (auto ul = unless(db.execute_update(entity.sql_for_create()))) {
+                                    state = state_t{
+                                        error{error_type::create_entity_table_failed, std::move(ul.value.error())}};
+                                    break;
+                                }
+
+                                for (auto &rel_pair : entity.relations) {
+                                    if (auto ul = unless(db.execute_update(rel_pair.second.sql_for_create()))) {
+                                        state = state_t{error{error_type::create_relation_table_failed,
+                                                              std::move(ul.value.error())}};
+                                        break;
+                                    }
+                                }
+
+                                if (!state) {
+                                    break;
+                                }
+                            }
+                        }
+
+                        // create indices
+
+                        if (state) {
+                            for (auto const &index_pair : model.indices()) {
+                                auto &index = index_pair.second;
+                                if (auto ul = unless(db.execute_update(index.sql_for_create()))) {
+                                    state =
+                                        state_t{error{error_type::create_index_failed, std::move(ul.value.error())}};
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    if (state) {
+                        db::commit(db);
+                    } else {
+                        db::rollback(db);
+                    }
+                } else {
+                    state = state_t{error{error_type::begin_transaction_failed, std::move(begin_result.error())}};
+                }
+
+                if (state) {
+                    if (auto select_result = select_db_info(db)) {
+                        db_info = std::move(select_result.value());
+                    } else {
+                        state = state_t{error{error_type::select_info_failed, std::move(select_result.error())}};
+                    }
+                }
+
+                completion(manager, std::move(state), std::move(db_info));
+            },
+            0);
+    }
+
     void execute_insert(
         insert_preparation_f &&preparation,
         std::function<void(db::manager &, state_t &&, object_data_vector_map &&, db::value_map &&)> &&completion,
@@ -845,190 +1023,6 @@ void db::manager::resume() {
     impl_ptr<impl>()->queue.resume();
 }
 
-void db::manager::setup(vector_completion_f completion) {
-    execute([completion = std::move(completion), model = impl_ptr<impl>()->model](db::manager & manager,
-                                                                                  operation const &op) {
-        auto &db = manager.database();
-
-        db::value_map db_info;
-        state_t state{nullptr};
-
-        if (auto begin_result = db::begin_transaction(db)) {
-            if (db::table_exists(db, info_table)) {
-                bool needs_migration = false;
-
-                if (auto select_result = db::select(
-                        db, {.table = info_table, .fields = {version_field}, .limit_range = db::range{0, 1}})) {
-                    auto const update_info_result = db.execute_update(update_sql(info_table, {version_field}, ""),
-                                                                      {db::value{model.version().str()}});
-                    if (update_info_result) {
-                        auto const &infos = select_result.value();
-                        auto const &info = *infos.rbegin();
-                        if (info.count(version_field) == 0) {
-                            state = state_t{error{error_type::version_not_found}};
-                        } else {
-                            auto db_version_str = info.at(version_field).get<text>();
-                            if (db_version_str.size() == 0) {
-                                state = state_t{error{error_type::invalid_version_text}};
-                            } else {
-                                auto const db_version = yas::version{db_version_str};
-                                if (db_version < model.version()) {
-                                    needs_migration = true;
-                                }
-                            }
-                        }
-                    } else {
-                        state = state_t{error{error_type::update_info_failed, std::move(update_info_result.error())}};
-                    }
-                } else {
-                    state = state_t{error{error_type::select_info_failed, std::move(select_result.error())}};
-                }
-
-                if (state && needs_migration) {
-                    for (auto const &entity_pair : model.entities()) {
-                        auto const &entity_name = entity_pair.first;
-                        auto const &entity = entity_pair.second;
-
-                        if (db::table_exists(db, entity_name)) {
-                            // alter table
-                            for (auto const &attr_pair : entity.attributes) {
-                                if (!db::column_exists(db, attr_pair.first, entity_name)) {
-                                    auto const &attr = attr_pair.second;
-                                    if (auto ul = unless(db.execute_update(alter_table_sql(entity_name, attr.sql())))) {
-                                        state = state_t{
-                                            error{error_type::alter_entity_table_failed, std::move(ul.value.error())}};
-                                        break;
-                                    }
-                                }
-                            }
-                        } else {
-                            // create table
-                            if (auto ul = unless(db.execute_update(entity.sql_for_create()))) {
-                                state =
-                                    state_t{error{error_type::create_entity_table_failed, std::move(ul.value.error())}};
-                                break;
-                            }
-                        }
-
-                        if (state) {
-                            for (auto &rel_pair : entity.relations) {
-                                if (auto ul = unless(db.execute_update(rel_pair.second.sql_for_create()))) {
-                                    state = state_t{
-                                        error{error_type::create_relation_table_failed, std::move(ul.value.error())}};
-                                    break;
-                                }
-                            }
-                        }
-
-                        if (!state) {
-                            break;
-                        }
-                    }
-
-                    if (state) {
-                        // create indices
-                        for (auto const &index_pair : model.indices()) {
-                            if (!db::index_exists(db, index_pair.first)) {
-                                auto &index = index_pair.second;
-                                if (auto ul = unless(db.execute_update(index.sql_for_create()))) {
-                                    state =
-                                        state_t{error{error_type::create_index_failed, std::move(ul.value.error())}};
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }
-            } else {
-                // create information table
-
-                if (auto create_result = db.execute_update(
-                        db::create_table_sql(info_table, {version_field, current_save_id_field, last_save_id_field}))) {
-                    db::value_map args{std::make_pair(version_field, db::value{model.version().str()}),
-                                       std::make_pair(current_save_id_field, db::value{0}),
-                                       std::make_pair(last_save_id_field, db::value{0})};
-                    if (auto ul = unless(db.execute_update(
-                            db::insert_sql(info_table, {version_field, current_save_id_field, last_save_id_field}),
-                            args))) {
-                        state = state_t{error{error_type::insert_info_failed, std::move(ul.value.error())}};
-                    }
-                } else {
-                    state = state_t{error{error_type::create_info_table_failed, std::move(create_result.error())}};
-                }
-
-                // create entity tables
-
-                if (state) {
-                    auto const &entities = model.entities();
-                    for (auto &entity_pair : entities) {
-                        auto &entity = entity_pair.second;
-                        if (auto ul = unless(db.execute_update(entity.sql_for_create()))) {
-                            state = state_t{error{error_type::create_entity_table_failed, std::move(ul.value.error())}};
-                            break;
-                        }
-
-                        for (auto &rel_pair : entity.relations) {
-                            if (auto ul = unless(db.execute_update(rel_pair.second.sql_for_create()))) {
-                                state = state_t{
-                                    error{error_type::create_relation_table_failed, std::move(ul.value.error())}};
-                                break;
-                            }
-                        }
-
-                        if (!state) {
-                            break;
-                        }
-                    }
-                }
-
-                // create indices
-
-                if (state) {
-                    for (auto const &index_pair : model.indices()) {
-                        auto &index = index_pair.second;
-                        if (auto ul = unless(db.execute_update(index.sql_for_create()))) {
-                            state = state_t{error{error_type::create_index_failed, std::move(ul.value.error())}};
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if (state) {
-                db::commit(db);
-            } else {
-                db::rollback(db);
-            }
-        } else {
-            state = state_t{error{error_type::begin_transaction_failed, std::move(begin_result.error())}};
-        }
-
-        if (state) {
-            if (auto select_result = select_db_info(db)) {
-                db_info = std::move(select_result.value());
-            } else {
-                state = state_t{error{error_type::select_info_failed, std::move(select_result.error())}};
-            }
-        }
-
-        auto lambda = [
-            completion = std::move(completion),
-            state = std::move(state),
-            manager,
-            db_info = std::move(db_info)
-        ]() mutable {
-            if (state) {
-                manager.impl_ptr<impl>()->set_db_info(db_info);
-                completion(manager, vector_result_t{object_vector_map{}});
-            } else {
-                completion(manager, vector_result_t{std::move(state.error())});
-            }
-        };
-
-        dispatch_sync(dispatch_get_main_queue(), std::move(lambda));
-    });
-}
-
 std::string const &db::manager::database_path() const {
     return impl_ptr<impl>()->database.database_path();
 }
@@ -1059,6 +1053,29 @@ db::integer::type db::manager::last_save_id() const {
         return db_info.at(last_save_id_field).get<integer>();
     }
     return 0;
+}
+
+void db::manager::setup(vector_completion_f completion) {
+    auto impl_completion = [completion = std::move(completion)](manager & manager, state_t && state,
+                                                                value_map && db_info) mutable {
+        auto lambda = [
+            manager,
+            state = std::move(state),
+            db_info = std::move(db_info),
+            completion = std::move(completion)
+        ]() mutable {
+            if (state) {
+                manager.impl_ptr<impl>()->set_db_info(db_info);
+                completion(manager, vector_result_t{object_vector_map{}});
+            } else {
+                completion(manager, vector_result_t{std::move(state.error())});
+            }
+        };
+
+        dispatch_sync(dispatch_get_main_queue(), std::move(lambda));
+    };
+
+    impl_ptr<impl>()->execute_setup(std::move(impl_completion));
 }
 
 void db::manager::execute(execution_f &&execution, priority_t const priority) {
