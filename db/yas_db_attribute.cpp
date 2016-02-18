@@ -73,12 +73,12 @@ db::attribute const &db::attribute::id_attribute() {
 }
 
 db::attribute const &db::attribute::object_id_attribute() {
-    static db::attribute const attr{object_id_field, db::integer::name, db::value{0}, true};
+    static db::attribute const attr{object_id_field, db::integer::name, db::value{integer::type{0}}, true};
     return attr;
 }
 
 db::attribute const &db::attribute::save_id_attribute() {
-    static db::attribute const attr{save_id_field, db::integer::name, db::value{0}, true};
+    static db::attribute const attr{save_id_field, db::integer::name, db::value{integer::type{0}}, true};
     return attr;
 }
 
