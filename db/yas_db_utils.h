@@ -43,7 +43,8 @@ namespace db {
     bool column_exists(database const &db, std::string column_name, std::string table_name);
 
     select_result select(database const &db, select_option const &option);
-    select_result select_last(database const &db, select_option option, value const &save_id = nullptr);
+    select_result select_last(database const &db, select_option option, value const &save_id = nullptr,
+                              bool const include_removed = false);
     select_result select_undo(database const &db, std::string const &table_name, integer::type const revert_save_id,
                               integer::type const current_save_id);
     select_result select_redo(database const &db, std::string const &table_name, integer::type const revert_save_id,
