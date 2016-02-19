@@ -194,8 +194,11 @@ db::select_result db::select_last(database const &db, select_option option, valu
 
     std::string sub_where = components.size() > 0 ? " WHERE " + joined(components, " AND ") : "";
 
-    option.where_exprs =
-        "rowid IN (SELECT MAX(rowid) FROM " + option.table + sub_where + " GROUP BY " + db::object_id_field + ")";
+    static std::string const not_removed_expr = action_field + " != '" + remove_action + "'";
+    option.where_exprs = joined(
+        {"rowid IN (SELECT MAX(rowid) FROM " + option.table + sub_where + " GROUP BY " + db::object_id_field + ")",
+         not_removed_expr},
+        " AND ");
 
     return select(db, option);
 }
