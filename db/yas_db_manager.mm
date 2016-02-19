@@ -557,17 +557,32 @@ struct db::manager::impl : public base::impl {
             result_t state{nullptr};
 
             if (auto begin_result = db::begin_transaction(db)) {
+                db::value current_save_id{nullptr};
+                db::value last_save_id{nullptr};
                 db::value next_save_id{nullptr};
 
                 if (auto select_result = db::select_db_info(db)) {
                     auto const &db_info = select_result.value();
                     if (db_info.count(current_save_id_field)) {
-                        next_save_id = db::value{db_info.at(current_save_id_field).get<integer>() + 1};
+                        current_save_id = db_info.at(current_save_id_field);
+                        next_save_id = db::value{current_save_id.get<integer>() + 1};
+                    } else {
+                        state = result_t{error{error_type::save_id_not_found}};
+                    }
+
+                    if (db_info.count(last_save_id_field)) {
+                        last_save_id = db_info.at(last_save_id_field);
                     } else {
                         state = result_t{error{error_type::save_id_not_found}};
                     }
                 } else {
                     state = result_t{error{error_type::select_info_failed, std::move(select_result.error())}};
+                }
+
+                if (state && current_save_id && last_save_id) {
+                    if (current_save_id.get<integer>() < last_save_id.get<integer>()) {
+                        state = delete_current_to_last(manager, current_save_id, last_save_id);
+                    }
                 }
 
                 if (state) {
