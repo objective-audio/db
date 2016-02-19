@@ -118,6 +118,34 @@ namespace db {
         }
     }
 
+    db::manager::result_t delete_current_to_last(db::manager &manager, db::value const &current_save_id,
+                                                 db::value const &last_save_id) {
+        auto const delete_exprs = joined({expr(db::save_id_field, ">", to_string(current_save_id)),
+                                          expr(save_id_field, "<=", to_string(last_save_id))},
+                                         " and ");
+        auto &db = manager.database();
+        auto const &entity_models = manager.model().entities();
+        for (auto const &entity_pair : entity_models) {
+            auto const &entity_name = entity_pair.first;
+
+            if (auto delete_result = db.execute_update(db::delete_sql(entity_name, delete_exprs))) {
+                for (auto const &rel_pair : entity_pair.second.relations) {
+                    auto const table_name = rel_pair.second.table_name;
+
+                    if (auto ul = unless(db.execute_update(db::delete_sql(table_name, delete_exprs)))) {
+                        return db::manager::result_t{
+                            db::manager::error{db::manager::error_type::delete_failed, std::move(ul.value.error())}};
+                    }
+                }
+            } else {
+                return db::manager::result_t{
+                    db::manager::error{db::manager::error_type::delete_failed, std::move(delete_result.error())}};
+            }
+        }
+
+        return db::manager::result_t{nullptr};
+    }
+
     const_object_vector_map to_const_vector_objects(db::model const &model, object_data_vector_map const &datas) {
         const_object_vector_map objects;
         for (auto const &entity_pair : datas) {
@@ -786,32 +814,7 @@ struct db::manager::impl : public base::impl {
                         if (state && next_save_id && current_save_id && last_save_id &&
                             next_save_id.get<integer>() > 0) {
                             if (current_save_id.get<integer>() < last_save_id.get<integer>()) {
-                                auto const delete_exprs = joined({expr(save_id_field, ">", to_string(current_save_id)),
-                                                                  expr(save_id_field, "<=", to_string(last_save_id))},
-                                                                 " and ");
-
-                                auto const &entity_models = manager.model().entities();
-                                for (auto const &entity_pair : entity_models) {
-                                    auto const &entity_name = entity_pair.first;
-
-                                    if (auto delete_result =
-                                            db.execute_update(db::delete_sql(entity_name, delete_exprs))) {
-                                        for (auto const &rel_pair : entity_pair.second.relations) {
-                                            auto const table_name = rel_pair.second.table_name;
-
-                                            if (auto ul = unless(
-                                                    db.execute_update(db::delete_sql(table_name, delete_exprs)))) {
-                                                state = result_t{
-                                                    error{error_type::delete_failed, std::move(ul.value.error())}};
-                                                break;
-                                            }
-                                        }
-                                    } else {
-                                        state = result_t{
-                                            error{error_type::delete_failed, std::move(delete_result.error())}};
-                                        break;
-                                    }
-                                }
+                                state = delete_current_to_last(manager, current_save_id, last_save_id);
                             }
                         } else {
                             state = result_t{error{error_type::save_id_not_found}};
