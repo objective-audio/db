@@ -75,7 +75,7 @@ namespace db {
 
         using priority_t = UInt32;
 
-        using state_t = result<std::nullptr_t, error>;
+        using result_t = result<std::nullptr_t, error>;
         using vector_result_t = result<object_vector_map, error>;
         using map_result_t = result<object_map_map, error>;
         using const_vector_result_t = result<const_object_vector_map, error>;
@@ -88,6 +88,7 @@ namespace db {
         using fetch_preparation_ids_f = std::function<integer_set_map(manager &)>;
         using revert_preparation_f = std::function<integer::type(manager &)>;
 
+        using completion_f = std::function<void(manager &, result_t)>;
         using vector_completion_f = std::function<void(manager &, vector_result_t)>;
         using map_completion_f = std::function<void(manager &, map_result_t)>;
         using const_vector_completion_f = std::function<void(manager &, const_vector_result_t)>;
@@ -108,7 +109,7 @@ namespace db {
 
         void execute(execution_f &&execution, priority_t const priority = 0);
 
-        void setup(vector_completion_f completion);
+        void setup(completion_f completion);
         void insert_objects(insert_preparation_f preparation, vector_completion_f completion,
                             priority_t const priority = 0);
         void fetch_objects(fetch_preparation_option_f preparation, vector_completion_f completion,

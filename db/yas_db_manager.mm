@@ -96,7 +96,7 @@ namespace db {
     }
 
     result<db::value, db::manager::error> select_current_save_id(database &db) {
-        db::manager::state_t state{nullptr};
+        db::manager::result_t state{nullptr};
 
         db::value current_save_id{nullptr};
         if (auto db_info_result = db::select_db_info(db)) {
@@ -104,10 +104,10 @@ namespace db {
             if (db_info.count(current_save_id_field)) {
                 current_save_id = db_info.at(current_save_id_field);
             } else {
-                state = manager::state_t{manager::error{manager::error_type::save_id_not_found}};
+                state = manager::result_t{manager::error{manager::error_type::save_id_not_found}};
             }
         } else {
-            state = manager::state_t{
+            state = manager::result_t{
                 manager::error{manager::error_type::select_info_failed, std::move(db_info_result.error())}};
         }
 
@@ -330,14 +330,14 @@ struct db::manager::impl : public base::impl {
         queue.add_operation(operation{std::move(op_lambda)}, priority);
     }
 
-    void execute_setup(std::function<void(manager &, state_t &&, value_map &&)> &&completion) {
+    void execute_setup(std::function<void(manager &, result_t &&, value_map &&)> &&completion) {
         execute(
             [completion = std::move(completion)](db::manager & manager, operation const &op) {
                 auto &db = manager.database();
                 auto const &model = manager.model();
 
                 db::value_map db_info;
-                state_t state{nullptr};
+                result_t state{nullptr};
 
                 if (auto begin_result = db::begin_transaction(db)) {
                     if (db::table_exists(db, info_table)) {
@@ -351,11 +351,11 @@ struct db::manager::impl : public base::impl {
                                 auto const &infos = select_result.value();
                                 auto const &info = *infos.rbegin();
                                 if (info.count(version_field) == 0) {
-                                    state = state_t{error{error_type::version_not_found}};
+                                    state = result_t{error{error_type::version_not_found}};
                                 } else {
                                     auto db_version_str = info.at(version_field).get<text>();
                                     if (db_version_str.size() == 0) {
-                                        state = state_t{error{error_type::invalid_version_text}};
+                                        state = result_t{error{error_type::invalid_version_text}};
                                     } else {
                                         auto const db_version = yas::version{db_version_str};
                                         if (db_version < model.version()) {
@@ -364,11 +364,11 @@ struct db::manager::impl : public base::impl {
                                     }
                                 }
                             } else {
-                                state = state_t{
+                                state = result_t{
                                     error{error_type::update_info_failed, std::move(update_info_result.error())}};
                             }
                         } else {
-                            state = state_t{error{error_type::select_info_failed, std::move(select_result.error())}};
+                            state = result_t{error{error_type::select_info_failed, std::move(select_result.error())}};
                         }
 
                         if (state && needs_migration) {
@@ -383,8 +383,8 @@ struct db::manager::impl : public base::impl {
                                             auto const &attr = attr_pair.second;
                                             if (auto ul = unless(
                                                     db.execute_update(alter_table_sql(entity_name, attr.sql())))) {
-                                                state = state_t{error{error_type::alter_entity_table_failed,
-                                                                      std::move(ul.value.error())}};
+                                                state = result_t{error{error_type::alter_entity_table_failed,
+                                                                       std::move(ul.value.error())}};
                                                 break;
                                             }
                                         }
@@ -392,7 +392,7 @@ struct db::manager::impl : public base::impl {
                                 } else {
                                     // create table
                                     if (auto ul = unless(db.execute_update(entity.sql_for_create()))) {
-                                        state = state_t{
+                                        state = result_t{
                                             error{error_type::create_entity_table_failed, std::move(ul.value.error())}};
                                         break;
                                     }
@@ -401,8 +401,8 @@ struct db::manager::impl : public base::impl {
                                 if (state) {
                                     for (auto &rel_pair : entity.relations) {
                                         if (auto ul = unless(db.execute_update(rel_pair.second.sql_for_create()))) {
-                                            state = state_t{error{error_type::create_relation_table_failed,
-                                                                  std::move(ul.value.error())}};
+                                            state = result_t{error{error_type::create_relation_table_failed,
+                                                                   std::move(ul.value.error())}};
                                             break;
                                         }
                                     }
@@ -419,7 +419,7 @@ struct db::manager::impl : public base::impl {
                                     if (!db::index_exists(db, index_pair.first)) {
                                         auto &index = index_pair.second;
                                         if (auto ul = unless(db.execute_update(index.sql_for_create()))) {
-                                            state = state_t{
+                                            state = result_t{
                                                 error{error_type::create_index_failed, std::move(ul.value.error())}};
                                             break;
                                         }
@@ -439,11 +439,11 @@ struct db::manager::impl : public base::impl {
                                     db::insert_sql(info_table,
                                                    {version_field, current_save_id_field, last_save_id_field}),
                                     args))) {
-                                state = state_t{error{error_type::insert_info_failed, std::move(ul.value.error())}};
+                                state = result_t{error{error_type::insert_info_failed, std::move(ul.value.error())}};
                             }
                         } else {
                             state =
-                                state_t{error{error_type::create_info_table_failed, std::move(create_result.error())}};
+                                result_t{error{error_type::create_info_table_failed, std::move(create_result.error())}};
                         }
 
                         // create entity tables
@@ -453,15 +453,15 @@ struct db::manager::impl : public base::impl {
                             for (auto &entity_pair : entities) {
                                 auto &entity = entity_pair.second;
                                 if (auto ul = unless(db.execute_update(entity.sql_for_create()))) {
-                                    state = state_t{
+                                    state = result_t{
                                         error{error_type::create_entity_table_failed, std::move(ul.value.error())}};
                                     break;
                                 }
 
                                 for (auto &rel_pair : entity.relations) {
                                     if (auto ul = unless(db.execute_update(rel_pair.second.sql_for_create()))) {
-                                        state = state_t{error{error_type::create_relation_table_failed,
-                                                              std::move(ul.value.error())}};
+                                        state = result_t{error{error_type::create_relation_table_failed,
+                                                               std::move(ul.value.error())}};
                                         break;
                                     }
                                 }
@@ -479,7 +479,7 @@ struct db::manager::impl : public base::impl {
                                 auto &index = index_pair.second;
                                 if (auto ul = unless(db.execute_update(index.sql_for_create()))) {
                                     state =
-                                        state_t{error{error_type::create_index_failed, std::move(ul.value.error())}};
+                                        result_t{error{error_type::create_index_failed, std::move(ul.value.error())}};
                                     break;
                                 }
                             }
@@ -492,14 +492,14 @@ struct db::manager::impl : public base::impl {
                         db::rollback(db);
                     }
                 } else {
-                    state = state_t{error{error_type::begin_transaction_failed, std::move(begin_result.error())}};
+                    state = result_t{error{error_type::begin_transaction_failed, std::move(begin_result.error())}};
                 }
 
                 if (state) {
                     if (auto select_result = select_db_info(db)) {
                         db_info = std::move(select_result.value());
                     } else {
-                        state = state_t{error{error_type::select_info_failed, std::move(select_result.error())}};
+                        state = result_t{error{error_type::select_info_failed, std::move(select_result.error())}};
                     }
                 }
 
@@ -510,7 +510,7 @@ struct db::manager::impl : public base::impl {
 
     void execute_insert(
         insert_preparation_f &&preparation,
-        std::function<void(db::manager &, state_t &&, object_data_vector_map &&, db::value_map &&)> &&completion,
+        std::function<void(db::manager &, result_t &&, object_data_vector_map &&, db::value_map &&)> &&completion,
         priority_t const priority) {
         execute([preparation = std::move(preparation), completion = std::move(completion)](db::manager & manager,
                                                                                            operation const &op) {
@@ -526,7 +526,7 @@ struct db::manager::impl : public base::impl {
             object_data_vector_map inserted_datas;
             db::integer::type start_obj_id = 1;
 
-            state_t state{nullptr};
+            result_t state{nullptr};
 
             if (auto begin_result = db::begin_transaction(db)) {
                 db::value next_save_id{nullptr};
@@ -536,10 +536,10 @@ struct db::manager::impl : public base::impl {
                     if (db_info.count(current_save_id_field)) {
                         next_save_id = db::value{db_info.at(current_save_id_field).get<integer>() + 1};
                     } else {
-                        state = state_t{error{error_type::save_id_not_found}};
+                        state = result_t{error{error_type::save_id_not_found}};
                     }
                 } else {
-                    state = state_t{error{error_type::select_info_failed, std::move(select_result.error())}};
+                    state = result_t{error{error_type::select_info_failed, std::move(select_result.error())}};
                 }
 
                 if (state) {
@@ -558,7 +558,7 @@ struct db::manager::impl : public base::impl {
 
                             if (auto ul = unless(db.execute_update(std::move(sql), std::move(args)))) {
                                 state =
-                                    state_t{error{error_type::insert_attributes_failed, std::move(ul.value.error())}};
+                                    result_t{error{error_type::insert_attributes_failed, std::move(ul.value.error())}};
                                 break;
                             }
 
@@ -577,7 +577,7 @@ struct db::manager::impl : public base::impl {
                                 inserted_datas.at(entity_name)
                                     .emplace_back(object_data{.attributes = std::move(select_result.value().at(0))});
                             } else {
-                                state = state_t{error{error_type::select_failed, std::move(select_result.error())}};
+                                state = result_t{error{error_type::select_failed, std::move(select_result.error())}};
                                 break;
                             }
                         }
@@ -591,10 +591,10 @@ struct db::manager::impl : public base::impl {
                         if (auto select_result = db::select_db_info(db)) {
                             db_info = select_result.value();
                         } else {
-                            state = state_t{error{error_type::select_info_failed, std::move(select_result.error())}};
+                            state = result_t{error{error_type::select_info_failed, std::move(select_result.error())}};
                         }
                     } else {
-                        state = state_t{error{error_type::update_info_failed, std::move(update_result.error())}};
+                        state = result_t{error{error_type::update_info_failed, std::move(update_result.error())}};
                     }
                 }
 
@@ -605,7 +605,7 @@ struct db::manager::impl : public base::impl {
                     inserted_datas.clear();
                 }
             } else {
-                state = state_t{error{error_type::begin_transaction_failed, std::move(begin_result.error())}};
+                state = result_t{error{error_type::begin_transaction_failed, std::move(begin_result.error())}};
             }
 
             completion(manager, std::move(state), std::move(inserted_datas), std::move(db_info));
@@ -613,10 +613,10 @@ struct db::manager::impl : public base::impl {
                 priority);
     }
 
-    void execute_fetch_object_datas(
-        fetch_preparation_option_f &&preparation,
-        std::function<void(db::manager &manager, state_t &&state, object_data_vector_map &&fetched_datas)> &&completion,
-        priority_t const priority) {
+    void execute_fetch_object_datas(fetch_preparation_option_f &&preparation,
+                                    std::function<void(db::manager &manager, result_t &&state,
+                                                       object_data_vector_map &&fetched_datas)> &&completion,
+                                    priority_t const priority) {
         execute([preparation = std::move(preparation), completion = std::move(completion)](db::manager & manager,
                                                                                            operation const &) {
             db::select_option option;
@@ -630,7 +630,7 @@ struct db::manager::impl : public base::impl {
             auto &db = manager.database();
 
             auto const &rel_models = manager.model().relations(entity_name);
-            state_t state{nullptr};
+            result_t state{nullptr};
 
             object_data_vector_map fetched_datas;
 
@@ -649,14 +649,14 @@ struct db::manager::impl : public base::impl {
                                 fetched_datas.emplace(std::make_pair(entity_name, std::move(entity_obj_datas)));
                             }
                         } else {
-                            state = state_t{
+                            state = result_t{
                                 error{error_type::fetch_object_datas_failed, std::move(obj_datas_result.error())}};
                         }
                     } else {
-                        state = state_t{error{error_type::select_last_failed, std::move(select_result.error())}};
+                        state = result_t{error{error_type::select_last_failed, std::move(select_result.error())}};
                     }
                 } else {
-                    state = state_t{std::move(cur_save_id_result.error())};
+                    state = result_t{std::move(cur_save_id_result.error())};
                 }
 
                 if (state) {
@@ -666,7 +666,7 @@ struct db::manager::impl : public base::impl {
                     fetched_datas.clear();
                 }
             } else {
-                state = state_t{error{error_type::begin_transaction_failed, std::move(begin_result.error())}};
+                state = result_t{error{error_type::begin_transaction_failed, std::move(begin_result.error())}};
             }
 
             completion(manager, std::move(state), std::move(fetched_datas));
@@ -674,10 +674,10 @@ struct db::manager::impl : public base::impl {
                 priority);
     }
 
-    void execute_fetch_object_datas(
-        fetch_preparation_ids_f &&preparation,
-        std::function<void(db::manager &manager, state_t &&state, object_data_vector_map &&fetched_datas)> &&completion,
-        priority_t const priority) {
+    void execute_fetch_object_datas(fetch_preparation_ids_f &&preparation,
+                                    std::function<void(db::manager &manager, result_t &&state,
+                                                       object_data_vector_map &&fetched_datas)> &&completion,
+                                    priority_t const priority) {
         execute([completion = std::move(completion), preparation = std::move(preparation)](manager & manager,
                                                                                            operation const &) {
             db::integer_set_map obj_ids;
@@ -688,7 +688,7 @@ struct db::manager::impl : public base::impl {
 
             auto &db = manager.database();
 
-            state_t state{nullptr};
+            result_t state{nullptr};
 
             object_data_vector_map fetched_datas;
 
@@ -716,20 +716,20 @@ struct db::manager::impl : public base::impl {
                                     fetch_entity_object_datas(db, entity_name, rel_models, entity_attrs)) {
                                 fetched_datas.emplace(std::make_pair(entity_name, std::move(obj_datas_result.value())));
                             } else {
-                                state = state_t{
+                                state = result_t{
                                     error{error_type::fetch_object_datas_failed, std::move(obj_datas_result.error())}};
                                 break;
                             }
                         } else {
-                            state = state_t{error{error_type::select_last_failed, std::move(select_result.error())}};
+                            state = result_t{error{error_type::select_last_failed, std::move(select_result.error())}};
                             break;
                         }
                     }
                 } else {
-                    state = state_t{std::move(cur_save_id_result.error())};
+                    state = result_t{std::move(cur_save_id_result.error())};
                 }
             } else {
-                state = state_t{error{error_type::begin_transaction_failed, std::move(begin_result.error())}};
+                state = result_t{error{error_type::begin_transaction_failed, std::move(begin_result.error())}};
             }
 
             completion(manager, std::move(state), std::move(fetched_datas));
@@ -738,7 +738,7 @@ struct db::manager::impl : public base::impl {
     }
 
     void execute_save(
-        std::function<void(db::manager &manager, state_t &&state, db::object_data_vector_map &&saved_datas,
+        std::function<void(db::manager &manager, result_t &&state, db::object_data_vector_map &&saved_datas,
                            db::value_map &&db_info)> &&completion,
         priority_t const priority) {
         execute(
@@ -757,7 +757,7 @@ struct db::manager::impl : public base::impl {
                 db::value_map db_info;
                 db::object_data_vector_map saved_datas;
 
-                state_t state{nullptr};
+                result_t state{nullptr};
 
                 if (changed_datas.size() > 0) {
                     if (auto begin_result = db::begin_transaction(db)) {
@@ -771,16 +771,16 @@ struct db::manager::impl : public base::impl {
                                 current_save_id = db_info.at(current_save_id_field);
                                 next_save_id = db::value{current_save_id.get<integer>() + 1};
                             } else {
-                                state = state_t{error{error_type::save_id_not_found}};
+                                state = result_t{error{error_type::save_id_not_found}};
                             }
 
                             if (db_info.count(last_save_id_field)) {
                                 last_save_id = db_info.at(last_save_id_field);
                             } else {
-                                state = state_t{error{error_type::save_id_not_found}};
+                                state = result_t{error{error_type::save_id_not_found}};
                             }
                         } else {
-                            state = state_t{error{error_type::select_info_failed, std::move(select_result.error())}};
+                            state = result_t{error{error_type::select_info_failed, std::move(select_result.error())}};
                         }
 
                         if (state && next_save_id && current_save_id && last_save_id &&
@@ -801,20 +801,20 @@ struct db::manager::impl : public base::impl {
 
                                             if (auto ul = unless(
                                                     db.execute_update(db::delete_sql(table_name, delete_exprs)))) {
-                                                state = state_t{
+                                                state = result_t{
                                                     error{error_type::delete_failed, std::move(ul.value.error())}};
                                                 break;
                                             }
                                         }
                                     } else {
-                                        state =
-                                            state_t{error{error_type::delete_failed, std::move(delete_result.error())}};
+                                        state = result_t{
+                                            error{error_type::delete_failed, std::move(delete_result.error())}};
                                         break;
                                     }
                                 }
                             }
                         } else {
-                            state = state_t{error{error_type::save_id_not_found}};
+                            state = result_t{error{error_type::save_id_not_found}};
                         }
 
                         if (state) {
@@ -847,15 +847,15 @@ struct db::manager::impl : public base::impl {
                                                 db::value_map args{src_id_pair, std::move(tgt_id_pair), save_id_pair};
                                                 if (auto ul =
                                                         unless(db.execute_update(rel_insert_sql, std::move(args)))) {
-                                                    state = state_t{error{error_type::insert_relation_failed,
-                                                                          std::move(ul.value.error())}};
+                                                    state = result_t{error{error_type::insert_relation_failed,
+                                                                           std::move(ul.value.error())}};
                                                     break;
                                                 }
                                             }
                                         }
                                     } else {
-                                        state = state_t{error{error_type::insert_attributes_failed,
-                                                              std::move(insert_result.error())}};
+                                        state = result_t{error{error_type::insert_attributes_failed,
+                                                               std::move(insert_result.error())}};
                                     }
 
                                     if (state) {
@@ -875,7 +875,7 @@ struct db::manager::impl : public base::impl {
                             auto const sql = update_sql(info_table, {current_save_id_field, last_save_id_field}, "");
                             db::value_vector const params{next_save_id, next_save_id};
                             if (auto ul = unless(db.execute_update(sql, params))) {
-                                state = state_t{error{error_type::update_info_failed, std::move(ul.value.error())}};
+                                state = result_t{error{error_type::update_info_failed, std::move(ul.value.error())}};
                             }
                         }
 
@@ -886,7 +886,7 @@ struct db::manager::impl : public base::impl {
                             saved_datas.clear();
                         }
                     } else {
-                        state = state_t{error{error_type::begin_transaction_failed, std::move(begin_result.error())}};
+                        state = result_t{error{error_type::begin_transaction_failed, std::move(begin_result.error())}};
                     }
                 }
 
@@ -894,7 +894,7 @@ struct db::manager::impl : public base::impl {
                     if (auto const select_result = db::select_db_info(db)) {
                         db_info = std::move(select_result.value());
                     } else {
-                        state = state_t{error{error_type::select_info_failed, std::move(select_result.error())}};
+                        state = result_t{error{error_type::select_info_failed, std::move(select_result.error())}};
                     }
                 }
 
@@ -905,7 +905,7 @@ struct db::manager::impl : public base::impl {
 
     void execute_revert(
         revert_preparation_f preparation,
-        std::function<void(db::manager &manager, state_t &&state, object_data_vector_map &&reverted_datas,
+        std::function<void(db::manager &manager, result_t &&state, object_data_vector_map &&reverted_datas,
                            db::value_map &&db_info)> &&completion,
         priority_t const priority) {
         execute([preparation = std::move(preparation), completion = std::move(completion)](manager & manager,
@@ -918,7 +918,7 @@ struct db::manager::impl : public base::impl {
 
             auto &db = manager.database();
 
-            state_t state{nullptr};
+            result_t state{nullptr};
 
             value_map_vector_map reverted_attrs;
             object_data_vector_map reverted_datas;
@@ -937,13 +937,13 @@ struct db::manager::impl : public base::impl {
                         last_save_id = db_info.at(last_save_id_field).get<integer>();
                     }
                 } else {
-                    state = state_t{error{error_type::select_info_failed, std::move(select_result.error())}};
+                    state = result_t{error{error_type::select_info_failed, std::move(select_result.error())}};
                 }
 
                 auto const &entity_models = manager.model().entities();
 
                 if (rev_save_id == current_save_id || last_save_id < rev_save_id) {
-                    state = state_t{error{error_type::out_of_range_save_id}};
+                    state = result_t{error{error_type::out_of_range_save_id}};
                 } else {
                     for (auto const &entity_model_pair : entity_models) {
                         auto const &entity_name = entity_model_pair.first;
@@ -951,7 +951,7 @@ struct db::manager::impl : public base::impl {
                             reverted_attrs.emplace(std::make_pair(entity_name, std::move(select_result.value())));
                         } else {
                             reverted_attrs.clear();
-                            state = state_t{error{error_type::select_revert_failed, std::move(select_result.error())}};
+                            state = result_t{error{error_type::select_revert_failed, std::move(select_result.error())}};
                             break;
                         }
                     }
@@ -969,7 +969,7 @@ struct db::manager::impl : public base::impl {
                         } else {
                             reverted_attrs.clear();
                             reverted_datas.clear();
-                            state = state_t{
+                            state = result_t{
                                 error{error_type::fetch_object_datas_failed, std::move(obj_datas_result.error())}};
                             break;
                         }
@@ -983,10 +983,10 @@ struct db::manager::impl : public base::impl {
                         if (auto select_result = db::select_db_info(db)) {
                             db_info = std::move(select_result.value());
                         } else {
-                            state = state_t{error{error_type::select_info_failed, std::move(select_result.error())}};
+                            state = result_t{error{error_type::select_info_failed, std::move(select_result.error())}};
                         }
                     } else {
-                        state = state_t{error{error_type::update_save_id_failed, std::move(update_result.error())}};
+                        state = result_t{error{error_type::update_save_id_failed, std::move(update_result.error())}};
                     }
                 }
 
@@ -997,7 +997,7 @@ struct db::manager::impl : public base::impl {
                     reverted_datas.clear();
                 }
             } else {
-                state = state_t{error{error_type::begin_transaction_failed, std::move(begin_result.error())}};
+                state = result_t{error{error_type::begin_transaction_failed, std::move(begin_result.error())}};
             }
 
             completion(manager, std::move(state), std::move(reverted_datas), std::move(db_info));
@@ -1055,8 +1055,8 @@ db::integer::type db::manager::last_save_id() const {
     return 0;
 }
 
-void db::manager::setup(vector_completion_f completion) {
-    auto impl_completion = [completion = std::move(completion)](manager & manager, state_t && state,
+void db::manager::setup(completion_f completion) {
+    auto impl_completion = [completion = std::move(completion)](manager & manager, result_t && state,
                                                                 value_map && db_info) mutable {
         auto lambda = [
             manager,
@@ -1066,9 +1066,9 @@ void db::manager::setup(vector_completion_f completion) {
         ]() mutable {
             if (state) {
                 manager.impl_ptr<impl>()->set_db_info(db_info);
-                completion(manager, vector_result_t{object_vector_map{}});
+                completion(manager, result_t{nullptr});
             } else {
-                completion(manager, vector_result_t{std::move(state.error())});
+                completion(manager, result_t{std::move(state.error())});
             }
         };
 
@@ -1085,7 +1085,7 @@ void db::manager::execute(execution_f &&execution, priority_t const priority) {
 void db::manager::insert_objects(insert_preparation_f preparation, vector_completion_f completion,
                                  priority_t const priority) {
     auto impl_completion = [completion = std::move(completion)](
-        db::manager & manager, state_t && state, object_data_vector_map && inserted_datas, db::value_map && db_info) {
+        db::manager & manager, result_t && state, object_data_vector_map && inserted_datas, db::value_map && db_info) {
         auto lambda = [
             state = std::move(state),
             inserted_datas = std::move(inserted_datas),
@@ -1110,7 +1110,7 @@ void db::manager::insert_objects(insert_preparation_f preparation, vector_comple
 
 void db::manager::fetch_objects(fetch_preparation_option_f preparation, vector_completion_f completion,
                                 priority_t const priority) {
-    auto impl_completion = [completion = std::move(completion)](db::manager & manager, state_t && state,
+    auto impl_completion = [completion = std::move(completion)](db::manager & manager, result_t && state,
                                                                 object_data_vector_map && fetched_datas) {
         auto lambda = [
             state = std::move(state),
@@ -1134,7 +1134,7 @@ void db::manager::fetch_objects(fetch_preparation_option_f preparation, vector_c
 
 void db::manager::fetch_const_objects(fetch_preparation_option_f preparation, const_vector_completion_f completion,
                                       priority_t const priority) {
-    auto impl_completion = [completion = std::move(completion)](db::manager & manager, state_t && state,
+    auto impl_completion = [completion = std::move(completion)](db::manager & manager, result_t && state,
                                                                 object_data_vector_map && fetched_datas) {
         auto lambda = [
             state = std::move(state),
@@ -1157,7 +1157,7 @@ void db::manager::fetch_const_objects(fetch_preparation_option_f preparation, co
 
 void db::manager::fetch_objects(fetch_preparation_ids_f preparation, map_completion_f completion,
                                 priority_t const priority) {
-    auto impl_completion = [completion = std::move(completion)](db::manager & manager, state_t && state,
+    auto impl_completion = [completion = std::move(completion)](db::manager & manager, result_t && state,
                                                                 object_data_vector_map && fetched_datas) {
         auto lambda = [
             manager,
@@ -1181,7 +1181,7 @@ void db::manager::fetch_objects(fetch_preparation_ids_f preparation, map_complet
 
 void db::manager::fetch_const_objects(fetch_preparation_ids_f preparation, const_map_completion_f completion,
                                       priority_t const priority) {
-    auto impl_completion = [completion = std::move(completion)](db::manager & manager, state_t && state,
+    auto impl_completion = [completion = std::move(completion)](db::manager & manager, result_t && state,
                                                                 object_data_vector_map && fetched_datas) {
         auto lambda = [
             manager,
@@ -1204,7 +1204,7 @@ void db::manager::fetch_const_objects(fetch_preparation_ids_f preparation, const
 
 void db::manager::save(vector_completion_f completion, priority_t const priority) {
     auto impl_completion = [completion = std::move(completion)](
-        db::manager & manager, state_t && state, db::object_data_vector_map && saved_datas, db::value_map && db_info) {
+        db::manager & manager, result_t && state, db::object_data_vector_map && saved_datas, db::value_map && db_info) {
         auto lambda = [
             manager,
             state = std::move(state),
@@ -1230,7 +1230,7 @@ void db::manager::save(vector_completion_f completion, priority_t const priority
 
 void db::manager::revert(revert_preparation_f preparation, vector_completion_f completion, priority_t const priority) {
     auto impl_completion = [completion = std::move(completion)](
-        db::manager & manager, state_t && state, object_data_vector_map && reverted_datas, db::value_map && db_info) {
+        db::manager & manager, result_t && state, object_data_vector_map && reverted_datas, db::value_map && db_info) {
         auto lambda = [
             manager,
             state = std::move(state),
