@@ -253,6 +253,12 @@ class db::object::impl : public const_object::impl {
         }
     }
 
+    void clear_data() {
+        clear();
+
+        notify_did_change(loading_change_key, "", false);
+    }
+
     void set_attribute(std::string const &attr_name, db::value const &value, bool const loading = false) {
         validate_attribute_name(attr_name);
 
@@ -440,6 +446,10 @@ subject<db::object::change_info> &db::object::subject() {
 
 void db::object::load_data(object_data const &obj_data) {
     impl_ptr<impl>()->load_data(obj_data);
+}
+
+void db::object::clear_data() {
+    impl_ptr<impl>()->clear_data();
 }
 
 void db::object::set_attribute(std::string const &attr_name, db::value const &value) {

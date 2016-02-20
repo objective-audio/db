@@ -78,6 +78,7 @@ namespace db {
         yas::subject<change_info> &subject();
 
         void load_data(object_data const &obj_data);
+        void clear_data();
 
         void set_attribute(std::string const &attr_name, value const &value);
 
