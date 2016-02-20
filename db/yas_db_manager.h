@@ -110,6 +110,7 @@ namespace db {
         void execute(execution_f &&execution, priority_t const priority = 0);
 
         void setup(completion_f completion);
+        void clear(completion_f completion, priority_t const priority = 0);
         void insert_objects(insert_preparation_f preparation, vector_completion_f completion,
                             priority_t const priority = 0);
         void fetch_objects(fetch_preparation_option_f preparation, vector_completion_f completion,

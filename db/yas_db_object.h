@@ -78,6 +78,7 @@ namespace db {
         yas::subject<change_info> &subject();
 
         void load_data(object_data const &obj_data);
+        void clear_data();
 
         void set_attribute(std::string const &attr_name, value const &value);
 
@@ -120,4 +121,5 @@ namespace db {
     using object_data_vector = std::vector<object_data>;
     using object_data_vector_map = std::unordered_map<std::string, object_data_vector>;
 }
+    std::string to_string(db::object_status const &);
 }

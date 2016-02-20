@@ -247,12 +247,16 @@ class db::object::impl : public const_object::impl {
 
             if (obj_data.attributes.count(save_id_field)) {
                 status = db::object_status::saved;
-            } else {
-                status = db::object_status::invalid;
             }
 
             notify_did_change(loading_change_key, "", false);
         }
+    }
+
+    void clear_data() {
+        clear();
+
+        notify_did_change(loading_change_key, "", false);
     }
 
     void set_attribute(std::string const &attr_name, db::value const &value, bool const loading = false) {
@@ -264,9 +268,9 @@ class db::object::impl : public const_object::impl {
             set_update_action();
         }
 
-        status = db::object_status::changed;
-
         if (!loading) {
+            status = db::object_status::changed;
+
             notify_did_change(attribute_change_key, attr_name, true);
         }
     }
@@ -278,11 +282,9 @@ class db::object::impl : public const_object::impl {
 
         if (!loading) {
             set_update_action();
-        }
 
-        status = db::object_status::changed;
+            status = db::object_status::changed;
 
-        if (!loading) {
             notify_did_change(relation_change_key, rel_name, true);
         }
     }
@@ -446,6 +448,10 @@ void db::object::load_data(object_data const &obj_data) {
     impl_ptr<impl>()->load_data(obj_data);
 }
 
+void db::object::clear_data() {
+    impl_ptr<impl>()->clear_data();
+}
+
 void db::object::set_attribute(std::string const &attr_name, db::value const &value) {
     impl_ptr<impl>()->set_attribute(attr_name, value);
 }
@@ -523,4 +529,18 @@ db::object_data db::object::data_for_save() const {
 db::object const &db::object::null_object() {
     static db::object const _null_object{nullptr};
     return _null_object;
+}
+
+std::string yas::to_string(db::object_status const &status) {
+    switch (status) {
+        case db::object_status::invalid:
+            return "invalid";
+        case db::object_status::saved:
+            return "invalid";
+        case db::object_status::changed:
+            return "invalid";
+        case db::object_status::updating:
+            return "invalid";
+    }
+    return "unknown";
 }

@@ -1345,6 +1345,54 @@ using namespace yas;
     [self waitForExpectationsWithTimeout:1.0 handler:nil];
 }
 
+- (void)test_clear {
+    db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
+    auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
+
+    XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
+
+    db::object object{nullptr};
+
+    manager.setup([self](auto &manager, auto result) { XCTAssertTrue(result); });
+
+    manager.insert_objects(
+        [](auto &manager) {
+            return db::entity_count_map{{"sample_a", 1}};
+        },
+        [self, &object](auto &manager, auto result) {
+            XCTAssertTrue(result);
+            auto &objects = result.value();
+            auto &a_objects = objects.at("sample_a");
+
+            object = std::move(a_objects.at(0));
+
+            object.set_attribute("name", db::value{"test_clear_value"});
+        });
+
+    manager.save([self, &object](auto &manager, auto result) {
+        XCTAssertTrue(result);
+
+        XCTAssertEqual(object.status(), db::object_status::saved);
+        XCTAssertEqual(object.object_id(), db::value{1});
+        XCTAssertEqual(object.get_attribute("name"), db::value{"test_clear_value"});
+
+        XCTAssertTrue(manager.cached_object("sample_a", 1));
+    });
+
+    manager.clear([self, &object, exp](db::manager &manager, auto result) {
+        XCTAssertTrue(result);
+
+        XCTAssertEqual(object.status(), db::object_status::invalid);
+        XCTAssertFalse(object.get_attribute("name"));
+
+        XCTAssertFalse(manager.cached_object("sample_a", 1));
+
+        [exp fulfill];
+    });
+
+    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+}
+
 - (void)test_make_error {
     auto error = db::manager::error{db::manager::error_type::version_not_found};
     XCTAssertTrue(error);
