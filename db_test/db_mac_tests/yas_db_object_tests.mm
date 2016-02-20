@@ -527,4 +527,28 @@ using namespace yas;
     XCTAssertTrue(called);
 }
 
+- (void)test_clear {
+    NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
+    db::model model((__bridge CFDictionaryRef)model_dict);
+
+    db::object obj{nullptr, model, "sample_a"};
+
+    obj.set_attribute("age", db::value{20});
+    obj.set_attribute("name", db::value{"test_name"});
+    obj.set_relation_ids("child", {db::value{23}, db::value{45}});
+
+    XCTAssertEqual(obj.status(), db::object_status::changed);
+    XCTAssertEqual(obj.get_attribute("age"), db::value{20});
+    XCTAssertEqual(obj.get_attribute("name"), db::value{"test_name"});
+    XCTAssertEqual(obj.get_relation_id("child", 0), db::value{23});
+    XCTAssertEqual(obj.get_relation_id("child", 1), db::value{45});
+
+    obj.clear_data();
+
+    XCTAssertEqual(obj.status(), db::object_status::invalid);
+    XCTAssertFalse(obj.get_attribute("age"));
+    XCTAssertFalse(obj.get_attribute("name"));
+    XCTAssertEqual(obj.relation_size("child"), 0);
+}
+
 @end
