@@ -181,7 +181,8 @@ db::select_result db::select(db::database const &db, select_option const &option
     return select_result{value_map_vector};
 }
 
-db::select_result db::select_last(database const &db, select_option option, value const &save_id) {
+db::select_result db::select_last(database const &db, select_option option, value const &save_id,
+                                  bool const include_removed) {
     std::vector<std::string> components;
 
     if (save_id) {
@@ -194,8 +195,13 @@ db::select_result db::select_last(database const &db, select_option option, valu
 
     std::string sub_where = components.size() > 0 ? " WHERE " + joined(components, " AND ") : "";
 
-    option.where_exprs =
+    std::string where_exprs =
         "rowid IN (SELECT MAX(rowid) FROM " + option.table + sub_where + " GROUP BY " + db::object_id_field + ")";
+    if (!include_removed) {
+        static std::string const exc_removed_expr = action_field + " != '" + remove_action + "'";
+        where_exprs = joined({where_exprs, exc_removed_expr}, " AND ");
+    }
+    option.where_exprs = where_exprs;
 
     return select(db, option);
 }
@@ -253,7 +259,7 @@ db::select_result db::select_redo(database const &db, std::string const &table_n
                              .where_exprs = joined(components, " AND "),
                              .field_orders = {{object_id_field, db::order::ascending}}};
 
-    return select_last(db, std::move(option), db::value{revert_save_id});
+    return select_last(db, std::move(option), db::value{revert_save_id}, true);
 }
 
 db::select_result db::select_revert(database const &db, std::string const &table_name,
