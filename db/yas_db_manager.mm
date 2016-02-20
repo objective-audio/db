@@ -606,14 +606,14 @@ struct db::manager::impl : public base::impl {
     }
 
     void execute_insert(
-        insert_preparation_f &&preparation,
+        insert_preparation_values_f &&preparation,
         std::function<void(db::manager &, result_t &&, object_data_vector_map &&, db::value_map &&)> &&completion,
         priority_t const priority) {
         execute([preparation = std::move(preparation), completion = std::move(completion)](db::manager & manager,
                                                                                            operation const &op) {
-            entity_count_map counts;
+            value_map_vector_map values;
 
-            auto preparation_on_main = [&counts, &manager, &preparation]() { counts = preparation(manager); };
+            auto preparation_on_main = [&values, &manager, &preparation]() { values = preparation(manager); };
 
             dispatch_sync(dispatch_get_main_queue(), std::move(preparation_on_main));
 
@@ -655,19 +655,30 @@ struct db::manager::impl : public base::impl {
                 }
 
                 if (state) {
-                    for (auto const &count_pair : counts) {
-                        auto const &entity_name = count_pair.first;
-                        auto const &count = count_pair.second;
+                    for (auto &values_pair : values) {
+                        auto const &entity_name = values_pair.first;
+                        auto &entity_values = values_pair.second;
 
                         if (auto max_value = db::max(db, entity_name, object_id_field)) {
                             start_obj_id = max_value.get<integer>() + 1;
                         }
 
-                        for (auto const &idx : each_index<std::size_t>{count}) {
+                        std::size_t idx = 0;
+                        for (auto &obj_values : entity_values) {
                             db::value obj_id_value{start_obj_id + idx};
-                            db::value_vector args{obj_id_value, next_save_id};
-                            auto sql = db::insert_sql(entity_name, {object_id_field, save_id_field});
 
+                            std::vector<std::string> fields{object_id_field, save_id_field};
+                            db::value_vector args{obj_id_value, next_save_id};
+
+                            fields.reserve(obj_values.size() + 2);
+                            args.reserve(obj_values.size() + 2);
+
+                            for (auto &value : obj_values) {
+                                fields.push_back(value.first);
+                                args.emplace_back(std::move(value.second));
+                            }
+
+                            auto sql = db::insert_sql(entity_name, fields);
                             if (auto ul = unless(db.execute_update(std::move(sql), std::move(args)))) {
                                 state =
                                     result_t{error{error_type::insert_attributes_failed, std::move(ul.value.error())}};
@@ -682,7 +693,7 @@ struct db::manager::impl : public base::impl {
                             if (select_result) {
                                 if (inserted_datas.count(entity_name) == 0) {
                                     object_data_vector entity_datas{};
-                                    entity_datas.reserve(count);
+                                    entity_datas.reserve(entity_values.size());
                                     inserted_datas.emplace(std::make_pair(entity_name, std::move(entity_datas)));
                                 }
 
@@ -692,6 +703,8 @@ struct db::manager::impl : public base::impl {
                                 state = result_t{error{error_type::select_failed, std::move(select_result.error())}};
                                 break;
                             }
+
+                            ++idx;
                         }
                     }
                 }
@@ -1189,7 +1202,23 @@ void db::manager::execute(execution_f &&execution, priority_t const priority) {
     impl_ptr<impl>()->execute(std::move(execution), priority);
 }
 
-void db::manager::insert_objects(insert_preparation_f preparation, vector_completion_f completion,
+void db::manager::insert_objects(insert_preparation_count_f preparation, vector_completion_f completion,
+                                 priority_t const priority) {
+    auto impl_preparation = [preparation = std::move(preparation)](auto &manager) {
+        auto counts = preparation(manager);
+        db::value_map_vector_map values{};
+
+        for (auto &count_pair : counts) {
+            values.emplace(std::make_pair(count_pair.first, db::value_map_vector{count_pair.second}));
+        }
+
+        return values;
+    };
+
+    insert_objects(std::move(impl_preparation), std::move(completion), priority);
+}
+
+void db::manager::insert_objects(insert_preparation_values_f preparation, vector_completion_f completion,
                                  priority_t const priority) {
     auto impl_completion = [completion = std::move(completion)](
         db::manager & manager, result_t && state, object_data_vector_map && inserted_datas, db::value_map && db_info) {

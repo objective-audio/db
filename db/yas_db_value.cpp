@@ -69,6 +69,13 @@ struct db::value::impl : public impl_base {
     impl(typename T::type &&val) : value(std::move(val)) {
     }
 
+    impl(impl const &) = delete;
+    impl(impl &&) = delete;
+    impl &operator=(impl const &) = delete;
+    impl &operator=(impl &&) = delete;
+
+    ~impl() = default;
+
     std::type_info const &type() const override {
         return typeid(T);
     }
@@ -106,7 +113,33 @@ db::value::value(std::string &&value) : super_class(std::make_unique<impl<text>>
 db::value::value(blob::type &&value) : super_class(std::make_unique<impl<blob>>(std::move(value))) {
 }
 
-db::value::value(null::type) : super_class(std::make_unique<impl<null>>(nullptr)) {
+db::value::value(null::type) : super_class(null_value_impl_ptr()) {
+}
+
+template <>
+db::value::value(const void *const data_ptr, std::size_t const size, db::copy_tag_t const)
+    : value(blob{data_ptr, size, db::copy_tag}) {
+}
+
+template <>
+db::value::value(const void *const data_ptr, std::size_t const size, db::no_copy_tag_t const)
+    : value(blob{data_ptr, size, db::no_copy_tag}) {
+}
+
+db::value::~value() = default;
+
+db::value::value(value const &) = default;
+
+db::value::value(value &&rhs) : super_class(std::move(rhs.impl_ptr())) {
+    rhs.set_impl_ptr(null_value_impl_ptr());
+}
+
+db::value &db::value::operator=(value const &) = default;
+
+db::value &db::value::operator=(value &&rhs) {
+    set_impl_ptr(std::move(rhs.impl_ptr()));
+    rhs.set_impl_ptr(null_value_impl_ptr());
+    return *this;
 }
 
 bool db::value::operator==(value const &rhs) const {
@@ -134,18 +167,6 @@ bool db::value::operator!=(value const &rhs) const {
 db::value::operator bool() const {
     return impl_ptr() != nullptr && type() != typeid(null);
 }
-
-template <>
-db::value::value(const void *const data_ptr, std::size_t const size, db::copy_tag_t const)
-    : value(blob{data_ptr, size, db::copy_tag}) {
-}
-
-template <>
-db::value::value(const void *const data_ptr, std::size_t const size, db::no_copy_tag_t const)
-    : value(blob{data_ptr, size, db::no_copy_tag}) {
-}
-
-db::value::~value() = default;
 
 std::type_info const &db::value::type() const {
     return impl_ptr<impl_base>()->type();
@@ -187,6 +208,11 @@ std::string db::value::sql() const {
 db::value const &db::value::null_value() {
     static db::value _null_value{nullptr};
     return _null_value;
+}
+
+std::shared_ptr<db::value::impl<db::null>> const &db::value::null_value_impl_ptr() {
+    static auto _impl_ptr = std::make_shared<db::value::impl<null>>(nullptr);
+    return _impl_ptr;
 }
 
 #pragma mark -

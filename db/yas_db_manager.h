@@ -83,7 +83,8 @@ namespace db {
 
         using execution_f = std::function<void(manager &, operation const &)>;
 
-        using insert_preparation_f = std::function<entity_count_map(manager &)>;
+        using insert_preparation_count_f = std::function<entity_count_map(manager &)>;
+        using insert_preparation_values_f = std::function<value_map_vector_map(manager &)>;
         using fetch_preparation_option_f = std::function<select_option(manager &)>;
         using fetch_preparation_ids_f = std::function<integer_set_map(manager &)>;
         using revert_preparation_f = std::function<integer::type(manager &)>;
@@ -111,7 +112,9 @@ namespace db {
 
         void setup(completion_f completion);
         void clear(completion_f completion, priority_t const priority = 0);
-        void insert_objects(insert_preparation_f preparation, vector_completion_f completion,
+        void insert_objects(insert_preparation_count_f preparation, vector_completion_f completion,
+                            priority_t const priority = 0);
+        void insert_objects(insert_preparation_values_f preparation, vector_completion_f completion,
                             priority_t const priority = 0);
         void fetch_objects(fetch_preparation_option_f preparation, vector_completion_f completion,
                            priority_t const priority = 0);
