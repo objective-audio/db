@@ -247,8 +247,6 @@ class db::object::impl : public const_object::impl {
 
             if (obj_data.attributes.count(save_id_field)) {
                 status = db::object_status::saved;
-            } else {
-                status = db::object_status::invalid;
             }
 
             notify_did_change(loading_change_key, "", false);
@@ -264,9 +262,9 @@ class db::object::impl : public const_object::impl {
             set_update_action();
         }
 
-        status = db::object_status::changed;
-
         if (!loading) {
+            status = db::object_status::changed;
+
             notify_did_change(attribute_change_key, attr_name, true);
         }
     }
@@ -278,11 +276,9 @@ class db::object::impl : public const_object::impl {
 
         if (!loading) {
             set_update_action();
-        }
 
-        status = db::object_status::changed;
+            status = db::object_status::changed;
 
-        if (!loading) {
             notify_did_change(relation_change_key, rel_name, true);
         }
     }
