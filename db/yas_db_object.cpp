@@ -524,3 +524,17 @@ db::object const &db::object::null_object() {
     static db::object const _null_object{nullptr};
     return _null_object;
 }
+
+std::string yas::to_string(db::object_status const &status) {
+    switch (status) {
+        case db::object_status::invalid:
+            return "invalid";
+        case db::object_status::saved:
+            return "invalid";
+        case db::object_status::changed:
+            return "invalid";
+        case db::object_status::updating:
+            return "invalid";
+    }
+    return "unknown";
+}
