@@ -283,8 +283,8 @@ struct db::manager::impl : public base::impl {
         return loaded_objects;
     }
 
-    void set_db_info(db::value_map const &info) {
-        db_info = info;
+    void set_db_info(db::value_map &&info) {
+        db_info = std::move(info);
     }
 
     db::object_data_vector_map changed_datas_for_save() {
@@ -1083,11 +1083,9 @@ void db::manager::setup(completion_f completion) {
             completion = std::move(completion)
         ]() mutable {
             if (state) {
-                manager.impl_ptr<impl>()->set_db_info(db_info);
-                completion(manager, result_t{nullptr});
-            } else {
-                completion(manager, result_t{std::move(state.error())});
+                manager.impl_ptr<impl>()->set_db_info(std::move(db_info));
             }
+            completion(manager, std::move(state));
         };
 
         dispatch_sync(dispatch_get_main_queue(), std::move(lambda));
@@ -1112,7 +1110,7 @@ void db::manager::insert_objects(insert_preparation_f preparation, vector_comple
             db_info = std::move(db_info)
         ]() mutable {
             if (state) {
-                manager.impl_ptr<impl>()->set_db_info(db_info);
+                manager.impl_ptr<impl>()->set_db_info(std::move(db_info));
                 auto loaded_objects = manager.impl_ptr<impl>()->load_object_datas(inserted_datas);
                 completion(manager, vector_result_t{std::move(loaded_objects)});
             } else {
@@ -1231,7 +1229,7 @@ void db::manager::save(vector_completion_f completion, priority_t const priority
             db_info = std::move(db_info)
         ]() mutable {
             if (state) {
-                manager.impl_ptr<impl>()->set_db_info(db_info);
+                manager.impl_ptr<impl>()->set_db_info(std::move(db_info));
                 auto loaded_objects = manager.impl_ptr<impl>()->load_object_datas(saved_datas);
                 manager.impl_ptr<impl>()->changed_objects.clear();
                 completion(manager, vector_result_t{std::move(loaded_objects)});
@@ -1257,7 +1255,7 @@ void db::manager::revert(revert_preparation_f preparation, vector_completion_f c
             db_info = std::move(db_info)
         ]() mutable {
             if (state) {
-                manager.impl_ptr<impl>()->set_db_info(db_info);
+                manager.impl_ptr<impl>()->set_db_info(std::move(db_info));
                 auto loaded_objects = manager.impl_ptr<impl>()->load_object_datas(reverted_datas);
                 manager.impl_ptr<impl>()->changed_objects.clear();
                 completion(manager, vector_result_t{std::move(loaded_objects)});
