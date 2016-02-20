@@ -471,9 +471,8 @@ struct db::manager::impl : public base::impl {
 
                         if (auto create_result = db.execute_update(db::create_table_sql(
                                 info_table, {version_field, current_save_id_field, last_save_id_field}))) {
-                            db::value_map args{std::make_pair(version_field, db::value{model.version().str()}),
-                                               std::make_pair(current_save_id_field, db::value{integer::type{0}}),
-                                               std::make_pair(last_save_id_field, db::value{integer::type{0}})};
+                            db::value_vector args{db::value{model.version().str()}, db::value{integer::type{0}},
+                                                  db::value{integer::type{0}}};
                             if (auto ul = unless(db.execute_update(
                                     db::insert_sql(info_table,
                                                    {version_field, current_save_id_field, last_save_id_field}),
