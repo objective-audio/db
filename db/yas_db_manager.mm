@@ -283,6 +283,17 @@ struct db::manager::impl : public base::impl {
         return loaded_objects;
     }
 
+    void clear_objects() {
+        for (auto &entity_pair : cached_objects) {
+            for (auto &object_pair : entity_pair.second) {
+                if (auto object = object_pair.second.lock()) {
+                    object.clear_data();
+                }
+            }
+        }
+        cached_objects.clear();
+    }
+
     void set_db_info(db::value_map &&info) {
         db_info = std::move(info);
     }
@@ -534,6 +545,65 @@ struct db::manager::impl : public base::impl {
                 completion(manager, std::move(state), std::move(db_info));
             },
             0);
+    }
+
+    void execute_clear(std::function<void(manager &, result_t &&, value_map &&)> &&completion,
+                       priority_t const priority) {
+        execute(
+            [completion = std::move(completion)](db::manager & manager, operation const &op) {
+                auto &db = manager.database();
+                auto const &model = manager.model();
+
+                db::value_map db_info;
+                result_t state{nullptr};
+
+                if (auto begin_result = db::begin_transaction(db)) {
+                    for (auto const &entity_pair : model.entities()) {
+                        auto const &entity = entity_pair.second;
+                        auto const &table_name = entity.name;
+
+                        if (auto delete_result = db.execute_update(db::delete_sql(table_name))) {
+                            for (auto const &rel_pair : entity.relations) {
+                                auto const table_name = rel_pair.second.table_name;
+
+                                if (auto ul = unless(db.execute_update(db::delete_sql(table_name)))) {
+                                    state = result_t{error{error_type::delete_failed, std::move(ul.value.error())}};
+                                    break;
+                                }
+                            }
+                        } else {
+                            state = result_t{error{error_type::delete_failed, std::move(delete_result.error())}};
+                            break;
+                        }
+                    }
+                } else {
+                    state = result_t{error{error_type::begin_transaction_failed, std::move(begin_result.error())}};
+                }
+
+                if (state) {
+                    auto const sql = update_sql(info_table, {current_save_id_field, last_save_id_field}, "");
+                    db::value_vector const params{db::value{integer::type{0}}, db::value{integer::type{0}}};
+                    if (auto update_result = db.execute_update(sql, params)) {
+                        if (auto select_result = db::select_db_info(db)) {
+                            db_info = std::move(select_result.value());
+                        } else {
+                            state = result_t{error{error_type::select_info_failed, std::move(select_result.error())}};
+                        }
+                    } else {
+                        state = result_t{error{error_type::update_info_failed, std::move(update_result.error())}};
+                    }
+                }
+
+                if (state) {
+                    db::commit(db);
+                } else {
+                    db::rollback(db);
+                    db_info.clear();
+                }
+
+                completion(manager, std::move(state), std::move(db_info));
+            },
+            priority);
     }
 
     void execute_insert(
@@ -1092,6 +1162,28 @@ void db::manager::setup(completion_f completion) {
     };
 
     impl_ptr<impl>()->execute_setup(std::move(impl_completion));
+}
+
+void db::manager::clear(completion_f completion, priority_t const priority) {
+    auto impl_completion = [completion = std::move(completion)](manager & manager, result_t && state,
+                                                                value_map && db_info) {
+        auto lambda = [
+            completion = std::move(completion),
+            manager,
+            state = std::move(state),
+            db_info = std::move(db_info)
+        ]() mutable {
+            if (state) {
+                manager.impl_ptr<impl>()->set_db_info(std::move(db_info));
+                manager.impl_ptr<impl>()->clear_objects();
+            }
+            completion(manager, std::move(state));
+        };
+
+        dispatch_sync(dispatch_get_main_queue(), std::move(lambda));
+    };
+
+    impl_ptr<impl>()->execute_clear(std::move(impl_completion), priority);
 }
 
 void db::manager::execute(execution_f &&execution, priority_t const priority) {
