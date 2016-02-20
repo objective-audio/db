@@ -146,6 +146,7 @@ using namespace yas;
     value_b = std::move(value_a);
 
     XCTAssertEqual(value_b.get<db::integer>(), 5);
+    XCTAssertFalse(value_a);
 }
 
 - (void)test_create_empty_blob {
