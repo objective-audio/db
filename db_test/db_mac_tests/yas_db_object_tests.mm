@@ -538,6 +538,7 @@ using namespace yas;
     obj.set_relation_ids("child", {db::value{23}, db::value{45}});
 
     XCTAssertEqual(obj.status(), db::object_status::changed);
+
     XCTAssertEqual(obj.get_attribute("age"), db::value{20});
     XCTAssertEqual(obj.get_attribute("name"), db::value{"test_name"});
     XCTAssertEqual(obj.get_relation_id("child", 0), db::value{23});
@@ -546,9 +547,45 @@ using namespace yas;
     obj.clear_data();
 
     XCTAssertEqual(obj.status(), db::object_status::invalid);
+
     XCTAssertFalse(obj.get_attribute("age"));
     XCTAssertFalse(obj.get_attribute("name"));
     XCTAssertEqual(obj.relation_size("child"), 0);
+}
+
+- (void)test_observe_clear {
+    NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
+    db::model model((__bridge CFDictionaryRef)model_dict);
+
+    db::object obj{nullptr, model, "sample_a"};
+
+    obj.set_attribute("name", db::value{"test_name"});
+    obj.set_relation_ids("child", {db::value{101}, db::value{102}});
+
+    XCTAssertEqual(obj.status(), db::object_status::changed);
+
+    bool called = false;
+
+    auto observer = obj.subject().make_wild_card_observer(
+        [&called, self](std::string const &key, db::object::change_info const &info) {
+            XCTAssertEqual(key, db::loading_change_key);
+
+            auto const &obj = info.object;
+            auto const &name = info.name;
+
+            XCTAssertEqual(obj.status(), db::object_status::invalid);
+
+            XCTAssertEqual(name.size(), 0);
+
+            XCTAssertFalse(obj.get_attribute("name"));
+            XCTAssertEqual(obj.relation_size("child"), 0);
+
+            called = true;
+        });
+
+    obj.clear_data();
+
+    XCTAssertTrue(called);
 }
 
 @end
