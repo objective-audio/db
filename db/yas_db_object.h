@@ -121,5 +121,5 @@ namespace db {
     using object_data_vector = std::vector<object_data>;
     using object_data_vector_map = std::unordered_map<std::string, object_data_vector>;
 }
-    std::string to_string(db::object_status const &);
+std::string to_string(db::object_status const &);
 }

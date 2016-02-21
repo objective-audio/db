@@ -588,4 +588,47 @@ using namespace yas;
     XCTAssertTrue(called);
 }
 
+- (void)test_move {
+    NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
+    db::model model((__bridge CFDictionaryRef)model_dict);
+
+    db::object obj{nullptr, model, "sample_a"};
+
+    XCTAssertTrue(obj);
+
+    db::object obj2 = std::move(obj);
+
+    XCTAssertTrue(obj2);
+    XCTAssertFalse(obj);
+
+    db::object obj3{nullptr};
+
+    obj3 = std::move(obj2);
+
+    XCTAssertTrue(obj3);
+    XCTAssertFalse(obj2);
+}
+
+- (void)test_const_move {
+    NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
+    db::model model((__bridge CFDictionaryRef)model_dict);
+
+    db::value_map attributes{std::make_pair("age", db::value{10})};
+    db::object_data obj_data{.attributes = std::move(attributes)};
+
+    db::const_object obj{model, "sample_a", obj_data};
+
+    db::const_object obj2 = std::move(obj);
+
+    XCTAssertTrue(obj2);
+    XCTAssertFalse(obj);
+
+    db::const_object obj3{nullptr};
+
+    obj3 = std::move(obj2);
+
+    XCTAssertTrue(obj3);
+    XCTAssertFalse(obj2);
+}
+
 @end
