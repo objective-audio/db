@@ -89,6 +89,11 @@ namespace db {
         template <typename T = db::copy_tag_t>
         value(const void *const data, std::size_t const size, T const tag = db::copy_tag);
 
+        value(value const &);
+        value(value &&);
+        value &operator=(value const &);
+        value &operator=(value &&);
+
         ~value();
 
         bool operator==(value const &) const;
@@ -110,6 +115,8 @@ namespace db {
 
         template <typename T>
         class impl;
+
+        static std::shared_ptr<db::value::impl<null>> const &null_value_impl_ptr();
     };
 
     using value_vector = std::vector<value>;

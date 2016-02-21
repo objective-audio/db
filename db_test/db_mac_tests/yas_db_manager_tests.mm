@@ -232,7 +232,7 @@ using namespace yas;
     [self waitForExpectationsWithTimeout:1.0 handler:nil];
 }
 
-- (void)test_insert_objects {
+- (void)test_insert_objects_by_count {
     db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
 
@@ -325,6 +325,48 @@ using namespace yas;
     XCTAssertEqual(object_1.object_id(), db::value{1});
 
     XCTAssertFalse(manager.cached_object("sample_a", 5));
+}
+
+- (void)test_insert_objects_by_values {
+    db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
+    auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
+
+    XCTestExpectation *exp = [self expectationWithDescription:@"insert"];
+
+    manager.setup([self](auto &manager, auto result) {
+        XCTAssertTrue(result);
+        XCTAssertEqual(manager.current_save_id(), 0);
+    });
+
+    manager.insert_objects(
+        [](auto &) {
+            db::value_map obj1{{"name", db::value{"test_name_1"}}, {"age", db::value{43}}};
+            db::value_map obj2{{"name", db::value{"test_name_2"}}, {"age", db::value{67}}};
+            db::value_map_vector sample_as{std::move(obj1), std::move(obj2)};
+            return db::value_map_vector_map{{"sample_a", std::move(sample_as)}};
+        },
+        [self, exp](auto &manager, auto result) {
+            XCTAssertTrue(result);
+
+            auto &objects = result.value();
+
+            XCTAssertEqual(objects.count("sample_a"), 1);
+
+            auto &a_objects = objects.at("sample_a");
+
+            XCTAssertEqual(a_objects.size(), 2);
+
+            XCTAssertEqual(a_objects.at(0).get_attribute("name"), db::value{"test_name_1"});
+            XCTAssertEqual(a_objects.at(0).get_attribute("age"), db::value{43});
+            XCTAssertEqual(a_objects.at(1).get_attribute("name"), db::value{"test_name_2"});
+            XCTAssertEqual(a_objects.at(1).get_attribute("age"), db::value{67});
+
+            XCTAssertEqual(manager.current_save_id(), 1);
+
+            [exp fulfill];
+        });
+
+    [self waitForExpectationsWithTimeout:1.0 handler:nil];
 }
 
 - (void)test_insert_many_entity_objects {
