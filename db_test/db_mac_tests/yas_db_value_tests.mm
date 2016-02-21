@@ -136,7 +136,7 @@ using namespace yas;
     db::value value{vec.data(), vec.size(), yas::db::no_copy_tag};
 }
 
-- (void)test_move_assignment {
+- (void)test_move {
     db::value value_a{db::integer::type{5}};
     db::value value_b{db::integer::type{10}};
 
@@ -145,8 +145,15 @@ using namespace yas;
 
     value_b = std::move(value_a);
 
+    XCTAssertTrue(value_b);
     XCTAssertEqual(value_b.get<db::integer>(), 5);
     XCTAssertFalse(value_a);
+
+    db::value value_c = std::move(value_b);
+
+    XCTAssertTrue(value_c);
+    XCTAssertEqual(value_c.get<db::integer>(), 5);
+    XCTAssertFalse(value_b);
 }
 
 - (void)test_create_empty_blob {
