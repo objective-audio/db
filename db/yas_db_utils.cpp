@@ -289,6 +289,17 @@ db::select_single_result db::select_db_info(database const &db) {
     return select_single(db, db::select_option{.table = db::info_table});
 }
 
+db::update_result db::purge(database &db, std::string const &table_name) {
+    std::string where_exprs =
+        "NOT rowid IN (SELECT MAX(rowid) FROM " + table_name + " GROUP BY " + db::object_id_field + ")";
+    return db.execute_update(delete_sql(table_name, where_exprs));
+}
+
+db::update_result db::purge_relation(database &db, std::string const &table_name, std::string const &src_table_name) {
+    std::string where_exprs = "NOT " + db::src_rowid_field + " IN (SELECT rowid FROM " + src_table_name + ")";
+    return db.execute_update(delete_sql(table_name, where_exprs));
+}
+
 db::value db::max(database const &db, std::string const &table_name, std::string const &field) {
     if (auto query_result = db.execute_query("SELECT MAX(" + field + ") FROM " + table_name + ";")) {
         auto &row_set = query_result.value();
