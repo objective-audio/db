@@ -56,7 +56,7 @@ namespace db {
             version_not_found,
             save_id_not_found,
             out_of_range_save_id,
-
+            last_insert_rowid_failed,
         };
 
         struct error {

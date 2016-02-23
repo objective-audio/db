@@ -28,14 +28,15 @@ db::relation::relation(std::string const entity_name, std::string const &attribu
 
 std::string db::relation::sql_for_create() const {
     auto id_sql = db::attribute::id_attribute().sql();
-    auto src_id_sql = db::attribute{src_id_field, db::integer::name}.sql();
-    auto tgt_id_sql = db::attribute{tgt_id_field, db::integer::name}.sql();
+    auto src_id_sql = db::attribute{src_rowid_field, db::integer::name}.sql();
+    auto src_obj_id_sql = db::attribute{src_obj_id_field, db::integer::name}.sql();
+    auto tgt_obj_id_sql = db::attribute{tgt_obj_id_field, db::integer::name}.sql();
     auto save_id_sql = db::attribute{save_id_field, db::integer::name}.sql();
 
-    return db::create_table_sql(
-        table_name, {std::move(id_sql), std::move(src_id_sql), std::move(tgt_id_sql), std::move(save_id_sql)});
+    return db::create_table_sql(table_name, {std::move(id_sql), std::move(src_id_sql), std::move(src_obj_id_sql),
+                                             std::move(tgt_obj_id_sql), std::move(save_id_sql)});
 }
 
 std::string db::relation::sql_for_insert() const {
-    return db::insert_sql(table_name, {src_id_field, tgt_id_field, save_id_field});
+    return db::insert_sql(table_name, {src_rowid_field, src_obj_id_field, tgt_obj_id_field, save_id_field});
 }
