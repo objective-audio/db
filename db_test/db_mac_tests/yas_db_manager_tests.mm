@@ -144,7 +144,7 @@ using namespace yas;
         auto select_result_b = db::select(db, option_b);
         auto &tgt_id = select_result_b.value().at(0).at(db::id_field);
 
-        auto sql = db::insert_sql("rel_sample_a_child", {db::src_id_field, db::tgt_id_field});
+        auto sql = db::insert_sql("rel_sample_a_child", {db::src_obj_id_field, db::tgt_obj_id_field});
         if (!db.execute_update(sql, db::value_vector{src_id, tgt_id})) {
             rollback = true;
         }
@@ -219,8 +219,8 @@ using namespace yas;
         auto &tgt_id = sample_b.at(db::id_field);
 
         auto &rel = select_rels_result.value().at(0);
-        XCTAssertEqual(rel.at(db::src_id_field), src_id);
-        XCTAssertEqual(rel.at(db::tgt_id_field), tgt_id);
+        XCTAssertEqual(rel.at(db::src_obj_id_field), src_id);
+        XCTAssertEqual(rel.at(db::tgt_obj_id_field), tgt_id);
 
         XCTAssertTrue(db::index_exists(db, "sample_a_name"));
         XCTAssertTrue(db::index_exists(db, "sample_a_others"));
@@ -979,8 +979,8 @@ using namespace yas;
         auto const &selected_relations = relation_result.value();
 
         XCTAssertEqual(selected_relations.size(), 2);
-        XCTAssertEqual(selected_relations.at(0).at(db::tgt_id_field), db::value{100});
-        XCTAssertEqual(selected_relations.at(1).at(db::tgt_id_field), db::value{200});
+        XCTAssertEqual(selected_relations.at(0).at(db::tgt_obj_id_field), db::value{100});
+        XCTAssertEqual(selected_relations.at(1).at(db::tgt_obj_id_field), db::value{200});
 
         [exp3 fulfill];
     });

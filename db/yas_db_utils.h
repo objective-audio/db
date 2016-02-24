@@ -55,6 +55,9 @@ namespace db {
     select_single_result select_single(database const &db, select_option option);
     select_single_result select_db_info(database const &db);
 
+    update_result purge(database &db, std::string const &table_name);
+    update_result purge_relation(database &db, std::string const &table_name, std::string const &src_table_name);
+
     value max(database const &db, std::string const &table_name, std::string const &field);
 
     std::vector<const_object> get_const_relation_objects(const_object const &object,

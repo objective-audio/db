@@ -55,18 +55,18 @@ namespace db {
                 auto const &rel_name = rel_model_pair.first;
                 auto const &table_name = rel_model_pair.second.table_name;
                 std::string where_exprs =
-                    joined({equal_field_expr(save_id_field), equal_field_expr(src_id_field)}, " and ");
-                db::select_option option{
-                    .table = table_name,
-                    .where_exprs = std::move(where_exprs),
-                    .arguments = {{save_id_field, attrs.at(save_id_field)}, {src_id_field, attrs.at(object_id_field)}}};
+                    joined({equal_field_expr(save_id_field), equal_field_expr(src_obj_id_field)}, " and ");
+                db::select_option option{.table = table_name,
+                                         .where_exprs = std::move(where_exprs),
+                                         .arguments = {{save_id_field, attrs.at(save_id_field)},
+                                                       {src_obj_id_field, attrs.at(object_id_field)}}};
 
                 if (auto select_result = db::select(db, option)) {
                     auto const &result_rels = select_result.value();
                     db::value_vector rel_tgts;
                     rel_tgts.reserve(result_rels.size());
                     for (auto const &result_rel : result_rels) {
-                        rel_tgts.push_back(result_rel.at(tgt_id_field));
+                        rel_tgts.push_back(result_rel.at(tgt_obj_id_field));
                     }
                     relations.emplace(std::make_pair(rel_name, std::move(rel_tgts)));
                 } else {
@@ -933,25 +933,34 @@ struct db::manager::impl : public base::impl {
                                     replace(data.attributes, save_id_field, next_save_id);
 
                                     if (auto insert_result = db.execute_update(entity_insert_sql, data.attributes)) {
-                                        auto const src_id_pair =
-                                            std::make_pair(src_id_field, data.attributes.at(object_id_field));
+                                        if (auto row_result = db.last_insert_row_id()) {
+                                            auto const src_rowid_pair =
+                                                std::make_pair(src_rowid_field, db::value{row_result.value()});
+                                            auto const src_obj_id_pair =
+                                                std::make_pair(src_obj_id_field, data.attributes.at(object_id_field));
 
-                                        for (auto const &rel_pair : data.relations) {
-                                            auto const &rel_name = rel_pair.first;
-                                            auto const &rel = rel_pair.second;
-                                            auto const &rel_model = rel_models.at(rel_name);
-                                            auto const &rel_insert_sql = rel_model.sql_for_insert();
+                                            for (auto const &rel_pair : data.relations) {
+                                                auto const &rel_name = rel_pair.first;
+                                                auto const &rel = rel_pair.second;
+                                                auto const &rel_model = rel_models.at(rel_name);
+                                                auto const &rel_insert_sql = rel_model.sql_for_insert();
 
-                                            for (auto const &rel_tgt_id : rel) {
-                                                auto tgt_id_pair = std::make_pair(tgt_id_field, rel_tgt_id);
-                                                db::value_map args{src_id_pair, std::move(tgt_id_pair), save_id_pair};
-                                                if (auto ul =
-                                                        unless(db.execute_update(rel_insert_sql, std::move(args)))) {
-                                                    state = result_t{error{error_type::insert_relation_failed,
-                                                                           std::move(ul.value.error())}};
-                                                    break;
+                                                for (auto const &rel_tgt_obj_id : rel) {
+                                                    auto tgt_obj_id_pair =
+                                                        std::make_pair(tgt_obj_id_field, rel_tgt_obj_id);
+                                                    db::value_map args{src_rowid_pair, src_obj_id_pair,
+                                                                       std::move(tgt_obj_id_pair), save_id_pair};
+                                                    if (auto ul = unless(
+                                                            db.execute_update(rel_insert_sql, std::move(args)))) {
+                                                        state = result_t{error{error_type::insert_relation_failed,
+                                                                               std::move(ul.value.error())}};
+                                                        break;
+                                                    }
                                                 }
                                             }
+                                        } else {
+                                            state = result_t{error{error_type::last_insert_rowid_failed,
+                                                                   std::move(row_result.error())}};
                                         }
                                     } else {
                                         state = result_t{error{error_type::insert_attributes_failed,
@@ -1446,6 +1455,8 @@ std::string yas::to_string(db::manager::error_type const &error) {
             return "out_of_range_save_id";
         case db::manager::error_type::select_failed:
             return "select_failed";
+        case db::manager::error_type::last_insert_rowid_failed:
+            return "last_insert_rowid_failed";
         case db::manager::error_type::none:
             return "none";
     }
