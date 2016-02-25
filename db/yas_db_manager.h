@@ -105,8 +105,8 @@ namespace db {
         database const &database() const;
         db::database &database();
         model const &model() const;
-        integer::type current_save_id() const;
-        integer::type last_save_id() const;
+        db::value const &current_save_id() const;
+        db::value const &last_save_id() const;
 
         void suspend();
         void resume();

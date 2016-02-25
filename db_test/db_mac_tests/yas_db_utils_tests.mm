@@ -903,7 +903,7 @@ using namespace yas;
         },
         [self](auto &manager, auto result) {
             XCTAssertTrue(result);
-            XCTAssertEqual(manager.current_save_id(), 1);
+            XCTAssertEqual(manager.current_save_id(), db::value{1});
 
             auto &objects = result.value();
             auto &a_objects = objects.at("sample_a");
@@ -919,7 +919,7 @@ using namespace yas;
 
     manager.save([self](auto &manager, auto result) {
         XCTAssertTrue(result);
-        XCTAssertEqual(manager.current_save_id(), 2);
+        XCTAssertEqual(manager.current_save_id(), db::value{2});
 
         auto &objects = result.value();
         auto &a_objects = objects.at("sample_a");
@@ -933,7 +933,7 @@ using namespace yas;
 
     manager.save([self](auto &manager, auto result) {
         XCTAssertTrue(result);
-        XCTAssertEqual(manager.current_save_id(), 3);
+        XCTAssertEqual(manager.current_save_id(), db::value{3});
     });
 
     manager.execute([self](auto &manager, auto const &op) {
@@ -976,7 +976,7 @@ using namespace yas;
         },
         [self, &objects](auto &manager, auto result) {
             XCTAssertTrue(result);
-            XCTAssertEqual(manager.current_save_id(), 1);
+            XCTAssertEqual(manager.current_save_id(), db::value{1});
 
             objects = std::move(result.value());
             db::object &obj_a = objects.at("sample_a").at(0);
@@ -992,7 +992,7 @@ using namespace yas;
 
     manager.save([self, &objects](auto &manager, auto result) {
         XCTAssertTrue(result);
-        XCTAssertEqual(manager.current_save_id(), 2);
+        XCTAssertEqual(manager.current_save_id(), db::value{2});
 
         db::object &obj_a = objects.at("sample_a").at(0);
         db::object &obj_b0 = objects.at("sample_b").at(0);
@@ -1007,7 +1007,7 @@ using namespace yas;
 
     manager.save([self, &objects](auto &manager, auto result) {
         XCTAssertTrue(result);
-        XCTAssertEqual(manager.current_save_id(), 3);
+        XCTAssertEqual(manager.current_save_id(), db::value{3});
 
         db::object &obj_a = objects.at("sample_a").at(0);
         db::object &obj_b0 = objects.at("sample_b").at(0);
@@ -1022,7 +1022,7 @@ using namespace yas;
 
     manager.save([self, &objects](auto &manager, auto result) {
         XCTAssertTrue(result);
-        XCTAssertEqual(manager.current_save_id(), 4);
+        XCTAssertEqual(manager.current_save_id(), db::value{4});
     });
 
     manager.execute([self](auto &manager, auto const &op) {
