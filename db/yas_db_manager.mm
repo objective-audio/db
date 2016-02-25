@@ -1274,20 +1274,20 @@ db::model const &db::manager::model() const {
     return impl_ptr<impl>()->model;
 }
 
-db::integer::type db::manager::current_save_id() const {
+db::value const &db::manager::current_save_id() const {
     auto &db_info = impl_ptr<impl>()->db_info;
     if (db_info.count(current_save_id_field)) {
-        return db_info.at(current_save_id_field).get<integer>();
+        return db_info.at(current_save_id_field);
     }
-    return 0;
+    return db::value::null_value();
 }
 
-db::integer::type db::manager::last_save_id() const {
+db::value const &db::manager::last_save_id() const {
     auto &db_info = impl_ptr<impl>()->db_info;
     if (db_info.count(last_save_id_field)) {
-        return db_info.at(last_save_id_field).get<integer>();
+        return db_info.at(last_save_id_field);
     }
-    return 0;
+    return db::value::null_value();
 }
 
 void db::manager::setup(completion_f completion) {
