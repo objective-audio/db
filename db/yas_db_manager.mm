@@ -384,8 +384,8 @@ struct db::manager::impl : public base::impl {
 
                         if (auto select_result = db::select(
                                 db, {.table = info_table, .fields = {version_field}, .limit_range = db::range{0, 1}})) {
-                            auto const update_info_result = db.execute_update(
-                                update_sql(info_table, {version_field}, ""), {db::value{model.version().str()}});
+                            auto const update_info_result = db.execute_update(update_sql(info_table, {version_field}),
+                                                                              {db::value{model.version().str()}});
                             if (update_info_result) {
                                 auto const &infos = select_result.value();
                                 auto const &info = *infos.rbegin();
@@ -580,7 +580,7 @@ struct db::manager::impl : public base::impl {
                 }
 
                 if (state) {
-                    auto const sql = update_sql(info_table, {current_save_id_field, last_save_id_field}, "");
+                    auto const sql = update_sql(info_table, {current_save_id_field, last_save_id_field});
                     db::value_vector const params{db::value{integer::type{0}}, db::value{integer::type{0}}};
                     if (auto update_result = db.execute_update(sql, params)) {
                         if (auto select_result = db::select_db_info(db)) {
@@ -935,7 +935,7 @@ struct db::manager::impl : public base::impl {
                                     if (auto insert_result = db.execute_update(entity_insert_sql, data.attributes)) {
                                         if (auto row_result = db.last_insert_row_id()) {
                                             auto const src_rowid_pair =
-                                                std::make_pair(src_rowid_field, db::value{row_result.value()});
+                                                std::make_pair(src_id_field, db::value{row_result.value()});
                                             auto const src_obj_id_pair =
                                                 std::make_pair(src_obj_id_field, data.attributes.at(object_id_field));
 
@@ -981,7 +981,7 @@ struct db::manager::impl : public base::impl {
                         }
 
                         if (state) {
-                            auto const sql = update_sql(info_table, {current_save_id_field, last_save_id_field}, "");
+                            auto const sql = update_sql(info_table, {current_save_id_field, last_save_id_field});
                             db::value_vector const params{next_save_id, next_save_id};
                             if (auto ul = unless(db.execute_update(sql, params))) {
                                 state = result_t{error{error_type::update_info_failed, std::move(ul.value.error())}};
@@ -1087,7 +1087,7 @@ struct db::manager::impl : public base::impl {
 
                 if (state) {
                     db::value const save_id{rev_save_id};
-                    auto const sql = update_sql(info_table, {current_save_id_field}, "");
+                    auto const sql = update_sql(info_table, {current_save_id_field});
                     if (auto update_result = db.execute_update(sql, {save_id})) {
                         if (auto select_result = db::select_db_info(db)) {
                             db_info = std::move(select_result.value());

@@ -22,7 +22,7 @@ namespace db {
 
     std::string insert_sql(std::string const &table, std::vector<std::string> const &fields = {});
     std::string update_sql(std::string const &table, std::vector<std::string> const &fields,
-                           std::string const &where_exprs);
+                           std::string const &where_exprs = "");
     std::string delete_sql(std::string const &table, std::string const &where_exprs = "");
 
     std::string expr(std::string const &left, std::string const &op, std::string const &right);
