@@ -39,5 +39,7 @@ namespace db {
 
     std::string foreign_key(std::string const &field, std::string const &ref_table, std::string const &ref_field,
                             std::string const &on_update, std::string const &on_delete);
+    
+    std::string vacuum_sql();
 }
 }
