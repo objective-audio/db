@@ -51,6 +51,9 @@ namespace db {
             fetch_object_datas_failed,
 
             delete_failed,
+            purge_failed,
+            purge_relation_failed,
+            vacuum_failed,
 
             invalid_version_text,
             version_not_found,
@@ -112,6 +115,7 @@ namespace db {
 
         void setup(completion_f completion);
         void clear(completion_f completion, priority_t const priority = 0);
+        void purge(completion_f completion, priority_t const priority = 0);
         void insert_objects(insert_preparation_count_f preparation, vector_completion_f completion,
                             priority_t const priority = 0);
         void insert_objects(insert_preparation_values_f preparation, vector_completion_f completion,
