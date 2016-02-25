@@ -1043,7 +1043,7 @@ using namespace yas;
         XCTAssertEqual(entity_rel_values.size(), 1);
 
         auto &rel_values = entity_rel_values.at(0);
-        XCTAssertEqual(rel_values.at(db::src_rowid_field), db::value{4});
+        XCTAssertEqual(rel_values.at(db::src_id_field), db::value{4});
         XCTAssertEqual(rel_values.at(db::src_obj_id_field), db::value{1});
         XCTAssertEqual(rel_values.at(db::tgt_obj_id_field), db::value{2});
     });
