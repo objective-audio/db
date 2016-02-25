@@ -144,13 +144,13 @@ using namespace yas;
 - (void)test_id_sql {
     auto const &attr = db::attribute::id_attribute();
 
-    XCTAssertEqual(attr.sql(), "id INTEGER PRIMARY KEY");
+    XCTAssertEqual(attr.sql(), "id INTEGER PRIMARY KEY AUTOINCREMENT");
 }
 
 - (void)test_full_sql {
     db::attribute attr{"test_name", db::integer::name, db::value{5}, true, true, true};
 
-    XCTAssertEqual(attr.sql(), "test_name INTEGER PRIMARY KEY UNIQUE NOT NULL DEFAULT 5");
+    XCTAssertEqual(attr.sql(), "test_name INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE NOT NULL DEFAULT 5");
 }
 
 @end

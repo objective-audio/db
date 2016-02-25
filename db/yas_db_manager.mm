@@ -294,6 +294,18 @@ struct db::manager::impl : public base::impl {
         cached_objects.clear();
     }
 
+    void purge_objects() {
+        db::value const one_value{integer::type{1}};
+
+        for (auto &entity_pair : cached_objects) {
+            for (auto &object_pair : entity_pair.second) {
+                if (auto object = object_pair.second.lock()) {
+                    object.load_save_id(one_value);
+                }
+            }
+        }
+    }
+
     void set_db_info(db::value_map &&info) {
         db_info = std::move(info);
     }
@@ -384,8 +396,8 @@ struct db::manager::impl : public base::impl {
 
                         if (auto select_result = db::select(
                                 db, {.table = info_table, .fields = {version_field}, .limit_range = db::range{0, 1}})) {
-                            auto const update_info_result = db.execute_update(
-                                update_sql(info_table, {version_field}, ""), {db::value{model.version().str()}});
+                            auto const update_info_result = db.execute_update(update_sql(info_table, {version_field}),
+                                                                              {db::value{model.version().str()}});
                             if (update_info_result) {
                                 auto const &infos = select_result.value();
                                 auto const &info = *infos.rbegin();
@@ -580,7 +592,7 @@ struct db::manager::impl : public base::impl {
                 }
 
                 if (state) {
-                    auto const sql = update_sql(info_table, {current_save_id_field, last_save_id_field}, "");
+                    auto const sql = update_sql(info_table, {current_save_id_field, last_save_id_field});
                     db::value_vector const params{db::value{integer::type{0}}, db::value{integer::type{0}}};
                     if (auto update_result = db.execute_update(sql, params)) {
                         if (auto select_result = db::select_db_info(db)) {
@@ -598,6 +610,120 @@ struct db::manager::impl : public base::impl {
                 } else {
                     db::rollback(db);
                     db_info.clear();
+                }
+
+                completion(manager, std::move(state), std::move(db_info));
+            },
+            priority);
+    }
+
+    void execute_purge(std::function<void(db::manager &, result_t &&, value_map &&)> &&completion,
+                       priority_t const priority) {
+        execute(
+            [completion = std::move(completion)](db::manager & manager, operation const &op) {
+                auto &db = manager.database();
+                auto const &model = manager.model();
+
+                db::value const one_value = db::value{integer::type{1}};
+
+                db::value_map db_info;
+                db::manager::result_t state{nullptr};
+
+                if (auto begin_result = db::begin_transaction(db)) {
+                    db::value current_save_id{nullptr};
+                    db::value last_save_id{nullptr};
+
+                    if (auto select_result = db::select_db_info(db)) {
+                        auto const &db_info = select_result.value();
+                        if (db_info.count(current_save_id_field)) {
+                            current_save_id = db_info.at(current_save_id_field);
+                        } else {
+                            state = result_t{error{error_type::save_id_not_found}};
+                        }
+
+                        if (db_info.count(last_save_id_field)) {
+                            last_save_id = db_info.at(last_save_id_field);
+                        } else {
+                            state = result_t{error{error_type::save_id_not_found}};
+                        }
+                    } else {
+                        state = result_t{error{error_type::select_info_failed, std::move(select_result.error())}};
+                    }
+
+                    if (state && current_save_id && last_save_id) {
+                        if (current_save_id.get<integer>() < last_save_id.get<integer>()) {
+                            state = delete_current_to_last(manager, current_save_id, last_save_id);
+                        }
+                    }
+
+                    if (state) {
+                        for (auto const &entity_pair : model.entities()) {
+                            auto const &entity_name = entity_pair.first;
+                            auto const &entity = entity_pair.second;
+
+                            if (auto purge_result = db::purge(db, entity_name)) {
+                                auto const update_entity_sql = db::update_sql(entity_name, {save_id_field});
+                                if (auto update_result = db.execute_update(update_entity_sql, {one_value})) {
+                                    for (auto const &rel_pair : entity.relations) {
+                                        auto const &relation = rel_pair.second;
+                                        auto const &rel_table_name = relation.table_name;
+
+                                        if (auto purge_rel_result =
+                                                db::purge_relation(db, rel_table_name, entity_name)) {
+                                            auto const update_rel_sql = db::update_sql(rel_table_name, {save_id_field});
+                                            if (auto ul = unless(db.execute_update(update_rel_sql, {one_value}))) {
+                                                state = result_t{error{error_type::update_save_id_failed,
+                                                                       std::move(ul.value.error())}};
+                                            }
+                                        } else {
+                                            state = result_t{error{error_type::purge_relation_failed,
+                                                                   std::move(purge_rel_result.error())}};
+                                        }
+                                    }
+                                } else {
+                                    state = result_t{
+                                        error{error_type::update_save_id_failed, std::move(update_result.error())}};
+                                }
+                            } else {
+                                state = result_t{error{error_type::purge_failed, std::move(purge_result.error())}};
+                                break;
+                            }
+
+                            if (!state) {
+                                break;
+                            }
+                        }
+                    }
+
+                    if (state) {
+                        auto const sql = update_sql(info_table, {current_save_id_field, last_save_id_field}, "");
+                        db::value_vector const args{one_value, one_value};
+                        if (auto update_result = db.execute_update(sql, args)) {
+                            if (auto select_result = db::select_db_info(db)) {
+                                db_info = select_result.value();
+                            } else {
+                                state =
+                                    result_t{error{error_type::select_info_failed, std::move(select_result.error())}};
+                            }
+                        } else {
+                            state = result_t{error{error_type::update_info_failed, std::move(update_result.error())}};
+                        }
+                    }
+
+                    if (state) {
+                        db::commit(db);
+                    } else {
+                        db::rollback(db);
+                        db_info.clear();
+                    }
+                } else {
+                    state = result_t{error{error_type::begin_transaction_failed, std::move(begin_result.error())}};
+                }
+
+                if (state) {
+                    if (auto ul = unless(db.execute_update(vacuum_sql()))) {
+                        state = result_t{error{error_type::vacuum_failed, std::move(ul.value.error())}};
+                    }
                 }
 
                 completion(manager, std::move(state), std::move(db_info));
@@ -710,9 +836,9 @@ struct db::manager::impl : public base::impl {
                 }
 
                 if (state) {
-                    auto const sql = update_sql(info_table, {current_save_id_field, last_save_id_field}, "");
-                    db::value_vector const params{next_save_id, next_save_id};
-                    if (auto update_result = db.execute_update(sql, params)) {
+                    auto const sql = update_sql(info_table, {current_save_id_field, last_save_id_field});
+                    db::value_vector const args{next_save_id, next_save_id};
+                    if (auto update_result = db.execute_update(sql, args)) {
                         if (auto select_result = db::select_db_info(db)) {
                             db_info = select_result.value();
                         } else {
@@ -935,7 +1061,7 @@ struct db::manager::impl : public base::impl {
                                     if (auto insert_result = db.execute_update(entity_insert_sql, data.attributes)) {
                                         if (auto row_result = db.last_insert_row_id()) {
                                             auto const src_rowid_pair =
-                                                std::make_pair(src_rowid_field, db::value{row_result.value()});
+                                                std::make_pair(src_id_field, db::value{row_result.value()});
                                             auto const src_obj_id_pair =
                                                 std::make_pair(src_obj_id_field, data.attributes.at(object_id_field));
 
@@ -981,7 +1107,7 @@ struct db::manager::impl : public base::impl {
                         }
 
                         if (state) {
-                            auto const sql = update_sql(info_table, {current_save_id_field, last_save_id_field}, "");
+                            auto const sql = update_sql(info_table, {current_save_id_field, last_save_id_field});
                             db::value_vector const params{next_save_id, next_save_id};
                             if (auto ul = unless(db.execute_update(sql, params))) {
                                 state = result_t{error{error_type::update_info_failed, std::move(ul.value.error())}};
@@ -1087,7 +1213,7 @@ struct db::manager::impl : public base::impl {
 
                 if (state) {
                     db::value const save_id{rev_save_id};
-                    auto const sql = update_sql(info_table, {current_save_id_field}, "");
+                    auto const sql = update_sql(info_table, {current_save_id_field});
                     if (auto update_result = db.execute_update(sql, {save_id})) {
                         if (auto select_result = db::select_db_info(db)) {
                             db_info = std::move(select_result.value());
@@ -1205,6 +1331,29 @@ void db::manager::clear(completion_f completion, priority_t const priority) {
     };
 
     impl_ptr<impl>()->execute_clear(std::move(impl_completion), priority);
+}
+
+void db::manager::purge(completion_f completion, priority_t const priority) {
+    auto impl_completion = [completion = std::move(completion)](manager & manager, result_t && state,
+                                                                value_map && db_info) {
+        auto lambda = [
+            completion = std::move(completion),
+            manager,
+            state = std::move(state),
+            db_info = std::move(db_info)
+        ]() mutable {
+            if (state) {
+                manager.impl_ptr<impl>()->set_db_info(std::move(db_info));
+                manager.impl_ptr<impl>()->purge_objects();
+            }
+
+            completion(manager, std::move(state));
+        };
+
+        dispatch_sync(dispatch_get_main_queue(), std::move(lambda));
+    };
+
+    impl_ptr<impl>()->execute_purge(std::move(impl_completion), priority);
 }
 
 void db::manager::execute(execution_f &&execution, priority_t const priority) {
@@ -1415,6 +1564,8 @@ std::string yas::to_string(db::manager::error_type const &error) {
     switch (error) {
         case db::manager::error_type::begin_transaction_failed:
             return "begin_transaction_failed";
+        case db::manager::error_type::vacuum_failed:
+            return "vacuum_failed";
         case db::manager::error_type::select_info_failed:
             return "select_info_failed";
         case db::manager::error_type::update_info_failed:
@@ -1445,6 +1596,10 @@ std::string yas::to_string(db::manager::error_type const &error) {
             return "update_save_id_failed";
         case db::manager::error_type::delete_failed:
             return "delete_failed";
+        case db::manager::error_type::purge_failed:
+            return "purge_failed";
+        case db::manager::error_type::purge_relation_failed:
+            return "purge_relation_failed";
         case db::manager::error_type::select_last_failed:
             return "select_last_failed";
         case db::manager::error_type::select_revert_failed:

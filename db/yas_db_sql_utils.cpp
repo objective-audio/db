@@ -135,3 +135,7 @@ std::string yas::db::foreign_key(std::string const &field, std::string const &re
     }
     return stream.str();
 }
+
+std::string yas::db::vacuum_sql() {
+    return "VACUUM;";
+}

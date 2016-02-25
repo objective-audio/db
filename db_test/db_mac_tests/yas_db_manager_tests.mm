@@ -1435,6 +1435,142 @@ using namespace yas;
     [self waitForExpectationsWithTimeout:1.0 handler:nil];
 }
 
+- (void)test_purge {
+    db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
+    auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
+
+    manager.setup([self](auto &manager, auto result) { XCTAssertTrue(result); });
+
+    db::object_vector_map objects;
+
+    manager.insert_objects(
+        [](auto &manager) {
+            return db::entity_count_map{{"sample_a", 1}, {"sample_b", 2}};
+        },
+        [self, &objects](auto &manager, auto result) {
+            XCTAssertTrue(result);
+            XCTAssertEqual(manager.current_save_id(), 1);
+
+            objects = result.value();
+            auto &obj_a = objects.at("sample_a").at(0);
+            auto &obj_b0 = objects.at("sample_b").at(0);
+            auto &obj_b1 = objects.at("sample_b").at(1);
+
+            obj_a.set_attribute("name", db::value{"obj_a_2"});
+            obj_b0.set_attribute("name", db::value{"obj_b0_2"});
+            obj_b1.set_attribute("name", db::value{"obj_b1_2"});
+
+            obj_a.set_relation_object("child", {obj_b0});
+        });
+
+    manager.save([self, &objects](auto &manager, auto result) {
+        XCTAssertTrue(result);
+        XCTAssertEqual(manager.current_save_id(), 2);
+
+        auto &obj_a = objects.at("sample_a").at(0);
+        auto &obj_b0 = objects.at("sample_b").at(0);
+        auto &obj_b1 = objects.at("sample_b").at(1);
+
+        obj_a.set_attribute("name", db::value{"obj_a_3"});
+        obj_b0.set_attribute("name", db::value{"obj_b0_3"});
+        obj_b1.set_attribute("name", db::value{"obj_b1_3"});
+
+        obj_a.set_relation_object("child", {obj_b0, obj_b1});
+    });
+
+    manager.save([self, &objects](auto &manager, auto result) {
+        XCTAssertTrue(result);
+        XCTAssertEqual(manager.current_save_id(), 3);
+
+        auto &obj_a = objects.at("sample_a").at(0);
+        auto &obj_b0 = objects.at("sample_b").at(0);
+        auto &obj_b1 = objects.at("sample_b").at(1);
+
+        obj_a.set_attribute("name", db::value{"obj_a_4"});
+        obj_b0.set_attribute("name", db::value{"obj_b0_4"});
+        obj_b1.set_attribute("name", db::value{"obj_b1_4"});
+
+        obj_a.set_relation_object("child", {obj_b1});
+    });
+
+    manager.save([self](auto &manager, auto result) {
+        XCTAssertTrue(result);
+        XCTAssertEqual(manager.current_save_id(), 4);
+    });
+
+    manager.revert([](auto &manager) { return 3; },
+                   [self](auto &manager, auto result) {
+                       XCTAssertTrue(result);
+                       XCTAssertEqual(manager.current_save_id(), 3);
+                       XCTAssertEqual(manager.last_save_id(), 4);
+                   });
+
+    manager.purge([self, &objects](auto &manager, auto result) {
+        XCTAssertTrue(result);
+        XCTAssertEqual(manager.current_save_id(), 1);
+        XCTAssertEqual(manager.last_save_id(), 1);
+
+        auto &obj_a = objects.at("sample_a").at(0);
+        auto &obj_b0 = objects.at("sample_b").at(0);
+        auto &obj_b1 = objects.at("sample_b").at(1);
+
+        XCTAssertEqual(obj_a.get_attribute("name"), db::value{"obj_a_3"});
+        XCTAssertEqual(obj_b0.get_attribute("name"), db::value{"obj_b0_3"});
+        XCTAssertEqual(obj_b1.get_attribute("name"), db::value{"obj_b1_3"});
+
+        XCTAssertEqual(obj_a.save_id(), db::value{1});
+        XCTAssertEqual(obj_b0.save_id(), db::value{1});
+        XCTAssertEqual(obj_b1.save_id(), db::value{1});
+    });
+
+    manager.execute([self](auto &manager, auto const &op) {
+        auto &db = manager.database();
+        auto const &rel_table_name = manager.model().entities().at("sample_a").relations.at("child").table_name;
+
+        auto select_a_result = db::select(db, db::select_option{.table = "sample_a"});
+        XCTAssertTrue(select_a_result);
+
+        auto &a_objects = select_a_result.value();
+        XCTAssertEqual(a_objects.size(), 1);
+
+        XCTAssertEqual(a_objects.at(0).at("name"), db::value{"obj_a_3"});
+        XCTAssertEqual(a_objects.at(0).at(db::save_id_field), db::value{1});
+
+        auto select_b_result = db::select(db, db::select_option{.table = "sample_b"});
+        XCTAssertTrue(select_b_result);
+
+        auto &b_objects = select_b_result.value();
+        XCTAssertEqual(b_objects.size(), 2);
+
+        auto b_object_map = to_map<db::integer::type>(
+            b_objects, [](db::value_map &obj) { return obj.at(db::object_id_field).get<db::integer>(); });
+        
+        XCTAssertEqual(b_object_map.at(1).at("name"), db::value{"obj_b0_3"});
+        XCTAssertEqual(b_object_map.at(1).at(db::save_id_field), db::value{1});
+        XCTAssertEqual(b_object_map.at(2).at("name"), db::value{"obj_b1_3"});
+        XCTAssertEqual(b_object_map.at(2).at(db::save_id_field), db::value{1});
+
+        auto select_rel_result = db::select(db, db::select_option{.table = rel_table_name});
+        XCTAssertTrue(select_rel_result);
+
+        auto &rel_objects = select_rel_result.value();
+        XCTAssertEqual(rel_objects.size(), 2);
+
+        XCTAssertEqual(rel_objects.at(0).at(db::src_id_field), db::value{3});
+        XCTAssertEqual(rel_objects.at(0).at(db::src_obj_id_field), db::value{1});
+        XCTAssertEqual(rel_objects.at(0).at(db::tgt_obj_id_field), db::value{1});
+        XCTAssertEqual(rel_objects.at(0).at(db::save_id_field), db::value{1});
+        XCTAssertEqual(rel_objects.at(1).at(db::src_id_field), db::value{3});
+        XCTAssertEqual(rel_objects.at(1).at(db::src_obj_id_field), db::value{1});
+        XCTAssertEqual(rel_objects.at(1).at(db::tgt_obj_id_field), db::value{2});
+        XCTAssertEqual(rel_objects.at(1).at(db::save_id_field), db::value{1});
+    });
+
+    XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
+    manager.execute([exp](auto &manager, auto const &op) { [exp fulfill]; });
+    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+}
+
 - (void)test_make_error {
     auto error = db::manager::error{db::manager::error_type::version_not_found};
     XCTAssertTrue(error);

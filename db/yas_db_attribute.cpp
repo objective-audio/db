@@ -53,7 +53,7 @@ std::string db::attribute::sql() const {
     std::ostringstream stream;
     stream << name << " " << type;
     if (primary) {
-        stream << " PRIMARY KEY";
+        stream << " PRIMARY KEY AUTOINCREMENT";
     }
     if (unique) {
         stream << " UNIQUE";

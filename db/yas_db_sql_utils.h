@@ -22,7 +22,7 @@ namespace db {
 
     std::string insert_sql(std::string const &table, std::vector<std::string> const &fields = {});
     std::string update_sql(std::string const &table, std::vector<std::string> const &fields,
-                           std::string const &where_exprs);
+                           std::string const &where_exprs = "");
     std::string delete_sql(std::string const &table, std::string const &where_exprs = "");
 
     std::string expr(std::string const &left, std::string const &op, std::string const &right);
@@ -39,5 +39,7 @@ namespace db {
 
     std::string foreign_key(std::string const &field, std::string const &ref_table, std::string const &ref_field,
                             std::string const &on_update, std::string const &on_delete);
+    
+    std::string vacuum_sql();
 }
 }
