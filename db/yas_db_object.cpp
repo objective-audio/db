@@ -253,6 +253,10 @@ class db::object::impl : public const_object::impl {
         }
     }
 
+    void load_save_id(db::value const &save_id) {
+        set_attribute(save_id_field, save_id, true);
+    }
+
     void clear_data() {
         clear();
 
@@ -446,6 +450,10 @@ subject<db::object::change_info> &db::object::subject() {
 
 void db::object::load_data(object_data const &obj_data) {
     impl_ptr<impl>()->load_data(obj_data);
+}
+
+void db::object::load_save_id(db::value const &save_id) {
+    impl_ptr<impl>()->load_save_id(save_id);
 }
 
 void db::object::clear_data() {
