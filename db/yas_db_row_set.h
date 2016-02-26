@@ -37,9 +37,6 @@ namespace db {
 
         ~row_set();
 
-        bool operator==(std::nullptr_t) const;
-        bool operator!=(std::nullptr_t) const;
-
         statement const &statement() const;
 
         next_result_code next();

@@ -83,14 +83,6 @@ db::row_set::row_set(std::nullptr_t) : super_class(nullptr) {
 
 db::row_set::~row_set() = default;
 
-bool db::row_set::operator==(std::nullptr_t) const {
-    return super_class::operator==(nullptr);
-}
-
-bool db::row_set::operator!=(std::nullptr_t) const {
-    return super_class::operator!=(nullptr);
-}
-
 db::statement const &db::row_set::statement() const {
     return impl_ptr<impl>()->statement();
 }
