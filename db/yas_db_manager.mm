@@ -118,13 +118,11 @@ namespace db {
         }
     }
 
-    db::manager::result_t delete_current_to_last(db::manager &manager, db::value const &current_save_id,
-                                                 db::value const &last_save_id) {
-        auto const delete_exprs = joined({expr(db::save_id_field, ">", to_string(current_save_id)),
-                                          expr(save_id_field, "<=", to_string(last_save_id))},
-                                         " and ");
-        auto &db = manager.database();
-        auto const &entity_models = manager.model().entities();
+    db::manager::result_t delete_next_to_last(db::database &db, db::model const &model,
+                                              db::value const &current_save_id) {
+        auto const &entity_models = model.entities();
+        auto const delete_exprs = expr(db::save_id_field, ">", to_string(current_save_id));
+
         for (auto const &entity_pair : entity_models) {
             auto const &entity_name = entity_pair.first;
 
@@ -644,7 +642,7 @@ struct db::manager::impl : public base::impl {
 
                 if (state && current_save_id && last_save_id) {
                     if (current_save_id.get<integer>() < last_save_id.get<integer>()) {
-                        state = delete_current_to_last(manager, current_save_id, last_save_id);
+                        state = delete_next_to_last(db, model, current_save_id);
                     }
                 }
 
@@ -733,6 +731,7 @@ struct db::manager::impl : public base::impl {
             dispatch_sync(dispatch_get_main_queue(), std::move(preparation_on_main));
 
             auto &db = manager.database();
+            auto const &model = manager.model();
 
             db::value_map db_info;
             object_data_vector_map inserted_datas;
@@ -765,7 +764,7 @@ struct db::manager::impl : public base::impl {
 
                 if (state && current_save_id && last_save_id) {
                     if (current_save_id.get<integer>() < last_save_id.get<integer>()) {
-                        state = delete_current_to_last(manager, current_save_id, last_save_id);
+                        state = delete_next_to_last(db, model, current_save_id);
                     }
                 }
 
@@ -991,6 +990,7 @@ struct db::manager::impl : public base::impl {
             dispatch_sync(dispatch_get_main_queue(), get_change_lambda);
 
             auto &db = manager.database();
+            auto const &model = manager.model();
 
             db::value_map db_info;
             db::object_data_vector_map saved_datas;
@@ -1023,7 +1023,7 @@ struct db::manager::impl : public base::impl {
 
                     if (state && next_save_id && current_save_id && last_save_id && next_save_id.get<integer>() > 0) {
                         if (current_save_id.get<integer>() < last_save_id.get<integer>()) {
-                            state = delete_current_to_last(manager, current_save_id, last_save_id);
+                            state = delete_next_to_last(db, model, current_save_id);
                         }
                     } else {
                         state = result_t{error{error_type::save_id_not_found}};
