@@ -666,7 +666,7 @@ using namespace yas;
 
     XCTAssertTrue(db::create_table(db, table_name, fields));
 
-    XCTAssertEqual(db::max(db, table_name, field_name), nullptr);
+    XCTAssertFalse(db::max(db, table_name, field_name));
 
     XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), {db::value{1}}));
 
