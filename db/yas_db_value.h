@@ -96,9 +96,6 @@ namespace db {
 
         ~value();
 
-        bool operator==(value const &) const;
-        bool operator!=(value const &) const;
-
         explicit operator bool() const;
 
         std::type_info const &type() const;

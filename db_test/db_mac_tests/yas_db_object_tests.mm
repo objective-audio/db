@@ -29,10 +29,10 @@ using namespace yas;
 
     XCTAssertEqual(obj.model(), model);
     XCTAssertEqual(obj.entity_name(), "sample_a");
-    XCTAssertEqual(obj.get_attribute("age"), nullptr);
-    XCTAssertEqual(obj.get_attribute("name"), nullptr);
-    XCTAssertEqual(obj.get_attribute("weight"), nullptr);
-    XCTAssertEqual(obj.object_id(), nullptr);
+    XCTAssertFalse(obj.get_attribute("age"));
+    XCTAssertFalse(obj.get_attribute("name"));
+    XCTAssertFalse(obj.get_attribute("weight"));
+    XCTAssertFalse(obj.object_id());
     XCTAssertEqual(obj.get_relation_ids("child").size(), 0);
     XCTAssertFalse(obj.is_removed());
 }
@@ -100,8 +100,8 @@ using namespace yas;
     obj.load_data(post_obj_data);
 
     XCTAssertEqual(obj.get_attribute("age"), db::value{543});
-    XCTAssertEqual(obj.get_attribute("name"), nullptr);
-    XCTAssertEqual(obj.get_attribute("weight"), nullptr);
+    XCTAssertFalse(obj.get_attribute("name"));
+    XCTAssertFalse(obj.get_attribute("weight"));
     XCTAssertThrows(obj.get_attribute("hoge"));
 
     XCTAssertEqual(obj.relation_size("child"), 3);
@@ -246,7 +246,7 @@ using namespace yas;
     obj.remove();
 
     XCTAssertTrue(obj.is_removed());
-    XCTAssertEqual(obj.get_attribute("name"), nullptr);
+    XCTAssertFalse(obj.get_attribute("name"));
     XCTAssertEqual(obj.get_attribute(db::id_field), db::value{11});
     XCTAssertEqual(obj.get_attribute(db::object_id_field), db::value{45});
     XCTAssertEqual(obj.get_relation_ids("child").size(), 0);

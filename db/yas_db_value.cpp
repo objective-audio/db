@@ -76,6 +76,17 @@ struct db::value::impl : public impl_base {
 
     ~impl() = default;
 
+    virtual bool is_equal(std::shared_ptr<base::impl> const &rhs) const override {
+        if (auto casted_rhs = std::dynamic_pointer_cast<impl>(rhs)) {
+            auto &type_info = type();
+            if (type_info == casted_rhs->type()) {
+                return value == casted_rhs->value;
+            }
+        }
+
+        return false;
+    }
+
     std::type_info const &type() const override {
         return typeid(T);
     }
@@ -140,28 +151,6 @@ db::value &db::value::operator=(value &&rhs) {
     set_impl_ptr(std::move(rhs.impl_ptr()));
     rhs.set_impl_ptr(null_value_impl_ptr());
     return *this;
-}
-
-bool db::value::operator==(value const &rhs) const {
-    auto &type_info = type();
-    if (type_info == rhs.type()) {
-        if (type_info == typeid(integer)) {
-            return this->get<integer>() == rhs.get<integer>();
-        } else if (type_info == typeid(real)) {
-            return this->get<real>() == rhs.get<real>();
-        } else if (type_info == typeid(text)) {
-            return this->get<text>() == rhs.get<text>();
-        } else if (type_info == typeid(blob)) {
-            return this->get<blob>() == rhs.get<blob>();
-        } else if (type_info == typeid(null)) {
-            return true;
-        }
-    }
-    return false;
-}
-
-bool db::value::operator!=(value const &rhs) const {
-    return !(*this == rhs);
 }
 
 db::value::operator bool() const {
