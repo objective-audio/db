@@ -196,7 +196,7 @@ struct db::manager::impl : public base::impl {
     db::object_map_map changed_objects;
     db::value_map db_info;
 
-    impl(std::string const &path, db::model const &model, priority_t const priority_count)
+    impl(std::string const &path, db::model const &model, std::size_t const priority_count)
         : database(path), model(model), queue(priority_count), cached_objects() {
     }
 

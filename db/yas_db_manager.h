@@ -77,8 +77,6 @@ namespace db {
             db::error _db_error;
         };
 
-        using priority_t = UInt32;
-
         using result_t = result<std::nullptr_t, error>;
         using vector_result_t = result<object_vector_map, error>;
         using map_result_t = result<object_map_map, error>;
