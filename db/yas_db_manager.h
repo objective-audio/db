@@ -84,21 +84,21 @@ namespace db {
         using const_vector_result_t = result<const_object_vector_map, error>;
         using const_map_result_t = result<const_object_map_map, error>;
 
-        using execution_f = std::function<void(manager &, operation const &)>;
+        using execution_f = std::function<void(operation const &)>;
 
-        using insert_preparation_count_f = std::function<entity_count_map(manager &)>;
-        using insert_preparation_values_f = std::function<value_map_vector_map(manager &)>;
-        using fetch_preparation_option_f = std::function<select_option(manager &)>;
-        using fetch_preparation_ids_f = std::function<integer_set_map(manager &)>;
-        using revert_preparation_f = std::function<integer::type(manager &)>;
+        using insert_preparation_count_f = std::function<entity_count_map(void)>;
+        using insert_preparation_values_f = std::function<value_map_vector_map(void)>;
+        using fetch_preparation_option_f = std::function<select_option(void)>;
+        using fetch_preparation_ids_f = std::function<integer_set_map(void)>;
+        using revert_preparation_f = std::function<integer::type(void)>;
 
-        using completion_f = std::function<void(manager &, result_t)>;
-        using vector_completion_f = std::function<void(manager &, vector_result_t)>;
-        using map_completion_f = std::function<void(manager &, map_result_t)>;
-        using const_vector_completion_f = std::function<void(manager &, const_vector_result_t)>;
-        using const_map_completion_f = std::function<void(manager &, const_map_result_t)>;
+        using completion_f = std::function<void(result_t)>;
+        using vector_completion_f = std::function<void(vector_result_t)>;
+        using map_completion_f = std::function<void(map_result_t)>;
+        using const_vector_completion_f = std::function<void(const_vector_result_t)>;
+        using const_map_completion_f = std::function<void(const_map_result_t)>;
 
-        manager(std::string const &db_path, model const &model, size_t const priority_count = 1);
+        manager(std::string const &db_path, model const &model, std::size_t const priority_count = 1);
         manager(std::nullptr_t);
 
         std::string const &database_path() const;

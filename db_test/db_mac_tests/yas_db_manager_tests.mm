@@ -35,8 +35,7 @@ using namespace yas;
 
     XCTestExpectation *exp = [self expectationWithDescription:@"execution"];
 
-    manager.execute([self, exp](auto &database, auto const &operation) {
-        XCTAssertTrue(database);
+    manager.execute([self, exp](auto const &operation) {
         XCTAssertTrue(operation);
         XCTAssertFalse([NSThread isMainThread]);
         [exp fulfill];
@@ -50,7 +49,7 @@ using namespace yas;
 
     XCTestExpectation *exp = [self expectationWithDescription:@"execution"];
 
-    manager.execute([self, exp](db::manager &manager, auto const &operation) {
+    manager.execute([self, &manager, exp](auto const &operation) {
         auto &db = manager.database();
 
         XCTAssertTrue(db.execute_update(db::create_table_sql("test_table", {"field_a", "field_b"})));
@@ -81,9 +80,9 @@ using namespace yas;
 
     XCTestExpectation *exp = [self expectationWithDescription:@"setup"];
 
-    manager.setup([self](auto &, auto result) { XCTAssertTrue(result); });
+    manager.setup([self, &manager](auto result) { XCTAssertTrue(result); });
 
-    manager.execute([self, exp](db::manager &manager, auto const &op) {
+    manager.execute([self, &manager, exp](auto const &op) {
         auto &db = manager.database();
 
         XCTAssertTrue(db::table_exists(db, db::info_table));
@@ -118,9 +117,9 @@ using namespace yas;
 
     XCTestExpectation *exp1 = [self expectationWithDescription:@"setup_1"];
 
-    manager.setup([self](auto &, auto result) { XCTAssertTrue(result); });
+    manager.setup([self, &manager](auto result) { XCTAssertTrue(result); });
 
-    manager.execute([self, exp1](db::manager &manager, auto const &) {
+    manager.execute([self, &manager, exp1](auto const &) {
         auto &db = manager.database();
 
         db::begin_transaction(db);
@@ -175,9 +174,9 @@ using namespace yas;
     db::model model_0_0_2{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_2]};
     manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_2)];
 
-    manager.setup([self](auto &, auto result) { XCTAssertTrue(result); });
+    manager.setup([self, &manager](auto result) { XCTAssertTrue(result); });
 
-    manager.execute([self, exp2](db::manager &manager, auto const &) {
+    manager.execute([self, &manager, exp2](auto const &) {
         auto &db = manager.database();
 
         XCTAssertTrue(db::table_exists(db, db::info_table));
@@ -238,7 +237,7 @@ using namespace yas;
 
     XCTestExpectation *exp1 = [self expectationWithDescription:@"insert_1"];
 
-    manager.setup([self](auto &manager, auto result) {
+    manager.setup([self, &manager](auto result) {
         XCTAssertTrue(result);
         XCTAssertEqual(manager.current_save_id(), db::value{0});
         XCTAssertEqual(manager.last_save_id(), db::value{0});
@@ -247,10 +246,10 @@ using namespace yas;
     db::object_vector_map inserted_objects_1;
 
     manager.insert_objects(
-        [](auto &) {
+        []() {
             return db::entity_count_map{{"sample_a", 3}};
         },
-        [self, exp1, &inserted_objects_1](auto &manager, auto result) {
+        [self, &manager, exp1, &inserted_objects_1](auto result) {
             XCTAssertTrue(result);
 
             inserted_objects_1 = std::move(result.value());
@@ -292,10 +291,10 @@ using namespace yas;
     db::object_vector_map inserted_objects_2;
 
     manager.insert_objects(
-        [](auto &) {
+        []() {
             return db::entity_count_map{{"sample_a", 1}};
         },
-        [self, exp2, &inserted_objects_2](auto &manager, auto result) {
+        [self, exp2, &manager, &inserted_objects_2](auto result) {
             XCTAssertTrue(result);
 
             inserted_objects_2 = std::move(result.value());
@@ -333,19 +332,19 @@ using namespace yas;
 
     XCTestExpectation *exp = [self expectationWithDescription:@"insert"];
 
-    manager.setup([self](auto &manager, auto result) {
+    manager.setup([self, &manager](auto result) {
         XCTAssertTrue(result);
         XCTAssertEqual(manager.current_save_id(), db::value{0});
     });
 
     manager.insert_objects(
-        [](auto &) {
+        []() {
             db::value_map obj1{{"name", db::value{"test_name_1"}}, {"age", db::value{43}}};
             db::value_map obj2{{"name", db::value{"test_name_2"}}, {"age", db::value{67}}};
             db::value_map_vector sample_as{std::move(obj1), std::move(obj2)};
             return db::value_map_vector_map{{"sample_a", std::move(sample_as)}};
         },
-        [self, exp](auto &manager, auto result) {
+        [self, &manager, exp](auto result) {
             XCTAssertTrue(result);
 
             auto &objects = result.value();
@@ -373,15 +372,15 @@ using namespace yas;
     db::model model_0_0_2{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_2]};
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_2)];
 
-    manager.setup([self](auto &, auto result) { XCTAssertTrue(result); });
+    manager.setup([self, &manager](auto result) { XCTAssertTrue(result); });
 
     XCTestExpectation *exp1 = [self expectationWithDescription:@"insert_1"];
 
     manager.insert_objects(
-        [](auto &) {
+        []() {
             return db::entity_count_map{{"sample_a", 3}, {"sample_b", 5}};
         },
-        [self, exp1](auto &, auto result) {
+        [self, exp1](auto result) {
             db::object_vector_map const &objects = result.value();
             XCTAssertEqual(objects.size(), 2);
 
@@ -407,17 +406,17 @@ using namespace yas;
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
 
-    manager.setup([self](auto &manager, auto result) {
+    manager.setup([self, &manager](auto result) {
         XCTAssertTrue(result);
         XCTAssertEqual(manager.current_save_id(), db::value{0});
         XCTAssertEqual(manager.last_save_id(), db::value{0});
     });
 
     manager.insert_objects(
-        [](auto &manager) {
+        []() {
             return db::entity_count_map{{"sample_a", 1}};
         },
-        [self](auto &manager, auto result) {
+        [self, &manager](auto result) {
             XCTAssertTrue(result);
             XCTAssertEqual(manager.current_save_id(), db::value{1});
 
@@ -428,17 +427,16 @@ using namespace yas;
             object.set_attribute("name", db::value{"first_name_value"});
         });
 
-    manager.save([self](auto &manager, auto result) {
+    manager.save([self, &manager](auto result) {
         XCTAssertTrue(result);
         XCTAssertEqual(manager.current_save_id(), db::value{2});
-
     });
 
     manager.insert_objects(
-        [](auto &manager) {
+        []() {
             return db::entity_count_map{{"sample_a", 1}};
         },
-        [self](auto &manager, auto result) {
+        [self, &manager](auto result) {
             XCTAssertTrue(result);
             XCTAssertEqual(manager.current_save_id(), db::value{3});
 
@@ -449,23 +447,23 @@ using namespace yas;
             object.set_attribute("name", db::value{"second_name_value"});
         });
 
-    manager.save([self](auto &manager, auto result) {
+    manager.save([self, &manager](auto result) {
         XCTAssertTrue(result);
         XCTAssertEqual(manager.current_save_id(), db::value{4});
 
     });
 
-    manager.revert([](auto &) { return 2; },
-                   [self](auto &manager, auto result) {
+    manager.revert([]() { return 2; },
+                   [self, &manager](auto result) {
                        XCTAssertTrue(result);
                        XCTAssertEqual(manager.current_save_id(), db::value{2});
                    });
 
     manager.insert_objects(
-        [](auto &manager) {
+        []() {
             return db::entity_count_map{{"sample_a", 1}};
         },
-        [self](auto &manager, auto result) {
+        [self, &manager](auto result) {
             XCTAssertTrue(result);
             XCTAssertEqual(manager.current_save_id(), db::value{3});
 
@@ -474,7 +472,7 @@ using namespace yas;
             XCTAssertEqual(object.save_id(), db::value{3});
         });
 
-    manager.execute([self, exp](db::manager &manager, operation const &op) {
+    manager.execute([self, &manager, exp](operation const &op) {
         auto &db = manager.database();
         auto result = db::select(db, {.table = "sample_a"});
 
@@ -495,17 +493,17 @@ using namespace yas;
     db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
 
-    manager.setup([self](auto &manager, auto result) { XCTAssertTrue(result); });
+    manager.setup([self, &manager](auto result) { XCTAssertTrue(result); });
 
     XCTestExpectation *exp1 = [self expectationWithDescription:@"1"];
 
     db::object_vector_map objects;
 
     manager.insert_objects(
-        [](auto &) {
+        []() {
             return db::entity_count_map{{"sample_a", 3}, {"sample_b", 2}};
         },
-        [self, exp1, &objects](auto &, auto result) {
+        [self, exp1, &objects](auto result) {
             XCTAssertTrue(result);
 
             objects = std::move(result.value());
@@ -545,7 +543,7 @@ using namespace yas;
 
     XCTestExpectation *exp2 = [self expectationWithDescription:@"2"];
 
-    manager.save([self, exp2](auto &, auto save_result) {
+    manager.save([self, exp2](auto save_result) {
         XCTAssertTrue(save_result);
 
         [exp2 fulfill];
@@ -558,8 +556,8 @@ using namespace yas;
 
     XCTestExpectation *exp3 = [self expectationWithDescription:@"3"];
 
-    manager.fetch_objects([](auto &) { return db::select_option{.table = "sample_a"}; },
-                          [self, exp3](auto &, auto fetch_result) {
+    manager.fetch_objects([]() { return db::select_option{.table = "sample_a"}; },
+                          [self, exp3](auto fetch_result) {
                               XCTAssertTrue(fetch_result);
 
                               auto const &objects = fetch_result.value();
@@ -592,7 +590,7 @@ using namespace yas;
 
     XCTestExpectation *exp4 = [self expectationWithDescription:@"4"];
 
-    manager.save([self, exp4](auto &, auto save_result) { [exp4 fulfill]; });
+    manager.save([self, exp4](auto save_result) { [exp4 fulfill]; });
 
     [self waitForExpectationsWithTimeout:1.0 handler:nil];
 
@@ -602,14 +600,14 @@ using namespace yas;
     XCTestExpectation *exp5 = [self expectationWithDescription:@"4"];
 
     manager.fetch_objects(
-        [](auto &) {
+        []() {
             return db::select_option{.table = "sample_a",
                                      .where_exprs = db::field_expr("name", "like"),
                                      .arguments = {{"name", db::value{"value_%"}}},
                                      .field_orders = {{db::object_id_field, db::order::descending}},
                                      .limit_range = db::range{0, 3}};
         },
-        [self, exp5, &objects](auto &, auto fetch_result) {
+        [self, exp5, &objects](auto fetch_result) {
             XCTAssertTrue(fetch_result);
 
             auto const &objects = fetch_result.value();
@@ -642,16 +640,16 @@ using namespace yas;
 
     XCTestExpectation *exp = [self expectationWithDescription:@"1"];
 
-    manager.setup([self](auto &manager, auto result) mutable {
+    manager.setup([self, &manager](auto result) mutable {
         XCTAssertTrue(result);
 
     });
 
     manager.insert_objects(
-        [](auto &) {
+        []() {
             return db::entity_count_map{{"sample_a", 1}, {"sample_b", 1}};
         },
-        [self](auto &manager, auto result) mutable {
+        [self, &manager](auto result) mutable {
             XCTAssertTrue(result);
             auto &objects = result.value();
 
@@ -667,13 +665,10 @@ using namespace yas;
 
         });
 
-    manager.save([self](auto &, auto save_result) mutable {
-        XCTAssertTrue(save_result);
+    manager.save([self](auto save_result) { XCTAssertTrue(save_result); });
 
-    });
-
-    manager.fetch_const_objects([](auto &) { return db::select_option{.table = "sample_a"}; },
-                                [self, exp](auto &, db::manager::const_vector_result_t fetch_result) mutable {
+    manager.fetch_const_objects([]() { return db::select_option{.table = "sample_a"}; },
+                                [self, exp](db::manager::const_vector_result_t fetch_result) mutable {
                                     XCTAssertTrue(fetch_result);
 
                                     auto const &objects = fetch_result.value();
@@ -698,15 +693,15 @@ using namespace yas;
     db::model model_0_0_2{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_2]};
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_2)];
 
-    manager.setup([self](auto &manager, auto result) { XCTAssertTrue(result); });
+    manager.setup([self, &manager](auto result) { XCTAssertTrue(result); });
 
     XCTestExpectation *exp1 = [self expectationWithDescription:@"1"];
 
     manager.insert_objects(
-        [](auto &) {
+        []() {
             return db::entity_count_map{{"sample_a", 1}, {"sample_b", 1}, {"sample_c", 1}};
         },
-        [self, exp1](auto &, auto result) {
+        [self, exp1](auto result) {
             XCTAssertTrue(result);
 
             auto const &objects = result.value();
@@ -741,7 +736,7 @@ using namespace yas;
 
     XCTestExpectation *exp2 = [self expectationWithDescription:@"2"];
 
-    manager.save([self, exp2](db::manager &manager, auto save_result) {
+    manager.save([self, exp2](auto save_result) {
         XCTAssertTrue(save_result);
 
         auto const &objects = save_result.value();
@@ -777,8 +772,8 @@ using namespace yas;
 
     db::object object_a{nullptr};
 
-    manager.fetch_objects([](auto &) { return db::select_option{.table = "sample_a"}; },
-                          [self, exp3, &object_a](auto &, auto const &fetch_result) {
+    manager.fetch_objects([]() { return db::select_option{.table = "sample_a"}; },
+                          [self, exp3, &object_a](auto const &fetch_result) {
                               XCTAssertTrue(fetch_result);
 
                               auto const &objects = fetch_result.value();
@@ -799,10 +794,10 @@ using namespace yas;
     XCTestExpectation *exp4 = [self expectationWithDescription:@"4"];
 
     manager.fetch_objects(
-        [object_a](auto &) {
+        [object_a]() {
             return db::relation_ids(db::object_vector_map{std::make_pair("sample_a", db::object_vector{object_a})});
         },
-        [self, exp4, object_a](db::manager &manager, auto const &fetch_result) {
+        [self, exp4, object_a](auto const &fetch_result) {
             XCTAssertTrue(fetch_result);
 
             auto const &objects = fetch_result.value();
@@ -831,13 +826,13 @@ using namespace yas;
 
     XCTestExpectation *exp = [self expectationWithDescription:@"1"];
 
-    manager.setup([self](auto &manager, auto result) mutable { XCTAssertTrue(result); });
+    manager.setup([self, &manager](auto result) mutable { XCTAssertTrue(result); });
 
     manager.insert_objects(
-        [](auto &) {
+        []() {
             return db::entity_count_map{{"sample_a", 3}};
         },
-        [self](auto &manager, auto result) mutable {
+        [self, &manager](auto result) mutable {
             XCTAssertTrue(result);
             auto &objects = result.value();
 
@@ -853,13 +848,13 @@ using namespace yas;
             XCTAssertEqual(objects.at("sample_a").at(2).object_id(), db::value{3});
         });
 
-    manager.save([self](auto &, auto save_result) mutable { XCTAssertTrue(save_result); });
+    manager.save([self](auto save_result) { XCTAssertTrue(save_result); });
 
     manager.fetch_const_objects(
-        [](auto &) {
+        []() {
             return db::integer_set_map{{"sample_a", {2}}};
         },
-        [self, exp](auto &, auto fetch_result) mutable {
+        [self, exp](auto fetch_result) mutable {
             XCTAssertTrue(fetch_result);
 
             auto const &objects = fetch_result.value();
@@ -879,7 +874,7 @@ using namespace yas;
     db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
 
-    manager.setup([self](auto &manager, auto result) {
+    manager.setup([self, &manager](auto result) {
         XCTAssertTrue(result);
         XCTAssertEqual(manager.current_save_id(), db::value{0});
         XCTAssertEqual(manager.last_save_id(), db::value{0});
@@ -890,10 +885,10 @@ using namespace yas;
     XCTestExpectation *exp1 = [self expectationWithDescription:@"1"];
 
     manager.insert_objects(
-        [](auto &) {
+        []() {
             return db::entity_count_map{{"sample_a", 1}};
         },
-        [self, &main_objects, exp1](auto &, auto result) {
+        [self, &main_objects, exp1](auto result) {
             db::object_vector_map const &objects = result.value();
             db::object_vector const &a_objects = objects.at("sample_a");
             for (auto const &obj : a_objects) {
@@ -918,7 +913,7 @@ using namespace yas;
 
     XCTestExpectation *exp2 = [self expectationWithDescription:@"2"];
 
-    manager.save([self, exp2](auto &, auto save_result) {
+    manager.save([self, exp2](auto save_result) {
         auto const &objects = save_result.value();
         XCTAssertEqual(objects.size(), 0);
 
@@ -937,7 +932,7 @@ using namespace yas;
 
     XCTestExpectation *exp3 = [self expectationWithDescription:@"3"];
 
-    manager.save([self, exp3](auto &, auto save_result) {
+    manager.save([self, exp3](auto save_result) {
         XCTAssertTrue(save_result);
 
         auto const &objects = save_result.value();
@@ -958,7 +953,7 @@ using namespace yas;
         XCTAssertEqual(obj.get_relation_id("child", 1), db::value{200});
     });
 
-    manager.execute([self, exp3](db::manager &manager, operation const &) {
+    manager.execute([self, exp3, &manager](operation const &) {
         auto &db = manager.database();
 
         auto value_result = db::select(db, db::select_option{.table = "sample_a"});
@@ -1004,7 +999,7 @@ using namespace yas;
 
     XCTestExpectation *exp4 = [self expectationWithDescription:@"4"];
 
-    manager.save([self, exp4](auto &, auto save_result) {
+    manager.save([self, exp4](auto save_result) {
         XCTAssertTrue(save_result);
 
         auto const &objects = save_result.value();
@@ -1033,7 +1028,7 @@ using namespace yas;
 
     XCTestExpectation *exp5 = [self expectationWithDescription:@"5"];
 
-    manager.save([self, exp5](auto &, auto save_result) {
+    manager.save([self, exp5](auto save_result) {
         XCTAssertTrue(save_result);
 
         auto const &objects = save_result.value();
@@ -1054,7 +1049,7 @@ using namespace yas;
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
 
-    manager.setup([self](auto &manager, auto result) {
+    manager.setup([self, &manager](auto result) {
         XCTAssertTrue(result);
         XCTAssertEqual(manager.current_save_id(), db::value{0});
         XCTAssertEqual(manager.last_save_id(), db::value{0});
@@ -1063,10 +1058,10 @@ using namespace yas;
     db::object_vector a_objects;
 
     manager.insert_objects(
-        [](auto &manager) {
+        []() {
             return db::entity_count_map{{"sample_a", 2}};
         },
-        [self, &a_objects](auto &manager, auto result) {
+        [self, &manager, &a_objects](auto result) {
             XCTAssertTrue(result);
             XCTAssertEqual(manager.current_save_id(), db::value{1});
 
@@ -1080,7 +1075,7 @@ using namespace yas;
             object.set_attribute("name", db::value{"name_value_0"});
         });
 
-    manager.save([self, &a_objects](auto &manager, auto result) {
+    manager.save([self, &manager, &a_objects](auto result) {
         XCTAssertTrue(result);
         XCTAssertEqual(manager.current_save_id(), db::value{2});
         XCTAssertEqual(a_objects.at(0).save_id(), db::value{2});
@@ -1089,14 +1084,14 @@ using namespace yas;
         object.set_attribute("name", db::value{"name_value_1_a"});
     });
 
-    manager.save([self, &a_objects](auto &manager, auto result) {
+    manager.save([self, &manager, &a_objects](auto result) {
         XCTAssertTrue(result);
         XCTAssertEqual(manager.current_save_id(), db::value{3});
         XCTAssertEqual(a_objects.at(1).save_id(), db::value{3});
     });
 
-    manager.revert([](auto &) { return 2; },
-                   [self, &a_objects](auto &manager, auto result) {
+    manager.revert([]() { return 2; },
+                   [self, &manager, &a_objects](auto result) {
                        XCTAssertTrue(result);
                        XCTAssertEqual(manager.current_save_id(), db::value{2});
 
@@ -1104,13 +1099,13 @@ using namespace yas;
                        object.set_attribute("name", db::value{"name_value_1_b"});
                    });
 
-    manager.save([self, &a_objects](auto &manager, auto result) {
+    manager.save([self, &manager, &a_objects](auto result) {
         XCTAssertTrue(result);
         XCTAssertEqual(manager.current_save_id(), db::value{3});
         XCTAssertEqual(a_objects.at(1).save_id(), db::value{3});
     });
 
-    manager.execute([self, exp](db::manager &manager, operation const &op) {
+    manager.execute([self, &manager, exp](operation const &op) {
         auto &db = manager.database();
         auto result = db::select(db, {.table = "sample_a"});
 
@@ -1135,17 +1130,17 @@ using namespace yas;
 
     db::object a_object{nullptr};
 
-    manager.setup([self](auto &manager, auto result) {
+    manager.setup([self, &manager](auto result) {
         XCTAssertTrue(result);
         XCTAssertEqual(manager.current_save_id(), db::value{0});
         XCTAssertEqual(manager.last_save_id(), db::value{0});
     });
 
     manager.insert_objects(
-        [](auto &) {
+        []() {
             return db::entity_count_map{{"sample_a", 1}};
         },
-        [self, &a_object](auto &, auto result) mutable {
+        [self, &a_object](auto result) mutable {
             a_object = result.value().at("sample_a").at(0);
 
             XCTAssertEqual(a_object.save_id(), db::value{1});
@@ -1153,7 +1148,7 @@ using namespace yas;
             a_object.set_attribute("name", db::value{"value_2"});
         });
 
-    manager.save([self, &a_object](auto &, auto result) mutable {
+    manager.save([self, &a_object](auto result) mutable {
         XCTAssertTrue(result);
 
         XCTAssertEqual(a_object.save_id(), db::value{2});
@@ -1161,15 +1156,15 @@ using namespace yas;
         a_object.remove();
     });
 
-    manager.save([self, &a_object](auto &, auto result) mutable {
+    manager.save([self, &a_object](auto result) mutable {
         XCTAssertTrue(result);
 
         XCTAssertEqual(a_object.save_id(), db::value{3});
         XCTAssertTrue(a_object.is_removed());
     });
 
-    manager.revert([](auto &) { return 2; },
-                   [self, &a_object](auto &, auto result) mutable {
+    manager.revert([]() { return 2; },
+                   [self, &a_object](auto result) mutable {
                        XCTAssertTrue(result);
 
                        XCTAssertEqual(a_object.save_id(), db::value{2});
@@ -1177,8 +1172,8 @@ using namespace yas;
                        XCTAssertFalse(a_object.is_removed());
                    });
 
-    manager.revert([](auto &) { return 1; },
-                   [self, &a_object](auto &, auto result) mutable {
+    manager.revert([]() { return 1; },
+                   [self, &a_object](auto result) mutable {
                        XCTAssertTrue(result);
 
                        XCTAssertEqual(a_object.save_id(), db::value{1});
@@ -1187,9 +1182,9 @@ using namespace yas;
                        a_object.set_attribute("name", db::value{"value_b"});
                    });
 
-    manager.save([self](auto &, auto result) mutable { XCTAssertTrue(result); });
+    manager.save([self](auto result) mutable { XCTAssertTrue(result); });
 
-    manager.execute([self](db::manager &manager, operation const &) mutable {
+    manager.execute([self, &manager](operation const &) mutable {
         auto &db = manager.database();
 
         auto select_result = db::select(
@@ -1208,8 +1203,8 @@ using namespace yas;
         XCTAssertEqual(select_result.value().size(), 1);
     });
 
-    manager.revert([](auto &) { return 0; },
-                   [self, &a_object, exp](auto &, auto result) mutable {
+    manager.revert([]() { return 0; },
+                   [self, &a_object, exp](auto result) mutable {
                        XCTAssertTrue(result);
 
                        XCTAssertEqual(a_object.status(), db::object_status::invalid);
@@ -1230,17 +1225,17 @@ using namespace yas;
 
         db::object_vector_map objects;
 
-        manager.setup([self](auto &manager, auto result) mutable {
+        manager.setup([self, &manager](auto result) mutable {
             XCTAssertTrue(result);
             XCTAssertEqual(manager.current_save_id(), db::value{0});
             XCTAssertEqual(manager.last_save_id(), db::value{0});
         });
 
         manager.insert_objects(
-            [](auto &) {
+            []() {
                 return db::entity_count_map{{"sample_a", 1}, {"sample_b", 2}};
             },
-            [self, &objects](auto &manager, auto result) mutable {
+            [self, &manager, &objects](auto result) mutable {
                 XCTAssertTrue(result);
                 XCTAssertEqual(manager.current_save_id(), db::value{1});
                 XCTAssertEqual(manager.last_save_id(), db::value{1});
@@ -1252,7 +1247,7 @@ using namespace yas;
                 objects.at("sample_b").at(1).set_attribute("name", db::value{"name_value_3"});
             });
 
-        manager.save([self, &objects](auto &manager, auto result) mutable {
+        manager.save([self, &manager, &objects](auto result) mutable {
             XCTAssertTrue(result);
             XCTAssertEqual(manager.current_save_id(), db::value{2});
             XCTAssertEqual(manager.last_save_id(), db::value{2});
@@ -1263,7 +1258,7 @@ using namespace yas;
             XCTAssertEqual(objects.at("sample_b").at(0).object_id(), db::value{1});
         });
 
-        manager.save([self, &objects](auto &manager, auto result) mutable {
+        manager.save([self, &manager, &objects](auto result) mutable {
             XCTAssertTrue(result);
             XCTAssertEqual(manager.current_save_id(), db::value{3});
             XCTAssertEqual(manager.last_save_id(), db::value{3});
@@ -1273,14 +1268,14 @@ using namespace yas;
             objects.at("sample_a").at(0).set_relation_object("child", {objects.at("sample_b").at(1)});
         });
 
-        manager.save([self](auto &manager, auto result) mutable {
+        manager.save([self, &manager](auto result) mutable {
             XCTAssertTrue(result);
             XCTAssertEqual(manager.current_save_id(), db::value{4});
             XCTAssertEqual(manager.last_save_id(), db::value{4});
         });
 
-        manager.revert([](auto &) { return 3; },
-                       [self, exp1](auto &manager, auto result) mutable {
+        manager.revert([]() { return 3; },
+                       [self, &manager, exp1](auto result) mutable {
                            XCTAssertTrue(result);
                            XCTAssertEqual(manager.current_save_id(), db::value{3});
                            XCTAssertEqual(manager.last_save_id(), db::value{4});
@@ -1298,14 +1293,14 @@ using namespace yas;
 
         db::object_vector_map objects{};
 
-        manager.setup([self](auto &manager, auto result) mutable {
+        manager.setup([self, &manager](auto result) mutable {
             XCTAssertTrue(result);
             XCTAssertEqual(manager.current_save_id(), db::value{3});
             XCTAssertEqual(manager.last_save_id(), db::value{4});
         });
 
-        manager.fetch_objects([](auto &) { return db::select_option{.table = "sample_a"}; },
-                              [self, &objects](auto &manager, auto result) mutable {
+        manager.fetch_objects([]() { return db::select_option{.table = "sample_a"}; },
+                              [self, &objects](auto result) mutable {
                                   XCTAssertTrue(result);
 
                                   objects = std::move(result.value());
@@ -1317,8 +1312,8 @@ using namespace yas;
                               });
 
         manager.fetch_objects(
-            [&objects](auto &) { return db::relation_ids(objects); },
-            [self, &objects, exp2](auto &manager, auto result) mutable {
+            [&objects]() { return db::relation_ids(objects); },
+            [self, &objects, exp2](auto result) mutable {
                 XCTAssertTrue(result);
 
                 db::object_map_map &rel_objects = result.value();
@@ -1347,7 +1342,7 @@ using namespace yas;
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1) priority_count:2];
 
     XCTestExpectation *exp1 = [self expectationWithDescription:@"1"];
-    manager.setup([exp1](auto &, auto) { [exp1 fulfill]; });
+    manager.setup([exp1](auto) { [exp1 fulfill]; });
 
     [self waitForExpectationsWithTimeout:1.0 handler:nil];
 
@@ -1359,10 +1354,10 @@ using namespace yas;
     int fetched_object_count = 0;
 
     manager.insert_objects(
-        [](auto &) {
+        []() {
             return db::entity_count_map{{"sample_a", 1}};
         },
-        [&call_count, exp2](auto &, auto) {
+        [&call_count, exp2](auto) {
             call_count++;
             if (call_count == 2) {
                 [exp2 fulfill];
@@ -1370,8 +1365,8 @@ using namespace yas;
         },
         1);
 
-    manager.fetch_objects([](auto &) { return db::select_option{.table = "sample_a"}; },
-                          [&call_count, exp2, &fetched_object_count, self](auto &, auto result) {
+    manager.fetch_objects([]() { return db::select_option{.table = "sample_a"}; },
+                          [&call_count, exp2, &fetched_object_count, self](auto result) {
                               XCTAssertTrue(result);
                               XCTAssertEqual(result.value().count("sample_a"), 0);
 
@@ -1395,13 +1390,13 @@ using namespace yas;
 
     db::object object{nullptr};
 
-    manager.setup([self](auto &manager, auto result) { XCTAssertTrue(result); });
+    manager.setup([self, &manager](auto result) { XCTAssertTrue(result); });
 
     manager.insert_objects(
-        [](auto &manager) {
+        []() {
             return db::entity_count_map{{"sample_a", 1}};
         },
-        [self, &object](auto &manager, auto result) {
+        [self, &object](auto result) {
             XCTAssertTrue(result);
             auto &objects = result.value();
             auto &a_objects = objects.at("sample_a");
@@ -1411,7 +1406,7 @@ using namespace yas;
             object.set_attribute("name", db::value{"test_clear_value"});
         });
 
-    manager.save([self, &object](auto &manager, auto result) {
+    manager.save([self, &manager, &object](auto result) {
         XCTAssertTrue(result);
 
         XCTAssertEqual(object.status(), db::object_status::saved);
@@ -1421,7 +1416,7 @@ using namespace yas;
         XCTAssertTrue(manager.cached_object("sample_a", 1));
     });
 
-    manager.clear([self, &object, exp](db::manager &manager, auto result) {
+    manager.clear([self, &manager, &object, exp](auto result) {
         XCTAssertTrue(result);
 
         XCTAssertEqual(object.status(), db::object_status::invalid);
@@ -1439,15 +1434,15 @@ using namespace yas;
     db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
 
-    manager.setup([self](auto &manager, auto result) { XCTAssertTrue(result); });
+    manager.setup([self, &manager](auto result) { XCTAssertTrue(result); });
 
     db::object_vector_map objects;
 
     manager.insert_objects(
-        [](auto &manager) {
+        []() {
             return db::entity_count_map{{"sample_a", 1}, {"sample_b", 2}};
         },
-        [self, &objects](auto &manager, auto result) {
+        [self, &manager, &objects](auto result) {
             XCTAssertTrue(result);
             XCTAssertEqual(manager.current_save_id(), db::value{1});
 
@@ -1463,7 +1458,7 @@ using namespace yas;
             obj_a.set_relation_object("child", {obj_b0});
         });
 
-    manager.save([self, &objects](auto &manager, auto result) {
+    manager.save([self, &manager, &objects](auto result) {
         XCTAssertTrue(result);
         XCTAssertEqual(manager.current_save_id(), db::value{2});
 
@@ -1478,7 +1473,7 @@ using namespace yas;
         obj_a.set_relation_object("child", {obj_b0, obj_b1});
     });
 
-    manager.save([self, &objects](auto &manager, auto result) {
+    manager.save([self, &manager, &objects](auto result) {
         XCTAssertTrue(result);
         XCTAssertEqual(manager.current_save_id(), db::value{3});
 
@@ -1493,19 +1488,19 @@ using namespace yas;
         obj_a.set_relation_object("child", {obj_b1});
     });
 
-    manager.save([self](auto &manager, auto result) {
+    manager.save([self, &manager](auto result) {
         XCTAssertTrue(result);
         XCTAssertEqual(manager.current_save_id(), db::value{4});
     });
 
-    manager.revert([](auto &manager) { return 3; },
-                   [self](auto &manager, auto result) {
+    manager.revert([]() { return 3; },
+                   [self, &manager](auto result) {
                        XCTAssertTrue(result);
                        XCTAssertEqual(manager.current_save_id(), db::value{3});
                        XCTAssertEqual(manager.last_save_id(), db::value{4});
                    });
 
-    manager.purge([self, &objects](auto &manager, auto result) {
+    manager.purge([self, &manager, &objects](auto result) {
         XCTAssertTrue(result);
         XCTAssertEqual(manager.current_save_id(), db::value{1});
         XCTAssertEqual(manager.last_save_id(), db::value{1});
@@ -1524,7 +1519,7 @@ using namespace yas;
 
     });
 
-    manager.execute([self](auto &manager, auto const &op) {
+    manager.execute([self, &manager](auto const &op) {
         auto &db = manager.database();
         auto const &rel_table_name = manager.model().entities().at("sample_a").relations.at("child").table_name;
 
@@ -1568,7 +1563,7 @@ using namespace yas;
     });
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
-    manager.execute([exp](auto &manager, auto const &op) { [exp fulfill]; });
+    manager.execute([exp](auto const &op) { [exp fulfill]; });
     [self waitForExpectationsWithTimeout:1.0 handler:nil];
 }
 
