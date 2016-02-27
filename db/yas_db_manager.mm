@@ -1227,7 +1227,7 @@ struct db::manager::impl : public base::impl {
 
 #pragma mark - manager
 
-db::manager::manager(std::string const &db_path, db::model const &model, size_t const priority_count)
+db::manager::manager(std::string const &db_path, db::model const &model, std::size_t const priority_count)
     : super_class(std::make_unique<impl>(db_path, model, priority_count)) {
 }
 

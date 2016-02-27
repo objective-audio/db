@@ -98,7 +98,7 @@ namespace db {
         using const_vector_completion_f = std::function<void(const_vector_result_t)>;
         using const_map_completion_f = std::function<void(const_map_result_t)>;
 
-        manager(std::string const &db_path, model const &model, size_t const priority_count = 1);
+        manager(std::string const &db_path, model const &model, std::size_t const priority_count = 1);
         manager(std::nullptr_t);
 
         std::string const &database_path() const;
