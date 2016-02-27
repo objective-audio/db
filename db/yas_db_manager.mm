@@ -376,7 +376,7 @@ struct db::manager::impl : public base::impl {
             }
         };
 
-        queue.push_back(operation{std::move(op_lambda)}, priority);
+        queue.push_back(operation{std::move(op_lambda), {.priority = priority}});
     }
 
     void execute_setup(std::function<void(result_t &&, value_map &&)> &&completion) {
