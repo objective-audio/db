@@ -124,6 +124,7 @@
 		B6C5A2CC1C30D96800E100EC /* yas_db_sql_utils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = yas_db_sql_utils.cpp; sourceTree = "<group>"; };
 		B6C5A2CD1C30D96800E100EC /* yas_db_sql_utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_db_sql_utils.h; sourceTree = "<group>"; };
 		B6C5A2CF1C31453600E100EC /* yas_db_sql_utils_tests.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = yas_db_sql_utils_tests.mm; sourceTree = "<group>"; };
+		B6D0DDE51C81662B0086AA8E /* yas_operation_protocol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_operation_protocol.h; sourceTree = "<group>"; };
 		B6D89B6D1C361A84007100A7 /* yas_db_relation_tests.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = yas_db_relation_tests.mm; sourceTree = "<group>"; };
 		B6D89B6F1C368142007100A7 /* yas_db_entity.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = yas_db_entity.cpp; sourceTree = "<group>"; };
 		B6D89B701C368142007100A7 /* yas_db_entity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_db_entity.h; sourceTree = "<group>"; };
@@ -174,6 +175,7 @@
 				B6A285E41C2A3D4900EC7945 /* yas_observing.h */,
 				B63A0C421C340267009EB0B3 /* yas_operation.cpp */,
 				B63A0C431C340267009EB0B3 /* yas_operation.h */,
+				B6D0DDE51C81662B0086AA8E /* yas_operation_protocol.h */,
 				B6A285E51C2A3D4900EC7945 /* yas_property_private.h */,
 				B6A285E61C2A3D4900EC7945 /* yas_property.h */,
 				B608C8621C21B8F000F594D8 /* yas_result_private.h */,

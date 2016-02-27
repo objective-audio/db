@@ -1363,7 +1363,7 @@ using namespace yas;
                 [exp2 fulfill];
             }
         },
-        1);
+        {.priority = 1});
 
     manager.fetch_objects([]() { return db::select_option{.table = "sample_a"}; },
                           [&call_count, exp2, &fetched_object_count, self](auto result) {
@@ -1375,7 +1375,7 @@ using namespace yas;
                                   [exp2 fulfill];
                               }
                           },
-                          0);
+                          {.priority = 0});
 
     manager.resume();
 

@@ -366,7 +366,7 @@ struct db::manager::impl : public base::impl {
         }
     }
 
-    void execute(execution_f &&execution, priority_t const priority) {
+    void execute(execution_f &&execution, operation_option_t &&option) {
         auto op_lambda = [execution = std::move(execution), manager = cast<manager>()](operation const &op) mutable {
             if (!op.is_canceled()) {
                 auto &db = manager.impl_ptr<impl>()->database;
@@ -376,10 +376,10 @@ struct db::manager::impl : public base::impl {
             }
         };
 
-        queue.push_back(operation{std::move(op_lambda), {.priority = priority}});
+        queue.push_back(operation{std::move(op_lambda), std::move(option)});
     }
 
-    void execute_setup(std::function<void(result_t &&, value_map &&)> &&completion) {
+    void execute_setup(std::function<void(result_t &&, value_map &&)> &&completion, operation_option_t &&option) {
         execute([completion = std::move(completion), manager = cast<manager>()](operation const &op) mutable {
             auto &db = manager.database();
             auto const &model = manager.model();
@@ -549,10 +549,10 @@ struct db::manager::impl : public base::impl {
 
             completion(std::move(state), std::move(db_info));
         },
-                0);
+                std::move(option));
     }
 
-    void execute_clear(std::function<void(result_t &&, value_map &&)> &&completion, priority_t const priority) {
+    void execute_clear(std::function<void(result_t &&, value_map &&)> &&completion, operation_option_t &&option) {
         execute([completion = std::move(completion), manager = cast<manager>()](operation const &op) mutable {
             auto &db = manager.database();
             auto const &model = manager.model();
@@ -606,10 +606,10 @@ struct db::manager::impl : public base::impl {
 
             completion(std::move(state), std::move(db_info));
         },
-                priority);
+                std::move(option));
     }
 
-    void execute_purge(std::function<void(result_t &&, value_map &&)> &&completion, priority_t const priority) {
+    void execute_purge(std::function<void(result_t &&, value_map &&)> &&completion, operation_option_t &&option) {
         execute([completion = std::move(completion), manager = cast<manager>()](operation const &op) mutable {
             auto &db = manager.database();
             auto const &model = manager.model();
@@ -716,12 +716,12 @@ struct db::manager::impl : public base::impl {
 
             completion(std::move(state), std::move(db_info));
         },
-                priority);
+                std::move(option));
     }
 
     void execute_insert(insert_preparation_values_f &&preparation,
                         std::function<void(result_t &&, object_data_vector_map &&, db::value_map &&)> &&completion,
-                        priority_t const priority) {
+                        operation_option_t &&option) {
         execute([preparation = std::move(preparation), completion = std::move(completion), manager = cast<manager>()](
                     operation const &op) mutable {
             value_map_vector_map values;
@@ -849,13 +849,13 @@ struct db::manager::impl : public base::impl {
 
             completion(std::move(state), std::move(inserted_datas), std::move(db_info));
         },
-                priority);
+                std::move(option));
     }
 
     void execute_fetch_object_datas(
         fetch_preparation_option_f &&preparation,
         std::function<void(result_t &&state, object_data_vector_map &&fetched_datas)> &&completion,
-        priority_t const priority) {
+        operation_option_t &&option) {
         execute([preparation = std::move(preparation), completion = std::move(completion), manager = cast<manager>()](
                     operation const &) mutable {
             db::select_option option;
@@ -910,13 +910,13 @@ struct db::manager::impl : public base::impl {
 
             completion(std::move(state), std::move(fetched_datas));
         },
-                priority);
+                std::move(option));
     }
 
     void execute_fetch_object_datas(
         fetch_preparation_ids_f &&preparation,
         std::function<void(result_t &&state, object_data_vector_map &&fetched_datas)> &&completion,
-        priority_t const priority) {
+        operation_option_t &&option) {
         execute([completion = std::move(completion), preparation = std::move(preparation), manager = cast<manager>()](
                     operation const &) mutable {
             db::integer_set_map obj_ids;
@@ -973,12 +973,12 @@ struct db::manager::impl : public base::impl {
 
             completion(std::move(state), std::move(fetched_datas));
         },
-                priority);
+                std::move(option));
     }
 
     void execute_save(std::function<void(result_t &&state, db::object_data_vector_map &&saved_datas,
                                          db::value_map &&db_info)> &&completion,
-                      priority_t const priority) {
+                      operation_option_t &&option) {
         execute([completion = std::move(completion), manager = cast<manager>()](operation const &) mutable {
             db::object_data_vector_map changed_datas;
             auto manager_impl = manager.impl_ptr<impl>();
@@ -1120,13 +1120,13 @@ struct db::manager::impl : public base::impl {
 
             completion(std::move(state), std::move(saved_datas), std::move(db_info));
         },
-                priority);
+                std::move(option));
     }
 
     void execute_revert(revert_preparation_f preparation,
                         std::function<void(result_t &&state, object_data_vector_map &&reverted_datas,
                                            db::value_map &&db_info)> &&completion,
-                        priority_t const priority) {
+                        operation_option_t &&option) {
         execute([preparation = std::move(preparation), completion = std::move(completion), manager = cast<manager>()](
                     operation const &) mutable {
             db::integer::type rev_save_id;
@@ -1221,7 +1221,7 @@ struct db::manager::impl : public base::impl {
 
             completion(std::move(state), std::move(reverted_datas), std::move(db_info));
         },
-                priority);
+                std::move(option));
     }
 };
 
@@ -1274,7 +1274,7 @@ db::value const &db::manager::last_save_id() const {
     return db::value::null_value();
 }
 
-void db::manager::setup(completion_f completion) {
+void db::manager::setup(completion_f completion, operation_option_t option) {
     auto impl_completion =
         [completion = std::move(completion), manager = *this](result_t && state, value_map && db_info) mutable {
         auto lambda = [
@@ -1292,10 +1292,10 @@ void db::manager::setup(completion_f completion) {
         dispatch_sync(dispatch_get_main_queue(), std::move(lambda));
     };
 
-    impl_ptr<impl>()->execute_setup(std::move(impl_completion));
+    impl_ptr<impl>()->execute_setup(std::move(impl_completion), std::move(option));
 }
 
-void db::manager::clear(completion_f completion, priority_t const priority) {
+void db::manager::clear(completion_f completion, operation_option_t option) {
     auto impl_completion =
         [completion = std::move(completion), manager = *this](result_t && state, value_map && db_info) {
         auto lambda = [
@@ -1314,10 +1314,10 @@ void db::manager::clear(completion_f completion, priority_t const priority) {
         dispatch_sync(dispatch_get_main_queue(), std::move(lambda));
     };
 
-    impl_ptr<impl>()->execute_clear(std::move(impl_completion), priority);
+    impl_ptr<impl>()->execute_clear(std::move(impl_completion), std::move(option));
 }
 
-void db::manager::purge(completion_f completion, priority_t const priority) {
+void db::manager::purge(completion_f completion, operation_option_t option) {
     auto impl_completion =
         [completion = std::move(completion), manager = *this](result_t && state, value_map && db_info) {
         auto lambda = [
@@ -1337,15 +1337,15 @@ void db::manager::purge(completion_f completion, priority_t const priority) {
         dispatch_sync(dispatch_get_main_queue(), std::move(lambda));
     };
 
-    impl_ptr<impl>()->execute_purge(std::move(impl_completion), priority);
+    impl_ptr<impl>()->execute_purge(std::move(impl_completion), std::move(option));
 }
 
-void db::manager::execute(execution_f &&execution, priority_t const priority) {
-    impl_ptr<impl>()->execute(std::move(execution), priority);
+void db::manager::execute(execution_f &&execution, operation_option_t &&option) {
+    impl_ptr<impl>()->execute(std::move(execution), std::move(option));
 }
 
 void db::manager::insert_objects(insert_preparation_count_f preparation, vector_completion_f completion,
-                                 priority_t const priority) {
+                                 operation_option_t option) {
     auto impl_preparation = [preparation = std::move(preparation)]() {
         auto counts = preparation();
         db::value_map_vector_map values{};
@@ -1357,11 +1357,11 @@ void db::manager::insert_objects(insert_preparation_count_f preparation, vector_
         return values;
     };
 
-    insert_objects(std::move(impl_preparation), std::move(completion), priority);
+    insert_objects(std::move(impl_preparation), std::move(completion), std::move(option));
 }
 
 void db::manager::insert_objects(insert_preparation_values_f preparation, vector_completion_f completion,
-                                 priority_t const priority) {
+                                 operation_option_t option) {
     auto impl_completion = [completion = std::move(completion), manager = *this](
         result_t && state, object_data_vector_map && inserted_datas, db::value_map && db_info) {
         auto lambda = [
@@ -1383,11 +1383,11 @@ void db::manager::insert_objects(insert_preparation_values_f preparation, vector
         dispatch_sync(dispatch_get_main_queue(), std::move(lambda));
     };
 
-    impl_ptr<impl>()->execute_insert(std::move(preparation), std::move(impl_completion), priority);
+    impl_ptr<impl>()->execute_insert(std::move(preparation), std::move(impl_completion), std::move(option));
 }
 
 void db::manager::fetch_objects(fetch_preparation_option_f preparation, vector_completion_f completion,
-                                priority_t const priority) {
+                                operation_option_t option) {
     auto impl_completion = [completion = std::move(completion), manager = *this](
         result_t && state, object_data_vector_map && fetched_datas) {
         auto lambda = [
@@ -1407,11 +1407,11 @@ void db::manager::fetch_objects(fetch_preparation_option_f preparation, vector_c
         dispatch_sync(dispatch_get_main_queue(), std::move(lambda));
     };
 
-    impl_ptr<impl>()->execute_fetch_object_datas(std::move(preparation), std::move(impl_completion), priority);
+    impl_ptr<impl>()->execute_fetch_object_datas(std::move(preparation), std::move(impl_completion), std::move(option));
 }
 
 void db::manager::fetch_const_objects(fetch_preparation_option_f preparation, const_vector_completion_f completion,
-                                      priority_t const priority) {
+                                      operation_option_t option) {
     auto impl_completion = [completion = std::move(completion), manager = *this](
         result_t && state, object_data_vector_map && fetched_datas) {
         auto lambda = [
@@ -1430,11 +1430,11 @@ void db::manager::fetch_const_objects(fetch_preparation_option_f preparation, co
         dispatch_sync(dispatch_get_main_queue(), std::move(lambda));
     };
 
-    impl_ptr<impl>()->execute_fetch_object_datas(std::move(preparation), std::move(impl_completion), priority);
+    impl_ptr<impl>()->execute_fetch_object_datas(std::move(preparation), std::move(impl_completion), std::move(option));
 }
 
 void db::manager::fetch_objects(fetch_preparation_ids_f preparation, map_completion_f completion,
-                                priority_t const priority) {
+                                operation_option_t option) {
     auto impl_completion = [completion = std::move(completion), manager = *this](
         result_t && state, object_data_vector_map && fetched_datas) {
         auto lambda = [
@@ -1454,11 +1454,11 @@ void db::manager::fetch_objects(fetch_preparation_ids_f preparation, map_complet
         dispatch_sync(dispatch_get_main_queue(), std::move(lambda));
     };
 
-    impl_ptr<impl>()->execute_fetch_object_datas(std::move(preparation), std::move(impl_completion), priority);
+    impl_ptr<impl>()->execute_fetch_object_datas(std::move(preparation), std::move(impl_completion), std::move(option));
 }
 
 void db::manager::fetch_const_objects(fetch_preparation_ids_f preparation, const_map_completion_f completion,
-                                      priority_t const priority) {
+                                      operation_option_t option) {
     auto impl_completion = [completion = std::move(completion), manager = *this](
         result_t && state, object_data_vector_map && fetched_datas) {
         auto lambda = [
@@ -1477,10 +1477,10 @@ void db::manager::fetch_const_objects(fetch_preparation_ids_f preparation, const
         dispatch_sync(dispatch_get_main_queue(), std::move(lambda));
     };
 
-    impl_ptr<impl>()->execute_fetch_object_datas(std::move(preparation), std::move(impl_completion), priority);
+    impl_ptr<impl>()->execute_fetch_object_datas(std::move(preparation), std::move(impl_completion), std::move(option));
 }
 
-void db::manager::save(vector_completion_f completion, priority_t const priority) {
+void db::manager::save(vector_completion_f completion, operation_option_t option) {
     auto impl_completion = [completion = std::move(completion), manager = *this](
         result_t && state, db::object_data_vector_map && saved_datas, db::value_map && db_info) {
         auto lambda = [
@@ -1503,10 +1503,10 @@ void db::manager::save(vector_completion_f completion, priority_t const priority
         dispatch_sync(dispatch_get_main_queue(), std::move(lambda));
     };
 
-    impl_ptr<impl>()->execute_save(std::move(impl_completion), priority);
+    impl_ptr<impl>()->execute_save(std::move(impl_completion), std::move(option));
 }
 
-void db::manager::revert(revert_preparation_f preparation, vector_completion_f completion, priority_t const priority) {
+void db::manager::revert(revert_preparation_f preparation, vector_completion_f completion, operation_option_t option) {
     auto impl_completion = [completion = std::move(completion), manager = *this](
         result_t && state, object_data_vector_map && reverted_datas, db::value_map && db_info) {
         auto lambda = [
@@ -1529,7 +1529,7 @@ void db::manager::revert(revert_preparation_f preparation, vector_completion_f c
         dispatch_sync(dispatch_get_main_queue(), std::move(lambda));
     };
 
-    impl_ptr<impl>()->execute_revert(std::move(preparation), std::move(impl_completion), priority);
+    impl_ptr<impl>()->execute_revert(std::move(preparation), std::move(impl_completion), std::move(option));
 }
 
 db::object db::manager::cached_object(std::string const &entity_name, db::integer::type const object_id) const {
