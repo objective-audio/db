@@ -8,6 +8,7 @@
 #include "yas_db_additional_protocol.h"
 #include "yas_db_database.h"
 #include "yas_db_object.h"
+#include "yas_operation_protocol.h"
 
 namespace yas {
 class operation;
@@ -76,8 +77,6 @@ namespace db {
             db::error _db_error;
         };
 
-        using priority_t = UInt32;
-
         using result_t = result<std::nullptr_t, error>;
         using vector_result_t = result<object_vector_map, error>;
         using map_result_t = result<object_map_map, error>;
@@ -111,25 +110,25 @@ namespace db {
         void suspend();
         void resume();
 
-        void execute(execution_f &&execution, priority_t const priority = 0);
+        void execute(execution_f &&execution, operation_option_t &&option = {});
 
-        void setup(completion_f completion);
-        void clear(completion_f completion, priority_t const priority = 0);
-        void purge(completion_f completion, priority_t const priority = 0);
+        void setup(completion_f, operation_option_t option = {});
+        void clear(completion_f, operation_option_t option = {});
+        void purge(completion_f, operation_option_t option = {});
         void insert_objects(insert_preparation_count_f preparation, vector_completion_f completion,
-                            priority_t const priority = 0);
+                            operation_option_t option = {});
         void insert_objects(insert_preparation_values_f preparation, vector_completion_f completion,
-                            priority_t const priority = 0);
+                            operation_option_t option = {});
         void fetch_objects(fetch_preparation_option_f preparation, vector_completion_f completion,
-                           priority_t const priority = 0);
+                           operation_option_t option = {});
         void fetch_objects(fetch_preparation_ids_f preparation, map_completion_f completion,
-                           priority_t const priority = 0);
+                           operation_option_t option = {});
         void fetch_const_objects(fetch_preparation_option_f preparation, const_vector_completion_f completion,
-                                 priority_t const priority = 0);
+                                 operation_option_t option = {});
         void fetch_const_objects(fetch_preparation_ids_f preparation, const_map_completion_f completion,
-                                 priority_t const priority = 0);
-        void save(vector_completion_f completion, priority_t const priority = 0);
-        void revert(revert_preparation_f preparation, vector_completion_f completion, priority_t const priority = 0);
+                                 operation_option_t option = {});
+        void save(vector_completion_f completion, operation_option_t option = {});
+        void revert(revert_preparation_f preparation, vector_completion_f completion, operation_option_t option = {});
 
         object cached_object(std::string const &entity_name, integer::type const object_id) const;
 
