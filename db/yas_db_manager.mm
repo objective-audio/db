@@ -1536,6 +1536,16 @@ db::object db::manager::cached_object(std::string const &entity_name, db::intege
     return impl_ptr<impl>()->cached_object(entity_name, object_id);
 }
 
+bool db::manager::has_changed_objects() const {
+    for (auto const &entity_pair : impl_ptr<impl>()->changed_objects) {
+        if (entity_pair.second.size() > 0) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 void db::manager::_object_did_change(db::object const &object) {
     impl_ptr<impl>()->_object_did_change(object);
 }

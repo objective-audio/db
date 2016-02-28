@@ -1567,6 +1567,30 @@ using namespace yas;
     [self waitForExpectationsWithTimeout:1.0 handler:nil];
 }
 
+- (void)test_has_changed {
+    db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
+    auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
+
+    manager.setup([self, &manager](auto result) { XCTAssertTrue(result); });
+
+    manager.insert_objects(
+        []() {
+            return db::entity_count_map{{"sample_a", 1}};
+        },
+        [self, &manager](auto result) {
+            XCTAssertFalse(manager.has_changed_objects());
+
+            auto &obj = result.value().at("sample_a").at(0);
+            obj.set_attribute("name", db::value{"a"});
+
+            XCTAssertTrue(manager.has_changed_objects());
+        });
+
+    XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
+    manager.execute([exp](auto const &op) { [exp fulfill]; });
+    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+}
+
 - (void)test_make_error {
     auto error = db::manager::error{db::manager::error_type::version_not_found};
     XCTAssertTrue(error);

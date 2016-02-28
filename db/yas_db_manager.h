@@ -131,6 +131,8 @@ namespace db {
         void revert(revert_preparation_f preparation, vector_completion_f completion, operation_option_t option = {});
 
         object cached_object(std::string const &entity_name, integer::type const object_id) const;
+        
+        bool has_changed_objects() const;
 
        private:
         void _object_did_change(object const &);
