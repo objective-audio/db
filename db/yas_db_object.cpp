@@ -225,8 +225,8 @@ class db::object::impl : public const_object::impl {
         return false;
     }
 
-    void load_data(object_data const &obj_data) {
-        if (status != db::object_status::changed) {
+    void load_data(object_data const &obj_data, bool const force) {
+        if (status != db::object_status::changed || force) {
             clear();
 
             db::entity const &entity = model.entity(entity_name);
@@ -448,8 +448,8 @@ subject<db::object::change_info> &db::object::subject() {
     return impl_ptr<impl>()->subject;
 }
 
-void db::object::load_data(object_data const &obj_data) {
-    impl_ptr<impl>()->load_data(obj_data);
+void db::object::load_data(object_data const &obj_data, bool const force) {
+    impl_ptr<impl>()->load_data(obj_data, force);
 }
 
 void db::object::load_save_id(db::value const &save_id) {

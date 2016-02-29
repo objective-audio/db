@@ -77,7 +77,7 @@ namespace db {
         yas::subject<change_info> const &subject() const;
         yas::subject<change_info> &subject();
 
-        void load_data(object_data const &obj_data);
+        void load_data(object_data const &obj_data, bool const force = false);
         void load_save_id(db::value const &save_id);
         void clear_data();
 
