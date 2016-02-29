@@ -337,6 +337,29 @@ struct db::manager::impl : public base::impl {
         return changed_datas;
     }
 
+    db::value_vector_map changed_object_ids_for_reset() {
+        db::value_vector_map changed_obj_ids;
+
+        for (auto const &entity_pair : changed_objects) {
+            auto const &entity_name = entity_pair.first;
+            auto const &entity_objects = entity_pair.second;
+
+            db::value_vector entity_ids;
+            entity_ids.reserve(entity_objects.size());
+
+            for (auto const &object_pair : entity_objects) {
+                auto object = object_pair.second;
+                entity_ids.push_back(object.object_id());
+            }
+
+            if (entity_ids.size() > 0) {
+                changed_obj_ids.emplace(std::make_pair(entity_name, std::move(entity_ids)));
+            }
+        }
+
+        return changed_obj_ids;
+    }
+
     db::object cached_object(std::string const &entity_name, db::integer::type object_id) {
         if (cached_objects.count(entity_name) > 0) {
             auto &entity_objects = cached_objects.at(entity_name);
