@@ -55,6 +55,7 @@ void db_controller::add() {
 
     _begin_processing();
 
+    _manager.reset([](auto result) {});
     _manager.insert_objects(
         []() {
             CFUUIDRef cf_uuid = CFUUIDCreate(nullptr);
@@ -100,8 +101,8 @@ void db_controller::remove(std::size_t const &idx) {
         _begin_processing();
 
         auto &object = _objects.at(idx);
-        object.remove();
 
+        _manager.reset([object](auto result) mutable { object.remove(); });
         _manager.save([weak = to_weak(shared_from_this()), idx](auto save_result) {
             if (auto shared = weak.lock()) {
                 shared->_update_objects([weak = weak, idx](auto update_result) {
@@ -128,6 +129,7 @@ void db_controller::undo() {
 
     auto const undo_id = current_save_id() - 1;
 
+    _manager.reset([](auto result) mutable {});
     _manager.revert([undo_id]() { return undo_id; },
                     [weak = to_weak(shared_from_this())](auto revert_result) {
                         if (auto shared = weak.lock()) {
@@ -154,6 +156,7 @@ void db_controller::redo() {
 
     auto const redo_id = current_save_id() + 1;
 
+    _manager.reset([](auto result) mutable {});
     _manager.revert([redo_id]() { return redo_id; },
                     [weak = to_weak(shared_from_this())](auto revert_result) {
                         if (auto shared = weak.lock()) {
@@ -201,6 +204,7 @@ void db_controller::purge() {
 
     _begin_processing();
 
+    _manager.save([](auto result) mutable {});
     _manager.purge([weak = to_weak(shared_from_this())](auto purge_result) {
         if (auto shared = weak.lock()) {
             shared->_update_objects([weak = weak](auto update_result) {
