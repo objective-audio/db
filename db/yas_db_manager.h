@@ -115,6 +115,7 @@ namespace db {
         void setup(completion_f, operation_option_t option = {});
         void clear(completion_f, operation_option_t option = {});
         void purge(completion_f, operation_option_t option = {});
+        void reset(completion_f, operation_option_t option = {});
         void insert_objects(insert_preparation_count_f preparation, vector_completion_f completion,
                             operation_option_t option = {});
         void insert_objects(insert_preparation_values_f preparation, vector_completion_f completion,
@@ -131,7 +132,7 @@ namespace db {
         void revert(revert_preparation_f preparation, vector_completion_f completion, operation_option_t option = {});
 
         object cached_object(std::string const &entity_name, integer::type const object_id) const;
-        
+
         bool has_changed_objects() const;
 
        private:

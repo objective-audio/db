@@ -1591,6 +1591,74 @@ using namespace yas;
     [self waitForExpectationsWithTimeout:1.0 handler:nil];
 }
 
+- (void)test_reset {
+    db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
+    auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
+
+    manager.setup([self, &manager](auto result) { XCTAssertTrue(result); });
+
+    db::object_vector_map objects;
+
+    manager.insert_objects(
+        []() {
+            return db::entity_count_map{{"sample_a", 1}, {"sample_b", 2}};
+        },
+        [self, &manager, &objects](auto result) {
+            XCTAssertTrue(result);
+
+            objects = std::move(result.value());
+            auto &obj_a = objects.at("sample_a").at(0);
+            auto &obj_b0 = objects.at("sample_b").at(0);
+            auto &obj_b1 = objects.at("sample_b").at(1);
+
+            obj_a.set_attribute("name", db::value{"a_test_1"});
+            obj_b0.set_attribute("name", db::value{"b0_test_1"});
+            obj_b1.set_attribute("name", db::value{"b1_test_1"});
+            obj_a.set_relation_object("child", {obj_b0});
+        });
+
+    manager.save([self, &manager, &objects](auto result) {
+        XCTAssertTrue(result);
+        auto &obj_a = objects.at("sample_a").at(0);
+        auto &obj_b0 = objects.at("sample_b").at(0);
+        auto &obj_b1 = objects.at("sample_b").at(1);
+
+        obj_a.set_attribute("name", db::value{"a_test_2"});
+        obj_b0.set_attribute("name", db::value{"b0_test_2"});
+        obj_b1.set_attribute("name", db::value{"b1_test_2"});
+        obj_a.set_relation_object("child", {obj_b1, obj_b0});
+
+        XCTAssertEqual(obj_a.status(), db::object_status::changed);
+        XCTAssertEqual(obj_b0.status(), db::object_status::changed);
+        XCTAssertEqual(obj_b1.status(), db::object_status::changed);
+
+        XCTAssertTrue(manager.has_changed_objects());
+    });
+
+    manager.reset([self, &manager, &objects](auto result) {
+        XCTAssertTrue(result);
+        XCTAssertFalse(manager.has_changed_objects());
+
+        auto &obj_a = objects.at("sample_a").at(0);
+        auto &obj_b0 = objects.at("sample_b").at(0);
+        auto &obj_b1 = objects.at("sample_b").at(1);
+
+        XCTAssertEqual(obj_a.get_attribute("name"), db::value{"a_test_1"});
+        XCTAssertEqual(obj_b0.get_attribute("name"), db::value{"b0_test_1"});
+        XCTAssertEqual(obj_b1.get_attribute("name"), db::value{"b1_test_1"});
+        XCTAssertEqual(obj_a.relation_size("child"), 1);
+        XCTAssertEqual(obj_a.get_relation_object("child", 0), obj_b0);
+
+        XCTAssertEqual(obj_a.status(), db::object_status::saved);
+        XCTAssertEqual(obj_b0.status(), db::object_status::saved);
+        XCTAssertEqual(obj_b1.status(), db::object_status::saved);
+    });
+
+    XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
+    manager.execute([exp](auto const &op) { [exp fulfill]; });
+    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+}
+
 - (void)test_make_error {
     auto error = db::manager::error{db::manager::error_type::version_not_found};
     XCTAssertTrue(error);

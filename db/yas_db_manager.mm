@@ -337,19 +337,18 @@ struct db::manager::impl : public base::impl {
         return changed_datas;
     }
 
-    db::value_vector_map changed_object_ids_for_reset() {
-        db::value_vector_map changed_obj_ids;
+    db::integer_set_map changed_object_ids_for_reset() {
+        db::integer_set_map changed_obj_ids;
 
         for (auto const &entity_pair : changed_objects) {
             auto const &entity_name = entity_pair.first;
             auto const &entity_objects = entity_pair.second;
 
-            db::value_vector entity_ids;
-            entity_ids.reserve(entity_objects.size());
+            db::integer_set entity_ids;
 
             for (auto const &object_pair : entity_objects) {
                 auto object = object_pair.second;
-                entity_ids.push_back(object.object_id());
+                entity_ids.insert(object.object_id().get<integer>());
             }
 
             if (entity_ids.size() > 0) {
@@ -1363,6 +1362,34 @@ void db::manager::purge(completion_f completion, operation_option_t option) {
     impl_ptr<impl>()->execute_purge(std::move(impl_completion), std::move(option));
 }
 
+void db::manager::reset(completion_f completion, operation_option_t option) {
+    auto preparation = [manager = *this]() {
+        return std::move(manager.impl_ptr<impl>()->changed_object_ids_for_reset());
+    };
+
+    auto impl_completion = [completion = std::move(completion), manager = *this](
+        result_t && state, object_data_vector_map && fetched_datas) {
+        auto lambda = [
+            manager,
+            completion = std::move(completion),
+            state = std::move(state),
+            fetched_datas = std::move(fetched_datas)
+        ]() mutable {
+            if (state) {
+                manager.impl_ptr<impl>()->load_map_object_datas(fetched_datas, true);
+                manager.impl_ptr<impl>()->changed_objects.clear();
+                completion(result_t{nullptr});
+            } else {
+                completion(result_t{std::move(state.error())});
+            }
+        };
+
+        dispatch_sync(dispatch_get_main_queue(), std::move(lambda));
+    };
+
+    impl_ptr<impl>()->execute_fetch_object_datas(std::move(preparation), std::move(impl_completion), std::move(option));
+}
+
 void db::manager::execute(execution_f &&execution, operation_option_t &&option) {
     impl_ptr<impl>()->execute(std::move(execution), std::move(option));
 }
@@ -1541,8 +1568,7 @@ void db::manager::revert(revert_preparation_f preparation, vector_completion_f c
         ]() mutable {
             if (state) {
                 manager.impl_ptr<impl>()->set_db_info(std::move(db_info));
-                auto loaded_objects = manager.impl_ptr<impl>()->load_object_datas(reverted_datas, true);
-                manager.impl_ptr<impl>()->changed_objects.clear();
+                auto loaded_objects = manager.impl_ptr<impl>()->load_object_datas(reverted_datas, false);
                 completion(vector_result_t{std::move(loaded_objects)});
             } else {
                 completion(vector_result_t{std::move(state.error())});
