@@ -421,7 +421,7 @@ using namespace yas;
 
     auto observer = obj.subject().make_wild_card_observer(
         [&called, self](std::string const &key, db::object::change_info const &info) {
-            XCTAssertEqual(key, db::attribute_change_key);
+            XCTAssertEqual(key, db::object::attribute_change_key);
 
             auto const &obj = info.object;
             auto const &name = info.name;
@@ -447,7 +447,7 @@ using namespace yas;
 
     auto observer = obj.subject().make_wild_card_observer(
         [&called_count, self](std::string const &key, db::object::change_info const &info) {
-            XCTAssertEqual(key, db::relation_change_key);
+            XCTAssertEqual(key, db::object::relation_change_key);
 
             auto const &obj = info.object;
             auto const &name = info.name;
@@ -499,7 +499,7 @@ using namespace yas;
 
     auto observer = obj.subject().make_wild_card_observer(
         [&called, self](std::string const &key, db::object::change_info const &info) {
-            XCTAssertEqual(key, db::loading_change_key);
+            XCTAssertEqual(key, db::object::loading_change_key);
 
             auto const &obj = info.object;
             auto const &name = info.name;
@@ -568,7 +568,7 @@ using namespace yas;
 
     auto observer = obj.subject().make_wild_card_observer(
         [&called, self](std::string const &key, db::object::change_info const &info) {
-            XCTAssertEqual(key, db::loading_change_key);
+            XCTAssertEqual(key, db::object::loading_change_key);
 
             auto const &obj = info.object;
             auto const &name = info.name;
