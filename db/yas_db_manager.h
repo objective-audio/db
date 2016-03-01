@@ -8,6 +8,7 @@
 #include "yas_db_additional_protocol.h"
 #include "yas_db_database.h"
 #include "yas_db_object.h"
+#include "yas_observing.h"
 #include "yas_operation_protocol.h"
 
 namespace yas {
@@ -77,6 +78,9 @@ namespace db {
             db::error _db_error;
         };
 
+        static auto constexpr object_change_key = "object_change";
+        static auto constexpr db_info_change_key = "save_id_change";
+
         using result_t = result<std::nullptr_t, error>;
         using vector_result_t = result<object_vector_map, error>;
         using map_result_t = result<object_map_map, error>;
@@ -106,6 +110,9 @@ namespace db {
         model const &model() const;
         db::value const &current_save_id() const;
         db::value const &last_save_id() const;
+
+        yas::subject<> const &subject() const;
+        yas::subject<> &subject();
 
         void suspend();
         void resume();
