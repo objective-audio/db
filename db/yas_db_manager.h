@@ -81,11 +81,8 @@ namespace db {
         struct change_info {
             db::object const object;
 
-            change_info(std::nullptr_t) : object(nullptr) {
-            }
-
-            change_info(db::object const &object) : object(object) {
-            }
+            change_info(std::nullptr_t);
+            change_info(db::object const &object);
         };
 
         static auto constexpr object_change_key = "object_change";

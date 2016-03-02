@@ -40,6 +40,14 @@ db::error const &db::manager::error::database_error() const {
     return _db_error;
 }
 
+#pragma mark - change_info
+
+db::manager::change_info::change_info(std::nullptr_t) : object(nullptr) {
+}
+
+db::manager::change_info::change_info(db::object const &object) : object(object) {
+}
+
 #pragma mark - utils
 
 namespace yas {
