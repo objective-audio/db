@@ -45,6 +45,21 @@ void db_controller::setup(db::manager::completion_f completion) {
                 }
             }
         });
+
+        auto weak_manager = to_weak(_manager);
+
+        _observer =
+            _manager.subject().make_wild_card_observer([&controller = *this](auto const &key, auto const &change_info) {
+                if (key == db::manager::object_change_key) {
+                    if (auto idx_opt = index(controller._objects, change_info.object)) {
+                        controller._subject.notify(object_did_change_key, db::value{*idx_opt});
+                    } else {
+                        controller._subject.notify(object_did_change_key);
+                    }
+                } else if (key == db::manager::db_info_change_key) {
+                    controller._subject.notify(db_info_did_change_key);
+                }
+            });
     }
 }
 
@@ -76,11 +91,9 @@ void db_controller::add() {
                         if (a_objects.size() > 0) {
                             auto &target_obj = a_objects.at(0);
                             auto &objects = shared->_objects;
-                            auto it = std::find_if(objects.begin(), objects.end(),
-                                                   [&target_obj](auto const &obj) { return target_obj == obj; });
-                            if (it != objects.end()) {
-                                auto distance = std::distance(objects.begin(), it);
-                                idx_value = db::value{static_cast<db::integer::type>(distance)};
+
+                            if (auto idx = index(objects, target_obj)) {
+                                idx_value = db::value{*idx};
                             }
                         }
 
@@ -251,6 +264,7 @@ void db_controller::cancel() {
 
     _begin_processing();
 
+    _manager.reset([](auto result) mutable {});
     _update_objects([weak = to_weak(shared_from_this())](auto update_result) {
         if (auto shared = weak.lock()) {
             shared->_end_processing();
@@ -301,10 +315,6 @@ subject<db::value> &db_controller::subject() {
 
 bool db_controller::is_processing() const {
     return _processing;
-}
-
-void db_controller::send_object_did_change() const {
-    _subject.notify(object_did_change_key);
 }
 
 void db_controller::_update_objects(std::function<void(db::manager::result_t)> &&completion) {

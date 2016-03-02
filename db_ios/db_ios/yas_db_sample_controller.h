@@ -8,11 +8,12 @@ namespace yas {
 namespace sample {
     class db_controller : public std::enable_shared_from_this<db_controller> {
        public:
-        static auto constexpr objects_did_update_key = "update";
-        static auto constexpr object_did_insert_key = "insert";
-        static auto constexpr object_did_remove_key = "remove";
-        static auto constexpr processing_did_change_key = "processing";
-        static auto constexpr object_did_change_key = "change";
+        static auto constexpr objects_did_update_key = "objects_did_update";
+        static auto constexpr object_did_insert_key = "object_did_insert";
+        static auto constexpr object_did_remove_key = "object_did_remove";
+        static auto constexpr processing_did_change_key = "processing_did_change";
+        static auto constexpr object_did_change_key = "obj_did_change";
+        static auto constexpr db_info_did_change_key = "db_info_did_change";
 
         db_controller();
 
@@ -43,12 +44,11 @@ namespace sample {
 
         bool is_processing() const;
 
-        void send_object_did_change() const;
-
        private:
         db::manager _manager;
         db::object_vector _objects;
         yas::subject<db::value> _subject;
+        yas::observer<db::manager::change_info> _observer;
         bool _processing;
 
         void _update_objects(std::function<void(db::manager::result_t)> &&);
