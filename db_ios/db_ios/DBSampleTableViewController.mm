@@ -14,7 +14,7 @@ using namespace yas::sample;
 
 typedef NS_ENUM(NSUInteger, DBSampleSection) {
     DBSampleSectionActions,
-    DBSampleSectionInfo,
+    DBSampleSectionInfos,
     DBSampleSectionObjects,
 
     DBSampleSectionCount,
@@ -68,6 +68,7 @@ typedef NS_ENUM(NSUInteger, DBSampleInfoRow) {
                 }
             }
         });
+
     _observers.emplace_back(std::move(proccessing_observer));
 
     _db_controller->setup([weak_container](auto result) {
@@ -75,7 +76,7 @@ typedef NS_ENUM(NSUInteger, DBSampleInfoRow) {
             DBSampleTableViewController *controller = self_container.object();
 
             if (result) {
-                [controller setupObserver];
+                [controller setupObserversAfterSetup];
                 [controller updateTable];
             } else {
                 CFStringRef cf_string = to_cf_object(to_string(result.error().type()));
@@ -83,6 +84,36 @@ typedef NS_ENUM(NSUInteger, DBSampleInfoRow) {
             }
         }
     });
+}
+
+- (void)setupObserversAfterSetup {
+    yas::objc::container<objc::weak> weak_container{self};
+
+    auto observer =
+        _db_controller->subject().make_wild_card_observer([weak_container](auto const &key, db::value const &value) {
+            if (auto self_container = weak_container.lock()) {
+                DBSampleTableViewController *controller = self_container.object();
+
+                if (key == db_controller::db_info_did_change_key) {
+                    [controller updateTableForInfo:DBSampleInfoRowSaveID];
+                } else if (key == db_controller::objects_did_update_key) {
+                    [controller updateTable];
+                } else if (key == db_controller::object_did_insert_key) {
+                    [controller updateTableForInsertedRow:NSInteger(value.get<db::integer>())];
+                } else if (key == db_controller::object_did_remove_key) {
+                    [controller updateTableForDeletedRow:NSInteger(value.get<db::integer>())];
+                } else if (key == db_controller::object_did_change_key) {
+                    if (value) {
+                        [controller updateTableObjectCellAtIndex:NSInteger(value.get<db::integer>())];
+                    } else {
+                        [controller updateTableObjects];
+                    }
+                    [controller updateTableActions];
+                }
+            }
+        });
+
+    _observers.emplace_back(std::move(observer));
 }
 
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
@@ -98,75 +129,73 @@ typedef NS_ENUM(NSUInteger, DBSampleInfoRow) {
 }
 
 - (void)updateTable {
-    [self.tableView reloadData];
+    [self updateTableActions];
+    [self updateTableInfos];
+    [self.tableView reloadSections:[NSIndexSet indexSetWithIndex:DBSampleSectionObjects]
+                  withRowAnimation:UITableViewRowAnimationNone];
 }
 
-- (void)updateTableWithoutObjects {
-    NSMutableIndexSet *sections = [NSMutableIndexSet indexSet];
-    [sections addIndex:DBSampleSectionActions];
-    [sections addIndex:DBSampleSectionInfo];
-
-    [self.tableView reloadSections:sections withRowAnimation:UITableViewRowAnimationNone];
+- (void)updateTableActions {
+    for (auto &idx : each_index<std::size_t>{DBSampleActionRowCount}) {
+        [self updateTableForAction:DBSampleActionRow(idx)];
+    }
 }
 
-- (void)insertObjectRow:(NSInteger)row {
+- (void)updateTableForAction:(DBSampleActionRow)row {
+    UITableViewCell *cell =
+        [self.tableView cellForRowAtIndexPath:[NSIndexPath indexPathForRow:row inSection:DBSampleSectionActions]];
+    [self updateActionCell:cell atRow:row];
+}
+
+- (void)updateTableInfos {
+    [self updateTableForInfo:DBSampleInfoRowSaveID];
+    [self updateTableForInfo:DBSampleInfoRowObjectCount];
+}
+
+- (void)updateTableForInfo:(DBSampleInfoRow)row {
+    UITableViewCell *cell =
+        [self.tableView cellForRowAtIndexPath:[NSIndexPath indexPathForRow:row inSection:DBSampleSectionInfos]];
+    [self updateInfoCell:cell atRow:row];
+}
+
+- (void)updateTableObjects {
+    for (UITableViewCell *cell in self.tableView.visibleCells) {
+        NSIndexPath *indexPath = [self.tableView indexPathForCell:cell];
+        if (indexPath) {
+            [self updateTableObjectCellAtIndex:indexPath.row];
+        }
+    }
+}
+
+- (void)updateTableObjectCellAtIndex:(NSUInteger)index {
+    UITableViewCell *cell =
+        [self.tableView cellForRowAtIndexPath:[NSIndexPath indexPathForRow:index inSection:DBSampleSectionObjects]];
+    auto const &object = _db_controller->object(index);
+
+    [self updateObjectCell:cell withObject:object];
+}
+
+- (void)updateTableForInsertedRow:(NSInteger)row {
     auto const db_obj_count = _db_controller->object_count();
     if (db_obj_count > 0 && db_obj_count - 1 == [self.tableView numberOfRowsInSection:DBSampleSectionObjects]) {
         NSIndexPath *indexPath = [NSIndexPath indexPathForRow:row inSection:DBSampleSectionObjects];
         [self.tableView insertRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationAutomatic];
-        [self updateTableWithoutObjects];
+        [self updateTableInfos];
+        [self updateTableActions];
     } else {
         [self updateTable];
     }
 }
 
-- (void)deleteObjectRow:(NSInteger)row {
+- (void)updateTableForDeletedRow:(NSInteger)row {
     if (_db_controller->object_count() + 1 == [self.tableView numberOfRowsInSection:DBSampleSectionObjects]) {
         NSIndexPath *indexPath = [NSIndexPath indexPathForRow:row inSection:DBSampleSectionObjects];
         [self.tableView deleteRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationAutomatic];
-        [self updateTableWithoutObjects];
+        [self updateTableInfos];
+        [self updateTableActions];
     } else {
         [self updateTable];
     }
-}
-
-- (void)setupObserver {
-    yas::objc::container<objc::weak> weak_container{self};
-
-    auto update_observer = _db_controller->subject().make_observer(
-        db_controller::objects_did_update_key, [weak_container](std::string const &key, db::value const &value) {
-            if (auto self_container = weak_container.lock()) {
-                [(DBSampleTableViewController *)self_container.object() updateTable];
-            }
-        });
-
-    auto insert_observer = _db_controller->subject().make_observer(
-        db_controller::object_did_insert_key, [weak_container](std::string const &key, db::value const &value) {
-            if (auto self_container = weak_container.lock()) {
-                [(DBSampleTableViewController *)self_container.object()
-                    insertObjectRow:NSInteger(value.get<db::integer>())];
-            }
-        });
-
-    auto remove_observer = _db_controller->subject().make_observer(
-        db_controller::object_did_remove_key, [weak_container](std::string const &key, db::value const &value) {
-            if (auto self_container = weak_container.lock()) {
-                [(DBSampleTableViewController *)self_container.object()
-                    deleteObjectRow:NSInteger(value.get<db::integer>())];
-            }
-        });
-
-    auto editing_observer = _db_controller->subject().make_observer(
-        db_controller::object_did_change_key, [weak_container](std::string const &key, db::value const &value) {
-            if (auto self_container = weak_container.lock()) {
-                [(DBSampleTableViewController *)self_container.object() updateTable];
-            }
-        });
-
-    _observers.emplace_back(std::move(update_observer));
-    _observers.emplace_back(std::move(insert_observer));
-    _observers.emplace_back(std::move(remove_observer));
-    _observers.emplace_back(std::move(editing_observer));
 }
 
 - (void)showErrorAlertWithTitle:(NSString *)title message:(NSString *)message {
@@ -188,7 +217,7 @@ typedef NS_ENUM(NSUInteger, DBSampleInfoRow) {
         switch (section) {
             case DBSampleSectionActions:
                 return DBSampleActionRowCount;
-            case DBSampleSectionInfo:
+            case DBSampleSectionInfos:
                 return DBSampleInfoRowCount;
             case DBSampleSectionObjects:
                 return _db_controller->object_count();
@@ -202,7 +231,7 @@ typedef NS_ENUM(NSUInteger, DBSampleInfoRow) {
         switch (section) {
             case DBSampleSectionActions:
                 return @"Actions";
-            case DBSampleSectionInfo:
+            case DBSampleSectionInfos:
                 return @"Info";
             case DBSampleSectionObjects:
                 return @"Objects";
@@ -211,81 +240,111 @@ typedef NS_ENUM(NSUInteger, DBSampleInfoRow) {
     return nil;
 }
 
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
+    return 30.0;
+}
+
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     UITableViewCell *cell = nil;
 
     if (indexPath.section == DBSampleSectionObjects) {
         if (indexPath.row < _db_controller->object_count()) {
             cell = [tableView dequeueReusableCellWithIdentifier:@"ObjectCell" forIndexPath:indexPath];
-
             auto const &object = _db_controller->object(size_t(indexPath.row));
-            CFStringRef cf_id_str = to_cf_object(to_string(object.get_attribute(db::object_id_field)));
-            CFStringRef cf_name_str = to_cf_object(to_string(object.get_attribute("name")));
-            cell.textLabel.text = [NSString stringWithFormat:@"obj_id : %@ name : %@", cf_id_str, cf_name_str];
-            cell.selectionStyle = UITableViewCellSelectionStyleNone;
+            [self updateObjectCell:cell withObject:object];
         }
     } else {
         cell = [tableView dequeueReusableCellWithIdentifier:@"Cell" forIndexPath:indexPath];
-        cell.textLabel.textColor = [UIColor blackColor];
 
         switch (indexPath.section) {
-            case DBSampleSectionActions: {
-                bool enabled = true;
-                switch (indexPath.row) {
-                    case DBSampleActionRowAdd:
-                        cell.textLabel.text = @"Add";
-                        break;
-                    case DBSampleActionRowUndo:
-                        cell.textLabel.text = @"Undo";
-                        enabled = _db_controller->can_undo();
-                        break;
-                    case DBSampleActionRowRedo:
-                        cell.textLabel.text = @"Redo";
-                        enabled = _db_controller->can_redo();
-                        break;
-                    case DBSampleActionRowClear:
-                        cell.textLabel.text = @"Clear";
-                        enabled = _db_controller->can_clear();
-                        break;
-                    case DBSampleActionRowPurge:
-                        cell.textLabel.text = @"Purge";
-                        enabled = _db_controller->can_purge();
-                        break;
-                    case DBSampleActionRowSaveChanged:
-                        cell.textLabel.text = @"Save Changed";
-                        enabled = _db_controller->has_changed();
-                        break;
-                    case DBSampleActionRowCancelChanged:
-                        cell.textLabel.text = @"Cancel Changed";
-                        enabled = _db_controller->has_changed();
-                        break;
-                }
-
-                if (enabled) {
-                    cell.selectionStyle = UITableViewCellSelectionStyleBlue;
-                } else {
-                    cell.textLabel.textColor = [UIColor lightGrayColor];
-                    cell.selectionStyle = UITableViewCellSelectionStyleNone;
-                }
-            } break;
-            case DBSampleSectionInfo:
-                switch (indexPath.row) {
-                    case DBSampleInfoRowSaveID:
-                        cell.textLabel.text =
-                            [NSString stringWithFormat:@"save_id : %@ / %@", @(_db_controller->current_save_id()),
-                                                       @(_db_controller->last_save_id())];
-                        break;
-                    case DBSampleInfoRowObjectCount:
-                        cell.textLabel.text =
-                            [NSString stringWithFormat:@"object count : %@", @(_db_controller->object_count())];
-                        break;
-                }
-                cell.selectionStyle = UITableViewCellSelectionStyleNone;
+            case DBSampleSectionActions:
+                [self updateActionCell:cell atRow:DBSampleActionRow(indexPath.row)];
+                break;
+            case DBSampleSectionInfos:
+                [self updateInfoCell:cell atRow:DBSampleInfoRow(indexPath.row)];
                 break;
         }
     }
 
     return cell;
+}
+
+- (void)updateActionCell:(UITableViewCell *)cell atRow:(DBSampleActionRow)row {
+    if (!cell) {
+        return;
+    }
+
+    bool enabled = true;
+
+    switch (row) {
+        case DBSampleActionRowAdd:
+            cell.textLabel.text = @"Add";
+            break;
+        case DBSampleActionRowUndo:
+            cell.textLabel.text = @"Undo";
+            enabled = _db_controller->can_undo();
+            break;
+        case DBSampleActionRowRedo:
+            cell.textLabel.text = @"Redo";
+            enabled = _db_controller->can_redo();
+            break;
+        case DBSampleActionRowClear:
+            cell.textLabel.text = @"Clear";
+            enabled = _db_controller->can_clear();
+            break;
+        case DBSampleActionRowPurge:
+            cell.textLabel.text = @"Purge";
+            enabled = _db_controller->can_purge();
+            break;
+        case DBSampleActionRowSaveChanged:
+            cell.textLabel.text = @"Save Changed";
+            enabled = _db_controller->has_changed();
+            break;
+        case DBSampleActionRowCancelChanged:
+            cell.textLabel.text = @"Cancel Changed";
+            enabled = _db_controller->has_changed();
+            break;
+        default:
+            break;
+    }
+
+    if (enabled) {
+        cell.textLabel.textColor = [UIColor blackColor];
+        cell.selectionStyle = UITableViewCellSelectionStyleBlue;
+    } else {
+        cell.textLabel.textColor = [UIColor lightGrayColor];
+        cell.selectionStyle = UITableViewCellSelectionStyleNone;
+    }
+}
+
+- (void)updateInfoCell:(UITableViewCell *)cell atRow:(DBSampleInfoRow)row {
+    if (!cell) {
+        return;
+    }
+
+    switch (row) {
+        case DBSampleInfoRowSaveID:
+            cell.textLabel.text =
+                [NSString stringWithFormat:@"current_save_id : %@ / last_save_id : %@",
+                                           @(_db_controller->current_save_id()), @(_db_controller->last_save_id())];
+            break;
+        case DBSampleInfoRowObjectCount:
+            cell.textLabel.text = [NSString stringWithFormat:@"object count : %@", @(_db_controller->object_count())];
+            break;
+        default:
+            break;
+    }
+
+    cell.textLabel.textColor = [UIColor blackColor];
+    cell.selectionStyle = UITableViewCellSelectionStyleNone;
+}
+
+- (void)updateObjectCell:(UITableViewCell *)cell withObject:(db::object const &)object {
+    CFStringRef cf_id_str = to_cf_object(to_string(object.get_attribute(db::object_id_field)));
+    CFStringRef cf_age_str = to_cf_object(to_string(object.get_attribute("age")));
+    CFStringRef cf_name_str = to_cf_object(to_string(object.get_attribute("name")));
+    cell.textLabel.text = [NSString stringWithFormat:@"obj_id:%@ age:%@ name:%@", cf_id_str, cf_age_str, cf_name_str];
+    cell.selectionStyle = UITableViewCellSelectionStyleNone;
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {

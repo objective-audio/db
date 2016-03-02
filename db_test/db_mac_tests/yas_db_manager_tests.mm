@@ -1659,6 +1659,69 @@ using namespace yas;
     [self waitForExpectationsWithTimeout:1.0 handler:nil];
 }
 
+- (void)test_observing_object_changed {
+    db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
+    auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
+
+    manager.setup([self, &manager](auto result) { XCTAssertTrue(result); });
+
+    manager.insert_objects(
+        []() {
+            return db::entity_count_map{{"sample_a", 1}};
+        },
+        [self, &manager](auto result) {
+            XCTAssertTrue(result);
+
+            bool observer_called = false;
+
+            auto observer = manager.subject().make_observer(
+                db::manager::object_change_key,
+                [&observer_called](std::string const &key, auto const &) { observer_called = true; });
+
+            auto &object = result.value().at("sample_a").at(0);
+            object.set_attribute("name", db::value{"test_name"});
+
+            XCTAssertTrue(observer_called);
+        });
+
+    XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
+    manager.execute([exp](auto const &op) { [exp fulfill]; });
+    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+}
+
+- (void)test_observing_db_info_changed {
+    db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
+    auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
+
+    std::size_t observing_count = 0;
+
+    auto observer = manager.subject().make_observer(
+        db::manager::db_info_change_key,
+        [&observing_count](std::string const &key, auto const &) { ++observing_count; });
+
+    manager.setup([self, &manager, &observing_count](auto result) {
+        XCTAssertTrue(result);
+        XCTAssertEqual(observing_count, 1);
+    });
+
+    manager.insert_objects(
+        []() {
+            return db::entity_count_map{{"sample_a", 1}};
+        },
+        [self, &manager, &observing_count](auto result) {
+            XCTAssertEqual(observing_count, 2);
+
+            auto &object = result.value().at("sample_a").at(0);
+            object.set_attribute("name", db::value{"test_name"});
+        });
+
+    manager.save([self, &observing_count](auto result) { XCTAssertEqual(observing_count, 3); });
+
+    XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
+    manager.execute([exp](auto const &op) { [exp fulfill]; });
+    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+}
+
 - (void)test_make_error {
     auto error = db::manager::error{db::manager::error_type::version_not_found};
     XCTAssertTrue(error);

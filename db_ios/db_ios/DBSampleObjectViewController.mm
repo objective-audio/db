@@ -27,7 +27,6 @@ using namespace yas::sample;
 @implementation DBSampleObjectViewController {
     std::shared_ptr<db_controller> _controller;
     object_holder _holder;
-    bool changed;
 }
 
 - (void)viewDidLoad {
@@ -45,10 +44,6 @@ using namespace yas::sample;
 
 - (void)viewWillDisappear:(BOOL)animated {
     [super viewWillDisappear:animated];
-
-    if (changed) {
-        _controller->send_object_did_change();
-    }
 }
 
 - (void)setDbController:(std::shared_ptr<yas::sample::db_controller>)controller dbObject:(yas::db::object)object {
@@ -66,8 +61,6 @@ using namespace yas::sample;
         auto value = db::value{db::integer::type{[textField.text integerValue]}};
         _holder.object.set_attribute("age", value);
     }
-
-    changed = true;
 }
 
 @end

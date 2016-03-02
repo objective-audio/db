@@ -40,6 +40,14 @@ db::error const &db::manager::error::database_error() const {
     return _db_error;
 }
 
+#pragma mark - change_info
+
+db::manager::change_info::change_info(std::nullptr_t) : object(nullptr) {
+}
+
+db::manager::change_info::change_info(db::object const &object) : object(object) {
+}
+
 #pragma mark - utils
 
 namespace yas {
@@ -195,6 +203,7 @@ struct db::manager::impl : public base::impl {
     db::weak_object_map_map cached_objects;
     db::object_map_map changed_objects;
     db::value_map db_info;
+    yas::subject<change_info> subject;
 
     impl(std::string const &path, db::model const &model, std::size_t const priority_count)
         : database(path), model(model), queue(priority_count), cached_objects() {
@@ -306,6 +315,10 @@ struct db::manager::impl : public base::impl {
 
     void set_db_info(db::value_map &&info) {
         db_info = std::move(info);
+
+        if (subject.has_observer()) {
+            subject.notify(db_info_change_key);
+        }
     }
 
     db::object_data_vector_map changed_datas_for_save() {
@@ -380,6 +393,10 @@ struct db::manager::impl : public base::impl {
         }
 
         changed_objects.at(entity_name).emplace(std::make_pair(object.object_id().get<integer>(), object));
+
+        if (subject.has_observer()) {
+            subject.notify(object_change_key, change_info{object});
+        }
     }
 
     void _object_did_erase(std::string const &entity_name, db::integer::type const object_id) {
@@ -1593,6 +1610,14 @@ bool db::manager::has_changed_objects() const {
     }
 
     return false;
+}
+
+yas::subject<db::manager::change_info> const &db::manager::subject() const {
+    return impl_ptr<impl>()->subject;
+}
+
+yas::subject<db::manager::change_info> &db::manager::subject() {
+    return impl_ptr<impl>()->subject;
 }
 
 void db::manager::_object_did_change(db::object const &object) {
