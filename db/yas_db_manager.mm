@@ -195,7 +195,7 @@ struct db::manager::impl : public base::impl {
     db::weak_object_map_map cached_objects;
     db::object_map_map changed_objects;
     db::value_map db_info;
-    yas::subject<> subject;
+    yas::subject<change_info> subject;
 
     impl(std::string const &path, db::model const &model, std::size_t const priority_count)
         : database(path), model(model), queue(priority_count), cached_objects() {
@@ -387,7 +387,7 @@ struct db::manager::impl : public base::impl {
         changed_objects.at(entity_name).emplace(std::make_pair(object.object_id().get<integer>(), object));
 
         if (subject.has_observer()) {
-            subject.notify(object_change_key);
+            subject.notify(object_change_key, change_info{object});
         }
     }
 
@@ -1604,11 +1604,11 @@ bool db::manager::has_changed_objects() const {
     return false;
 }
 
-yas::subject<> const &db::manager::subject() const {
+yas::subject<db::manager::change_info> const &db::manager::subject() const {
     return impl_ptr<impl>()->subject;
 }
 
-yas::subject<> &db::manager::subject() {
+yas::subject<db::manager::change_info> &db::manager::subject() {
     return impl_ptr<impl>()->subject;
 }
 

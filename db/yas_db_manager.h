@@ -78,6 +78,16 @@ namespace db {
             db::error _db_error;
         };
 
+        struct change_info {
+            db::object const object;
+
+            change_info(std::nullptr_t) : object(nullptr) {
+            }
+
+            change_info(db::object const &object) : object(object) {
+            }
+        };
+
         static auto constexpr object_change_key = "object_change";
         static auto constexpr db_info_change_key = "save_id_change";
 
@@ -111,8 +121,8 @@ namespace db {
         db::value const &current_save_id() const;
         db::value const &last_save_id() const;
 
-        yas::subject<> const &subject() const;
-        yas::subject<> &subject();
+        yas::subject<change_info> const &subject() const;
+        yas::subject<change_info> &subject();
 
         void suspend();
         void resume();
