@@ -89,7 +89,7 @@ namespace db {
         };
 
         static auto constexpr object_change_key = "object_change";
-        static auto constexpr db_info_change_key = "save_id_change";
+        static auto constexpr db_info_change_key = "db_info_change";
 
         using result_t = result<std::nullptr_t, error>;
         using vector_result_t = result<object_vector_map, error>;
