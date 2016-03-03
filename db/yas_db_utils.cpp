@@ -320,7 +320,7 @@ std::vector<db::const_object> db::get_const_relation_objects(const_object const 
         auto const &entity_objects = objects.at(tgt_entity_name);
         return to_vector<db::const_object>(rel_ids,
                                            [&entity_objects, entity_name = object.entity_name()](db::value const &id) {
-                                               if (entity_objects.count(id.get<integer>())) {
+                                               if (entity_objects.count(id.get<integer>()) > 0) {
                                                    return entity_objects.at(id.get<integer>());
                                                }
                                                return db::const_object::null_object();
@@ -337,7 +337,7 @@ db::const_object db::get_const_relation_object(const_object const &object, const
 
     if (objects.count(tgt_entity_name) > 0) {
         auto const &entity_objects = objects.at(tgt_entity_name);
-        if (entity_objects.count(rel_id)) {
+        if (entity_objects.count(rel_id) > 0) {
             return entity_objects.at(rel_id);
         }
     }
