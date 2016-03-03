@@ -58,7 +58,7 @@ namespace db {
     object_data_result fetch_object_data(database &db, relation_map const &rel_models, db::value_map &attrs) {
         db::value_vector_map relations;
 
-        if (attrs.count(save_id_field)) {
+        if (attrs.count(save_id_field) > 0) {
             for (auto const &rel_model_pair : rel_models) {
                 auto const &rel_name = rel_model_pair.first;
                 auto const &table_name = rel_model_pair.second.table_name;
@@ -109,7 +109,7 @@ namespace db {
         db::value current_save_id{nullptr};
         if (auto db_info_result = db::select_db_info(db)) {
             auto &db_info = db_info_result.value();
-            if (db_info.count(current_save_id_field)) {
+            if (db_info.count(current_save_id_field) > 0) {
                 current_save_id = db_info.at(current_save_id_field);
             } else {
                 state = manager::result_t{manager::error{manager::error_type::save_id_not_found}};
@@ -217,7 +217,7 @@ struct db::manager::impl : public base::impl {
         auto manager = cast<db::manager>();
         auto &objects = cached_objects.at(entity_name);
 
-        if (data.attributes.count(object_id_field)) {
+        if (data.attributes.count(object_id_field) > 0) {
             if (auto const &object_id_value = data.attributes.at(object_id_field)) {
                 auto const &object_id = object_id_value.get<integer>();
 
@@ -375,7 +375,7 @@ struct db::manager::impl : public base::impl {
     db::object cached_object(std::string const &entity_name, db::integer::type object_id) {
         if (cached_objects.count(entity_name) > 0) {
             auto &entity_objects = cached_objects.at(entity_name);
-            if (entity_objects.count(object_id)) {
+            if (entity_objects.count(object_id) > 0) {
                 if (auto const &weak_object = entity_objects.at(object_id)) {
                     if (auto object = weak_object.lock()) {
                         return object;
@@ -664,13 +664,13 @@ struct db::manager::impl : public base::impl {
 
                 if (auto select_result = db::select_db_info(db)) {
                     auto const &db_info = select_result.value();
-                    if (db_info.count(current_save_id_field)) {
+                    if (db_info.count(current_save_id_field) > 0) {
                         current_save_id = db_info.at(current_save_id_field);
                     } else {
                         state = result_t{error{error_type::save_id_not_found}};
                     }
 
-                    if (db_info.count(last_save_id_field)) {
+                    if (db_info.count(last_save_id_field) > 0) {
                         last_save_id = db_info.at(last_save_id_field);
                     } else {
                         state = result_t{error{error_type::save_id_not_found}};
@@ -785,14 +785,14 @@ struct db::manager::impl : public base::impl {
 
                 if (auto select_result = db::select_db_info(db)) {
                     auto const &db_info = select_result.value();
-                    if (db_info.count(current_save_id_field)) {
+                    if (db_info.count(current_save_id_field) > 0) {
                         current_save_id = db_info.at(current_save_id_field);
                         next_save_id = db::value{current_save_id.get<integer>() + 1};
                     } else {
                         state = result_t{error{error_type::save_id_not_found}};
                     }
 
-                    if (db_info.count(last_save_id_field)) {
+                    if (db_info.count(last_save_id_field) > 0) {
                         last_save_id = db_info.at(last_save_id_field);
                     } else {
                         state = result_t{error{error_type::save_id_not_found}};
@@ -1044,14 +1044,14 @@ struct db::manager::impl : public base::impl {
 
                     if (auto select_result = db::select_db_info(db)) {
                         auto const &db_info = select_result.value();
-                        if (db_info.count(current_save_id_field)) {
+                        if (db_info.count(current_save_id_field) > 0) {
                             current_save_id = db_info.at(current_save_id_field);
                             next_save_id = db::value{current_save_id.get<integer>() + 1};
                         } else {
                             state = result_t{error{error_type::save_id_not_found}};
                         }
 
-                        if (db_info.count(last_save_id_field)) {
+                        if (db_info.count(last_save_id_field) > 0) {
                             last_save_id = db_info.at(last_save_id_field);
                         } else {
                             state = result_t{error{error_type::save_id_not_found}};
@@ -1188,10 +1188,10 @@ struct db::manager::impl : public base::impl {
 
                 if (auto select_result = db::select_db_info(db)) {
                     auto const &db_info = select_result.value();
-                    if (db_info.count(current_save_id_field)) {
+                    if (db_info.count(current_save_id_field) > 0) {
                         current_save_id = db_info.at(current_save_id_field).get<integer>();
                     }
-                    if (db_info.count(last_save_id_field)) {
+                    if (db_info.count(last_save_id_field) > 0) {
                         last_save_id = db_info.at(last_save_id_field).get<integer>();
                     }
                 } else {
@@ -1299,7 +1299,7 @@ db::model const &db::manager::model() const {
 
 db::value const &db::manager::current_save_id() const {
     auto &db_info = impl_ptr<impl>()->db_info;
-    if (db_info.count(current_save_id_field)) {
+    if (db_info.count(current_save_id_field) > 0) {
         return db_info.at(current_save_id_field);
     }
     return db::value::null_value();
@@ -1307,7 +1307,7 @@ db::value const &db::manager::current_save_id() const {
 
 db::value const &db::manager::last_save_id() const {
     auto &db_info = impl_ptr<impl>()->db_info;
-    if (db_info.count(last_save_id_field)) {
+    if (db_info.count(last_save_id_field) > 0) {
         return db_info.at(last_save_id_field);
     }
     return db::value::null_value();

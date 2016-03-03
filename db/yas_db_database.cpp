@@ -169,7 +169,7 @@ class db::database::impl : public base::impl {
 #pragma mark - private
 
     db::statement cached_statement(std::string const &query) {
-        if (cached_statements.count(query)) {
+        if (cached_statements.count(query) > 0) {
             auto &statements = cached_statements.at(query);
             for (auto &pair : statements) {
                 if (!pair.second.in_use().value()) {
@@ -352,7 +352,7 @@ class db::database::impl : public base::impl {
 
         static auto execute_bulk_sql_callback = [](void *id, int columns, char **values, char **names) {
             auto database_id = (db::callback_id){id}.database;
-            if (db::_databases.count(database_id)) {
+            if (db::_databases.count(database_id) > 0) {
                 if (auto database = db::_databases.at(database_id).lock()) {
                     std::unordered_map<std::string, db::value> map;
                     for (auto &idx : each_index<int>{columns}) {
@@ -518,7 +518,7 @@ class db::database::impl : public base::impl {
 
             static auto sqlite_busy_handler = [](void *id, int count) {
                 auto database_id = (db::callback_id){id}.database;
-                if (db::_databases.count(database_id)) {
+                if (db::_databases.count(database_id) > 0) {
                     if (auto database = db::_databases.at(database_id).lock()) {
                         if (count == 0) {
                             database.set_start_busy_retry_time(std::chrono::system_clock::now());
