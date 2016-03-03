@@ -10,7 +10,6 @@ namespace sample {
        public:
         static auto constexpr objects_did_update_key = "objects_did_update";
         static auto constexpr object_did_insert_key = "object_did_insert";
-        static auto constexpr object_did_remove_key = "object_did_remove";
         static auto constexpr processing_did_change_key = "processing_did_change";
         static auto constexpr object_did_change_key = "obj_did_change";
         static auto constexpr db_info_did_change_key = "db_info_did_change";

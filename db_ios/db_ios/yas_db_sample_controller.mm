@@ -126,15 +126,11 @@ void db_controller::remove(std::size_t const &idx) {
 
         auto &object = _objects.at(idx);
 
-        _manager.reset([object](auto result) mutable { object.remove(); });
-        _manager.save([weak = to_weak(shared_from_this()), idx](auto save_result) {
+        _manager.reset([weak = to_weak(shared_from_this()), object](auto result) mutable {
             if (auto shared = weak.lock()) {
-                shared->_update_objects([weak = weak, idx](auto update_result) {
-                    if (auto shared = weak.lock()) {
-                        shared->_end_processing();
-                        shared->subject().notify(object_did_remove_key, db::value{static_cast<db::integer::type>(idx)});
-                    }
-                });
+                erase_if(shared->_objects, [&object](auto const &vec_obj) { return object == vec_obj; });
+                object.remove();
+                shared->_end_processing();
             }
         });
     }

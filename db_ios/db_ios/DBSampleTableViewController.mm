@@ -100,14 +100,19 @@ typedef NS_ENUM(NSUInteger, DBSampleInfoRow) {
                     [controller updateTable];
                 } else if (key == db_controller::object_did_insert_key) {
                     [controller updateTableForInsertedRow:NSInteger(value.get<db::integer>())];
-                } else if (key == db_controller::object_did_remove_key) {
-                    [controller updateTableForDeletedRow:NSInteger(value.get<db::integer>())];
                 } else if (key == db_controller::object_did_change_key) {
-                    if (value) {
-                        [controller updateTableObjectCellAtIndex:NSInteger(value.get<db::integer>())];
+                    auto const &index = value.get<db::integer>();
+                    auto const &object = controller->_db_controller->object(std::size_t(index));
+                    if (object.is_removed()) {
+                        [controller updateTableForDeletedRow:NSInteger(value.get<db::integer>())];
                     } else {
-                        [controller updateTableObjects];
+                        if (value) {
+                            [controller updateTableObjectCellAtIndex:NSInteger(index)];
+                        } else {
+                            [controller updateTableObjects];
+                        }
                     }
+
                     [controller updateTableActions];
                 }
             }
@@ -188,14 +193,14 @@ typedef NS_ENUM(NSUInteger, DBSampleInfoRow) {
 }
 
 - (void)updateTableForDeletedRow:(NSInteger)row {
-    if (_db_controller->object_count() + 1 == [self.tableView numberOfRowsInSection:DBSampleSectionObjects]) {
-        NSIndexPath *indexPath = [NSIndexPath indexPathForRow:row inSection:DBSampleSectionObjects];
-        [self.tableView deleteRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationAutomatic];
-        [self updateTableInfos];
-        [self updateTableActions];
-    } else {
+    // if (_db_controller->object_count() + 1 == [self.tableView numberOfRowsInSection:DBSampleSectionObjects]) {
+    NSIndexPath *indexPath = [NSIndexPath indexPathForRow:row inSection:DBSampleSectionObjects];
+    [self.tableView deleteRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationAutomatic];
+    [self updateTableInfos];
+    [self updateTableActions];
+    /*} else {
         [self updateTable];
-    }
+    }*/
 }
 
 - (void)showErrorAlertWithTitle:(NSString *)title message:(NSString *)message {
