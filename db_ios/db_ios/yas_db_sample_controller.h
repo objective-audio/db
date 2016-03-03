@@ -16,10 +16,10 @@ namespace sample {
 
         struct change_info {
             db::object const object;
-            db::value const index;
+            db::value const value;
 
             change_info(std::nullptr_t);
-            change_info(db::object object, db::value index);
+            change_info(db::object object, db::value value);
         };
 
         db_controller();
@@ -47,14 +47,14 @@ namespace sample {
         db::integer::type const &current_save_id() const;
         db::integer::type const &last_save_id() const;
 
-        subject<db::value> &subject();
+        subject<change_info> &subject();
 
         bool is_processing() const;
 
        private:
         db::manager _manager;
         db::object_vector _objects;
-        yas::subject<db::value> _subject;
+        yas::subject<change_info> _subject;
         yas::observer<db::manager::change_info> _observer;
         bool _processing;
 

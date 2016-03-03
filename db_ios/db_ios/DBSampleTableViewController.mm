@@ -58,10 +58,11 @@ typedef NS_ENUM(NSUInteger, DBSampleInfoRow) {
     yas::objc::container<objc::weak> weak_container{self};
 
     auto proccessing_observer = _db_controller->subject().make_observer(
-        db_controller::processing_did_change_key, [weak_container](auto const &key, db::value const &value) {
+        db_controller::processing_did_change_key,
+        [weak_container](auto const &key, db_controller::change_info const &info) {
             if (auto self_container = weak_container.lock()) {
                 DBSampleTableViewController *controller = self_container.object();
-                if (value.get<db::integer>()) {
+                if (info.value.get<db::integer>()) {
                     controller.title = @"Processing...";
                 } else {
                     controller.title = nil;
@@ -89,8 +90,8 @@ typedef NS_ENUM(NSUInteger, DBSampleInfoRow) {
 - (void)setupObserversAfterSetup {
     yas::objc::container<objc::weak> weak_container{self};
 
-    auto observer =
-        _db_controller->subject().make_wild_card_observer([weak_container](auto const &key, db::value const &value) {
+    auto observer = _db_controller->subject().make_wild_card_observer(
+        [weak_container](auto const &key, db_controller::change_info const &info) {
             if (auto self_container = weak_container.lock()) {
                 DBSampleTableViewController *controller = self_container.object();
 
@@ -99,14 +100,14 @@ typedef NS_ENUM(NSUInteger, DBSampleInfoRow) {
                 } else if (key == db_controller::objects_did_update_key) {
                     [controller updateTable];
                 } else if (key == db_controller::object_did_insert_key) {
-                    [controller updateTableForInsertedRow:NSInteger(value.get<db::integer>())];
+                    [controller updateTableForInsertedRow:NSInteger(info.value.get<db::integer>())];
                 } else if (key == db_controller::object_did_change_key) {
-                    auto const &index = value.get<db::integer>();
+                    auto const &index = info.value.get<db::integer>();
                     auto const &object = controller->_db_controller->object(std::size_t(index));
                     if (object.is_removed()) {
-                        [controller updateTableForDeletedRow:NSInteger(value.get<db::integer>())];
+                        [controller updateTableForDeletedRow:NSInteger(info.value.get<db::integer>())];
                     } else {
-                        if (value) {
+                        if (info.value) {
                             [controller updateTableObjectCellAtIndex:NSInteger(index)];
                         } else {
                             [controller updateTableObjects];
