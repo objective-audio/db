@@ -218,7 +218,7 @@ class db::object::impl : public const_object::impl {
     }
 
     bool is_equal_to_action(std::string const &action) {
-        if (data.attributes.count(action_field)) {
+        if (data.attributes.count(action_field) > 0) {
             return data.attributes.at(action_field).get<text>() == action;
         }
 
