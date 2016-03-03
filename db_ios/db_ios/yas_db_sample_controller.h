@@ -10,10 +10,17 @@ namespace sample {
        public:
         static auto constexpr objects_did_update_key = "objects_did_update";
         static auto constexpr object_did_insert_key = "object_did_insert";
-        static auto constexpr object_did_remove_key = "object_did_remove";
         static auto constexpr processing_did_change_key = "processing_did_change";
         static auto constexpr object_did_change_key = "obj_did_change";
         static auto constexpr db_info_did_change_key = "db_info_did_change";
+
+        struct change_info {
+            db::object const object;
+            db::value const value;
+
+            change_info(std::nullptr_t);
+            change_info(db::object object, db::value value);
+        };
 
         db_controller();
 
@@ -40,14 +47,14 @@ namespace sample {
         db::integer::type const &current_save_id() const;
         db::integer::type const &last_save_id() const;
 
-        subject<db::value> &subject();
+        subject<change_info> &subject();
 
         bool is_processing() const;
 
        private:
         db::manager _manager;
         db::object_vector _objects;
-        yas::subject<db::value> _subject;
+        yas::subject<change_info> _subject;
         yas::observer<db::manager::change_info> _observer;
         bool _processing;
 

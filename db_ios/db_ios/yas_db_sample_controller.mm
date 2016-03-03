@@ -10,6 +10,17 @@
 using namespace yas;
 using namespace yas::sample;
 
+#pragma mark - change_info
+
+db_controller::change_info::change_info(std::nullptr_t) : object(nullptr), value(nullptr) {
+}
+
+db_controller::change_info::change_info(db::object object, db::value value)
+    : object(std::move(object)), value(std::move(value)) {
+}
+
+#pragma mark - db_controller
+
 db_controller::db_controller() : _manager(nullptr), _objects() {
 }
 
@@ -51,8 +62,12 @@ void db_controller::setup(db::manager::completion_f completion) {
         _observer =
             _manager.subject().make_wild_card_observer([&controller = *this](auto const &key, auto const &change_info) {
                 if (key == db::manager::object_change_key) {
-                    if (auto idx_opt = index(controller._objects, change_info.object)) {
-                        controller._subject.notify(object_did_change_key, db::value{*idx_opt});
+                    db::object const &object = change_info.object;
+                    if (auto idx_opt = index(controller._objects, object)) {
+                        if (object.entity_name() == "entity_a" && object.is_removed()) {
+                            erase_if(controller._objects, [&object](auto const &vec_obj) { return object == vec_obj; });
+                        }
+                        controller._subject.notify(object_did_change_key, {change_info.object, db::value{*idx_opt}});
                     } else {
                         controller._subject.notify(object_did_change_key);
                     }
@@ -86,19 +101,21 @@ void db_controller::add() {
                 shared->_update_objects([weak = weak, insert_result = std::move(insert_result)](auto update_result) {
                     if (auto shared = weak.lock()) {
                         db::value idx_value{nullptr};
+                        db::object object{nullptr};
 
                         auto &a_objects = insert_result.value().at("entity_a");
+
                         if (a_objects.size() > 0) {
-                            auto &target_obj = a_objects.at(0);
+                            object = a_objects.at(0);
                             auto &objects = shared->_objects;
 
-                            if (auto idx = index(objects, target_obj)) {
+                            if (auto idx = index(objects, object)) {
                                 idx_value = db::value{*idx};
                             }
                         }
 
                         shared->_end_processing();
-                        shared->_subject.notify(object_did_insert_key, idx_value);
+                        shared->_subject.notify(object_did_insert_key, {object, idx_value});
                     }
                 });
             }
@@ -115,15 +132,10 @@ void db_controller::remove(std::size_t const &idx) {
 
         auto &object = _objects.at(idx);
 
-        _manager.reset([object](auto result) mutable { object.remove(); });
-        _manager.save([weak = to_weak(shared_from_this()), idx](auto save_result) {
+        _manager.reset([weak = to_weak(shared_from_this()), object](auto result) mutable {
             if (auto shared = weak.lock()) {
-                shared->_update_objects([weak = weak, idx](auto update_result) {
-                    if (auto shared = weak.lock()) {
-                        shared->_end_processing();
-                        shared->subject().notify(object_did_remove_key, db::value{static_cast<db::integer::type>(idx)});
-                    }
-                });
+                object.remove();
+                shared->_end_processing();
             }
         });
     }
@@ -309,7 +321,7 @@ db::integer::type const &db_controller::last_save_id() const {
     return _manager.last_save_id().get<db::integer>();
 }
 
-subject<db::value> &db_controller::subject() {
+subject<db_controller::change_info> &db_controller::subject() {
     return _subject;
 }
 
@@ -344,11 +356,11 @@ void db_controller::_update_objects(std::function<void(db::manager::result_t)> &
 void db_controller::_begin_processing() {
     _processing = true;
 
-    subject().notify(processing_did_change_key, db::value{static_cast<db::integer::type>(true)});
+    subject().notify(processing_did_change_key, {nullptr, db::value{static_cast<db::integer::type>(true)}});
 }
 
 void db_controller::_end_processing() {
     _processing = false;
 
-    subject().notify(processing_did_change_key, db::value{static_cast<db::integer::type>(false)});
+    subject().notify(processing_did_change_key, {nullptr, db::value{static_cast<db::integer::type>(false)}});
 }
