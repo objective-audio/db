@@ -543,12 +543,14 @@ std::string yas::to_string(db::object_status const &status) {
     switch (status) {
         case db::object_status::invalid:
             return "invalid";
+        case db::object_status::inserted:
+            return "inserted";
         case db::object_status::saved:
-            return "invalid";
+            return "saved";
         case db::object_status::changed:
-            return "invalid";
+            return "changed";
         case db::object_status::updating:
-            return "invalid";
+            return "updating";
     }
     return "unknown";
 }
