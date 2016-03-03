@@ -17,6 +17,7 @@ namespace db {
 
     enum class object_status {
         invalid,
+        inserted,
         saved,
         changed,
         updating,

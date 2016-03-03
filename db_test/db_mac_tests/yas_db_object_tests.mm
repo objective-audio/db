@@ -631,4 +631,12 @@ using namespace yas;
     XCTAssertFalse(obj2);
 }
 
+- (void)test_object_status_to_string {
+    XCTAssertEqual(to_string(db::object_status::invalid), "invalid");
+    XCTAssertEqual(to_string(db::object_status::inserted), "inserted");
+    XCTAssertEqual(to_string(db::object_status::saved), "saved");
+    XCTAssertEqual(to_string(db::object_status::changed), "changed");
+    XCTAssertEqual(to_string(db::object_status::updating), "updating");
+}
+
 @end
