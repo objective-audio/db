@@ -45,7 +45,7 @@ typedef NS_ENUM(NSUInteger, DBSampleInfoRow) {
 
 @implementation DBSampleTableViewController {
     std::shared_ptr<db_controller> _db_controller;
-    std::vector<yas::observer<db::value>> _observers;
+    std::vector<yas::observer<db_controller::change_info>> _observers;
 }
 
 - (void)viewDidLoad {
@@ -103,7 +103,7 @@ typedef NS_ENUM(NSUInteger, DBSampleInfoRow) {
                     [controller updateTableForInsertedRow:NSInteger(info.value.get<db::integer>())];
                 } else if (key == db_controller::object_did_change_key) {
                     auto const &index = info.value.get<db::integer>();
-                    auto const &object = controller->_db_controller->object(std::size_t(index));
+                    auto const &object = info.object;
                     if (object.is_removed()) {
                         [controller updateTableForDeletedRow:NSInteger(info.value.get<db::integer>())];
                     } else {

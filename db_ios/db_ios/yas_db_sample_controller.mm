@@ -62,7 +62,11 @@ void db_controller::setup(db::manager::completion_f completion) {
         _observer =
             _manager.subject().make_wild_card_observer([&controller = *this](auto const &key, auto const &change_info) {
                 if (key == db::manager::object_change_key) {
-                    if (auto idx_opt = index(controller._objects, change_info.object)) {
+                    db::object const &object = change_info.object;
+                    if (auto idx_opt = index(controller._objects, object)) {
+                        if (object.entity_name() == "entity_a" && object.is_removed()) {
+                            erase_if(controller._objects, [&object](auto const &vec_obj) { return object == vec_obj; });
+                        }
                         controller._subject.notify(object_did_change_key, {change_info.object, db::value{*idx_opt}});
                     } else {
                         controller._subject.notify(object_did_change_key);
@@ -130,7 +134,6 @@ void db_controller::remove(std::size_t const &idx) {
 
         _manager.reset([weak = to_weak(shared_from_this()), object](auto result) mutable {
             if (auto shared = weak.lock()) {
-                erase_if(shared->_objects, [&object](auto const &vec_obj) { return object == vec_obj; });
                 object.remove();
                 shared->_end_processing();
             }
