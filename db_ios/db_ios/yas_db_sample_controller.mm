@@ -10,6 +10,17 @@
 using namespace yas;
 using namespace yas::sample;
 
+#pragma mark - change_info
+
+db_controller::change_info::change_info(std::nullptr_t) : object(nullptr), index(nullptr) {
+}
+
+db_controller::change_info::change_info(db::object object, db::value index)
+    : object(std::move(object)), index(std::move(index)) {
+}
+
+#pragma mark - db_controller
+
 db_controller::db_controller() : _manager(nullptr), _objects() {
 }
 

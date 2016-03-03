@@ -15,6 +15,14 @@ namespace sample {
         static auto constexpr object_did_change_key = "obj_did_change";
         static auto constexpr db_info_did_change_key = "db_info_did_change";
 
+        struct change_info {
+            db::object const object;
+            db::value const index;
+
+            change_info(std::nullptr_t);
+            change_info(db::object object, db::value index);
+        };
+
         db_controller();
 
         void setup(db::manager::completion_f completion);
