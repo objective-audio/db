@@ -10,6 +10,12 @@
 using namespace yas;
 using namespace yas::sample;
 
+namespace yas {
+namespace sample {
+    std::string const entity_name_a = "entity_a";
+}
+}
+
 #pragma mark - change_info
 
 db_controller::change_info::change_info(std::nullptr_t) : object(nullptr), value(nullptr) {
@@ -64,10 +70,12 @@ void db_controller::setup(db::manager::completion_f completion) {
                 if (key == db::manager::object_change_key) {
                     db::object const &object = change_info.object;
                     if (auto idx_opt = index(controller._objects, object)) {
-                        if (object.entity_name() == "entity_a" && object.is_removed()) {
+                        if (object.entity_name() == entity_name_a && object.is_removed()) {
                             erase_if(controller._objects, [&object](auto const &vec_obj) { return object == vec_obj; });
                         }
-                        controller._subject.notify(object_did_change_key, {change_info.object, db::value{*idx_opt}});
+                        controller._subject.notify(
+                            object_did_change_key,
+                            {change_info.object, db::value{static_cast<db::integer::type>(*idx_opt)}});
                     } else {
                         controller._subject.notify(object_did_change_key);
                     }
@@ -78,6 +86,17 @@ void db_controller::setup(db::manager::completion_f completion) {
     }
 }
 
+void db_controller::add_temporary() {
+    if (_processing) {
+        return;
+    }
+
+    auto object = _manager.insert_object(entity_name_a);
+    auto idx = _objects.size();
+    _objects.push_back(object);
+    _subject.notify(object_did_insert_key, {object, db::value{static_cast<db::integer::type>(idx)}});
+}
+
 void db_controller::add() {
     if (_processing) {
         return;
@@ -85,7 +104,7 @@ void db_controller::add() {
 
     _begin_processing();
 
-    _manager.reset([](auto result) {});
+    _manager.save([](auto result) {});
     _manager.insert_objects(
         []() {
             CFUUIDRef cf_uuid = CFUUIDCreate(nullptr);
@@ -94,7 +113,7 @@ void db_controller::add() {
             db::value_map obj{{"name", db::value{to_string(cf_str)}}};
             CFRelease(cf_str);
 
-            return db::value_map_vector_map{{"entity_a", {std::move(obj)}}};
+            return db::value_map_vector_map{{entity_name_a, {std::move(obj)}}};
         },
         [weak = to_weak(shared_from_this())](auto insert_result) {
             if (auto shared = weak.lock()) {
@@ -103,14 +122,14 @@ void db_controller::add() {
                         db::value idx_value{nullptr};
                         db::object object{nullptr};
 
-                        auto &a_objects = insert_result.value().at("entity_a");
+                        auto &a_objects = insert_result.value().at(entity_name_a);
 
                         if (a_objects.size() > 0) {
                             object = a_objects.at(0);
                             auto &objects = shared->_objects;
 
                             if (auto idx = index(objects, object)) {
-                                idx_value = db::value{*idx};
+                                idx_value = db::value{static_cast<db::integer::type>(*idx)};
                             }
                         }
 
@@ -128,16 +147,7 @@ void db_controller::remove(std::size_t const &idx) {
             return;
         }
 
-        _begin_processing();
-
-        auto &object = _objects.at(idx);
-
-        _manager.reset([weak = to_weak(shared_from_this()), object](auto result) mutable {
-            if (auto shared = weak.lock()) {
-                object.remove();
-                shared->_end_processing();
-            }
-        });
+        _objects.at(idx).remove();
     }
 }
 
@@ -229,7 +239,7 @@ void db_controller::purge() {
 
     _begin_processing();
 
-    _manager.save([](auto result) mutable {});
+    _manager.save([](auto result) {});
     _manager.purge([weak = to_weak(shared_from_this())](auto purge_result) {
         if (auto shared = weak.lock()) {
             shared->_update_objects([weak = weak](auto update_result) {
@@ -242,7 +252,7 @@ void db_controller::purge() {
     });
 }
 
-void db_controller::save() {
+void db_controller::save_changed() {
     if (_processing) {
         return;
     }
@@ -265,7 +275,7 @@ void db_controller::save() {
     });
 }
 
-void db_controller::cancel() {
+void db_controller::cancel_changed() {
     if (_processing) {
         return;
     }
@@ -285,12 +295,16 @@ void db_controller::cancel() {
     });
 }
 
+bool db_controller::can_add() const {
+    return !has_changed();
+}
+
 bool db_controller::can_undo() const {
-    return current_save_id() > 0;
+    return !has_changed() && current_save_id() > 0;
 }
 
 bool db_controller::can_redo() const {
-    return current_save_id() < last_save_id();
+    return !has_changed() && current_save_id() < last_save_id();
 }
 
 bool db_controller::can_clear() const {
@@ -298,11 +312,11 @@ bool db_controller::can_clear() const {
 }
 
 bool db_controller::can_purge() const {
-    return last_save_id() > 1;
+    return !has_changed() && last_save_id() > 1;
 }
 
 bool db_controller::has_changed() const {
-    return _manager.has_changed_objects();
+    return _manager.has_changed_objects() || _manager.has_inserted_objects();
 }
 
 db::object const &db_controller::object(std::size_t const idx) const {
@@ -332,7 +346,7 @@ bool db_controller::is_processing() const {
 void db_controller::_update_objects(std::function<void(db::manager::result_t)> &&completion) {
     _manager.fetch_objects(
         []() {
-            return db::select_option{.table = "entity_a",
+            return db::select_option{.table = entity_name_a,
                                      .field_orders = {{db::object_id_field, db::order::ascending}}};
         },
         [&controller = *this, completion = std::move(completion)](auto fetch_result) {
@@ -340,8 +354,8 @@ void db_controller::_update_objects(std::function<void(db::manager::result_t)> &
 
             if (fetch_result) {
                 auto &objects = fetch_result.value();
-                if (objects.count("entity_a") > 0) {
-                    controller._objects = std::move(objects.at("entity_a"));
+                if (objects.count(entity_name_a) > 0) {
+                    controller._objects = std::move(objects.at(entity_name_a));
                 } else {
                     controller._objects.clear();
                 }

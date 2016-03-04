@@ -26,15 +26,17 @@ namespace sample {
 
         void setup(db::manager::completion_f completion);
 
+        void add_temporary();
         void add();
         void remove(std::size_t const &idx);
         void undo();
         void redo();
         void clear();
         void purge();
-        void save();
-        void cancel();
+        void save_changed();
+        void cancel_changed();
 
+        bool can_add() const;
         bool can_undo() const;
         bool can_redo() const;
         bool can_clear() const;
