@@ -269,6 +269,35 @@ using namespace yas;
     [self waitForExpectationsWithTimeout:1.0 handler:nil];
 }
 
+- (void)test_set_relation_to_inserted_object {
+    db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
+    auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
+
+    manager.setup([self, &manager](auto result) {
+        XCTAssertTrue(result);
+
+        auto object_a = manager.insert_object("sample_a");
+        auto object_b = manager.insert_object("sample_b");
+
+        XCTAssertThrows(object_a.set_relation_object("child", {object_b}));
+        XCTAssertThrows(object_a.push_back_relation_object("child", object_b));
+    });
+
+    manager.save([self](auto result) {
+        XCTAssertTrue(result);
+
+        db::object &object_a = result.value().at("sample_a").at(0);
+        auto &object_b = result.value().at("sample_b").at(0);
+
+        XCTAssertNoThrow(object_a.set_relation_object("child", {object_b}));
+        XCTAssertEqual(object_a.get_relation_object("child", 0), object_b);
+    });
+
+    XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
+    manager.execute([exp](auto const &op) { [exp fulfill]; });
+    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+}
+
 - (void)test_setup_migration {
     db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
