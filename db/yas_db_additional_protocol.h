@@ -27,6 +27,7 @@ namespace db {
         virtual ~manageable() = default;
 
         virtual void set_status(object_status const &) = 0;
+        virtual void load_insertion_data() = 0;
     };
 
     struct object_observable {

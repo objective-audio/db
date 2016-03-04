@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <deque>
 #include <set>
 #include <unordered_map>
 #include "yas_base.h"
@@ -106,13 +107,16 @@ namespace db {
         static object const &null_object();
 
        private:
-        void set_status(object_status const &);
+        void set_status(object_status const &) override;
+        void load_insertion_data() override;
     };
 
     using object_map = std::unordered_map<integer::type, object>;
     using object_map_map = std::unordered_map<std::string, object_map>;
     using object_vector = std::vector<object>;
     using object_vector_map = std::unordered_map<std::string, object_vector>;
+    using object_deque = std::deque<object>;
+    using object_deque_map = std::unordered_map<std::string, object_deque>;
     using const_object_map = std::unordered_map<integer::type, const_object>;
     using const_object_map_map = std::unordered_map<std::string, const_object_map>;
     using const_object_vector = std::vector<const_object>;
