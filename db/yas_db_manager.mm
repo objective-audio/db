@@ -478,7 +478,12 @@ struct db::manager::impl : public base::impl {
     void _object_did_change(db::object const &object) {
         auto const &entity_name = object.entity_name();
 
-        if (object.status() != db::object_status::inserted) {
+        if (object.status() == db::object_status::inserted) {
+            if (inserted_objects.count(entity_name) > 0 && object.is_removed()) {
+                erase_if(inserted_objects.at(entity_name),
+                         [&object](auto const &inserted_object) { return inserted_object == object; });
+            }
+        } else {
             if (changed_objects.count(entity_name) == 0) {
                 changed_objects.insert(std::make_pair(entity_name, db::object_map{}));
             }
@@ -1504,6 +1509,7 @@ void db::manager::reset(completion_f completion, operation_option_t option) {
             if (state) {
                 manager.impl_ptr<impl>()->load_map_object_datas(fetched_datas, true);
                 manager.impl_ptr<impl>()->erase_changed_objects(fetched_datas);
+                manager.impl_ptr<impl>()->inserted_objects.clear();
                 completion(result_t{nullptr});
             } else {
                 completion(result_t{std::move(state.error())});
