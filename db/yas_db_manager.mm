@@ -433,6 +433,26 @@ struct db::manager::impl : public base::impl {
         return changed_obj_ids;
     }
 
+    void erase_changed_objects(db::object_data_vector_map const &object_datas) {
+        for (auto &entity_pair : object_datas) {
+            auto const &entity_name = entity_pair.first;
+            if (changed_objects.count(entity_name) > 0) {
+                auto const &entity_objects = entity_pair.second;
+                if (entity_objects.size() > 0) {
+                    auto &changed_entity_objects = changed_objects.at(entity_name);
+                    for (auto const &obj_data : entity_objects) {
+                        erase_if_exists(changed_entity_objects,
+                                        obj_data.attributes.at(object_id_field).get<db::integer>());
+                    }
+
+                    if (changed_entity_objects.size() == 0) {
+                        changed_objects.erase(entity_name);
+                    }
+                }
+            }
+        }
+    }
+
     db::object cached_object(std::string const &entity_name, db::integer::type object_id) {
         if (cached_objects.count(entity_name) > 0) {
             auto &entity_objects = cached_objects.at(entity_name);
@@ -1470,7 +1490,7 @@ void db::manager::reset(completion_f completion, operation_option_t option) {
         ]() mutable {
             if (state) {
                 manager.impl_ptr<impl>()->load_map_object_datas(fetched_datas, true);
-                manager.impl_ptr<impl>()->changed_objects.clear();
+                manager.impl_ptr<impl>()->erase_changed_objects(fetched_datas);
                 completion(result_t{nullptr});
             } else {
                 completion(result_t{std::move(state.error())});
@@ -1636,7 +1656,7 @@ void db::manager::save(vector_completion_f completion, operation_option_t option
             if (state) {
                 manager.impl_ptr<impl>()->set_db_info(std::move(db_info));
                 auto loaded_objects = manager.impl_ptr<impl>()->load_object_datas(saved_datas, false, true);
-                manager.impl_ptr<impl>()->changed_objects.clear();
+                manager.impl_ptr<impl>()->erase_changed_objects(saved_datas);
                 completion(vector_result_t{std::move(loaded_objects)});
             } else {
                 completion(vector_result_t{std::move(state.error())});
