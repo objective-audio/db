@@ -128,6 +128,18 @@ struct db::const_object::impl : public base::impl {
             throw "relation name (" + rel_name + ") not found in " + entity_name + ".";
         }
     }
+
+    void validate_relation_id(db::value const &rel_id) {
+        if (!rel_id || rel_id.get<integer>() <= 0) {
+            throw "object_id not found for relation.";
+        }
+    }
+
+    void validate_relation_ids(db::value_vector const &rel_ids) {
+        for (auto const &rel_id : rel_ids) {
+            validate_relation_id(rel_id);
+        }
+    }
 };
 
 #pragma mark - db::const_object
@@ -297,6 +309,7 @@ class db::object::impl : public const_object::impl {
 
     void set_relation(std::string const &rel_name, value_vector const &relation_ids, bool const loading = false) {
         validate_relation_name(rel_name);
+        validate_relation_ids(relation_ids);
 
         replace(data.relations, rel_name, relation_ids);
 
@@ -313,6 +326,7 @@ class db::object::impl : public const_object::impl {
 
     void push_back_relation(std::string const &rel_name, db::value const &relation_id) {
         validate_relation_name(rel_name);
+        validate_relation_id(relation_id);
 
         if (data.relations.count(rel_name) == 0) {
             data.relations.emplace(std::make_pair(rel_name, db::value_vector{}));
@@ -332,6 +346,7 @@ class db::object::impl : public const_object::impl {
 
     void erase_relation(std::string const &rel_name, db::value const &relation_id) {
         validate_relation_name(rel_name);
+        validate_relation_id(relation_id);
 
         if (data.relations.count(rel_name) > 0) {
             erase_if(data.relations.at(rel_name),
