@@ -201,6 +201,7 @@ struct db::manager::impl : public base::impl {
     db::model model;
     operation_queue queue;
     db::weak_object_map_map cached_objects;
+    db::object_deque_map inserted_objects;
     db::object_map_map changed_objects;
     db::value_map db_info;
     yas::subject<change_info> subject;
@@ -209,48 +210,67 @@ struct db::manager::impl : public base::impl {
         : database(path), model(model), queue(priority_count), cached_objects() {
     }
 
-    db::object load_object_data(std::string const &entity_name, db::object_data const &data, bool const force) {
+    db::object insert_object(std::string const entity_name) {
+        db::object object{cast<manager>(), model, entity_name};
+
+        if (auto manageable_object = dynamic_cast<manageable *>(&object)) {
+            manageable_object->load_insertion_data();
+        }
+
+        if (inserted_objects.count(entity_name) == 0) {
+            inserted_objects.insert(std::make_pair(entity_name, db::object_deque{}));
+        }
+
+        inserted_objects.at(entity_name).push_back(object);
+
+        return object;
+    }
+
+    bool load_object_data(db::object &object, std::string const &entity_name, db::object_data const &data,
+                          bool const force) {
         if (cached_objects.count(entity_name) == 0) {
             cached_objects.emplace(std::make_pair(entity_name, weak_object_map{}));
         }
 
         auto manager = cast<db::manager>();
-        auto &objects = cached_objects.at(entity_name);
+        auto &entity_cached_objects = cached_objects.at(entity_name);
 
         if (data.attributes.count(object_id_field) > 0) {
             if (auto const &object_id_value = data.attributes.at(object_id_field)) {
                 auto const &object_id = object_id_value.get<integer>();
 
-                db::object object{nullptr};
-
-                if (objects.count(object_id) > 0) {
-                    if (auto const &weak_object = objects.at(object_id)) {
-                        object = weak_object.lock();
-                        if (!object) {
-                            throw "cached object is released. entity_name (" + entity_name + ") object_id (" +
-                                std::to_string(object_id) + ")";
-                            ;
+                if (object) {
+                    entity_cached_objects.emplace(std::make_pair(object_id, to_weak(object)));
+                } else {
+                    if (entity_cached_objects.count(object_id) > 0) {
+                        if (auto const &weak_object = entity_cached_objects.at(object_id)) {
+                            object = weak_object.lock();
+                            if (!object) {
+                                throw "cached object is released. entity_name (" + entity_name + ") object_id (" +
+                                    std::to_string(object_id) + ")";
+                                ;
+                            }
                         }
                     }
-                }
 
-                if (!object) {
-                    object = db::object{manager, model, entity_name};
-                    objects.emplace(std::make_pair(object_id, to_weak(object)));
+                    if (!object) {
+                        object = db::object{manager, model, entity_name};
+                        entity_cached_objects.emplace(std::make_pair(object_id, to_weak(object)));
+                    }
                 }
 
                 object.load_data(data, force);
 
-                return object;
+                return true;
             }
         } else {
             throw "object_id not found.";
         }
 
-        return db::object::null_object();
+        return false;
     }
 
-    object_vector_map load_object_datas(object_data_vector_map const &datas, bool const force) {
+    object_vector_map load_object_datas(object_data_vector_map const &datas, bool const force, bool const is_save) {
         object_vector_map loaded_objects;
         for (auto const &entity_pair : datas) {
             auto const &entity_name = entity_pair.first;
@@ -260,8 +280,21 @@ struct db::manager::impl : public base::impl {
             objects.reserve(entity_datas.size());
 
             for (auto const &data : entity_datas) {
-                if (auto const obj = load_object_data(entity_name, data, force)) {
-                    objects.emplace_back(std::move(obj));
+                db::object object{nullptr};
+                if (is_save && inserted_objects.count(entity_name)) {
+                    auto &entity_objects = inserted_objects.at(entity_name);
+                    if (entity_objects.size() > 0) {
+                        object = entity_objects.front();
+                        entity_objects.pop_front();
+
+                        if (entity_objects.size() == 0) {
+                            inserted_objects.erase(entity_name);
+                        }
+                    }
+                }
+
+                if (load_object_data(object, entity_name, data, force)) {
+                    objects.emplace_back(std::move(object));
                 }
             }
 
@@ -280,8 +313,10 @@ struct db::manager::impl : public base::impl {
             objects.reserve(entity_datas.size());
 
             for (auto const &data : entity_datas) {
-                if (auto const obj = load_object_data(entity_name, data, force)) {
-                    objects.emplace(std::make_pair(obj.object_id().get<integer>(), std::move(obj)));
+                db::object object{nullptr};
+
+                if (load_object_data(object, entity_name, data, force)) {
+                    objects.emplace(std::make_pair(object.object_id().get<integer>(), std::move(object)));
                 }
             }
 
@@ -323,30 +358,56 @@ struct db::manager::impl : public base::impl {
 
     db::object_data_vector_map changed_datas_for_save() {
         db::object_data_vector_map changed_datas;
-        for (auto const &entity_pair : changed_objects) {
+
+        for (auto const &entity_pair : model.entities()) {
             auto const &entity_name = entity_pair.first;
-            auto const &entity_objects = entity_pair.second;
 
-            db::object_data_vector entity_datas;
-            entity_datas.reserve(entity_objects.size());
+            std::size_t const inserted_count =
+                inserted_objects.count(entity_name) ? inserted_objects.at(entity_name).size() : 0;
+            std::size_t const changed_count =
+                changed_objects.count(entity_name) ? changed_objects.at(entity_name).size() : 0;
+            std::size_t const total_count = inserted_count + changed_count;
 
-            for (auto const &object_pair : entity_objects) {
-                auto object = object_pair.second;
-                auto data = object.data_for_save();
-                if (data.attributes.size() > 0) {
-                    entity_datas.emplace_back(std::move(data));
-                } else {
-                    throw "object_data.attributes is empty.";
+            if (total_count > 0) {
+                db::object_data_vector entity_datas;
+                entity_datas.reserve(total_count);
+
+                if (inserted_count > 0) {
+                    auto const &entity_objects = inserted_objects.at(entity_name);
+
+                    for (auto object : entity_objects) {
+                        auto data = object.data_for_save();
+                        if (data.attributes.size() > 0) {
+                            entity_datas.emplace_back(std::move(data));
+                        } else {
+                            throw "object_data.attributes is empty.";
+                        }
+                    }
                 }
-                if (auto manageable_object = dynamic_cast<manageable *>(&object)) {
-                    manageable_object->set_status(db::object_status::updating);
-                }
-            }
 
-            if (entity_datas.size() > 0) {
-                changed_datas.emplace(std::make_pair(entity_name, std::move(entity_datas)));
+                if (changed_count > 0) {
+                    auto const &entity_objects = changed_objects.at(entity_name);
+
+                    for (auto const &object_pair : entity_objects) {
+                        auto object = object_pair.second;
+                        auto data = object.data_for_save();
+                        if (data.attributes.size() > 0) {
+                            entity_datas.emplace_back(std::move(data));
+                        } else {
+                            throw "object_data.attributes is empty.";
+                        }
+                        if (auto manageable_object = dynamic_cast<manageable *>(&object)) {
+                            manageable_object->set_status(db::object_status::updating);
+                        }
+                    }
+                }
+
+                if (entity_datas.size() > 0) {
+                    changed_datas.emplace(std::make_pair(entity_name, std::move(entity_datas)));
+                }
             }
         }
+
         return changed_datas;
     }
 
@@ -388,11 +449,14 @@ struct db::manager::impl : public base::impl {
 
     void _object_did_change(db::object const &object) {
         auto const &entity_name = object.entity_name();
-        if (changed_objects.count(entity_name) == 0) {
-            changed_objects.insert(std::make_pair(entity_name, db::object_map{}));
-        }
 
-        changed_objects.at(entity_name).emplace(std::make_pair(object.object_id().get<integer>(), object));
+        if (object.status() != db::object_status::inserted) {
+            if (changed_objects.count(entity_name) == 0) {
+                changed_objects.insert(std::make_pair(entity_name, db::object_map{}));
+            }
+
+            changed_objects.at(entity_name).emplace(std::make_pair(object.object_id().get<integer>(), object));
+        }
 
         if (subject.has_observer()) {
             subject.notify(object_change_key, change_info{object});
@@ -1083,6 +1147,14 @@ struct db::manager::impl : public base::impl {
                                 erase_if_exists(data.attributes, id_field);
                                 replace(data.attributes, save_id_field, next_save_id);
 
+                                if (data.attributes.count(object_id_field) == 0) {
+                                    db::integer::type obj_id = 0;
+                                    if (auto max_value = db::max(db, entity_name, object_id_field)) {
+                                        obj_id = max_value.get<integer>();
+                                    }
+                                    replace(data.attributes, object_id_field, db::value{obj_id + 1});
+                                }
+
                                 if (auto insert_result = db.execute_update(entity_insert_sql, data.attributes)) {
                                     if (auto row_result = db.last_insert_row_id()) {
                                         auto const src_rowid_pair =
@@ -1313,6 +1385,10 @@ db::value const &db::manager::last_save_id() const {
     return db::value::null_value();
 }
 
+db::object db::manager::insert_object(std::string const entity_name) {
+    return impl_ptr<impl>()->insert_object(entity_name);
+}
+
 void db::manager::setup(completion_f completion, operation_option_t option) {
     auto impl_completion =
         [completion = std::move(completion), manager = *this](result_t && state, value_map && db_info) mutable {
@@ -1440,7 +1516,7 @@ void db::manager::insert_objects(insert_preparation_values_f preparation, vector
         ]() mutable {
             if (state) {
                 manager.impl_ptr<impl>()->set_db_info(std::move(db_info));
-                auto loaded_objects = manager.impl_ptr<impl>()->load_object_datas(inserted_datas, false);
+                auto loaded_objects = manager.impl_ptr<impl>()->load_object_datas(inserted_datas, false, false);
                 completion(vector_result_t{std::move(loaded_objects)});
             } else {
                 completion(vector_result_t{std::move(state.error())});
@@ -1464,7 +1540,7 @@ void db::manager::fetch_objects(fetch_preparation_option_f preparation, vector_c
             manager
         ]() mutable {
             if (state) {
-                auto loaded_objects = manager.impl_ptr<impl>()->load_object_datas(fetched_datas, false);
+                auto loaded_objects = manager.impl_ptr<impl>()->load_object_datas(fetched_datas, false, false);
                 completion(vector_result_t{std::move(loaded_objects)});
             } else {
                 completion(vector_result_t{std::move(state.error())});
@@ -1559,7 +1635,7 @@ void db::manager::save(vector_completion_f completion, operation_option_t option
         ]() mutable {
             if (state) {
                 manager.impl_ptr<impl>()->set_db_info(std::move(db_info));
-                auto loaded_objects = manager.impl_ptr<impl>()->load_object_datas(saved_datas, false);
+                auto loaded_objects = manager.impl_ptr<impl>()->load_object_datas(saved_datas, false, true);
                 manager.impl_ptr<impl>()->changed_objects.clear();
                 completion(vector_result_t{std::move(loaded_objects)});
             } else {
@@ -1585,7 +1661,7 @@ void db::manager::revert(revert_preparation_f preparation, vector_completion_f c
         ]() mutable {
             if (state) {
                 manager.impl_ptr<impl>()->set_db_info(std::move(db_info));
-                auto loaded_objects = manager.impl_ptr<impl>()->load_object_datas(reverted_datas, false);
+                auto loaded_objects = manager.impl_ptr<impl>()->load_object_datas(reverted_datas, false, false);
                 completion(vector_result_t{std::move(loaded_objects)});
             } else {
                 completion(vector_result_t{std::move(state.error())});
@@ -1602,6 +1678,16 @@ db::object db::manager::cached_object(std::string const &entity_name, db::intege
     return impl_ptr<impl>()->cached_object(entity_name, object_id);
 }
 
+bool db::manager::has_inserted_objects() const {
+    for (auto const &entity_pair : impl_ptr<impl>()->inserted_objects) {
+        if (entity_pair.second.size() > 0) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 bool db::manager::has_changed_objects() const {
     for (auto const &entity_pair : impl_ptr<impl>()->changed_objects) {
         if (entity_pair.second.size() > 0) {
@@ -1610,6 +1696,20 @@ bool db::manager::has_changed_objects() const {
     }
 
     return false;
+}
+
+std::size_t db::manager::inserted_object_count(std::string const &entity_name) const {
+    if (impl_ptr<impl>()->inserted_objects.count(entity_name) > 0) {
+        return impl_ptr<impl>()->inserted_objects.at(entity_name).size();
+    }
+    return 0;
+}
+
+std::size_t db::manager::changed_object_count(std::string const &entity_name) const {
+    if (impl_ptr<impl>()->changed_objects.count(entity_name) > 0) {
+        return impl_ptr<impl>()->changed_objects.at(entity_name).size();
+    }
+    return 0;
 }
 
 yas::subject<db::manager::change_info> const &db::manager::subject() const {
