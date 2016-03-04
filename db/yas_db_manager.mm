@@ -12,6 +12,7 @@
 #include "yas_db_sql_utils.h"
 #include "yas_db_utils.h"
 #include "yas_each_index.h"
+#include "yas_objc_macros.h"
 #include "yas_operation.h"
 #include "yas_stl_utils.h"
 #include "yas_unless.h"
@@ -199,15 +200,22 @@ namespace db {
 struct db::manager::impl : public base::impl {
     db::database database;
     db::model model;
-    operation_queue queue;
+    operation_queue op_queue;
     db::weak_object_map_map cached_objects;
     db::object_deque_map inserted_objects;
     db::object_map_map changed_objects;
     db::value_map db_info;
     yas::subject<change_info> subject;
+    dispatch_queue_t dispatch_queue;
 
-    impl(std::string const &path, db::model const &model, std::size_t const priority_count)
-        : database(path), model(model), queue(priority_count), cached_objects() {
+    impl(std::string const &path, db::model const &model, dispatch_queue_t const dispatch_queue,
+         std::size_t const priority_count)
+        : database(path), model(model), dispatch_queue(dispatch_queue), op_queue(priority_count), cached_objects() {
+        yas_dispatch_queue_retain(dispatch_queue);
+    }
+
+    ~impl() {
+        yas_dispatch_queue_release(dispatch_queue);
     }
 
     db::object insert_object(std::string const entity_name) {
@@ -499,7 +507,7 @@ struct db::manager::impl : public base::impl {
             }
         };
 
-        queue.push_back(operation{std::move(op_lambda), std::move(option)});
+        op_queue.push_back(operation{std::move(op_lambda), std::move(option)});
     }
 
     void execute_setup(std::function<void(result_t &&, value_map &&)> &&completion, operation_option_t &&option) {
@@ -851,7 +859,7 @@ struct db::manager::impl : public base::impl {
 
             auto preparation_on_main = [&values, &preparation]() { values = preparation(); };
 
-            dispatch_sync(dispatch_get_main_queue(), std::move(preparation_on_main));
+            dispatch_sync(manager.dispatch_queue(), std::move(preparation_on_main));
 
             auto &db = manager.database();
             auto const &model = manager.model();
@@ -985,7 +993,7 @@ struct db::manager::impl : public base::impl {
 
             auto preparation_on_main = [&option, &preparation]() { option = preparation(); };
 
-            dispatch_sync(dispatch_get_main_queue(), std::move(preparation_on_main));
+            dispatch_sync(manager.dispatch_queue(), std::move(preparation_on_main));
 
             std::string const entity_name = option.table;
 
@@ -1046,7 +1054,7 @@ struct db::manager::impl : public base::impl {
 
             auto preparation_on_main = [&obj_ids, &preparation]() { obj_ids = preparation(); };
 
-            dispatch_sync(dispatch_get_main_queue(), std::move(preparation_on_main));
+            dispatch_sync(manager.dispatch_queue(), std::move(preparation_on_main));
 
             auto &db = manager.database();
 
@@ -1110,7 +1118,7 @@ struct db::manager::impl : public base::impl {
                 changed_datas = manager_impl->changed_datas_for_save();
             };
 
-            dispatch_sync(dispatch_get_main_queue(), get_change_lambda);
+            dispatch_sync(manager.dispatch_queue(), get_change_lambda);
 
             auto &db = manager.database();
             auto const &model = manager.model();
@@ -1264,7 +1272,7 @@ struct db::manager::impl : public base::impl {
 
             auto preparation_on_main = [&rev_save_id, &preparation]() { rev_save_id = preparation(); };
 
-            dispatch_sync(dispatch_get_main_queue(), std::move(preparation_on_main));
+            dispatch_sync(manager.dispatch_queue(), std::move(preparation_on_main));
 
             auto &db = manager.database();
 
@@ -1358,19 +1366,20 @@ struct db::manager::impl : public base::impl {
 
 #pragma mark - manager
 
-db::manager::manager(std::string const &db_path, db::model const &model, std::size_t const priority_count)
-    : super_class(std::make_unique<impl>(db_path, model, priority_count)) {
+db::manager::manager(std::string const &db_path, db::model const &model, std::size_t const priority_count,
+                     dispatch_queue_t const dispatch_queue)
+    : super_class(std::make_unique<impl>(db_path, model, dispatch_queue, priority_count)) {
 }
 
 db::manager::manager(std::nullptr_t) : super_class(nullptr) {
 }
 
 void db::manager::suspend() {
-    impl_ptr<impl>()->queue.suspend();
+    impl_ptr<impl>()->op_queue.suspend();
 }
 
 void db::manager::resume() {
-    impl_ptr<impl>()->queue.resume();
+    impl_ptr<impl>()->op_queue.resume();
 }
 
 std::string const &db::manager::database_path() const {
@@ -1405,6 +1414,10 @@ db::value const &db::manager::last_save_id() const {
     return db::value::null_value();
 }
 
+dispatch_queue_t db::manager::dispatch_queue() const {
+    return impl_ptr<impl>()->dispatch_queue;
+}
+
 db::object db::manager::insert_object(std::string const entity_name) {
     return impl_ptr<impl>()->insert_object(entity_name);
 }
@@ -1424,7 +1437,7 @@ void db::manager::setup(completion_f completion, operation_option_t option) {
             completion(std::move(state));
         };
 
-        dispatch_sync(dispatch_get_main_queue(), std::move(lambda));
+        dispatch_sync(manager.dispatch_queue(), std::move(lambda));
     };
 
     impl_ptr<impl>()->execute_setup(std::move(impl_completion), std::move(option));
@@ -1446,7 +1459,7 @@ void db::manager::clear(completion_f completion, operation_option_t option) {
             completion(std::move(state));
         };
 
-        dispatch_sync(dispatch_get_main_queue(), std::move(lambda));
+        dispatch_sync(manager.dispatch_queue(), std::move(lambda));
     };
 
     impl_ptr<impl>()->execute_clear(std::move(impl_completion), std::move(option));
@@ -1469,7 +1482,7 @@ void db::manager::purge(completion_f completion, operation_option_t option) {
             completion(std::move(state));
         };
 
-        dispatch_sync(dispatch_get_main_queue(), std::move(lambda));
+        dispatch_sync(manager.dispatch_queue(), std::move(lambda));
     };
 
     impl_ptr<impl>()->execute_purge(std::move(impl_completion), std::move(option));
@@ -1497,7 +1510,7 @@ void db::manager::reset(completion_f completion, operation_option_t option) {
             }
         };
 
-        dispatch_sync(dispatch_get_main_queue(), std::move(lambda));
+        dispatch_sync(manager.dispatch_queue(), std::move(lambda));
     };
 
     impl_ptr<impl>()->execute_fetch_object_datas(std::move(preparation), std::move(impl_completion), std::move(option));
@@ -1543,7 +1556,7 @@ void db::manager::insert_objects(insert_preparation_values_f preparation, vector
             }
         };
 
-        dispatch_sync(dispatch_get_main_queue(), std::move(lambda));
+        dispatch_sync(manager.dispatch_queue(), std::move(lambda));
     };
 
     impl_ptr<impl>()->execute_insert(std::move(preparation), std::move(impl_completion), std::move(option));
@@ -1567,7 +1580,7 @@ void db::manager::fetch_objects(fetch_preparation_option_f preparation, vector_c
             }
         };
 
-        dispatch_sync(dispatch_get_main_queue(), std::move(lambda));
+        dispatch_sync(manager.dispatch_queue(), std::move(lambda));
     };
 
     impl_ptr<impl>()->execute_fetch_object_datas(std::move(preparation), std::move(impl_completion), std::move(option));
@@ -1590,7 +1603,7 @@ void db::manager::fetch_const_objects(fetch_preparation_option_f preparation, co
             }
         };
 
-        dispatch_sync(dispatch_get_main_queue(), std::move(lambda));
+        dispatch_sync(manager.dispatch_queue(), std::move(lambda));
     };
 
     impl_ptr<impl>()->execute_fetch_object_datas(std::move(preparation), std::move(impl_completion), std::move(option));
@@ -1614,7 +1627,7 @@ void db::manager::fetch_objects(fetch_preparation_ids_f preparation, map_complet
             }
         };
 
-        dispatch_sync(dispatch_get_main_queue(), std::move(lambda));
+        dispatch_sync(manager.dispatch_queue(), std::move(lambda));
     };
 
     impl_ptr<impl>()->execute_fetch_object_datas(std::move(preparation), std::move(impl_completion), std::move(option));
@@ -1637,7 +1650,7 @@ void db::manager::fetch_const_objects(fetch_preparation_ids_f preparation, const
             }
         };
 
-        dispatch_sync(dispatch_get_main_queue(), std::move(lambda));
+        dispatch_sync(manager.dispatch_queue(), std::move(lambda));
     };
 
     impl_ptr<impl>()->execute_fetch_object_datas(std::move(preparation), std::move(impl_completion), std::move(option));
@@ -1663,7 +1676,7 @@ void db::manager::save(vector_completion_f completion, operation_option_t option
             }
         };
 
-        dispatch_sync(dispatch_get_main_queue(), std::move(lambda));
+        dispatch_sync(manager.dispatch_queue(), std::move(lambda));
     };
 
     impl_ptr<impl>()->execute_save(std::move(impl_completion), std::move(option));
@@ -1688,7 +1701,7 @@ void db::manager::revert(revert_preparation_f preparation, vector_completion_f c
             }
         };
 
-        dispatch_sync(dispatch_get_main_queue(), std::move(lambda));
+        dispatch_sync(manager.dispatch_queue(), std::move(lambda));
     };
 
     impl_ptr<impl>()->execute_revert(std::move(preparation), std::move(impl_completion), std::move(option));
