@@ -108,7 +108,8 @@ namespace db {
         using const_vector_completion_f = std::function<void(const_vector_result_t)>;
         using const_map_completion_f = std::function<void(const_map_result_t)>;
 
-        manager(std::string const &db_path, model const &model, std::size_t const priority_count = 1);
+        manager(std::string const &db_path, model const &model, std::size_t const priority_count = 1,
+                dispatch_queue_t const dispatch_queue = dispatch_get_main_queue());
         manager(std::nullptr_t);
 
         std::string const &database_path() const;
@@ -120,6 +121,8 @@ namespace db {
 
         yas::subject<change_info> const &subject() const;
         yas::subject<change_info> &subject();
+
+        dispatch_queue_t dispatch_queue() const;
 
         db::object insert_object(std::string const entity_name);
 

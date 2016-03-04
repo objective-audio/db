@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		B608C85E1C20F17300F594D8 /* yas_db_value.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B608C85C1C20F17300F594D8 /* yas_db_value.cpp */; };
 		B608C8601C20F61800F594D8 /* yas_db_value_tests.mm in Sources */ = {isa = PBXBuildFile; fileRef = B608C85F1C20F61800F594D8 /* yas_db_value_tests.mm */; };
+		B627DF1F1C89725E00E8BAE5 /* yas_objc_container.mm in Sources */ = {isa = PBXBuildFile; fileRef = B627DF1D1C89725E00E8BAE5 /* yas_objc_container.mm */; };
 		B62950101C4B7E780024034B /* yas_db_select_option.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B629500E1C4B7E780024034B /* yas_db_select_option.cpp */; };
 		B62CED901C2A33640047B6DE /* yas_db_statement_tests.mm in Sources */ = {isa = PBXBuildFile; fileRef = B62CED8F1C2A33640047B6DE /* yas_db_statement_tests.mm */; };
 		B637E6AE1C5DE30D00C8D288 /* yas_chain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B637E6AC1C5DE30D00C8D288 /* yas_chain.cpp */; };
@@ -61,6 +62,9 @@
 		B608C8611C21910400F594D8 /* yas_db.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_db.h; sourceTree = "<group>"; };
 		B608C8621C21B8F000F594D8 /* yas_result_private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_result_private.h; sourceTree = "<group>"; };
 		B608C8631C21B8F000F594D8 /* yas_result.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_result.h; sourceTree = "<group>"; };
+		B627DF1C1C89725E00E8BAE5 /* yas_objc_container.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_objc_container.h; sourceTree = "<group>"; };
+		B627DF1D1C89725E00E8BAE5 /* yas_objc_container.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = yas_objc_container.mm; sourceTree = "<group>"; };
+		B627DF1E1C89725E00E8BAE5 /* yas_objc_macros.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_objc_macros.h; sourceTree = "<group>"; };
 		B629500D1C491A6F0024034B /* yas_db_additional_protocol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_db_additional_protocol.h; sourceTree = "<group>"; };
 		B629500E1C4B7E780024034B /* yas_db_select_option.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = yas_db_select_option.cpp; sourceTree = "<group>"; };
 		B629500F1C4B7E780024034B /* yas_db_select_option.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_db_select_option.h; sourceTree = "<group>"; };
@@ -155,6 +159,17 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		B627DF1B1C89725E00E8BAE5 /* objc_utils */ = {
+			isa = PBXGroup;
+			children = (
+				B627DF1C1C89725E00E8BAE5 /* yas_objc_container.h */,
+				B627DF1D1C89725E00E8BAE5 /* yas_objc_container.mm */,
+				B627DF1E1C89725E00E8BAE5 /* yas_objc_macros.h */,
+			);
+			name = objc_utils;
+			path = ../submodules/objc_utils/objc_utils;
+			sourceTree = "<group>";
+		};
 		B69543B71C2036E9009DF7F9 /* cpp_utils */ = {
 			isa = PBXGroup;
 			children = (
@@ -195,6 +210,7 @@
 			isa = PBXGroup;
 			children = (
 				B69543B51C1EFC6E009DF7F9 /* libsqlite3.tbd */,
+				B627DF1B1C89725E00E8BAE5 /* objc_utils */,
 				B69543B71C2036E9009DF7F9 /* cpp_utils */,
 				B6E0F1601C1D66D20033AC60 /* db */,
 				B6E0F1591C1D66A80033AC60 /* db_mac_tests */,
@@ -369,6 +385,7 @@
 				B64BBFFF1C41408000B32664 /* yas_db_object_tests.mm in Sources */,
 				B66711DA1C6C312D00B8E501 /* yas_db_index.cpp in Sources */,
 				B6C5A2CE1C30D96800E100EC /* yas_db_sql_utils.cpp in Sources */,
+				B627DF1F1C89725E00E8BAE5 /* yas_objc_container.mm in Sources */,
 				B6A285F11C2A9D3D00EC7945 /* yas_db_row_set_tests.mm in Sources */,
 				B6A285E81C2A475500EC7945 /* yas_db_database_tests.mm in Sources */,
 				B608C8601C20F61800F594D8 /* yas_db_value_tests.mm in Sources */,
