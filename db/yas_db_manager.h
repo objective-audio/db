@@ -121,6 +121,8 @@ namespace db {
         yas::subject<change_info> const &subject() const;
         yas::subject<change_info> &subject();
 
+        db::object insert_object(std::string const entity_name);
+
         void suspend();
         void resume();
 
@@ -147,7 +149,10 @@ namespace db {
 
         object cached_object(std::string const &entity_name, integer::type const object_id) const;
 
+        bool has_inserted_objects() const;
         bool has_changed_objects() const;
+        std::size_t inserted_object_count(std::string const &entity_name) const;
+        std::size_t changed_object_count(std::string const &entity_name) const;
 
        private:
         void _object_did_change(object const &);

@@ -257,6 +257,20 @@ class db::object::impl : public const_object::impl {
         set_attribute(save_id_field, save_id, true);
     }
 
+    void load_insertion_data() {
+        status = db::object_status::inserted;
+        set_attribute(action_field, db::value{insert_action}, true);
+
+        db::entity const &entity = model.entity(entity_name);
+
+        for (auto const &pair : entity.attributes) {
+            auto const &attr = pair.second;
+            if (attr.default_value) {
+                set_attribute(attr.name, attr.default_value, true);
+            }
+        }
+    }
+
     void clear_data() {
         clear();
 
@@ -268,12 +282,14 @@ class db::object::impl : public const_object::impl {
 
         replace(data.attributes, attr_name, value);
 
-        if (attr_name != action_field && !loading) {
-            set_update_action();
-        }
-
         if (!loading) {
-            status = db::object_status::changed;
+            if (attr_name != action_field) {
+                set_update_action();
+            }
+
+            if (status != db::object_status::inserted) {
+                status = db::object_status::changed;
+            }
 
             notify_did_change(attribute_change_key, attr_name, true);
         }
@@ -287,7 +303,9 @@ class db::object::impl : public const_object::impl {
         if (!loading) {
             set_update_action();
 
-            status = db::object_status::changed;
+            if (status != db::object_status::inserted) {
+                status = db::object_status::changed;
+            }
 
             notify_did_change(relation_change_key, rel_name, true);
         }
@@ -305,7 +323,9 @@ class db::object::impl : public const_object::impl {
 
         set_update_action();
 
-        status = db::object_status::changed;
+        if (status != db::object_status::inserted) {
+            status = db::object_status::changed;
+        }
 
         notify_did_change(relation_change_key, rel_name, true);
     }
@@ -319,7 +339,9 @@ class db::object::impl : public const_object::impl {
 
             set_update_action();
 
-            status = db::object_status::changed;
+            if (status != db::object_status::inserted) {
+                status = db::object_status::changed;
+            }
 
             notify_did_change(relation_change_key, rel_name, true);
         }
@@ -336,7 +358,9 @@ class db::object::impl : public const_object::impl {
 
             set_update_action();
 
-            status = db::object_status::changed;
+            if (status != db::object_status::inserted) {
+                status = db::object_status::changed;
+            }
 
             notify_did_change(relation_change_key, rel_name, true);
         }
@@ -354,7 +378,9 @@ class db::object::impl : public const_object::impl {
 
             set_update_action();
 
-            status = db::object_status::changed;
+            if (status != db::object_status::inserted) {
+                status = db::object_status::changed;
+            }
 
             notify_did_change(relation_change_key, rel_name, true);
         }
@@ -386,14 +412,21 @@ class db::object::impl : public const_object::impl {
 
         for (auto const &pair : entity.attributes) {
             auto const &attr_name = pair.first;
-            if (attr_name != save_id_field) {
-                if (data.attributes.count(attr_name) > 0) {
-                    attributes.emplace(std::make_pair(attr_name, data.attributes.at(attr_name)));
-                } else if (pair.second.not_null) {
-                    attributes.emplace(std::make_pair(attr_name, pair.second.default_value));
-                } else {
-                    attributes.emplace(std::make_pair(attr_name, db::value::null_value()));
-                }
+
+            if (attr_name == save_id_field) {
+                continue;
+            }
+
+            if (attr_name == object_id_field && status == object_status::inserted) {
+                continue;
+            }
+
+            if (data.attributes.count(attr_name) > 0) {
+                attributes.emplace(std::make_pair(attr_name, data.attributes.at(attr_name)));
+            } else if (pair.second.not_null) {
+                attributes.emplace(std::make_pair(attr_name, pair.second.default_value));
+            } else {
+                attributes.emplace(std::make_pair(attr_name, db::value::null_value()));
             }
         }
 
@@ -408,7 +441,8 @@ class db::object::impl : public const_object::impl {
     }
 
     void set_update_action() {
-        if (!is_equal_to_action(remove_action) && !is_equal_to_action(update_action)) {
+        if (status != object_status::inserted && !is_equal_to_action(remove_action) &&
+            !is_equal_to_action(update_action)) {
             set_attribute(action_field, db::value{update_action}, true);
         }
     }
@@ -454,6 +488,10 @@ void db::object::load_data(object_data const &obj_data, bool const force) {
 
 void db::object::load_save_id(db::value const &save_id) {
     impl_ptr<impl>()->load_save_id(save_id);
+}
+
+void db::object::load_insertion_data() {
+    impl_ptr<impl>()->load_insertion_data();
 }
 
 void db::object::clear_data() {

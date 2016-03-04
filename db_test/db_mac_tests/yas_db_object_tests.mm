@@ -357,6 +357,10 @@ using namespace yas;
 
     XCTAssertEqual(obj.status(), db::object_status::invalid);
 
+    manageable_obj->set_status(db::object_status::inserted);
+
+    XCTAssertEqual(obj.status(), db::object_status::inserted);
+
     manageable_obj->set_status(db::object_status::saved);
 
     XCTAssertEqual(obj.status(), db::object_status::saved);
