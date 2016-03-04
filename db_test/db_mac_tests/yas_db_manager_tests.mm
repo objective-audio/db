@@ -1971,6 +1971,34 @@ using namespace yas;
     [self waitForExpectationsWithTimeout:1.0 handler:nil];
 }
 
+- (void)test_dispatch_queue {
+    dispatch_queue_t queue = dispatch_queue_create("test", DISPATCH_QUEUE_SERIAL);
+
+    db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
+    auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1) priority_count:1 dispatch_queue:queue];
+
+    XCTAssertEqualObjects(manager.dispatch_queue(), queue);
+
+    manager.setup([self](auto result) { XCTAssertFalse([NSThread isMainThread]); });
+
+    manager.insert_objects(
+        [self]() {
+            XCTAssertFalse([NSThread isMainThread]);
+            return db::entity_count_map{{"sample_a", 1}};
+        },
+        [self](auto result) {
+            XCTAssertFalse([NSThread isMainThread]);
+            auto &object = result.value().at("sample_a").at(0);
+            object.set_attribute("name", db::value{"x"});
+        });
+
+    manager.save([self](auto result) { XCTAssertFalse([NSThread isMainThread]); });
+
+    XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
+    manager.execute([exp](auto const &op) { [exp fulfill]; });
+    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+}
+
 - (void)test_make_error {
     auto error = db::manager::error{db::manager::error_type::version_not_found};
     XCTAssertTrue(error);
