@@ -21,6 +21,7 @@ typedef NS_ENUM(NSUInteger, DBSampleSection) {
 };
 
 typedef NS_ENUM(NSUInteger, DBSampleActionRow) {
+    DBSampleActionRowAddTemporary,
     DBSampleActionRowAdd,
     DBSampleActionRowUndo,
     DBSampleActionRowRedo,
@@ -283,8 +284,12 @@ typedef NS_ENUM(NSUInteger, DBSampleInfoRow) {
     bool enabled = true;
 
     switch (row) {
+        case DBSampleActionRowAddTemporary:
+            cell.textLabel.text = @"Add Temporary";
+            break;
         case DBSampleActionRowAdd:
             cell.textLabel.text = @"Add";
+            enabled = _db_controller->can_add();
             break;
         case DBSampleActionRowUndo:
             cell.textLabel.text = @"Undo";
@@ -356,6 +361,9 @@ typedef NS_ENUM(NSUInteger, DBSampleInfoRow) {
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     if (indexPath.section == DBSampleSectionActions) {
         switch (indexPath.row) {
+            case DBSampleActionRowAddTemporary:
+                _db_controller->add_temporary();
+                break;
             case DBSampleActionRowAdd:
                 _db_controller->add();
                 break;
@@ -372,10 +380,10 @@ typedef NS_ENUM(NSUInteger, DBSampleInfoRow) {
                 _db_controller->purge();
                 break;
             case DBSampleActionRowSaveChanged:
-                _db_controller->save();
+                _db_controller->save_changed();
                 break;
             case DBSampleActionRowCancelChanged:
-                _db_controller->cancel();
+                _db_controller->cancel_changed();
                 break;
         }
     }
