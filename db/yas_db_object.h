@@ -7,6 +7,7 @@
 #include <deque>
 #include <set>
 #include <unordered_map>
+#include "yas_observing.h"
 #include "yas_base.h"
 #include "yas_db_additional_protocol.h"
 
