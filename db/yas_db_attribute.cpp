@@ -4,6 +4,7 @@
 
 #include <sstream>
 #include "yas_cf_utils.h"
+#include "yas_db_additional_protocol.h"
 #include "yas_db_attribute.h"
 #include "yas_db_cf_utils.h"
 

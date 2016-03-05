@@ -9,10 +9,6 @@
 
 namespace yas {
 namespace db {
-    static std::string const src_id_field = "src_id";
-    static std::string const src_obj_id_field = "src_obj_id";
-    static std::string const tgt_obj_id_field = "tgt_obj_id";
-
     class entity;
 
     class relation {
