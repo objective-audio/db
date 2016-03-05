@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B627DF251C8A7F0500E8BAE5 /* yas_db_object_utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B627DF231C8A7F0500E8BAE5 /* yas_db_object_utils.cpp */; };
 		B682178D1C75F79000689F27 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = B682178C1C75F79000689F27 /* main.m */; };
 		B68217901C75F79000689F27 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = B682178F1C75F79000689F27 /* AppDelegate.m */; };
 		B68217961C75F79000689F27 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B68217941C75F79000689F27 /* Main.storyboard */; };
@@ -46,6 +47,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		B627DF231C8A7F0500E8BAE5 /* yas_db_object_utils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = yas_db_object_utils.cpp; sourceTree = "<group>"; };
+		B627DF241C8A7F0500E8BAE5 /* yas_db_object_utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_db_object_utils.h; sourceTree = "<group>"; };
 		B68217881C75F79000689F27 /* db_ios.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = db_ios.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B682178C1C75F79000689F27 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		B682178E1C75F79000689F27 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
@@ -219,6 +222,8 @@
 				B68217B21C75F7C000689F27 /* yas_db_manager.mm */,
 				B68217B31C75F7C000689F27 /* yas_db_model.cpp */,
 				B68217B41C75F7C000689F27 /* yas_db_model.h */,
+				B627DF231C8A7F0500E8BAE5 /* yas_db_object_utils.cpp */,
+				B627DF241C8A7F0500E8BAE5 /* yas_db_object_utils.h */,
 				B68217B51C75F7C000689F27 /* yas_db_object.cpp */,
 				B68217B61C75F7C000689F27 /* yas_db_object.h */,
 				B68217B71C75F7C000689F27 /* yas_db_protocol.h */,
@@ -366,6 +371,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B627DF251C8A7F0500E8BAE5 /* yas_db_object_utils.cpp in Sources */,
 				B68218101C76015A00689F27 /* DBSampleTableViewController.mm in Sources */,
 				B68217D71C75F7C000689F27 /* yas_db_value.cpp in Sources */,
 				B68217901C75F79000689F27 /* AppDelegate.m in Sources */,

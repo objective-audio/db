@@ -9,15 +9,6 @@
 
 namespace yas {
 namespace db {
-    static std::string const id_field = "id";
-    static std::string const object_id_field = "obj_id";
-    static std::string const save_id_field = "save_id";
-    static std::string const action_field = "action";
-
-    static std::string const insert_action = "insert";
-    static std::string const update_action = "update";
-    static std::string const remove_action = "remove";
-
     struct attribute {
         std::string const name;
         std::string const type;
