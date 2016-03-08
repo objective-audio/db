@@ -71,6 +71,8 @@ namespace db {
         using super_class = base;
 
        public:
+        class impl_base;
+
         explicit value(UInt8 const &);
         explicit value(SInt8 const &);
         explicit value(UInt16 const &);
@@ -108,8 +110,6 @@ namespace db {
         static value const &null_value();
 
        private:
-        class impl_base;
-
         template <typename T>
         class impl;
 
@@ -128,4 +128,7 @@ std::string to_string(db::value const &);
 
 db::time_point to_time_point(db::value const &);
 db::value to_value(db::time_point const &);
+
+template <>
+db::value cast<db::value>(base const &);
 }

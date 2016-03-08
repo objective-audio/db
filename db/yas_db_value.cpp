@@ -57,6 +57,8 @@ std::size_t db::blob::size() const {
 
 struct db::value::impl_base : public base::impl {
     virtual std::type_info const &type() const = 0;
+
+    friend db::value yas::cast<db::value>(base const &base);
 };
 
 template <typename T>
@@ -234,4 +236,11 @@ db::time_point yas::to_time_point(db::value const &value) {
 
 db::value yas::to_value(db::time_point const &time_point) {
     return db::value{time_point.time_since_epoch().count()};
+}
+
+template <>
+db::value yas::cast<db::value>(base const &base) {
+    db::value obj{nullptr};
+    obj.set_impl_ptr(std::dynamic_pointer_cast<db::value::impl_base>(base.impl_ptr()));
+    return obj;
 }
