@@ -322,4 +322,14 @@ using namespace yas;
     XCTAssertEqual(dst_time_point.time_since_epoch().count(), 1234);
 }
 
+- (void)test_cast {
+    db::value value{"a"};
+    base base_value = value;
+
+    db::value casted_value = cast<db::value>(base_value);
+
+    XCTAssertTrue(casted_value);
+    XCTAssertEqual(casted_value, db::value{"a"});
+}
+
 @end

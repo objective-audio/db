@@ -473,6 +473,8 @@ class db::object::impl : public const_object::impl {
             }
         }
     }
+
+    friend db::object cast<db::object>(base const &);
 };
 
 #pragma mark - db::object::change_info
@@ -606,4 +608,18 @@ std::string yas::to_string(db::object_status const &status) {
             return "updating";
     }
     return "unknown";
+}
+
+template <>
+db::const_object yas::cast<db::const_object>(base const &base) {
+    db::const_object obj{nullptr};
+    obj.set_impl_ptr(std::dynamic_pointer_cast<db::const_object::impl>(base.impl_ptr()));
+    return obj;
+}
+
+template <>
+db::object yas::cast<db::object>(base const &base) {
+    db::object obj{nullptr};
+    obj.set_impl_ptr(std::dynamic_pointer_cast<db::object::impl>(base.impl_ptr()));
+    return obj;
 }
