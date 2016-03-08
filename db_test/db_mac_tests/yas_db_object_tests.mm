@@ -643,4 +643,35 @@ using namespace yas;
     XCTAssertEqual(to_string(db::object_status::updating), "updating");
 }
 
+- (void)test_cast_object {
+    NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
+    db::model model((__bridge CFDictionaryRef)model_dict);
+
+    db::object obj{nullptr, model, "sample_a"};
+    base base_obj = obj;
+    db::const_object const_obj = obj;
+
+    db::object casted_obj_from_base = cast<db::object>(base_obj);
+    db::object casted_obj_from_const = cast<db::object>(const_obj);
+
+    XCTAssertTrue(casted_obj_from_base);
+    XCTAssertTrue(casted_obj_from_const);
+
+    XCTAssertEqual(casted_obj_from_base, obj);
+    XCTAssertEqual(casted_obj_from_const, obj);
+}
+
+- (void)test_cast_const_object {
+    NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
+    db::model model((__bridge CFDictionaryRef)model_dict);
+
+    db::const_object const_obj{model, "sample_a", {}};
+    base base_obj = const_obj;
+
+    db::const_object casted_obj = cast<db::const_object>(base_obj);
+
+    XCTAssertTrue(casted_obj);
+    XCTAssertEqual(casted_obj, const_obj);
+}
+
 @end

@@ -7,9 +7,9 @@
 #include <deque>
 #include <set>
 #include <unordered_map>
-#include "yas_observing.h"
 #include "yas_base.h"
 #include "yas_db_additional_protocol.h"
+#include "yas_observing.h"
 
 namespace yas {
 namespace db {
@@ -128,4 +128,9 @@ namespace db {
     using object_data_vector_map = std::unordered_map<std::string, object_data_vector>;
 }
 std::string to_string(db::object_status const &);
+
+template <>
+db::const_object cast<db::const_object>(base const &);
+template <>
+db::object cast<db::object>(base const &);
 }
