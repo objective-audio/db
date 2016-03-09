@@ -473,8 +473,6 @@ class db::object::impl : public const_object::impl {
             }
         }
     }
-
-    friend db::object cast<db::object>(base const &);
 };
 
 #pragma mark - db::object::change_info
