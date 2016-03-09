@@ -57,8 +57,6 @@ std::size_t db::blob::size() const {
 
 struct db::value::impl_base : public base::impl {
     virtual std::type_info const &type() const = 0;
-
-    friend db::value yas::cast<db::value>(base const &base);
 };
 
 template <typename T>
