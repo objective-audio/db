@@ -75,7 +75,7 @@ struct db::model::impl : public base::impl {
 
             CFDictionaryRef cf_attributes = get<CFDictionaryRef>(cf_entity_dict, attributes_key);
             if (cf_attributes) {
-                for (auto &cf_attribute_pair : each_dictionary{cf_attributes}) {
+                for (auto &cf_attribute_pair : each_dictionary(cf_attributes)) {
                     std::string attr_name = to_string((CFStringRef)cf_attribute_pair.first);
                     if (attr_name.size() > 0) {
                         CFDictionaryRef cf_attr_dict = get<CFDictionaryRef>(cf_attributes, attr_name);
@@ -88,7 +88,7 @@ struct db::model::impl : public base::impl {
 
             CFDictionaryRef cf_relations = get<CFDictionaryRef>(cf_entity_dict, relations_key);
             if (cf_relations) {
-                for (auto &cf_relation_pair : each_dictionary{cf_relations}) {
+                for (auto &cf_relation_pair : each_dictionary(cf_relations)) {
                     std::string relation_name = to_string((CFStringRef)cf_relation_pair.first);
                     CFDictionaryRef cf_relation_dict = get<CFDictionaryRef>(cf_relations, relation_name);
                     if (cf_relation_dict) {
@@ -104,7 +104,7 @@ struct db::model::impl : public base::impl {
 
         CFDictionaryRef cf_indices_dict = get<CFDictionaryRef>(cf_dict, indices_key);
         if (cf_indices_dict) {
-            for (auto &cf_index_pair : each_dictionary{cf_indices_dict}) {
+            for (auto &cf_index_pair : each_dictionary(cf_indices_dict)) {
                 auto index_name = to_string((CFStringRef)cf_index_pair.first);
                 if (index_name.size() == 0) {
                     throw "invalid index name";
