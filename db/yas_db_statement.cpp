@@ -8,7 +8,7 @@ using namespace yas;
 
 #pragma mark - statement::impl
 
-class db::statement::impl : public base::impl {
+class db::statement::impl : public base::impl, public closable::impl {
    public:
     impl() : stmt(), query(), in_use() {
     }
@@ -17,7 +17,7 @@ class db::statement::impl : public base::impl {
         close();
     }
 
-    void close() {
+    void close() override {
         if (auto stmt_ptr = stmt.value()) {
             sqlite3_finalize(stmt_ptr);
             stmt.set_value(nullptr);
@@ -49,10 +49,6 @@ db::statement::statement(std::nullptr_t) : super_class(nullptr) {
 
 db::statement::~statement() = default;
 
-void db::statement::_close() {
-    impl_ptr<impl>()->close();
-}
-
 property<sqlite3_stmt *> &db::statement::stmt() {
     return impl_ptr<impl>()->stmt;
 }
@@ -79,4 +75,8 @@ property<bool> const &db::statement::in_use() const {
 
 void db::statement::reset() {
     impl_ptr<impl>()->reset();
+}
+
+db::closable db::statement::closable() {
+    return db::closable{impl_ptr<closable::impl>()};
 }

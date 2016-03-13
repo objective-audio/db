@@ -24,7 +24,7 @@ namespace db {
         explicit operator bool() const;
     };
 
-    class row_set : public base, public closable, public db_holdable {
+    class row_set : public base, public db_holdable {
         using super_class = base;
 
        public:
@@ -52,9 +52,10 @@ namespace db {
         db::value column_value(std::string column_name) const;
 
         db::value_map value_map() const;
+        
+        closable closable();
 
        private:
-        void _close() override;
         void _set_database(database const &) override;
     };
 }

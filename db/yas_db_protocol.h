@@ -4,14 +4,23 @@
 
 #pragma once
 
+#include "yas_protocol.h"
+
 namespace yas {
 namespace db {
     class database;
 
-    struct closable {
-        virtual ~closable() = default;
+    struct closable : protocol {
+        struct impl : protocol::impl {
+            virtual void close() = 0;
+        };
 
-        virtual void _close() = 0;
+        explicit closable(std::shared_ptr<impl> impl) : protocol(std::move(impl)) {
+        }
+
+        void close() {
+            impl_ptr<impl>()->close();
+        }
     };
 
     struct row_set_observable {

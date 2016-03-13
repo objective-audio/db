@@ -194,8 +194,8 @@ class db::database::impl : public base::impl {
     void clear_cached_statements() {
         for (auto &pair : cached_statements) {
             for (auto &statementpair : pair.second) {
-                if (auto statement = dynamic_cast<closable *>(&statementpair.second)) {
-                    statement->_close();
+                if (auto statement = statementpair.second.closable()) {
+                    statement.close();
                 }
             }
         }
@@ -208,8 +208,8 @@ class db::database::impl : public base::impl {
                 if (auto db_holdable_rs = dynamic_cast<db_holdable *>(&row_set)) {
                     db_holdable_rs->_set_database(nullptr);
                 }
-                if (auto closable_rs = dynamic_cast<closable *>(&row_set)) {
-                    closable_rs->_close();
+                if (auto closable_rs = row_set.closable()) {
+                    closable_rs.close();
                 }
             }
         }
@@ -601,8 +601,8 @@ bool db::database::good_connection() {
 
     if (auto query_result = execute_query("select name from sqlite_master where type='table'")) {
         auto &row_set = query_result.value();
-        if (auto closable_rs = dynamic_cast<closable *>(&row_set)) {
-            closable_rs->_close();
+        if (auto closable_rs = row_set.closable()) {
+            closable_rs.close();
         }
         return true;
     }

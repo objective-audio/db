@@ -13,7 +13,7 @@
 
 namespace yas {
 namespace db {
-    class statement : public base, public closable {
+    class statement : public base {
         using super_class = base;
 
        public:
@@ -38,10 +38,10 @@ namespace db {
 
         void reset();
 
+        closable closable();
+
        private:
         class impl;
-
-        void _close() override;
     };
 }
 }
