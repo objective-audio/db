@@ -198,7 +198,7 @@ namespace db {
 
 #pragma mark - impl
 
-struct db::manager::impl : public base::impl {
+struct db::manager::impl : public base::impl, public object_observable::impl {
     db::database database;
     db::model model;
     operation_queue op_queue;
@@ -1760,12 +1760,8 @@ yas::subject<db::manager::change_info> &db::manager::subject() {
     return impl_ptr<impl>()->subject;
 }
 
-void db::manager::_object_did_change(db::object const &object) {
-    impl_ptr<impl>()->_object_did_change(object);
-}
-
-void db::manager::_object_did_erase(std::string const &entity_name, db::integer::type const object_id) {
-    impl_ptr<impl>()->_object_did_erase(entity_name, object_id);
+db::object_observable db::manager::object_observable() {
+    return db::object_observable{impl_ptr<object_observable::impl>()};
 }
 
 std::string yas::to_string(db::manager::error_type const &error) {

@@ -58,11 +58,22 @@ namespace db {
         }
     };
 
-    struct object_observable {
-        virtual ~object_observable() = default;
+    struct object_observable : protocol {
+        struct impl : protocol::impl {
+            virtual void _object_did_change(object const &) = 0;
+            virtual void _object_did_erase(std::string const &entity_name, integer::type const object_id) = 0;
+        };
 
-        virtual void _object_did_change(object const &) = 0;
-        virtual void _object_did_erase(std::string const &entity_name, integer::type const object_id) = 0;
+        explicit object_observable(std::shared_ptr<impl> impl) : protocol(std::move(impl)) {
+        }
+
+        void object_did_change(object const &obj) {
+            impl_ptr<impl>()->_object_did_change(obj);
+        }
+
+        void object_did_erase(std::string const &entity_name, integer::type const object_id) {
+            impl_ptr<impl>()->_object_did_erase(entity_name, object_id);
+        }
     };
 }
 }

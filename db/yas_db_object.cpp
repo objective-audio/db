@@ -218,8 +218,8 @@ class db::object::impl : public const_object::impl, public manageable_object::im
 
     ~impl() {
         if (manager) {
-            if (auto observable = dynamic_cast<object_observable *>(&manager)) {
-                observable->_object_did_erase(entity_name, get_attribute(object_id_field).get<integer>());
+            if (auto observable = manager.object_observable()) {
+                observable.object_did_erase(entity_name, get_attribute(object_id_field).get<integer>());
             }
         }
     }
@@ -472,8 +472,8 @@ class db::object::impl : public const_object::impl, public manageable_object::im
         }
 
         if (send_to_manager && manager) {
-            if (auto observable = dynamic_cast<object_observable *>(&manager)) {
-                observable->_object_did_change(cast<db::object>());
+            if (auto observable = manager.object_observable()) {
+                observable.object_did_change(cast<db::object>());
             }
         }
     }
