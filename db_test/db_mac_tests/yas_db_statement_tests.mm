@@ -23,8 +23,8 @@ using namespace yas;
 - (void)test_closable {
     db::statement statement;
 
-    auto closable_statement = dynamic_cast<db::closable *>(&statement);
-    XCTAssertTrue(closable_statement != nullptr);
+    auto closable_statement = statement.closable();
+    XCTAssertTrue(closable_statement);
 }
 
 - (void)test_stmt {

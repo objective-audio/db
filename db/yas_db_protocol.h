@@ -4,26 +4,49 @@
 
 #pragma once
 
+#include "yas_protocol.h"
+
 namespace yas {
 namespace db {
     class database;
 
-    struct closable {
-        virtual ~closable() = default;
+    struct closable : protocol {
+        struct impl : protocol::impl {
+            virtual void close() = 0;
+        };
 
-        virtual void _close() = 0;
+        explicit closable(std::shared_ptr<impl> impl) : protocol(std::move(impl)) {
+        }
+
+        void close() {
+            impl_ptr<impl>()->close();
+        }
     };
 
-    struct row_set_observable {
-        virtual ~row_set_observable() = default;
+    struct row_set_observable : protocol {
+        struct impl : protocol::impl {
+            virtual void _row_set_did_close(uintptr_t const) = 0;
+        };
 
-        virtual void _row_set_did_close(const uintptr_t) = 0;
+        explicit row_set_observable(std::shared_ptr<impl> impl) : protocol(std::move(impl)) {
+        }
+
+        void row_set_did_close(uintptr_t const identifier) {
+            impl_ptr<impl>()->_row_set_did_close(identifier);
+        }
     };
 
-    struct db_holdable {
-        virtual ~db_holdable() = default;
+    struct db_settable : protocol {
+        struct impl : protocol::impl {
+            virtual void _set_database(database const &) = 0;
+        };
 
-        virtual void _set_database(const database &) = 0;
+        explicit db_settable(std::shared_ptr<impl> impl) : protocol(std::move(impl)) {
+        }
+
+        void set_database(database const &db) {
+            impl_ptr<impl>()->_set_database(db);
+        }
     };
 }
 }

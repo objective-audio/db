@@ -59,7 +59,7 @@ namespace db {
     using row_result = result<sqlite3_int64, error>;
     using count_result = result<int, error>;
 
-    class database : public base, public row_set_observable {
+    class database : public base {
         using super_class = base;
 
        public:
@@ -114,8 +114,7 @@ namespace db {
         void set_start_busy_retry_time(const std::chrono::time_point<std::chrono::system_clock> &time);
         std::chrono::time_point<std::chrono::system_clock> start_busy_retry_time() const;
 
-       private:
-        void _row_set_did_close(uintptr_t const) override;
+        row_set_observable row_set_observable();
     };
 }
 std::string to_string(db::error_type const &);
