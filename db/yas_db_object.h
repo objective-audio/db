@@ -56,7 +56,7 @@ namespace db {
         const_object(std::shared_ptr<impl> &&);
     };
 
-    class object : public const_object, public manageable {
+    class object : public const_object {
         using super_class = const_object;
 
        public:
@@ -107,9 +107,7 @@ namespace db {
 
         static object const &null_object();
 
-       private:
-        void set_status(object_status const &) override;
-        void load_insertion_data() override;
+        manageable_object manageable();
     };
 
     using object_map = std::unordered_map<integer::type, object>;

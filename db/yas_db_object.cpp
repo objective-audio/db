@@ -204,7 +204,7 @@ db::const_object const &db::const_object::null_object() {
 
 #pragma mark - db::object::impl
 
-class db::object::impl : public const_object::impl {
+class db::object::impl : public const_object::impl, public manageable_object::impl {
     using super_class = const_object::impl;
 
    public:
@@ -462,6 +462,10 @@ class db::object::impl : public const_object::impl {
         }
     }
 
+    void set_status(object_status const &stat) {
+        status = stat;
+    }
+
     void notify_did_change(std::string const &key, std::string const &name, bool const send_to_manager) {
         if (subject.has_observer()) {
             subject.notify(key, change_info{cast<db::object>(), name});
@@ -503,10 +507,6 @@ void db::object::load_data(object_data const &obj_data, bool const force) {
 
 void db::object::load_save_id(db::value const &save_id) {
     impl_ptr<impl>()->load_save_id(save_id);
-}
-
-void db::object::load_insertion_data() {
-    impl_ptr<impl>()->load_insertion_data();
 }
 
 void db::object::clear_data() {
@@ -571,10 +571,6 @@ enum db::object_status db::object::status() const {
     return impl_ptr<impl>()->status;
 }
 
-void db::object::set_status(object_status const &stat) {
-    impl_ptr<impl>()->status = stat;
-}
-
 void db::object::remove() {
     impl_ptr<impl>()->remove();
 }
@@ -590,6 +586,10 @@ db::object_data db::object::data_for_save() const {
 db::object const &db::object::null_object() {
     static db::object const _null_object{nullptr};
     return _null_object;
+}
+
+db::manageable_object db::object::manageable() {
+    return manageable_object{impl_ptr<manageable_object::impl>()};
 }
 
 std::string yas::to_string(db::object_status const &status) {
