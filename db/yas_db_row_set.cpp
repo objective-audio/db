@@ -23,7 +23,7 @@ db::next_result_code::operator bool() const {
 
 #pragma mark - impl
 
-class db::row_set::impl : public base::impl, public closable::impl {
+class db::row_set::impl : public base::impl, public closable::impl, public db_settable::impl {
    public:
     impl(db::statement const &statement, database const &database) : _statement(statement), _database(database) {
         _statement.in_use().set_value(true);
@@ -36,14 +36,14 @@ class db::row_set::impl : public base::impl, public closable::impl {
     void close() override {
         _statement.reset();
         if (_database) {
-            if (auto observable_db = dynamic_cast<row_set_observable *>(&_database)) {
-                observable_db->_row_set_did_close(identifier());
+            if (auto observable_db = _database.row_set_observable()) {
+                observable_db.row_set_did_close(identifier());
             }
             _database = nullptr;
         }
     }
 
-    void set_database(database const &database) {
+    void _set_database(database const &database) override {
         _database = database;
     }
 
@@ -186,8 +186,6 @@ db::closable db::row_set::closable() {
     return db::closable{impl_ptr<closable::impl>()};
 }
 
-#pragma mark - private
-
-void db::row_set::_set_database(database const &database) {
-    impl_ptr<impl>()->set_database(database);
+db::db_settable db::row_set::db_settable() {
+    return db::db_settable{impl_ptr<db_settable::impl>()};
 }

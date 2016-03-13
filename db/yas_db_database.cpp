@@ -55,7 +55,7 @@ std::string const &db::error::message() const {
 
 #pragma mark - impl
 
-class db::database::impl : public base::impl {
+class db::database::impl : public base::impl, public row_set_observable::impl {
    public:
     UInt8 db_key;
     std::string database_path;
@@ -205,8 +205,8 @@ class db::database::impl : public base::impl {
     void close_open_row_sets() {
         for (auto &pair : open_row_sets) {
             if (auto row_set = pair.second.lock()) {
-                if (auto db_holdable_rs = dynamic_cast<db_holdable *>(&row_set)) {
-                    db_holdable_rs->_set_database(nullptr);
+                if (auto db_settable_rs = row_set.db_settable()) {
+                    db_settable_rs.set_database(nullptr);
                 }
                 if (auto closable_rs = row_set.closable()) {
                     closable_rs.close();
@@ -546,6 +546,10 @@ class db::database::impl : public base::impl {
         return _max_busy_retry_time_interval;
     }
 
+    void _row_set_did_close(uintptr_t const id) override {
+        open_row_sets.erase(id);
+    }
+
    private:
     double _max_busy_retry_time_interval = 2.0;
 };
@@ -707,10 +711,8 @@ std::chrono::time_point<std::chrono::system_clock> db::database::start_busy_retr
     return impl_ptr<impl>()->start_busy_retry_time;
 }
 
-#pragma mark -
-
-void db::database::_row_set_did_close(uintptr_t const id) {
-    impl_ptr<impl>()->open_row_sets.erase(id);
+db::row_set_observable db::database::row_set_observable() {
+    return db::row_set_observable{impl_ptr<row_set_observable::impl>()};
 }
 
 #pragma mark -
