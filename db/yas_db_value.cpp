@@ -30,7 +30,7 @@ bool db::blob::operator==(blob const &rhs) const {
     if (lhs_data == rhs_data) {
         return true;
     } else if (size() == rhs.size()) {
-        for (auto &idx : each_index<std::size_t>{size()}) {
+        for (auto &idx : each_index<std::size_t>(size())) {
             if (lhs_data[idx] != rhs_data[idx]) {
                 return false;
             }

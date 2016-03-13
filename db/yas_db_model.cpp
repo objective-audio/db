@@ -46,7 +46,7 @@ struct db::model::impl : public base::impl {
             return;
         }
 
-        for (auto &cf_entities_pair : each_dictionary{cf_entities_dict}) {
+        for (auto &cf_entities_pair : each_dictionary(cf_entities_dict)) {
             auto entity_name = to_string((CFStringRef)cf_entities_pair.first);
             if (entity_name.size() == 0) {
                 throw "invalid entity name";
