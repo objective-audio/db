@@ -256,7 +256,7 @@ using namespace yas;
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
     db::object obj{nullptr, model, "sample_a"};
-    auto *manageable_obj = dynamic_cast<db::manageable *>(&obj);
+    auto manageable_obj = obj.manageable();
 
     XCTAssertEqual(obj.action(), db::value::null_value());
 
@@ -269,35 +269,35 @@ using namespace yas;
     obj.set_attribute("name", db::value{"test_name"});
     XCTAssertEqual(obj.action(), db::value{db::update_action});
 
-    manageable_obj->set_status(db::object_status::updating);
+    manageable_obj.set_status(db::object_status::updating);
     obj.load_data(obj_data);
     XCTAssertEqual(obj.action(), db::value{db::insert_action});
 
     obj.push_back_relation_id("child", db::value{2});
     XCTAssertEqual(obj.action(), db::value{db::update_action});
 
-    manageable_obj->set_status(db::object_status::updating);
+    manageable_obj.set_status(db::object_status::updating);
     obj.load_data(obj_data);
     XCTAssertEqual(obj.action(), db::value{db::insert_action});
 
     obj.set_relation_ids("child", {db::value{1}});
     XCTAssertEqual(obj.action(), db::value{db::update_action});
 
-    manageable_obj->set_status(db::object_status::updating);
+    manageable_obj.set_status(db::object_status::updating);
     obj.load_data(obj_data);
     XCTAssertEqual(obj.action(), db::value{db::insert_action});
 
     obj.erase_relation("child", 0);
     XCTAssertEqual(obj.action(), db::value{db::update_action});
 
-    manageable_obj->set_status(db::object_status::updating);
+    manageable_obj.set_status(db::object_status::updating);
     obj.load_data(obj_data);
     XCTAssertEqual(obj.action(), db::value{db::insert_action});
 
     obj.clear_relation("child");
     XCTAssertEqual(obj.action(), db::value{db::update_action});
 
-    manageable_obj->set_status(db::object_status::updating);
+    manageable_obj.set_status(db::object_status::updating);
     obj.load_data(obj_data);
     XCTAssertEqual(obj.action(), db::value{db::insert_action});
 
@@ -353,23 +353,23 @@ using namespace yas;
     db::model model((__bridge CFDictionaryRef)model_dict);
     db::object obj{nullptr, model, "sample_a"};
 
-    auto *manageable_obj = dynamic_cast<db::manageable *>(&obj);
+    auto manageable_obj = obj.manageable();
 
     XCTAssertEqual(obj.status(), db::object_status::invalid);
 
-    manageable_obj->set_status(db::object_status::inserted);
+    manageable_obj.set_status(db::object_status::inserted);
 
     XCTAssertEqual(obj.status(), db::object_status::inserted);
 
-    manageable_obj->set_status(db::object_status::saved);
+    manageable_obj.set_status(db::object_status::saved);
 
     XCTAssertEqual(obj.status(), db::object_status::saved);
 
-    manageable_obj->set_status(db::object_status::changed);
+    manageable_obj.set_status(db::object_status::changed);
 
     XCTAssertEqual(obj.status(), db::object_status::changed);
 
-    manageable_obj->set_status(db::object_status::updating);
+    manageable_obj.set_status(db::object_status::updating);
 
     XCTAssertEqual(obj.status(), db::object_status::updating);
 }

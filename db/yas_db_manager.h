@@ -21,7 +21,7 @@ namespace db {
 
     using entity_count_map = std::unordered_map<std::string, std::size_t>;
 
-    class manager : public base, public object_observable {
+    class manager : public base {
         using super_class = base;
 
        public:
@@ -156,10 +156,8 @@ namespace db {
         bool has_changed_objects() const;
         std::size_t inserted_object_count(std::string const &entity_name) const;
         std::size_t changed_object_count(std::string const &entity_name) const;
-
-       private:
-        void _object_did_change(object const &);
-        void _object_did_erase(std::string const &entity_name, integer::type const object_id);
+        
+        object_observable object_observable();
     };
 }
 

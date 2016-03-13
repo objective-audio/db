@@ -6,8 +6,8 @@
 #include "yas_db_attribute.h"
 #include "yas_db_entity.h"
 #include "yas_db_manager.h"
-#include "yas_db_object_utils.h"
 #include "yas_db_model.h"
+#include "yas_db_object_utils.h"
 #include "yas_db_relation.h"
 #include "yas_db_select_option.h"
 #include "yas_db_sql_utils.h"
@@ -198,7 +198,7 @@ namespace db {
 
 #pragma mark - impl
 
-struct db::manager::impl : public base::impl {
+struct db::manager::impl : public base::impl, public object_observable::impl {
     db::database database;
     db::model model;
     operation_queue op_queue;
@@ -222,8 +222,8 @@ struct db::manager::impl : public base::impl {
     db::object insert_object(std::string const entity_name) {
         db::object object{cast<manager>(), model, entity_name};
 
-        if (auto manageable_object = dynamic_cast<manageable *>(&object)) {
-            manageable_object->load_insertion_data();
+        if (auto manageable_object = object.manageable()) {
+            manageable_object.load_insertion_data();
         }
 
         if (inserted_objects.count(entity_name) == 0) {
@@ -405,8 +405,8 @@ struct db::manager::impl : public base::impl {
                         } else {
                             throw "object_data.attributes is empty.";
                         }
-                        if (auto manageable_object = dynamic_cast<manageable *>(&object)) {
-                            manageable_object->set_status(db::object_status::updating);
+                        if (auto manageable_object = object.manageable()) {
+                            manageable_object.set_status(db::object_status::updating);
                         }
                     }
                 }
@@ -1760,12 +1760,8 @@ yas::subject<db::manager::change_info> &db::manager::subject() {
     return impl_ptr<impl>()->subject;
 }
 
-void db::manager::_object_did_change(db::object const &object) {
-    impl_ptr<impl>()->_object_did_change(object);
-}
-
-void db::manager::_object_did_erase(std::string const &entity_name, db::integer::type const object_id) {
-    impl_ptr<impl>()->_object_did_erase(entity_name, object_id);
+db::object_observable db::manager::object_observable() {
+    return db::object_observable{impl_ptr<object_observable::impl>()};
 }
 
 std::string yas::to_string(db::manager::error_type const &error) {

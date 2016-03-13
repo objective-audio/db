@@ -5,6 +5,7 @@
 #pragma once
 
 #include "yas_db_value.h"
+#include "yas_protocol.h"
 
 namespace yas {
 namespace db {
@@ -39,18 +40,40 @@ namespace db {
         updating,
     };
 
-    struct manageable {
-        virtual ~manageable() = default;
+    struct manageable_object : protocol {
+        struct impl : protocol::impl {
+            virtual void set_status(object_status const &) = 0;
+            virtual void load_insertion_data() = 0;
+        };
 
-        virtual void set_status(object_status const &) = 0;
-        virtual void load_insertion_data() = 0;
+        explicit manageable_object(std::shared_ptr<impl> impl) : protocol(std::move(impl)) {
+        }
+
+        void set_status(object_status const &status) {
+            impl_ptr<impl>()->set_status(status);
+        }
+
+        void load_insertion_data() {
+            impl_ptr<impl>()->load_insertion_data();
+        }
     };
 
-    struct object_observable {
-        virtual ~object_observable() = default;
+    struct object_observable : protocol {
+        struct impl : protocol::impl {
+            virtual void _object_did_change(object const &) = 0;
+            virtual void _object_did_erase(std::string const &entity_name, integer::type const object_id) = 0;
+        };
 
-        virtual void _object_did_change(object const &) = 0;
-        virtual void _object_did_erase(std::string const &entity_name, integer::type const object_id) = 0;
+        explicit object_observable(std::shared_ptr<impl> impl) : protocol(std::move(impl)) {
+        }
+
+        void object_did_change(object const &obj) {
+            impl_ptr<impl>()->_object_did_change(obj);
+        }
+
+        void object_did_erase(std::string const &entity_name, integer::type const object_id) {
+            impl_ptr<impl>()->_object_did_erase(entity_name, object_id);
+        }
     };
 }
 }
