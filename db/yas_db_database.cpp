@@ -355,7 +355,7 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
             if (db::_databases.count(database_id) > 0) {
                 if (auto database = db::_databases.at(database_id).lock()) {
                     std::unordered_map<std::string, db::value> map;
-                    for (auto &idx : each_index<int>{columns}) {
+                    for (auto &idx : make_each(columns)) {
                         auto const &name = names[idx];
                         auto const &value = values[idx];
                         if (name) {
