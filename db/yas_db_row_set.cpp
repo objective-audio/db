@@ -59,7 +59,7 @@ class db::row_set::impl : public base::impl, public closable::impl, public db_se
         if (_column_name_to_index_map.empty()) {
             auto *const stmt = _statement.stmt().value();
             int column_count = sqlite3_column_count(stmt);
-            for (auto &idx : each_index<int>(column_count)) {
+            for (auto &idx : make_each(column_count)) {
                 _column_name_to_index_map.insert(std::make_pair(to_lower(sqlite3_column_name(stmt, idx)), idx));
             }
         }
@@ -175,7 +175,7 @@ db::value_map db::row_set::value_map() const {
     db::value_map map;
     map.reserve(column_count);
 
-    for (auto &idx : each_index<int>(column_count)) {
+    for (auto &idx : make_each(column_count)) {
         map.insert(std::make_pair(sqlite3_column_name(stmt, idx), column_value(idx)));
     }
 
