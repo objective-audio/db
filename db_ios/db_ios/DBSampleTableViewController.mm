@@ -143,7 +143,7 @@ typedef NS_ENUM(NSUInteger, DBSampleInfoRow) {
 }
 
 - (void)updateTableActions {
-    for (auto &idx : make_each(DBSampleActionRowCount)) {
+    for (auto &idx : make_each<std::size_t>(DBSampleActionRowCount)) {
         [self updateTableForAction:DBSampleActionRow(idx)];
     }
 }
