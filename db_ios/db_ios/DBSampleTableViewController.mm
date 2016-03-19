@@ -56,7 +56,7 @@ typedef NS_ENUM(NSUInteger, DBSampleInfoRow) {
 
     _db_controller = std::make_shared<db_controller>();
 
-    yas::objc::container<objc::weak> weak_container{self};
+    auto weak_container = make_weak_container(self);
 
     auto proccessing_observer = _db_controller->subject().make_observer(
         db_controller::processing_did_change_key,
@@ -89,7 +89,7 @@ typedef NS_ENUM(NSUInteger, DBSampleInfoRow) {
 }
 
 - (void)setupObserversAfterSetup {
-    yas::objc::container<objc::weak> weak_container{self};
+    auto weak_container = make_weak_container(self);
 
     auto observer = _db_controller->subject().make_wild_card_observer(
         [weak_container](auto const &key, db_controller::change_info const &info) {
