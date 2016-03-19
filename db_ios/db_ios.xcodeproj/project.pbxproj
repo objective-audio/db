@@ -142,6 +142,7 @@
 		B6D0DDED1C81F4C40086AA8E /* yas_objc_macros.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_objc_macros.h; sourceTree = "<group>"; };
 		B6D0DDEF1C8310900086AA8E /* DBSampleObjectViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DBSampleObjectViewController.h; sourceTree = "<group>"; };
 		B6D0DDF01C8310900086AA8E /* DBSampleObjectViewController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = DBSampleObjectViewController.mm; sourceTree = "<group>"; };
+		B6F501BB1C9CEF8B00A0B4A1 /* yas_objc_container_private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_objc_container_private.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -299,6 +300,7 @@
 		B6D0DDEA1C81F4C40086AA8E /* objc_utils */ = {
 			isa = PBXGroup;
 			children = (
+				B6F501BB1C9CEF8B00A0B4A1 /* yas_objc_container_private.h */,
 				B6D0DDEB1C81F4C40086AA8E /* yas_objc_container.h */,
 				B6D0DDEC1C81F4C40086AA8E /* yas_objc_container.mm */,
 				B6D0DDED1C81F4C40086AA8E /* yas_objc_macros.h */,
