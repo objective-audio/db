@@ -423,18 +423,20 @@ using namespace yas;
 
     bool called = false;
 
-    auto observer = obj.subject().make_wild_card_observer(
-        [&called, self](std::string const &key, db::object::change_info const &info) {
-            XCTAssertEqual(key, db::object::attribute_change_key);
+    auto observer = obj.subject().make_wild_card_observer([&called, self](auto const &context) {
+        auto const &key = context.key;
+        auto const &info = context.value;
 
-            auto const &obj = info.object;
-            auto const &name = info.name;
+        XCTAssertEqual(key, db::object::attribute_change_key);
 
-            XCTAssertEqual(name, "name");
-            XCTAssertEqual(obj.get_attribute(name), db::value{"test_value"});
+        auto const &obj = info.object;
+        auto const &name = info.name;
 
-            called = true;
-        });
+        XCTAssertEqual(name, "name");
+        XCTAssertEqual(obj.get_attribute(name), db::value{"test_value"});
+
+        called = true;
+    });
 
     obj.set_attribute("name", db::value{"test_value"});
 
@@ -449,32 +451,34 @@ using namespace yas;
 
     size_t called_count = 0;
 
-    auto observer = obj.subject().make_wild_card_observer(
-        [&called_count, self](std::string const &key, db::object::change_info const &info) {
-            XCTAssertEqual(key, db::object::relation_change_key);
+    auto observer = obj.subject().make_wild_card_observer([&called_count, self](auto const &context) {
+        auto const &key = context.key;
+        auto const &info = context.value;
 
-            auto const &obj = info.object;
-            auto const &name = info.name;
+        XCTAssertEqual(key, db::object::relation_change_key);
 
-            XCTAssertEqual(name, "child");
+        auto const &obj = info.object;
+        auto const &name = info.name;
 
-            if (called_count == 0) {
-                XCTAssertEqual(obj.relation_size(name), 2);
-                XCTAssertEqual(obj.get_relation_id(name, 0), db::value{10});
-                XCTAssertEqual(obj.get_relation_id(name, 1), db::value{20});
-            } else if (called_count == 1) {
-                XCTAssertEqual(obj.relation_size(name), 3);
-                XCTAssertEqual(obj.get_relation_id(name, 2), db::value{30});
-            } else if (called_count == 2) {
-                XCTAssertEqual(obj.relation_size(name), 2);
-                XCTAssertEqual(obj.get_relation_id(name, 0), db::value{10});
-                XCTAssertEqual(obj.get_relation_id(name, 1), db::value{30});
-            } else if (called_count == 3) {
-                XCTAssertEqual(obj.relation_size(name), 0);
-            }
+        XCTAssertEqual(name, "child");
 
-            ++called_count;
-        });
+        if (called_count == 0) {
+            XCTAssertEqual(obj.relation_size(name), 2);
+            XCTAssertEqual(obj.get_relation_id(name, 0), db::value{10});
+            XCTAssertEqual(obj.get_relation_id(name, 1), db::value{20});
+        } else if (called_count == 1) {
+            XCTAssertEqual(obj.relation_size(name), 3);
+            XCTAssertEqual(obj.get_relation_id(name, 2), db::value{30});
+        } else if (called_count == 2) {
+            XCTAssertEqual(obj.relation_size(name), 2);
+            XCTAssertEqual(obj.get_relation_id(name, 0), db::value{10});
+            XCTAssertEqual(obj.get_relation_id(name, 1), db::value{30});
+        } else if (called_count == 3) {
+            XCTAssertEqual(obj.relation_size(name), 0);
+        }
+
+        ++called_count;
+    });
 
     obj.set_relation_ids("child", db::value_vector{db::value{10}, db::value{20}});
 
@@ -501,25 +505,27 @@ using namespace yas;
 
     bool called = false;
 
-    auto observer = obj.subject().make_wild_card_observer(
-        [&called, self](std::string const &key, db::object::change_info const &info) {
-            XCTAssertEqual(key, db::object::loading_change_key);
+    auto observer = obj.subject().make_wild_card_observer([&called, self](auto const &context) {
+        auto const &key = context.key;
+        auto const &info = context.value;
 
-            auto const &obj = info.object;
-            auto const &name = info.name;
+        XCTAssertEqual(key, db::object::loading_change_key);
 
-            XCTAssertEqual(name.size(), 0);
+        auto const &obj = info.object;
+        auto const &name = info.name;
 
-            XCTAssertEqual(obj.get_attribute("age"), db::value{10});
-            XCTAssertEqual(obj.get_attribute("name"), db::value{"name_val"});
-            XCTAssertEqual(obj.get_attribute("weight"), db::value{53.4});
+        XCTAssertEqual(name.size(), 0);
 
-            XCTAssertEqual(obj.relation_size("child"), 2);
-            XCTAssertEqual(obj.get_relation_id("child", 0), db::value{55});
-            XCTAssertEqual(obj.get_relation_id("child", 1), db::value{66});
+        XCTAssertEqual(obj.get_attribute("age"), db::value{10});
+        XCTAssertEqual(obj.get_attribute("name"), db::value{"name_val"});
+        XCTAssertEqual(obj.get_attribute("weight"), db::value{53.4});
 
-            called = true;
-        });
+        XCTAssertEqual(obj.relation_size("child"), 2);
+        XCTAssertEqual(obj.get_relation_id("child", 0), db::value{55});
+        XCTAssertEqual(obj.get_relation_id("child", 1), db::value{66});
+
+        called = true;
+    });
 
     db::value_map attributes{std::make_pair("age", db::value{10}), std::make_pair("name", db::value{"name_val"}),
                              std::make_pair("weight", db::value{53.4})};
@@ -570,22 +576,24 @@ using namespace yas;
 
     bool called = false;
 
-    auto observer = obj.subject().make_wild_card_observer(
-        [&called, self](std::string const &key, db::object::change_info const &info) {
-            XCTAssertEqual(key, db::object::loading_change_key);
+    auto observer = obj.subject().make_wild_card_observer([&called, self](auto const &context) {
+        auto const &key = context.key;
+        auto const &info = context.value;
 
-            auto const &obj = info.object;
-            auto const &name = info.name;
+        XCTAssertEqual(key, db::object::loading_change_key);
 
-            XCTAssertEqual(obj.status(), db::object_status::invalid);
+        auto const &obj = info.object;
+        auto const &name = info.name;
 
-            XCTAssertEqual(name.size(), 0);
+        XCTAssertEqual(obj.status(), db::object_status::invalid);
 
-            XCTAssertFalse(obj.get_attribute("name"));
-            XCTAssertEqual(obj.relation_size("child"), 0);
+        XCTAssertEqual(name.size(), 0);
 
-            called = true;
-        });
+        XCTAssertFalse(obj.get_attribute("name"));
+        XCTAssertEqual(obj.relation_size("child"), 0);
+
+        called = true;
+    });
 
     obj.clear_data();
 
