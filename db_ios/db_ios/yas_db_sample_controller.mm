@@ -65,24 +65,26 @@ void db_controller::setup(db::manager::completion_f completion) {
 
         auto weak_manager = to_weak(_manager);
 
-        _observer =
-            _manager.subject().make_wild_card_observer([&controller = *this](auto const &key, auto const &change_info) {
-                if (key == db::manager::object_change_key) {
-                    db::object const &object = change_info.object;
-                    if (auto idx_opt = index(controller._objects, object)) {
-                        if (object.entity_name() == entity_name_a && object.is_removed()) {
-                            erase_if(controller._objects, [&object](auto const &vec_obj) { return object == vec_obj; });
-                        }
-                        controller._subject.notify(
-                            object_did_change_key,
-                            {change_info.object, db::value{static_cast<db::integer::type>(*idx_opt)}});
-                    } else {
-                        controller._subject.notify(object_did_change_key);
+        _observer = _manager.subject().make_wild_card_observer([&controller = *this](auto const &context) {
+            auto const &key = context.key;
+            auto const &change_info = context.value;
+
+            if (key == db::manager::object_change_key) {
+                db::object const &object = change_info.object;
+                if (auto idx_opt = index(controller._objects, object)) {
+                    if (object.entity_name() == entity_name_a && object.is_removed()) {
+                        erase_if(controller._objects, [&object](auto const &vec_obj) { return object == vec_obj; });
                     }
-                } else if (key == db::manager::db_info_change_key) {
-                    controller._subject.notify(db_info_did_change_key);
+                    controller._subject.notify(
+                        object_did_change_key,
+                        {change_info.object, db::value{static_cast<db::integer::type>(*idx_opt)}});
+                } else {
+                    controller._subject.notify(object_did_change_key);
                 }
-            });
+            } else if (key == db::manager::db_info_change_key) {
+                controller._subject.notify(db_info_did_change_key);
+            }
+        });
     }
 }
 

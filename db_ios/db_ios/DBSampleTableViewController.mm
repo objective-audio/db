@@ -7,7 +7,8 @@
 #import "yas_cf_utils.h"
 #import "yas_db.h"
 #import "yas_db_sample_controller.h"
-#import "yas_objc_container.h"
+#import "yas_objc_ptr.h"
+#import "yas_objc_unowned.h"
 
 using namespace yas;
 using namespace yas::sample;
@@ -56,69 +57,66 @@ typedef NS_ENUM(NSUInteger, DBSampleInfoRow) {
 
     _db_controller = std::make_shared<db_controller>();
 
-    auto weak_container = make_weak_container(self);
+    auto unowned_self = make_objc_ptr([[YASUnownedObject<DBSampleTableViewController *> alloc] initWithObject:self]);
 
     auto proccessing_observer = _db_controller->subject().make_observer(
-        db_controller::processing_did_change_key,
-        [weak_container](auto const &key, db_controller::change_info const &info) {
-            if (auto self_container = weak_container.lock()) {
-                DBSampleTableViewController *controller = self_container.object();
-                if (info.value.get<db::integer>()) {
-                    controller.title = @"Processing...";
-                } else {
-                    controller.title = nil;
-                }
+        db_controller::processing_did_change_key, [unowned_self](auto const &context) {
+            db_controller::change_info const &info = context.value;
+
+            auto controller = [unowned_self.object() object];
+            if (info.value.get<db::integer>()) {
+                controller.title = @"Processing...";
+            } else {
+                controller.title = nil;
             }
         });
 
     _observers.emplace_back(std::move(proccessing_observer));
 
-    _db_controller->setup([weak_container](auto result) {
-        if (auto self_container = weak_container.lock()) {
-            DBSampleTableViewController *controller = self_container.object();
+    _db_controller->setup([unowned_self](auto result) {
+        auto controller = [unowned_self.object() object];
 
-            if (result) {
-                [controller setupObserversAfterSetup];
-                [controller updateTable];
-            } else {
-                CFStringRef cf_string = to_cf_object(to_string(result.error().type()));
-                [controller showErrorAlertWithTitle:@"Setup Error" message:(__bridge NSString *)cf_string];
-            }
+        if (result) {
+            [controller setupObserversAfterSetup];
+            [controller updateTable];
+        } else {
+            CFStringRef cf_string = to_cf_object(to_string(result.error().type()));
+            [controller showErrorAlertWithTitle:@"Setup Error" message:(__bridge NSString *)cf_string];
         }
     });
 }
 
 - (void)setupObserversAfterSetup {
-    auto weak_container = make_weak_container(self);
+    auto unowned_self = make_objc_ptr([[YASUnownedObject<DBSampleTableViewController *> alloc] initWithObject:self]);
 
-    auto observer = _db_controller->subject().make_wild_card_observer(
-        [weak_container](auto const &key, db_controller::change_info const &info) {
-            if (auto self_container = weak_container.lock()) {
-                DBSampleTableViewController *controller = self_container.object();
+    auto observer = _db_controller->subject().make_wild_card_observer([unowned_self](auto const &context) {
+        auto const &key = context.key;
+        db_controller::change_info const &info = context.value;
 
-                if (key == db_controller::db_info_did_change_key) {
-                    [controller updateTableForInfo:DBSampleInfoRowSaveID];
-                } else if (key == db_controller::objects_did_update_key) {
-                    [controller updateTable];
-                } else if (key == db_controller::object_did_insert_key) {
-                    [controller updateTableForInsertedRow:NSInteger(info.value.get<db::integer>())];
-                } else if (key == db_controller::object_did_change_key) {
-                    auto const &index = info.value.get<db::integer>();
-                    auto const &object = info.object;
-                    if (object.is_removed()) {
-                        [controller updateTableForDeletedRow:NSInteger(info.value.get<db::integer>())];
-                    } else {
-                        if (info.value) {
-                            [controller updateTableObjectCellAtIndex:NSInteger(index)];
-                        } else {
-                            [controller updateTableObjects];
-                        }
-                    }
+        auto controller = [unowned_self.object() object];
 
-                    [controller updateTableActions];
+        if (key == db_controller::db_info_did_change_key) {
+            [controller updateTableForInfo:DBSampleInfoRowSaveID];
+        } else if (key == db_controller::objects_did_update_key) {
+            [controller updateTable];
+        } else if (key == db_controller::object_did_insert_key) {
+            [controller updateTableForInsertedRow:NSInteger(info.value.get<db::integer>())];
+        } else if (key == db_controller::object_did_change_key) {
+            auto const &index = info.value.get<db::integer>();
+            auto const &object = info.object;
+            if (object.is_removed()) {
+                [controller updateTableForDeletedRow:NSInteger(info.value.get<db::integer>())];
+            } else {
+                if (info.value) {
+                    [controller updateTableObjectCellAtIndex:NSInteger(index)];
+                } else {
+                    [controller updateTableObjects];
                 }
             }
-        });
+
+            [controller updateTableActions];
+        }
+    });
 
     _observers.emplace_back(std::move(observer));
 }
