@@ -31,6 +31,7 @@ using namespace yas;
 }
 
 - (void)test_create_every_integer_value {
+#warning todo numeric_limitsにする
     db::value bool_value{true};
     db::value uint8_value{UInt8{UINT8_MAX}};
     db::value sint8_value{SInt8{INT8_MAX}};
