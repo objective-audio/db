@@ -40,7 +40,7 @@ using namespace yas;
 - (void)test_to_value_from_integer {
     uint8_t uint8_value = 1;
     uint16_t uint16_value = 2;
-    UInt32 uint32_value = 3;
+    uint32_t uint32_value = 3;
     UInt64 uint64_value = 4;
     SInt8 sint8_value = -1;
     SInt16 sint16_value = -2;
