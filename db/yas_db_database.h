@@ -60,8 +60,6 @@ namespace db {
     using count_result = result<int, error>;
 
     class database : public base {
-        using super_class = base;
-
        public:
         class impl;
 

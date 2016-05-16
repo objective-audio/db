@@ -145,16 +145,16 @@ struct db::const_object::impl : public base::impl {
 #pragma mark - db::const_object
 
 db::const_object::const_object(db::model const &model, std::string const &entity_name, object_data const &obj_data)
-    : super_class(std::make_unique<impl>(model, entity_name, obj_data)) {
+    : base(std::make_unique<impl>(model, entity_name, obj_data)) {
 }
 
-db::const_object::const_object(std::nullptr_t) : super_class(nullptr) {
+db::const_object::const_object(std::nullptr_t) : base(nullptr) {
 }
 
-db::const_object::const_object(std::shared_ptr<impl> const &impl) : super_class(impl) {
+db::const_object::const_object(std::shared_ptr<impl> const &impl) : base(impl) {
 }
 
-db::const_object::const_object(std::shared_ptr<impl> &&impl) : super_class(std::move(impl)) {
+db::const_object::const_object(std::shared_ptr<impl> &&impl) : base(std::move(impl)) {
 }
 
 db::model const &db::const_object::model() const {
@@ -205,15 +205,13 @@ db::const_object const &db::const_object::null_object() {
 #pragma mark - db::object::impl
 
 class db::object::impl : public const_object::impl, public manageable_object::impl {
-    using super_class = const_object::impl;
-
    public:
     enum db::object_status status = db::object_status::invalid;
     db::manager manager;
     yas::subject<db::object::change_info> subject;
 
     impl(db::manager const &manager, db::model const &model, std::string const &entity_name)
-        : super_class(model, entity_name), manager(manager) {
+        : const_object::impl(model, entity_name), manager(manager) {
     }
 
     ~impl() {
@@ -225,7 +223,7 @@ class db::object::impl : public const_object::impl, public manageable_object::im
     }
 
     void clear() {
-        super_class::clear();
+        const_object::impl::clear();
         status = db::object_status::invalid;
     }
 
@@ -487,10 +485,10 @@ db::object::change_info::change_info(class object const &object, std::string con
 #pragma mark - db::object
 
 db::object::object(db::manager const &manager, db::model const &model, std::string const &entity_name)
-    : super_class(std::make_unique<impl>(manager, model, entity_name)) {
+    : const_object(std::make_unique<impl>(manager, model, entity_name)) {
 }
 
-db::object::object(std::nullptr_t) : super_class(nullptr) {
+db::object::object(std::nullptr_t) : const_object(nullptr) {
 }
 
 subject<db::object::change_info> const &db::object::subject() const {

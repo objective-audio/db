@@ -123,7 +123,7 @@ struct db::model::impl : public base::impl {
     }
 };
 
-db::model::model(CFDictionaryRef const &cf_dict) : super_class(std::make_unique<impl>(cf_dict)) {
+db::model::model(CFDictionaryRef const &cf_dict) : base(std::make_unique<impl>(cf_dict)) {
 }
 
 yas::version const &db::model::version() const {

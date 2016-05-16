@@ -75,10 +75,10 @@ class db::row_set::impl : public base::impl, public closable::impl, public db_se
 };
 
 db::row_set::row_set(db::statement const &statement, database const &database)
-    : super_class(std::make_unique<impl>(statement, database)) {
+    : base(std::make_unique<impl>(statement, database)) {
 }
 
-db::row_set::row_set(std::nullptr_t) : super_class(nullptr) {
+db::row_set::row_set(std::nullptr_t) : base(nullptr) {
 }
 
 db::row_set::~row_set() = default;

@@ -26,8 +26,6 @@ namespace db {
     using integer_set_map = std::unordered_map<std::string, integer_set>;
 
     class const_object : public base {
-        using super_class = base;
-
        public:
         class impl;
 
@@ -57,8 +55,6 @@ namespace db {
     };
 
     class object : public const_object {
-        using super_class = const_object;
-
        public:
         class impl;
 
