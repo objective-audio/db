@@ -113,7 +113,7 @@ db::value::value(int64_t const &value) : base(std::make_unique<impl<db::integer>
 
 db::value::value(float const &value) : base(std::make_unique<impl<real>>(value)) {
 }
-db::value::value(Float64 const &value) : base(std::make_unique<impl<real>>(value)) {
+db::value::value(double const &value) : base(std::make_unique<impl<real>>(value)) {
 }
 
 db::value::value(std::string const &value) : base(std::make_unique<impl<text>>(value)) {

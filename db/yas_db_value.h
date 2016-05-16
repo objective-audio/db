@@ -26,7 +26,7 @@ namespace db {
     };
 
     struct real {
-        using type = Float64;
+        using type = double;
         static constexpr auto name = "REAL";
     };
 
@@ -83,7 +83,7 @@ namespace db {
         explicit value(uint64_t const &);
         explicit value(int64_t const &);
         explicit value(float const &);
-        explicit value(Float64 const &);
+        explicit value(double const &);
         explicit value(std::string const &);
         explicit value(std::string &&);
         explicit value(blob::type &&);
