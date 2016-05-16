@@ -80,7 +80,7 @@ namespace db {
         explicit value(SInt16 const &);
         explicit value(uint32_t const &);
         explicit value(SInt32 const &);
-        explicit value(UInt64 const &);
+        explicit value(uint64_t const &);
         explicit value(SInt64 const &);
         explicit value(Float32 const &);
         explicit value(Float64 const &);
