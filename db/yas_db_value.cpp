@@ -94,37 +94,37 @@ struct db::value::impl : public impl_base {
 
 #pragma mark - value
 
-db::value::value(UInt8 const &value) : super_class(std::make_unique<impl<db::integer>>(value)) {
+db::value::value(UInt8 const &value) : base(std::make_unique<impl<db::integer>>(value)) {
 }
-db::value::value(SInt8 const &value) : super_class(std::make_unique<impl<db::integer>>(value)) {
+db::value::value(SInt8 const &value) : base(std::make_unique<impl<db::integer>>(value)) {
 }
-db::value::value(UInt16 const &value) : super_class(std::make_unique<impl<db::integer>>(value)) {
+db::value::value(UInt16 const &value) : base(std::make_unique<impl<db::integer>>(value)) {
 }
-db::value::value(SInt16 const &value) : super_class(std::make_unique<impl<db::integer>>(value)) {
+db::value::value(SInt16 const &value) : base(std::make_unique<impl<db::integer>>(value)) {
 }
-db::value::value(UInt32 const &value) : super_class(std::make_unique<impl<db::integer>>(value)) {
+db::value::value(UInt32 const &value) : base(std::make_unique<impl<db::integer>>(value)) {
 }
-db::value::value(SInt32 const &value) : super_class(std::make_unique<impl<db::integer>>(value)) {
+db::value::value(SInt32 const &value) : base(std::make_unique<impl<db::integer>>(value)) {
 }
-db::value::value(UInt64 const &value) : super_class(std::make_unique<impl<db::integer>>(value)) {
+db::value::value(UInt64 const &value) : base(std::make_unique<impl<db::integer>>(value)) {
 }
-db::value::value(SInt64 const &value) : super_class(std::make_unique<impl<db::integer>>(value)) {
-}
-
-db::value::value(Float32 const &value) : super_class(std::make_unique<impl<real>>(value)) {
-}
-db::value::value(Float64 const &value) : super_class(std::make_unique<impl<real>>(value)) {
+db::value::value(SInt64 const &value) : base(std::make_unique<impl<db::integer>>(value)) {
 }
 
-db::value::value(std::string const &value) : super_class(std::make_unique<impl<text>>(value)) {
+db::value::value(Float32 const &value) : base(std::make_unique<impl<real>>(value)) {
 }
-db::value::value(std::string &&value) : super_class(std::make_unique<impl<text>>(std::move(value))) {
-}
-
-db::value::value(blob::type &&value) : super_class(std::make_unique<impl<blob>>(std::move(value))) {
+db::value::value(Float64 const &value) : base(std::make_unique<impl<real>>(value)) {
 }
 
-db::value::value(null::type) : super_class(null_value_impl_ptr()) {
+db::value::value(std::string const &value) : base(std::make_unique<impl<text>>(value)) {
+}
+db::value::value(std::string &&value) : base(std::make_unique<impl<text>>(std::move(value))) {
+}
+
+db::value::value(blob::type &&value) : base(std::make_unique<impl<blob>>(std::move(value))) {
+}
+
+db::value::value(null::type) : base(null_value_impl_ptr()) {
 }
 
 template <>
@@ -141,7 +141,7 @@ db::value::~value() = default;
 
 db::value::value(value const &) = default;
 
-db::value::value(value &&rhs) : super_class(std::move(rhs.impl_ptr())) {
+db::value::value(value &&rhs) : base(std::move(rhs.impl_ptr())) {
     rhs.set_impl_ptr(null_value_impl_ptr());
 }
 

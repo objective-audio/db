@@ -564,14 +564,14 @@ bool db::database::sqlite_thread_safe() {
     return sqlite3_threadsafe() != 0;
 }
 
-db::database::database(std::string const &path) : super_class(std::make_shared<impl>(path)) {
+db::database::database(std::string const &path) : base(std::make_shared<impl>(path)) {
     if (auto key = min_empty_key(_databases)) {
         impl_ptr<impl>()->db_key = *key;
         db::_databases.insert(std::make_pair(*key, *this));
     }
 }
 
-db::database::database(std::nullptr_t) : super_class(nullptr) {
+db::database::database(std::nullptr_t) : base(nullptr) {
 }
 
 db::database::~database() = default;

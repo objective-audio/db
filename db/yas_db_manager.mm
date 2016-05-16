@@ -1374,10 +1374,10 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
 
 db::manager::manager(std::string const &db_path, db::model const &model, std::size_t const priority_count,
                      dispatch_queue_t const dispatch_queue)
-    : super_class(std::make_unique<impl>(db_path, model, dispatch_queue, priority_count)) {
+    : base(std::make_unique<impl>(db_path, model, dispatch_queue, priority_count)) {
 }
 
-db::manager::manager(std::nullptr_t) : super_class(nullptr) {
+db::manager::manager(std::nullptr_t) : base(nullptr) {
 }
 
 void db::manager::suspend() {

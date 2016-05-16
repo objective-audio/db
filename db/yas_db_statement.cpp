@@ -41,10 +41,10 @@ class db::statement::impl : public base::impl, public closable::impl {
 
 #pragma mark - statement
 
-db::statement::statement() : super_class(std::make_unique<impl>()) {
+db::statement::statement() : base(std::make_unique<impl>()) {
 }
 
-db::statement::statement(std::nullptr_t) : super_class(nullptr) {
+db::statement::statement(std::nullptr_t) : base(nullptr) {
 }
 
 db::statement::~statement() = default;
