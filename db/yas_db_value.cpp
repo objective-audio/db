@@ -104,7 +104,7 @@ db::value::value(int16_t const &value) : base(std::make_unique<impl<db::integer>
 }
 db::value::value(uint32_t const &value) : base(std::make_unique<impl<db::integer>>(value)) {
 }
-db::value::value(SInt32 const &value) : base(std::make_unique<impl<db::integer>>(value)) {
+db::value::value(int32_t const &value) : base(std::make_unique<impl<db::integer>>(value)) {
 }
 db::value::value(uint64_t const &value) : base(std::make_unique<impl<db::integer>>(value)) {
 }
