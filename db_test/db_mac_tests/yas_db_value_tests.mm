@@ -35,7 +35,7 @@ using namespace yas;
     db::value bool_value{true};
     db::value uint8_value{uint8_t{UINT8_MAX}};
     db::value sint8_value{SInt8{INT8_MAX}};
-    db::value uint16_value{UInt16{UINT16_MAX}};
+    db::value uint16_value{uint16_t{UINT16_MAX}};
     db::value sint16_value{SInt16{INT16_MAX}};
     db::value uint32_value{UInt32{UINT32_MAX}};
     db::value sint32_value{SInt32{INT32_MAX}};

@@ -76,7 +76,7 @@ namespace db {
 
         explicit value(uint8_t const &);
         explicit value(SInt8 const &);
-        explicit value(UInt16 const &);
+        explicit value(uint16_t const &);
         explicit value(SInt16 const &);
         explicit value(UInt32 const &);
         explicit value(SInt32 const &);
