@@ -172,7 +172,7 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
         if (cached_statements.count(query) > 0) {
             auto &statements = cached_statements.at(query);
             for (auto &pair : statements) {
-                if (!pair.second.in_use().value()) {
+                if (!pair.second.in_use()) {
                     return pair.second;
                 }
             }
@@ -182,7 +182,7 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
 
     void set_cached_statement(db::statement const &statement, std::string const &query) {
         db::statement cached_statement = statement;
-        cached_statement.query().set_value(query);
+        cached_statement.set_query(query);
 
         if (cached_statements.count(query) == 0) {
             cached_statements.insert(std::make_pair(query, std::unordered_map<uintptr_t, db::statement>{}));
@@ -255,13 +255,13 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
 
         sqlite_result_code result_code{SQLITE_OK};
         std::string error_message;
-        sqlite3_stmt *stmt{nullptr};
+        sqlite3_stmt *stmt = nullptr;
         db::statement statement{nullptr};
 
         if (should_cache_statements) {
             statement = cached_statement(sql);
             if (statement) {
-                stmt = statement.stmt().value();
+                stmt = statement.stmt();
                 statement.reset();
             }
         }
@@ -320,7 +320,7 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
 
         if (should_cache_statements && !statement) {
             statement = db::statement{};
-            statement.stmt().set_value(stmt);
+            statement.set_stmt(stmt);
             set_cached_statement(statement, sql);
         }
 
@@ -416,7 +416,7 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
         if (should_cache_statements) {
             statement = cached_statement(sql);
             if (statement) {
-                stmt = statement.stmt().value();
+                stmt = statement.stmt();
                 statement.reset();
             }
         }
@@ -462,7 +462,7 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
 
         if (!statement) {
             statement = db::statement{};
-            statement.stmt().set_value(stmt);
+            statement.set_stmt(stmt);
 
             if (should_cache_statements && sql.size() > 0) {
                 set_cached_statement(statement, sql);

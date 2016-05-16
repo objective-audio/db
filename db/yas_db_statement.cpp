@@ -10,33 +10,30 @@ using namespace yas;
 
 class db::statement::impl : public base::impl, public closable::impl {
    public:
-    impl() : stmt(), query(), in_use() {
-    }
-
     ~impl() {
         close();
     }
 
     void close() override {
-        if (auto stmt_ptr = stmt.value()) {
-            sqlite3_finalize(stmt_ptr);
-            stmt.set_value(nullptr);
+        if (_stmt) {
+            sqlite3_finalize(_stmt);
+            _stmt = nullptr;
         }
 
-        in_use.set_value(false);
+        _in_use = false;
     }
 
     void reset() {
-        if (auto stmt_ptr = stmt.value()) {
-            sqlite3_reset(stmt_ptr);
+        if (_stmt) {
+            sqlite3_reset(_stmt);
         }
 
-        in_use.set_value(false);
+        _in_use = false;
     }
 
-    property<sqlite3_stmt *> stmt;
-    property<std::string> query;
-    property<bool> in_use;
+    sqlite3_stmt *_stmt;
+    std::string _query;
+    bool _in_use = false;
 };
 
 #pragma mark - statement
@@ -49,28 +46,28 @@ db::statement::statement(std::nullptr_t) : base(nullptr) {
 
 db::statement::~statement() = default;
 
-property<sqlite3_stmt *> &db::statement::stmt() {
-    return impl_ptr<impl>()->stmt;
+void db::statement::set_stmt(sqlite3_stmt *const stmt) {
+    impl_ptr<impl>()->_stmt = stmt;
 }
 
-property<sqlite3_stmt *> const &db::statement::stmt() const {
-    return impl_ptr<impl>()->stmt;
+sqlite3_stmt *db::statement::stmt() const {
+    return impl_ptr<impl>()->_stmt;
 }
 
-property<std::string> &db::statement::query() {
-    return impl_ptr<impl>()->query;
+void db::statement::set_query(std::string query) {
+    impl_ptr<impl>()->_query = std::move(query);
 }
 
-property<std::string> const &db::statement::query() const {
-    return impl_ptr<impl>()->query;
+std::string const &db::statement::query() const {
+    return impl_ptr<impl>()->_query;
 }
 
-property<bool> &db::statement::in_use() {
-    return impl_ptr<impl>()->in_use;
+void db::statement::set_in_use(bool const in_use) {
+    impl_ptr<impl>()->_in_use = in_use;
 }
 
-property<bool> const &db::statement::in_use() const {
-    return impl_ptr<impl>()->in_use;
+bool db::statement::in_use() const {
+    return impl_ptr<impl>()->_in_use;
 }
 
 void db::statement::reset() {
