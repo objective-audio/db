@@ -45,7 +45,7 @@ using namespace yas;
     int8_t sint8_value = -1;
     int16_t sint16_value = -2;
     int32_t sint32_value = -3;
-    SInt64 sint64_value = -4;
+    int64_t sint64_value = -4;
 
     auto const uint8_number = CFNumberCreate(nullptr, kCFNumberSInt8Type, &uint8_value);
     auto const uint16_number = CFNumberCreate(nullptr, kCFNumberSInt16Type, &uint16_value);

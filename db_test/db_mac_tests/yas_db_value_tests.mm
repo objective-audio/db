@@ -40,7 +40,7 @@ using namespace yas;
     db::value uint32_value{uint32_t{UINT32_MAX}};
     db::value sint32_value{int32_t{INT32_MAX}};
     db::value uint64_value{uint64_t{UINT64_MAX}};
-    db::value sint64_value{SInt64{INT64_MAX}};
+    db::value sint64_value{int64_t{INT64_MAX}};
 
     XCTAssertTrue(bool_value.type() == typeid(db::integer));
     XCTAssertTrue(uint8_value.type() == typeid(db::integer));

@@ -35,7 +35,7 @@ db::value yas::to_value(CFTypeRef const &cf_obj) {
             } break;
 
             default: {
-                SInt64 int64_value;
+                int64_t int64_value;
                 if (CFNumberGetValue(cf_number, kCFNumberSInt64Type, &int64_value)) {
                     return db::value{int64_value};
                 }
