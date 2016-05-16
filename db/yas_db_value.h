@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include <MacTypes.h>
 #include <sqlite3.h>
 #include <chrono>
 #include <memory>
