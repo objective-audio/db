@@ -42,7 +42,7 @@ using namespace yas;
     uint16_t uint16_value = 2;
     uint32_t uint32_value = 3;
     uint64_t uint64_value = 4;
-    SInt8 sint8_value = -1;
+    int8_t sint8_value = -1;
     SInt16 sint16_value = -2;
     SInt32 sint32_value = -3;
     SInt64 sint64_value = -4;

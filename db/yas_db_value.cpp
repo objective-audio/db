@@ -96,7 +96,7 @@ struct db::value::impl : public impl_base {
 
 db::value::value(uint8_t const &value) : base(std::make_unique<impl<db::integer>>(value)) {
 }
-db::value::value(SInt8 const &value) : base(std::make_unique<impl<db::integer>>(value)) {
+db::value::value(int8_t const &value) : base(std::make_unique<impl<db::integer>>(value)) {
 }
 db::value::value(uint16_t const &value) : base(std::make_unique<impl<db::integer>>(value)) {
 }
