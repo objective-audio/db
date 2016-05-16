@@ -25,8 +25,6 @@ namespace db {
     };
 
     class row_set : public base {
-        using super_class = base;
-
        public:
         class impl;
 

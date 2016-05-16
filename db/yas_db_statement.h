@@ -14,7 +14,7 @@
 namespace yas {
 namespace db {
     class statement : public base {
-        using super_class = base;
+        class impl;
 
        public:
         statement();
@@ -39,9 +39,6 @@ namespace db {
         void reset();
 
         closable closable();
-
-       private:
-        class impl;
     };
 }
 }

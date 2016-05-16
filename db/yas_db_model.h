@@ -20,7 +20,7 @@ namespace db {
     class entity;
 
     class model : public base {
-        using super_class = base;
+        class impl;
 
        public:
         using entity_map = std::unordered_map<std::string, entity>;
@@ -43,9 +43,6 @@ namespace db {
         bool attribute_exists(std::string const &entity_name, std::string const &attr_name) const;
         bool relation_exists(std::string const &entity_name, std::string const &rel_name) const;
         bool index_exists(std::string const &index_name) const;
-
-       private:
-        class impl;
     };
 }
 }

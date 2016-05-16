@@ -68,7 +68,8 @@ namespace db {
     };
 
     class value : public base {
-        using super_class = base;
+        template <typename T>
+        class impl;
 
        public:
         class impl_base;
@@ -110,9 +111,6 @@ namespace db {
         static value const &null_value();
 
        private:
-        template <typename T>
-        class impl;
-
         static std::shared_ptr<db::value::impl<null>> const &null_value_impl_ptr();
     };
 

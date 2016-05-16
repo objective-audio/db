@@ -205,8 +205,6 @@ db::const_object const &db::const_object::null_object() {
 #pragma mark - db::object::impl
 
 class db::object::impl : public const_object::impl, public manageable_object::impl {
-    using super_class = const_object::impl;
-
    public:
     enum db::object_status status = db::object_status::invalid;
     db::manager manager;
