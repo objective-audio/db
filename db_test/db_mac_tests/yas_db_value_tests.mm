@@ -72,7 +72,7 @@ using namespace yas;
 }
 
 - (void)test_create_every_real_value {
-    db::value float32_value{Float32{1.0f}};
+    db::value float32_value{float{1.0f}};
     db::value float64_value{Float64{2.0}};
 
     XCTAssertTrue(float32_value.type() == typeid(db::real));

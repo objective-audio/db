@@ -76,7 +76,7 @@ using namespace yas;
 }
 
 - (void)test_to_value_from_float {
-    Float32 f32_value = 3.2f;
+    float f32_value = 3.2f;
     Float64 f64_value = 6.4;
 
     auto const f32_number = CFNumberCreate(nullptr, kCFNumberFloat32Type, &f32_value);

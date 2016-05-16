@@ -82,7 +82,7 @@ namespace db {
         explicit value(int32_t const &);
         explicit value(uint64_t const &);
         explicit value(int64_t const &);
-        explicit value(Float32 const &);
+        explicit value(float const &);
         explicit value(Float64 const &);
         explicit value(std::string const &);
         explicit value(std::string &&);
