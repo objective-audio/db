@@ -32,14 +32,14 @@ using namespace yas;
 
 - (void)test_create_every_integer_value {
     db::value bool_value{true};
-    db::value uint8_value{UInt8{UINT8_MAX}};
-    db::value sint8_value{SInt8{INT8_MAX}};
-    db::value uint16_value{UInt16{UINT16_MAX}};
-    db::value sint16_value{SInt16{INT16_MAX}};
-    db::value uint32_value{UInt32{UINT32_MAX}};
-    db::value sint32_value{SInt32{INT32_MAX}};
-    db::value uint64_value{UInt64{UINT64_MAX}};
-    db::value sint64_value{SInt64{INT64_MAX}};
+    db::value uint8_value{uint8_t{std::numeric_limits<uint8_t>::max()}};
+    db::value sint8_value{int8_t{std::numeric_limits<int8_t>::max()}};
+    db::value uint16_value{uint16_t{std::numeric_limits<uint16_t>::max()}};
+    db::value sint16_value{int16_t{std::numeric_limits<int16_t>::max()}};
+    db::value uint32_value{uint32_t{std::numeric_limits<uint32_t>::max()}};
+    db::value sint32_value{int32_t{std::numeric_limits<int32_t>::max()}};
+    db::value uint64_value{uint64_t{std::numeric_limits<uint64_t>::max()}};
+    db::value sint64_value{int64_t{std::numeric_limits<int64_t>::max()}};
 
     XCTAssertTrue(bool_value.type() == typeid(db::integer));
     XCTAssertTrue(uint8_value.type() == typeid(db::integer));
@@ -52,14 +52,14 @@ using namespace yas;
     XCTAssertTrue(sint64_value.type() == typeid(db::integer));
 
     XCTAssertEqual(bool_value.get<db::integer>(), true);
-    XCTAssertEqual(uint8_value.get<db::integer>(), UINT8_MAX);
-    XCTAssertEqual(sint8_value.get<db::integer>(), INT8_MAX);
-    XCTAssertEqual(uint16_value.get<db::integer>(), UINT16_MAX);
-    XCTAssertEqual(sint16_value.get<db::integer>(), INT16_MAX);
-    XCTAssertEqual(uint32_value.get<db::integer>(), UINT32_MAX);
-    XCTAssertEqual(sint32_value.get<db::integer>(), INT32_MAX);
-    XCTAssertEqual(uint64_value.get<db::integer>(), UINT64_MAX);
-    XCTAssertEqual(sint64_value.get<db::integer>(), INT64_MAX);
+    XCTAssertEqual(uint8_value.get<db::integer>(), std::numeric_limits<uint8_t>::max());
+    XCTAssertEqual(sint8_value.get<db::integer>(), std::numeric_limits<int8_t>::max());
+    XCTAssertEqual(uint16_value.get<db::integer>(), std::numeric_limits<uint16_t>::max());
+    XCTAssertEqual(sint16_value.get<db::integer>(), std::numeric_limits<int16_t>::max());
+    XCTAssertEqual(uint32_value.get<db::integer>(), std::numeric_limits<uint32_t>::max());
+    XCTAssertEqual(sint32_value.get<db::integer>(), std::numeric_limits<int32_t>::max());
+    XCTAssertEqual(uint64_value.get<db::integer>(), std::numeric_limits<uint64_t>::max());
+    XCTAssertEqual(sint64_value.get<db::integer>(), std::numeric_limits<int64_t>::max());
 }
 
 - (void)test_create_real_value {
@@ -71,8 +71,8 @@ using namespace yas;
 }
 
 - (void)test_create_every_real_value {
-    db::value float32_value{Float32{1.0f}};
-    db::value float64_value{Float64{2.0}};
+    db::value float32_value{float{1.0f}};
+    db::value float64_value{double{2.0}};
 
     XCTAssertTrue(float32_value.type() == typeid(db::real));
     XCTAssertTrue(float64_value.type() == typeid(db::real));
@@ -91,7 +91,7 @@ using namespace yas;
 }
 
 - (void)test_create_blob_value_from_vector {
-    std::vector<UInt8> vec{0, 1, 2, 3};
+    std::vector<uint8_t> vec{0, 1, 2, 3};
     db::value value{vec.data(), static_cast<std::size_t>(vec.size())};
     XCTAssertTrue(value.type() == typeid(db::blob));
 
@@ -99,7 +99,7 @@ using namespace yas;
 
     XCTAssertEqual(blob.size(), 4);
 
-    const UInt8 *ptr = (const UInt8 *)(blob.data());
+    const uint8_t *ptr = (const uint8_t *)(blob.data());
     XCTAssertEqual(ptr[0], 0);
     XCTAssertEqual(ptr[1], 1);
     XCTAssertEqual(ptr[2], 2);
@@ -107,14 +107,14 @@ using namespace yas;
 }
 
 - (void)test_create_blob_value_from_ptr {
-    std::vector<UInt8> vec{5, 6, 7};
+    std::vector<uint8_t> vec{5, 6, 7};
     db::value value{vec.data(), vec.size()};
 
     auto const &blob = value.get<db::blob>();
 
     XCTAssertEqual(blob.size(), 3);
 
-    UInt8 *ptr = (UInt8 *)(blob.data());
+    uint8_t *ptr = (uint8_t *)(blob.data());
     XCTAssertEqual(ptr[0], 5);
     XCTAssertEqual(ptr[1], 6);
     XCTAssertEqual(ptr[2], 7);
@@ -132,7 +132,7 @@ using namespace yas;
 }
 
 - (void)test_no_copy {
-    std::vector<UInt8> vec{10};
+    std::vector<uint8_t> vec{10};
     db::value value{vec.data(), vec.size(), yas::db::no_copy_tag};
 }
 
@@ -173,7 +173,7 @@ using namespace yas;
     XCTAssertEqual(text_value.sql(), "'text_sql_value'");
     XCTAssertEqual(null_value.sql(), "null");
 
-    std::vector<UInt8> vec{0};
+    std::vector<uint8_t> vec{0};
     db::value blob_value{db::blob{vec.data(), vec.size()}};
 
     XCTAssertThrows(blob_value.sql());
@@ -183,7 +183,7 @@ using namespace yas;
     db::value integer_value{db::integer::type{8}};
     db::value real_value{db::real::type{0.5}};
     db::value text_value{db::text::type{"text_value"}};
-    std::vector<UInt8> vec{0, 1};
+    std::vector<uint8_t> vec{0, 1};
     db::value blob_value{db::blob{vec.data(), vec.size()}};
     db::value null_value{nullptr};
 
@@ -195,10 +195,10 @@ using namespace yas;
 }
 
 - (void)test_is_equal_blobs {
-    std::vector<UInt8> vec_a{0, 1, 2, 3};
-    std::vector<UInt8> vec_a2{0, 1, 2, 3};
-    std::vector<UInt8> vec_b{0, 1, 2, 4};
-    std::vector<UInt8> vec_c{0, 1, 2};
+    std::vector<uint8_t> vec_a{0, 1, 2, 3};
+    std::vector<uint8_t> vec_a2{0, 1, 2, 3};
+    std::vector<uint8_t> vec_b{0, 1, 2, 4};
+    std::vector<uint8_t> vec_c{0, 1, 2};
 
     db::blob blob_a{vec_a.data(), vec_a.size()};
     db::blob blob_a2{vec_a2.data(), vec_a2.size()};
@@ -274,9 +274,9 @@ using namespace yas;
 }
 
 - (void)test_is_equal_blob_values {
-    std::vector<UInt8> vec_a{1};
-    std::vector<UInt8> vec_b{1};
-    std::vector<UInt8> vec_c{3};
+    std::vector<uint8_t> vec_a{1};
+    std::vector<uint8_t> vec_b{1};
+    std::vector<uint8_t> vec_c{3};
 
     db::value b_value_a{vec_a.data(), vec_a.size()};
     db::value b_value_b{vec_b.data(), vec_b.size()};

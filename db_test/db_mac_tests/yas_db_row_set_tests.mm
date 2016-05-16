@@ -94,10 +94,10 @@ using namespace yas;
     XCTAssertTrue(
         db.execute_update("create table test_table (int_field, float_field, string_field, data_field, null_field);"));
 
-    std::vector<UInt8> vec{0, 1, 2, 3};
+    std::vector<uint8_t> vec{0, 1, 2, 3};
 
     db::value_map args{std::make_pair("int_field", db::value{sqlite3_int64{1}}),
-                       std::make_pair("float_field", db::value{Float64{2.0}}),
+                       std::make_pair("float_field", db::value{double{2.0}}),
                        std::make_pair("string_field", db::value{"string_value"}),
                        std::make_pair("data_field", db::value{vec.data(), vec.size()}),
                        std::make_pair("null_field", db::value{nullptr})};
@@ -133,7 +133,7 @@ using namespace yas;
     auto &result_blob = data_value.get<db::blob>();
     XCTAssertEqual(result_blob.size(), 4);
 
-    const UInt8 *data = (const UInt8 *)result_blob.data();
+    const uint8_t *data = (const uint8_t *)result_blob.data();
     XCTAssertEqual(data[0], 0);
     XCTAssertEqual(data[1], 1);
     XCTAssertEqual(data[2], 2);
@@ -149,10 +149,10 @@ using namespace yas;
     XCTAssertTrue(
         db.execute_update("create table test_table (int_field, float_field, string_field, data_field, null_field);"));
 
-    std::vector<UInt8> vec{0, 1, 2, 3};
+    std::vector<uint8_t> vec{0, 1, 2, 3};
 
     db::value_map args{std::make_pair("int_field", db::value{sqlite3_int64{1}}),
-                       std::make_pair("float_field", db::value{Float64{2.0}}),
+                       std::make_pair("float_field", db::value{double{2.0}}),
                        std::make_pair("string_field", db::value{"string_value"}),
                        std::make_pair("data_field", db::value{vec.data(), vec.size()}),
                        std::make_pair("null_field", db::value{nullptr})};
@@ -189,7 +189,7 @@ using namespace yas;
     auto &result_blob = data_value.get<db::blob>();
     XCTAssertEqual(result_blob.size(), 4);
 
-    const UInt8 *data = (const UInt8 *)result_blob.data();
+    const uint8_t *data = (const uint8_t *)result_blob.data();
     XCTAssertEqual(data[0], 0);
     XCTAssertEqual(data[1], 1);
     XCTAssertEqual(data[2], 2);

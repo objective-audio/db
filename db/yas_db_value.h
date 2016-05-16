@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include <MacTypes.h>
 #include <sqlite3.h>
 #include <chrono>
 #include <memory>
@@ -26,7 +25,7 @@ namespace db {
     };
 
     struct real {
-        using type = Float64;
+        using type = double;
         static constexpr auto name = "REAL";
     };
 
@@ -54,7 +53,7 @@ namespace db {
         std::size_t size() const;
 
        private:
-        std::vector<UInt8> _vector;
+        std::vector<uint8_t> _vector;
         const void *_data;
         std::size_t _size;
 
@@ -74,16 +73,16 @@ namespace db {
        public:
         class impl_base;
 
-        explicit value(UInt8 const &);
-        explicit value(SInt8 const &);
-        explicit value(UInt16 const &);
-        explicit value(SInt16 const &);
-        explicit value(UInt32 const &);
-        explicit value(SInt32 const &);
-        explicit value(UInt64 const &);
-        explicit value(SInt64 const &);
-        explicit value(Float32 const &);
-        explicit value(Float64 const &);
+        explicit value(uint8_t const &);
+        explicit value(int8_t const &);
+        explicit value(uint16_t const &);
+        explicit value(int16_t const &);
+        explicit value(uint32_t const &);
+        explicit value(int32_t const &);
+        explicit value(uint64_t const &);
+        explicit value(int64_t const &);
+        explicit value(float const &);
+        explicit value(double const &);
         explicit value(std::string const &);
         explicit value(std::string &&);
         explicit value(blob::type &&);

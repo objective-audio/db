@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include <MacTypes.h>
 #include <sqlite3.h>
 #include <functional>
 #include "yas_base.h"
@@ -19,7 +18,7 @@ namespace db {
     union callback_id {
         void *v;
         struct {
-            UInt8 database;
+            uint8_t database;
         };
     };
 

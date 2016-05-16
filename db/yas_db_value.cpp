@@ -24,8 +24,8 @@ db::blob::blob(const void *const data, std::size_t const size, no_copy_tag_t con
 }
 
 bool db::blob::operator==(blob const &rhs) const {
-    UInt8 const *lhs_data = static_cast<UInt8 const *>(data());
-    UInt8 const *rhs_data = static_cast<UInt8 const *>(rhs.data());
+    uint8_t const *lhs_data = static_cast<uint8_t const *>(data());
+    uint8_t const *rhs_data = static_cast<uint8_t const *>(rhs.data());
 
     if (lhs_data == rhs_data) {
         return true;
@@ -94,26 +94,26 @@ struct db::value::impl : public impl_base {
 
 #pragma mark - value
 
-db::value::value(UInt8 const &value) : base(std::make_unique<impl<db::integer>>(value)) {
+db::value::value(uint8_t const &value) : base(std::make_unique<impl<db::integer>>(value)) {
 }
-db::value::value(SInt8 const &value) : base(std::make_unique<impl<db::integer>>(value)) {
+db::value::value(int8_t const &value) : base(std::make_unique<impl<db::integer>>(value)) {
 }
-db::value::value(UInt16 const &value) : base(std::make_unique<impl<db::integer>>(value)) {
+db::value::value(uint16_t const &value) : base(std::make_unique<impl<db::integer>>(value)) {
 }
-db::value::value(SInt16 const &value) : base(std::make_unique<impl<db::integer>>(value)) {
+db::value::value(int16_t const &value) : base(std::make_unique<impl<db::integer>>(value)) {
 }
-db::value::value(UInt32 const &value) : base(std::make_unique<impl<db::integer>>(value)) {
+db::value::value(uint32_t const &value) : base(std::make_unique<impl<db::integer>>(value)) {
 }
-db::value::value(SInt32 const &value) : base(std::make_unique<impl<db::integer>>(value)) {
+db::value::value(int32_t const &value) : base(std::make_unique<impl<db::integer>>(value)) {
 }
-db::value::value(UInt64 const &value) : base(std::make_unique<impl<db::integer>>(value)) {
+db::value::value(uint64_t const &value) : base(std::make_unique<impl<db::integer>>(value)) {
 }
-db::value::value(SInt64 const &value) : base(std::make_unique<impl<db::integer>>(value)) {
+db::value::value(int64_t const &value) : base(std::make_unique<impl<db::integer>>(value)) {
 }
 
-db::value::value(Float32 const &value) : base(std::make_unique<impl<real>>(value)) {
+db::value::value(float const &value) : base(std::make_unique<impl<real>>(value)) {
 }
-db::value::value(Float64 const &value) : base(std::make_unique<impl<real>>(value)) {
+db::value::value(double const &value) : base(std::make_unique<impl<real>>(value)) {
 }
 
 db::value::value(std::string const &value) : base(std::make_unique<impl<text>>(value)) {

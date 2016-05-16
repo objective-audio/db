@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include <MacTypes.h>
 #include <string>
 #include "yas_db_value.h"
 
@@ -23,8 +22,8 @@ namespace db {
     };
 
     struct range {
-        UInt64 location = 0;
-        UInt64 length = 0;
+        uint64_t location = 0;
+        uint64_t length = 0;
 
         bool is_empty() const;
 
