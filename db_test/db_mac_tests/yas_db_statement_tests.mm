@@ -33,37 +33,37 @@ using namespace yas;
 - (void)test_query {
     db::statement statement;
 
-    XCTAssertEqual(statement.query().value(), "");
+    XCTAssertEqual(statement.query(), "");
 
-    statement.query().set_value("test_query");
+    statement.set_query("test_query");
 
     auto const &const_statement = statement;
 
-    XCTAssertEqual(const_statement.query().value(), "test_query");
+    XCTAssertEqual(const_statement.query(), "test_query");
 }
 
 - (void)test_in_use {
     db::statement statement;
 
-    XCTAssertFalse(statement.in_use().value());
+    XCTAssertFalse(statement.in_use());
 
-    statement.in_use().set_value(true);
+    statement.set_in_use(true);
 
     auto const &const_statement = statement;
 
-    XCTAssertTrue(const_statement.in_use().value());
+    XCTAssertTrue(const_statement.in_use());
 }
 
 - (void)test_reset {
     db::statement statement;
 
-    statement.in_use().set_value(true);
+    statement.set_in_use(true);
 
-    XCTAssertTrue(statement.in_use().value());
+    XCTAssertTrue(statement.in_use());
 
     statement.reset();
 
-    XCTAssertFalse(statement.in_use().value());
+    XCTAssertFalse(statement.in_use());
 }
 
 @end

@@ -26,7 +26,7 @@ db::next_result_code::operator bool() const {
 class db::row_set::impl : public base::impl, public closable::impl, public db_settable::impl {
    public:
     impl(db::statement const &statement, database const &database) : _statement(statement), _database(database) {
-        _statement.in_use().set_value(true);
+        _statement.set_in_use(true);
     }
 
     ~impl() {
@@ -57,7 +57,7 @@ class db::row_set::impl : public base::impl, public closable::impl, public db_se
 
     std::unordered_map<std::string, int> const &column_name_to_index_map() const {
         if (_column_name_to_index_map.empty()) {
-            auto *const stmt = _statement.stmt().value();
+            auto *const stmt = _statement.stmt();
             int column_count = sqlite3_column_count(stmt);
             for (auto &idx : make_each(column_count)) {
                 _column_name_to_index_map.insert(std::make_pair(to_lower(sqlite3_column_name(stmt, idx)), idx));
@@ -88,7 +88,7 @@ db::statement const &db::row_set::statement() const {
 }
 
 db::next_result_code db::row_set::next() {
-    auto result = next_result_code(sqlite3_step(impl_ptr<impl>()->statement().stmt().value()));
+    auto result = next_result_code(sqlite3_step(impl_ptr<impl>()->statement().stmt()));
 
     if (!result) {
         impl_ptr<impl>()->close();
@@ -107,7 +107,7 @@ bool db::row_set::has_row() {
 }
 
 int db::row_set::column_count() const {
-    return sqlite3_column_count(impl_ptr<impl>()->statement().stmt().value());
+    return sqlite3_column_count(impl_ptr<impl>()->statement().stmt());
 }
 
 db::row_set::index_result db::row_set::column_index(std::string column_name) const {
@@ -123,11 +123,11 @@ db::row_set::index_result db::row_set::column_index(std::string column_name) con
 }
 
 std::string db::row_set::column_name(int const column_idx) const {
-    return sqlite3_column_name(impl_ptr<impl>()->statement().stmt().value(), column_idx);
+    return sqlite3_column_name(impl_ptr<impl>()->statement().stmt(), column_idx);
 }
 
 bool db::row_set::column_is_null(int const column_idx) {
-    return sqlite3_column_type(impl_ptr<impl>()->statement().stmt().value(), column_idx) == SQLITE_NULL;
+    return sqlite3_column_type(impl_ptr<impl>()->statement().stmt(), column_idx) == SQLITE_NULL;
 }
 
 bool db::row_set::column_is_null(std::string column_name) {
@@ -139,7 +139,7 @@ bool db::row_set::column_is_null(std::string column_name) {
 
 db::value db::row_set::column_value(int const column_idx) const {
     if (column_idx >= 0) {
-        auto *const stmt = impl_ptr<impl>()->statement().stmt().value();
+        auto *const stmt = impl_ptr<impl>()->statement().stmt();
         int type = sqlite3_column_type(stmt, column_idx);
 
         if (type != SQLITE_NULL) {
@@ -169,7 +169,7 @@ db::value db::row_set::column_value(std::string column_name) const {
 }
 
 db::value_map db::row_set::value_map() const {
-    auto *const stmt = impl_ptr<impl>()->statement().stmt().value();
+    auto *const stmt = impl_ptr<impl>()->statement().stmt();
     int const column_count = sqlite3_data_count(stmt);
 
     db::value_map map;

@@ -9,7 +9,6 @@
 #include <string>
 #include "yas_base.h"
 #include "yas_db_protocol.h"
-#include "yas_property.h"
 
 namespace yas {
 namespace db {
@@ -27,14 +26,14 @@ namespace db {
         statement &operator=(statement const &) = default;
         statement &operator=(statement &&) = default;
 
-        property<sqlite3_stmt *> &stmt();
-        property<sqlite3_stmt *> const &stmt() const;
+        void set_stmt(sqlite3_stmt *const);
+        sqlite3_stmt *stmt() const;
 
-        property<std::string> &query();
-        property<std::string> const &query() const;
+        void set_query(std::string);
+        std::string const &query() const;
 
-        property<bool> &in_use();
-        property<bool> const &in_use() const;
+        void set_in_use(bool const);
+        bool in_use() const;
 
         void reset();
 
