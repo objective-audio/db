@@ -31,16 +31,15 @@ using namespace yas;
 }
 
 - (void)test_create_every_integer_value {
-#warning todo numeric_limitsにする
     db::value bool_value{true};
-    db::value uint8_value{uint8_t{UINT8_MAX}};
-    db::value sint8_value{int8_t{INT8_MAX}};
-    db::value uint16_value{uint16_t{UINT16_MAX}};
-    db::value sint16_value{int16_t{INT16_MAX}};
-    db::value uint32_value{uint32_t{UINT32_MAX}};
-    db::value sint32_value{int32_t{INT32_MAX}};
-    db::value uint64_value{uint64_t{UINT64_MAX}};
-    db::value sint64_value{int64_t{INT64_MAX}};
+    db::value uint8_value{uint8_t{std::numeric_limits<uint8_t>::max()}};
+    db::value sint8_value{int8_t{std::numeric_limits<int8_t>::max()}};
+    db::value uint16_value{uint16_t{std::numeric_limits<uint16_t>::max()}};
+    db::value sint16_value{int16_t{std::numeric_limits<int16_t>::max()}};
+    db::value uint32_value{uint32_t{std::numeric_limits<uint32_t>::max()}};
+    db::value sint32_value{int32_t{std::numeric_limits<int32_t>::max()}};
+    db::value uint64_value{uint64_t{std::numeric_limits<uint64_t>::max()}};
+    db::value sint64_value{int64_t{std::numeric_limits<int64_t>::max()}};
 
     XCTAssertTrue(bool_value.type() == typeid(db::integer));
     XCTAssertTrue(uint8_value.type() == typeid(db::integer));
@@ -53,14 +52,14 @@ using namespace yas;
     XCTAssertTrue(sint64_value.type() == typeid(db::integer));
 
     XCTAssertEqual(bool_value.get<db::integer>(), true);
-    XCTAssertEqual(uint8_value.get<db::integer>(), UINT8_MAX);
-    XCTAssertEqual(sint8_value.get<db::integer>(), INT8_MAX);
-    XCTAssertEqual(uint16_value.get<db::integer>(), UINT16_MAX);
-    XCTAssertEqual(sint16_value.get<db::integer>(), INT16_MAX);
-    XCTAssertEqual(uint32_value.get<db::integer>(), UINT32_MAX);
-    XCTAssertEqual(sint32_value.get<db::integer>(), INT32_MAX);
-    XCTAssertEqual(uint64_value.get<db::integer>(), UINT64_MAX);
-    XCTAssertEqual(sint64_value.get<db::integer>(), INT64_MAX);
+    XCTAssertEqual(uint8_value.get<db::integer>(), std::numeric_limits<uint8_t>::max());
+    XCTAssertEqual(sint8_value.get<db::integer>(), std::numeric_limits<int8_t>::max());
+    XCTAssertEqual(uint16_value.get<db::integer>(), std::numeric_limits<uint16_t>::max());
+    XCTAssertEqual(sint16_value.get<db::integer>(), std::numeric_limits<int16_t>::max());
+    XCTAssertEqual(uint32_value.get<db::integer>(), std::numeric_limits<uint32_t>::max());
+    XCTAssertEqual(sint32_value.get<db::integer>(), std::numeric_limits<int32_t>::max());
+    XCTAssertEqual(uint64_value.get<db::integer>(), std::numeric_limits<uint64_t>::max());
+    XCTAssertEqual(sint64_value.get<db::integer>(), std::numeric_limits<int64_t>::max());
 }
 
 - (void)test_create_real_value {
