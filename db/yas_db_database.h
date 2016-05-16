@@ -19,7 +19,7 @@ namespace db {
     union callback_id {
         void *v;
         struct {
-            UInt8 database;
+            uint8_t database;
         };
     };
 

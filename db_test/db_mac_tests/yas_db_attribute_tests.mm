@@ -65,7 +65,7 @@ using namespace yas;
 }
 
 - (void)test_create_blob {
-    std::vector<UInt8> vec{2, 4};
+    std::vector<uint8_t> vec{2, 4};
     NSDictionary *dict = @{ @"type": @"BLOB", @"default": [NSData dataWithBytes:vec.data() length:vec.size()] };
 
     db::attribute attr{"blob_attr", (__bridge CFDictionaryRef)dict};
@@ -75,7 +75,7 @@ using namespace yas;
     XCTAssertTrue(attr.default_value.type() == typeid(db::blob));
 
     auto &blob = attr.default_value.get<db::blob>();
-    UInt8 const *data = static_cast<UInt8 const *>(blob.data());
+    uint8_t const *data = static_cast<uint8_t const *>(blob.data());
     XCTAssertEqual(blob.size(), 2);
     XCTAssertEqual(data[0], 2);
     XCTAssertEqual(data[1], 4);

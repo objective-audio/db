@@ -38,7 +38,7 @@ using namespace yas;
 }
 
 - (void)test_to_value_from_integer {
-    UInt8 uint8_value = 1;
+    uint8_t uint8_value = 1;
     UInt16 uint16_value = 2;
     UInt32 uint32_value = 3;
     UInt64 uint64_value = 4;
@@ -90,7 +90,7 @@ using namespace yas;
 }
 
 - (void)test_to_value_from_cf_data {
-    std::vector<UInt8> vec{0, 1, 2, 3};
+    std::vector<uint8_t> vec{0, 1, 2, 3};
     auto cf_data = CFDataCreate(nullptr, vec.data(), vec.size());
 
     auto data_value = yas::to_value(cf_data);
@@ -98,7 +98,7 @@ using namespace yas;
     XCTAssertTrue(data_value.type() == typeid(db::blob));
     XCTAssertEqual(data_value.get<db::blob>().size(), 4);
 
-    UInt8 const *ptr = (UInt8 const *)data_value.get<db::blob>().data();
+    uint8_t const *ptr = (uint8_t const *)data_value.get<db::blob>().data();
     XCTAssertEqual(ptr[0], 0);
     XCTAssertEqual(ptr[1], 1);
     XCTAssertEqual(ptr[2], 2);
@@ -106,7 +106,7 @@ using namespace yas;
 }
 
 - (void)test_to_value_from_cf_mutable_data {
-    std::vector<UInt8> vec{4, 5, 6};
+    std::vector<uint8_t> vec{4, 5, 6};
     auto cf_mutable_data = CFDataCreateMutable(nullptr, vec.size());
     CFDataAppendBytes(cf_mutable_data, vec.data(), vec.size());
 
@@ -115,7 +115,7 @@ using namespace yas;
     XCTAssertTrue(data_value.type() == typeid(db::blob));
     XCTAssertEqual(data_value.get<db::blob>().size(), 3);
 
-    UInt8 const *ptr = (UInt8 const *)data_value.get<db::blob>().data();
+    uint8_t const *ptr = (uint8_t const *)data_value.get<db::blob>().data();
     XCTAssertEqual(ptr[0], 4);
     XCTAssertEqual(ptr[1], 5);
     XCTAssertEqual(ptr[2], 6);

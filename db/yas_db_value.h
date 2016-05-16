@@ -54,7 +54,7 @@ namespace db {
         std::size_t size() const;
 
        private:
-        std::vector<UInt8> _vector;
+        std::vector<uint8_t> _vector;
         const void *_data;
         std::size_t _size;
 
@@ -74,7 +74,7 @@ namespace db {
        public:
         class impl_base;
 
-        explicit value(UInt8 const &);
+        explicit value(uint8_t const &);
         explicit value(SInt8 const &);
         explicit value(UInt16 const &);
         explicit value(SInt16 const &);

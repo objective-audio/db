@@ -14,7 +14,7 @@ using namespace yas;
 
 namespace yas {
 namespace db {
-    static std::map<UInt8, weak<database>> _databases;
+    static std::map<uint8_t, weak<database>> _databases;
 }
 }
 
@@ -57,7 +57,7 @@ std::string const &db::error::message() const {
 
 class db::database::impl : public base::impl, public row_set_observable::impl {
    public:
-    UInt8 db_key;
+    uint8_t db_key;
     std::string database_path;
     sqlite3 *sqlite_handle = nullptr;
 

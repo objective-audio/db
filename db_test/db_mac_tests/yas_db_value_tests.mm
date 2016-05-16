@@ -33,7 +33,7 @@ using namespace yas;
 - (void)test_create_every_integer_value {
 #warning todo numeric_limitsにする
     db::value bool_value{true};
-    db::value uint8_value{UInt8{UINT8_MAX}};
+    db::value uint8_value{uint8_t{UINT8_MAX}};
     db::value sint8_value{SInt8{INT8_MAX}};
     db::value uint16_value{UInt16{UINT16_MAX}};
     db::value sint16_value{SInt16{INT16_MAX}};
@@ -92,7 +92,7 @@ using namespace yas;
 }
 
 - (void)test_create_blob_value_from_vector {
-    std::vector<UInt8> vec{0, 1, 2, 3};
+    std::vector<uint8_t> vec{0, 1, 2, 3};
     db::value value{vec.data(), static_cast<std::size_t>(vec.size())};
     XCTAssertTrue(value.type() == typeid(db::blob));
 
@@ -100,7 +100,7 @@ using namespace yas;
 
     XCTAssertEqual(blob.size(), 4);
 
-    const UInt8 *ptr = (const UInt8 *)(blob.data());
+    const uint8_t *ptr = (const uint8_t *)(blob.data());
     XCTAssertEqual(ptr[0], 0);
     XCTAssertEqual(ptr[1], 1);
     XCTAssertEqual(ptr[2], 2);
@@ -108,14 +108,14 @@ using namespace yas;
 }
 
 - (void)test_create_blob_value_from_ptr {
-    std::vector<UInt8> vec{5, 6, 7};
+    std::vector<uint8_t> vec{5, 6, 7};
     db::value value{vec.data(), vec.size()};
 
     auto const &blob = value.get<db::blob>();
 
     XCTAssertEqual(blob.size(), 3);
 
-    UInt8 *ptr = (UInt8 *)(blob.data());
+    uint8_t *ptr = (uint8_t *)(blob.data());
     XCTAssertEqual(ptr[0], 5);
     XCTAssertEqual(ptr[1], 6);
     XCTAssertEqual(ptr[2], 7);
@@ -133,7 +133,7 @@ using namespace yas;
 }
 
 - (void)test_no_copy {
-    std::vector<UInt8> vec{10};
+    std::vector<uint8_t> vec{10};
     db::value value{vec.data(), vec.size(), yas::db::no_copy_tag};
 }
 
@@ -174,7 +174,7 @@ using namespace yas;
     XCTAssertEqual(text_value.sql(), "'text_sql_value'");
     XCTAssertEqual(null_value.sql(), "null");
 
-    std::vector<UInt8> vec{0};
+    std::vector<uint8_t> vec{0};
     db::value blob_value{db::blob{vec.data(), vec.size()}};
 
     XCTAssertThrows(blob_value.sql());
@@ -184,7 +184,7 @@ using namespace yas;
     db::value integer_value{db::integer::type{8}};
     db::value real_value{db::real::type{0.5}};
     db::value text_value{db::text::type{"text_value"}};
-    std::vector<UInt8> vec{0, 1};
+    std::vector<uint8_t> vec{0, 1};
     db::value blob_value{db::blob{vec.data(), vec.size()}};
     db::value null_value{nullptr};
 
@@ -196,10 +196,10 @@ using namespace yas;
 }
 
 - (void)test_is_equal_blobs {
-    std::vector<UInt8> vec_a{0, 1, 2, 3};
-    std::vector<UInt8> vec_a2{0, 1, 2, 3};
-    std::vector<UInt8> vec_b{0, 1, 2, 4};
-    std::vector<UInt8> vec_c{0, 1, 2};
+    std::vector<uint8_t> vec_a{0, 1, 2, 3};
+    std::vector<uint8_t> vec_a2{0, 1, 2, 3};
+    std::vector<uint8_t> vec_b{0, 1, 2, 4};
+    std::vector<uint8_t> vec_c{0, 1, 2};
 
     db::blob blob_a{vec_a.data(), vec_a.size()};
     db::blob blob_a2{vec_a2.data(), vec_a2.size()};
@@ -275,9 +275,9 @@ using namespace yas;
 }
 
 - (void)test_is_equal_blob_values {
-    std::vector<UInt8> vec_a{1};
-    std::vector<UInt8> vec_b{1};
-    std::vector<UInt8> vec_c{3};
+    std::vector<uint8_t> vec_a{1};
+    std::vector<uint8_t> vec_b{1};
+    std::vector<uint8_t> vec_c{3};
 
     db::value b_value_a{vec_a.data(), vec_a.size()};
     db::value b_value_b{vec_b.data(), vec_b.size()};
