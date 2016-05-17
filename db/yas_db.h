@@ -8,3 +8,4 @@
 #include "yas_db_core.h"
 
 #include "yas_observing.h"
+#include "yas_result.h"

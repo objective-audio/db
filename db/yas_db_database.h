@@ -11,9 +11,11 @@
 #include "yas_db_result_code.h"
 #include "yas_db_row_set.h"
 #include "yas_db_value.h"
-#include "yas_result.h"
 
 namespace yas {
+template <typename T, typename U>
+class result;
+
 namespace db {
     union callback_id {
         void *v;

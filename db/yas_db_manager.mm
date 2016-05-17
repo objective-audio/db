@@ -16,6 +16,7 @@
 #include "yas_objc_macros.h"
 #include "yas_observing.h"
 #include "yas_operation.h"
+#include "yas_result.h"
 #include "yas_stl_utils.h"
 #include "yas_unless.h"
 #include "yas_version.h"

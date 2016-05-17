@@ -8,6 +8,7 @@
 #include "yas_db_statement.h"
 #include "yas_db_value.h"
 #include "yas_each_index.h"
+#include "yas_result.h"
 #include "yas_stl_utils.h"
 
 using namespace yas;
