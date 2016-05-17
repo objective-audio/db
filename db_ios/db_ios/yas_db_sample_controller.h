@@ -57,7 +57,7 @@ namespace sample {
         db::manager _manager;
         db::object_vector _objects;
         yas::subject<change_info> _subject;
-        yas::observer<db::manager::change_info> _observer;
+        yas::db::manager::observer_t _observer;
         bool _processing;
 
         void _update_objects(std::function<void(db::manager::result_t)> &&);

@@ -69,7 +69,7 @@ void db_controller::setup(db::manager::completion_f completion) {
             auto const &key = context.key;
             auto const &change_info = context.value;
 
-            if (key == db::manager::object_change_key) {
+            if (key == db::manager::method::object_changed) {
                 db::object const &object = change_info.object;
                 if (auto idx_opt = index(controller._objects, object)) {
                     if (object.entity_name() == entity_name_a && object.is_removed()) {
@@ -81,7 +81,7 @@ void db_controller::setup(db::manager::completion_f completion) {
                 } else {
                     controller._subject.notify(object_did_change_key);
                 }
-            } else if (key == db::manager::db_info_change_key) {
+            } else if (key == db::manager::method::db_info_changed) {
                 controller._subject.notify(db_info_did_change_key);
             }
         });
