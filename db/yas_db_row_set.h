@@ -9,7 +9,6 @@
 #include "yas_db_protocol.h"
 #include "yas_db_result_code.h"
 #include "yas_db_value.h"
-#include "yas_property.h"
 #include "yas_result.h"
 
 namespace yas {
