@@ -427,7 +427,7 @@ using namespace yas;
         auto const &key = context.key;
         auto const &info = context.value;
 
-        XCTAssertEqual(key, db::object::attribute_change_key);
+        XCTAssertEqual(key, db::object::method::attribute_changed);
 
         auto const &obj = info.object;
         auto const &name = info.name;
@@ -455,7 +455,7 @@ using namespace yas;
         auto const &key = context.key;
         auto const &info = context.value;
 
-        XCTAssertEqual(key, db::object::relation_change_key);
+        XCTAssertEqual(key, db::object::method::relation_changed);
 
         auto const &obj = info.object;
         auto const &name = info.name;
@@ -509,7 +509,7 @@ using namespace yas;
         auto const &key = context.key;
         auto const &info = context.value;
 
-        XCTAssertEqual(key, db::object::loading_change_key);
+        XCTAssertEqual(key, db::object::method::loading_changed);
 
         auto const &obj = info.object;
         auto const &name = info.name;
@@ -580,7 +580,7 @@ using namespace yas;
         auto const &key = context.key;
         auto const &info = context.value;
 
-        XCTAssertEqual(key, db::object::loading_change_key);
+        XCTAssertEqual(key, db::object::method::loading_changed);
 
         auto const &obj = info.object;
         auto const &name = info.name;
