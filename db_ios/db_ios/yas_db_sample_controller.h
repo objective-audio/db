@@ -4,15 +4,13 @@
 
 #pragma once
 
+#include "yas_db.h"
+
 namespace yas {
 namespace sample {
     class db_controller : public std::enable_shared_from_this<db_controller> {
        public:
-        static auto constexpr objects_did_update_key = "objects_did_update";
-        static auto constexpr object_did_insert_key = "object_did_insert";
-        static auto constexpr processing_did_change_key = "processing_did_change";
-        static auto constexpr object_did_change_key = "obj_did_change";
-        static auto constexpr db_info_did_change_key = "db_info_did_change";
+        enum class method { objects_updated, object_inserted, processing_changed, object_changed, db_info_changed };
 
         struct change_info {
             db::object const object;
@@ -21,6 +19,9 @@ namespace sample {
             change_info(std::nullptr_t);
             change_info(db::object object, db::value value);
         };
+
+        using subject_t = subject<change_info, method>;
+        using observer_t = observer<change_info, method>;
 
         db_controller();
 
@@ -49,14 +50,14 @@ namespace sample {
         db::integer::type const &current_save_id() const;
         db::integer::type const &last_save_id() const;
 
-        subject<change_info> &subject();
+        subject_t &subject();
 
         bool is_processing() const;
 
        private:
         db::manager _manager;
         db::object_vector _objects;
-        yas::subject<change_info> _subject;
+        subject_t _subject;
         yas::db::manager::observer_t _observer;
         bool _processing;
 
