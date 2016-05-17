@@ -9,9 +9,11 @@
 #include "yas_db_protocol.h"
 #include "yas_db_result_code.h"
 #include "yas_db_value.h"
-#include "yas_result.h"
 
 namespace yas {
+template <typename T, typename U>
+class result;
+
 namespace db {
     class database;
     class statement;
