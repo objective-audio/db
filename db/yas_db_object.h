@@ -9,9 +9,13 @@
 #include <unordered_map>
 #include "yas_base.h"
 #include "yas_db_additional_protocol.h"
-#include "yas_observing.h"
 
 namespace yas {
+template <typename T, typename K>
+class subject;
+template <typename T, typename K>
+class observer;
+
 namespace db {
     class model;
     class manager;
@@ -58,9 +62,7 @@ namespace db {
        public:
         class impl;
 
-        static auto constexpr attribute_change_key = "yas.db.object.attribute_change";
-        static auto constexpr relation_change_key = "yas.db.object.relation_change";
-        static auto constexpr loading_change_key = "yas.db.object.loading_change";
+        enum class method { attribute_changed, relation_changed, loading_changed };
 
         struct change_info {
             object const &object;
@@ -69,11 +71,14 @@ namespace db {
             change_info(class object const &, std::string const &);
         };
 
+        using subject_t = subject<change_info, method>;
+        using observer_t = observer<change_info, method>;
+
         object(manager const &manager, db::model const &model, std::string const &entity_name);
         object(std::nullptr_t);
 
-        yas::subject<change_info> const &subject() const;
-        yas::subject<change_info> &subject();
+        subject_t const &subject() const;
+        subject_t &subject();
 
         void load_data(object_data const &obj_data, bool const force = false);
         void load_save_id(db::value const &save_id);

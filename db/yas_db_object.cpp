@@ -9,6 +9,7 @@
 #include "yas_db_object.h"
 #include "yas_db_relation.h"
 #include "yas_db_value.h"
+#include "yas_observing.h"
 #include "yas_stl_utils.h"
 
 using namespace yas;
@@ -208,7 +209,7 @@ class db::object::impl : public const_object::impl, public manageable_object::im
    public:
     enum db::object_status status = db::object_status::invalid;
     db::manager manager;
-    yas::subject<db::object::change_info> subject;
+    db::object::subject_t subject;
 
     impl(db::manager const &manager, db::model const &model, std::string const &entity_name)
         : const_object::impl(model, entity_name), manager(manager) {
@@ -259,7 +260,7 @@ class db::object::impl : public const_object::impl, public manageable_object::im
                 status = db::object_status::saved;
             }
 
-            notify_did_change(loading_change_key, "", false);
+            notify_did_change(method::loading_changed, "", false);
         }
     }
 
@@ -284,7 +285,7 @@ class db::object::impl : public const_object::impl, public manageable_object::im
     void clear_data() {
         clear();
 
-        notify_did_change(loading_change_key, "", false);
+        notify_did_change(method::loading_changed, "", false);
     }
 
     void set_attribute(std::string const &attr_name, db::value const &value, bool const loading = false) {
@@ -301,7 +302,7 @@ class db::object::impl : public const_object::impl, public manageable_object::im
                 status = db::object_status::changed;
             }
 
-            notify_did_change(attribute_change_key, attr_name, true);
+            notify_did_change(method::attribute_changed, attr_name, true);
         }
     }
 
@@ -318,7 +319,7 @@ class db::object::impl : public const_object::impl, public manageable_object::im
                 status = db::object_status::changed;
             }
 
-            notify_did_change(relation_change_key, rel_name, true);
+            notify_did_change(method::relation_changed, rel_name, true);
         }
     }
 
@@ -339,7 +340,7 @@ class db::object::impl : public const_object::impl, public manageable_object::im
             status = db::object_status::changed;
         }
 
-        notify_did_change(relation_change_key, rel_name, true);
+        notify_did_change(method::relation_changed, rel_name, true);
     }
 
     void erase_relation(std::string const &rel_name, db::value const &relation_id) {
@@ -356,7 +357,7 @@ class db::object::impl : public const_object::impl, public manageable_object::im
                 status = db::object_status::changed;
             }
 
-            notify_did_change(relation_change_key, rel_name, true);
+            notify_did_change(method::relation_changed, rel_name, true);
         }
     }
 
@@ -375,7 +376,7 @@ class db::object::impl : public const_object::impl, public manageable_object::im
                 status = db::object_status::changed;
             }
 
-            notify_did_change(relation_change_key, rel_name, true);
+            notify_did_change(method::relation_changed, rel_name, true);
         }
     }
 
@@ -395,7 +396,7 @@ class db::object::impl : public const_object::impl, public manageable_object::im
                 status = db::object_status::changed;
             }
 
-            notify_did_change(relation_change_key, rel_name, true);
+            notify_did_change(method::relation_changed, rel_name, true);
         }
     }
 
@@ -464,7 +465,7 @@ class db::object::impl : public const_object::impl, public manageable_object::im
         status = stat;
     }
 
-    void notify_did_change(std::string const &key, std::string const &name, bool const send_to_manager) {
+    void notify_did_change(method const &key, std::string const &name, bool const send_to_manager) {
         if (subject.has_observer()) {
             subject.notify(key, change_info{cast<db::object>(), name});
         }
@@ -491,11 +492,11 @@ db::object::object(db::manager const &manager, db::model const &model, std::stri
 db::object::object(std::nullptr_t) : const_object(nullptr) {
 }
 
-subject<db::object::change_info> const &db::object::subject() const {
+db::object::subject_t const &db::object::subject() const {
     return impl_ptr<impl>()->subject;
 }
 
-subject<db::object::change_info> &db::object::subject() {
+db::object::subject_t &db::object::subject() {
     return impl_ptr<impl>()->subject;
 }
 

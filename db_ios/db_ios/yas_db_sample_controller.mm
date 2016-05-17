@@ -4,7 +4,6 @@
 
 #import <Foundation/Foundation.h>
 #include "yas_cf_utils.h"
-#include "yas_db.h"
 #include "yas_db_sample_controller.h"
 
 using namespace yas;
@@ -52,7 +51,7 @@ void db_controller::setup(db::manager::completion_f completion) {
                             if (auto shared = weak.lock()) {
                                 if (update_result) {
                                     shared->_end_processing();
-                                    shared->_subject.notify(objects_did_update_key);
+                                    shared->_subject.notify(method::objects_updated);
                                 }
                                 completion(std::move(update_result));
                             }
@@ -69,20 +68,20 @@ void db_controller::setup(db::manager::completion_f completion) {
             auto const &key = context.key;
             auto const &change_info = context.value;
 
-            if (key == db::manager::object_change_key) {
+            if (key == db::manager::method::object_changed) {
                 db::object const &object = change_info.object;
                 if (auto idx_opt = index(controller._objects, object)) {
                     if (object.entity_name() == entity_name_a && object.is_removed()) {
                         erase_if(controller._objects, [&object](auto const &vec_obj) { return object == vec_obj; });
                     }
                     controller._subject.notify(
-                        object_did_change_key,
+                        method::object_changed,
                         {change_info.object, db::value{static_cast<db::integer::type>(*idx_opt)}});
                 } else {
-                    controller._subject.notify(object_did_change_key);
+                    controller._subject.notify(method::object_changed);
                 }
-            } else if (key == db::manager::db_info_change_key) {
-                controller._subject.notify(db_info_did_change_key);
+            } else if (key == db::manager::method::db_info_changed) {
+                controller._subject.notify(method::db_info_changed);
             }
         });
     }
@@ -96,7 +95,7 @@ void db_controller::add_temporary() {
     auto object = _manager.insert_object(entity_name_a);
     auto idx = _objects.size();
     _objects.push_back(object);
-    _subject.notify(object_did_insert_key, {object, db::value{static_cast<db::integer::type>(idx)}});
+    _subject.notify(method::object_inserted, {object, db::value{static_cast<db::integer::type>(idx)}});
 }
 
 void db_controller::add() {
@@ -136,7 +135,7 @@ void db_controller::add() {
                         }
 
                         shared->_end_processing();
-                        shared->_subject.notify(object_did_insert_key, {object, idx_value});
+                        shared->_subject.notify(method::object_inserted, {object, idx_value});
                     }
                 });
             }
@@ -173,7 +172,7 @@ void db_controller::undo() {
                             shared->_update_objects([weak = weak](auto update_result) {
                                 if (auto shared = weak.lock()) {
                                     shared->_end_processing();
-                                    shared->_subject.notify(objects_did_update_key);
+                                    shared->_subject.notify(method::objects_updated);
                                 }
                             });
                         }
@@ -200,7 +199,7 @@ void db_controller::redo() {
                             shared->_update_objects([weak = weak](auto update_result) {
                                 if (auto shared = weak.lock()) {
                                     shared->_end_processing();
-                                    shared->_subject.notify(objects_did_update_key);
+                                    shared->_subject.notify(method::objects_updated);
                                 }
                             });
                         }
@@ -223,7 +222,7 @@ void db_controller::clear() {
             shared->_update_objects([weak = weak](auto update_result) {
                 if (auto shared = weak.lock()) {
                     shared->_end_processing();
-                    shared->_subject.notify(objects_did_update_key);
+                    shared->_subject.notify(method::objects_updated);
                 }
             });
         }
@@ -247,7 +246,7 @@ void db_controller::purge() {
             shared->_update_objects([weak = weak](auto update_result) {
                 if (auto shared = weak.lock()) {
                     shared->_end_processing();
-                    shared->_subject.notify(objects_did_update_key);
+                    shared->_subject.notify(method::objects_updated);
                 }
             });
         }
@@ -270,7 +269,7 @@ void db_controller::save_changed() {
             shared->_update_objects([weak = weak](auto update_result) {
                 if (auto shared = weak.lock()) {
                     shared->_end_processing();
-                    shared->_subject.notify(objects_did_update_key);
+                    shared->_subject.notify(method::objects_updated);
                 }
             });
         }
@@ -292,7 +291,7 @@ void db_controller::cancel_changed() {
     _update_objects([weak = to_weak(shared_from_this())](auto update_result) {
         if (auto shared = weak.lock()) {
             shared->_end_processing();
-            shared->_subject.notify(objects_did_update_key);
+            shared->_subject.notify(method::objects_updated);
         }
     });
 }
@@ -337,7 +336,7 @@ db::integer::type const &db_controller::last_save_id() const {
     return _manager.last_save_id().get<db::integer>();
 }
 
-subject<db_controller::change_info> &db_controller::subject() {
+db_controller::subject_t &db_controller::subject() {
     return _subject;
 }
 
@@ -372,11 +371,11 @@ void db_controller::_update_objects(std::function<void(db::manager::result_t)> &
 void db_controller::_begin_processing() {
     _processing = true;
 
-    subject().notify(processing_did_change_key, {nullptr, db::value{static_cast<db::integer::type>(true)}});
+    subject().notify(method::processing_changed, {nullptr, db::value{static_cast<db::integer::type>(true)}});
 }
 
 void db_controller::_end_processing() {
     _processing = false;
 
-    subject().notify(processing_did_change_key, {nullptr, db::value{static_cast<db::integer::type>(false)}});
+    subject().notify(method::processing_changed, {nullptr, db::value{static_cast<db::integer::type>(false)}});
 }

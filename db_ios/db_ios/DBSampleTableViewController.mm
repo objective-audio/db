@@ -47,7 +47,7 @@ typedef NS_ENUM(NSUInteger, DBSampleInfoRow) {
 
 @implementation DBSampleTableViewController {
     std::shared_ptr<db_controller> _db_controller;
-    std::vector<yas::observer<db_controller::change_info>> _observers;
+    std::vector<db_controller::observer_t> _observers;
 }
 
 - (void)viewDidLoad {
@@ -60,7 +60,7 @@ typedef NS_ENUM(NSUInteger, DBSampleInfoRow) {
     auto unowned_self = make_objc_ptr([[YASUnownedObject<DBSampleTableViewController *> alloc] initWithObject:self]);
 
     auto proccessing_observer = _db_controller->subject().make_observer(
-        db_controller::processing_did_change_key, [unowned_self](auto const &context) {
+        db_controller::method::processing_changed, [unowned_self](auto const &context) {
             db_controller::change_info const &info = context.value;
 
             auto controller = [unowned_self.object() object];
@@ -95,13 +95,13 @@ typedef NS_ENUM(NSUInteger, DBSampleInfoRow) {
 
         auto controller = [unowned_self.object() object];
 
-        if (key == db_controller::db_info_did_change_key) {
+        if (key == db_controller::method::db_info_changed) {
             [controller updateTableForInfo:DBSampleInfoRowSaveID];
-        } else if (key == db_controller::objects_did_update_key) {
+        } else if (key == db_controller::method::objects_updated) {
             [controller updateTable];
-        } else if (key == db_controller::object_did_insert_key) {
+        } else if (key == db_controller::method::object_inserted) {
             [controller updateTableForInsertedRow:NSInteger(info.value.get<db::integer>())];
-        } else if (key == db_controller::object_did_change_key) {
+        } else if (key == db_controller::method::object_changed) {
             auto const &index = info.value.get<db::integer>();
             auto const &object = info.object;
             if (object.is_removed()) {
