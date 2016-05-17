@@ -8,11 +8,15 @@
 #include "yas_db_additional_protocol.h"
 #include "yas_db_database.h"
 #include "yas_db_object.h"
-#include "yas_observing.h"
 #include "yas_operation_protocol.h"
 
 namespace yas {
 class operation;
+
+template <typename T, typename K>
+class subject;
+template <typename T, typename K>
+class observer;
 
 namespace db {
     class select_option;
@@ -83,8 +87,7 @@ namespace db {
             change_info(db::object const &object);
         };
 
-        static auto constexpr object_change_key = "object_change";
-        static auto constexpr db_info_change_key = "db_info_change";
+        enum class method { object_changed, db_info_changed };
 
         using result_t = result<std::nullptr_t, error>;
         using vector_result_t = result<object_vector_map, error>;
@@ -106,6 +109,9 @@ namespace db {
         using const_vector_completion_f = std::function<void(const_vector_result_t)>;
         using const_map_completion_f = std::function<void(const_map_result_t)>;
 
+        using subject_t = subject<change_info, method>;
+        using observer_t = observer<change_info, method>;
+
         manager(std::string const &db_path, model const &model, std::size_t const priority_count = 1,
                 dispatch_queue_t const dispatch_queue = dispatch_get_main_queue());
         manager(std::nullptr_t);
@@ -117,8 +123,8 @@ namespace db {
         db::value const &current_save_id() const;
         db::value const &last_save_id() const;
 
-        yas::subject<change_info> const &subject() const;
-        yas::subject<change_info> &subject();
+        subject_t const &subject() const;
+        subject_t &subject();
 
         dispatch_queue_t dispatch_queue() const;
 

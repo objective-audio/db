@@ -14,6 +14,7 @@
 #include "yas_db_utils.h"
 #include "yas_each_index.h"
 #include "yas_objc_macros.h"
+#include "yas_observing.h"
 #include "yas_operation.h"
 #include "yas_stl_utils.h"
 #include "yas_unless.h"
@@ -206,7 +207,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
     db::object_deque_map inserted_objects;
     db::object_map_map changed_objects;
     db::value_map db_info;
-    yas::subject<change_info> subject;
+    db::manager::subject_t subject;
     dispatch_queue_t dispatch_queue;
 
     impl(std::string const &path, db::model const &model, dispatch_queue_t const dispatch_queue,
@@ -361,7 +362,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
         db_info = std::move(info);
 
         if (subject.has_observer()) {
-            subject.notify(db_info_change_key);
+            subject.notify(method::db_info_changed);
         }
     }
 
@@ -493,7 +494,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
         }
 
         if (subject.has_observer()) {
-            subject.notify(object_change_key, change_info{object});
+            subject.notify(method::object_changed, change_info{object});
         }
     }
 
@@ -1752,11 +1753,11 @@ std::size_t db::manager::changed_object_count(std::string const &entity_name) co
     return 0;
 }
 
-yas::subject<db::manager::change_info> const &db::manager::subject() const {
+db::manager::subject_t const &db::manager::subject() const {
     return impl_ptr<impl>()->subject;
 }
 
-yas::subject<db::manager::change_info> &db::manager::subject() {
+db::manager::subject_t &db::manager::subject() {
     return impl_ptr<impl>()->subject;
 }
 
