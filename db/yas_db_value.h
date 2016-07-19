@@ -125,7 +125,4 @@ std::string to_string(db::value const &);
 
 db::time_point to_time_point(db::value const &);
 db::value to_value(db::time_point const &);
-
-template <>
-db::value cast<db::value>(base const &);
 }
