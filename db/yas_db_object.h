@@ -126,10 +126,6 @@ namespace db {
     using object_data_vector = std::vector<object_data>;
     using object_data_vector_map = std::unordered_map<std::string, object_data_vector>;
 }
-std::string to_string(db::object_status const &);
 
-template <>
-db::const_object cast<db::const_object>(base const &);
-template <>
-db::object cast<db::object>(base const &);
+std::string to_string(db::object_status const &);
 }
