@@ -91,7 +91,7 @@ namespace db {
         void set_relation_ids(std::string const &rel_name, value_vector const &relation_ids);
         void push_back_relation_id(std::string const &rel_name, value const &relation_id);
         void erase_relation_id(std::string const &rel_name, value const &relation_id);
-        void set_relation_object(std::string const &rel_name, std::vector<object> const &rel_objects);
+        void set_relation_objects(std::string const &rel_name, std::vector<object> const &rel_objects);
         void push_back_relation_object(std::string const &rel_name, object const &rel_object);
         void erase_relation_object(std::string const &rel_name, object const &rel_object);
         void erase_relation(std::string const &rel_name, std::size_t const idx);
