@@ -540,7 +540,7 @@ void db::object::erase_relation_id(std::string const &rel_name, db::value const 
     impl_ptr<impl>()->erase_relation(rel_name, relation_id);
 }
 
-void db::object::set_relation_object(std::string const &rel_name, object_vector const &rel_objects) {
+void db::object::set_relation_objects(std::string const &rel_name, object_vector const &rel_objects) {
     impl_ptr<impl>()->set_relation(
         rel_name,
         to_vector<db::value>(rel_objects, [entity_name = entity_name()](auto const &obj) { return obj.object_id(); }));

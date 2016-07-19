@@ -827,7 +827,7 @@ using namespace yas;
             objects.at("sample_a").at(0).set_attribute("name", db::value{"value_1"});
             objects.at("sample_a")
                 .at(0)
-                .set_relation_object("child", {objects.at("sample_b").at(0), objects.at("sample_b").at(1)});
+                .set_relation_objects("child", {objects.at("sample_b").at(0), objects.at("sample_b").at(1)});
             objects.at("sample_a").at(1).set_attribute("name", db::value{"value_2"});
 
             objects.at("sample_b").at(0).set_attribute("name", db::value{"value_3"});
@@ -987,7 +987,7 @@ using namespace yas;
             obj_b0.set_attribute("name", db::value{"test_b0_2"});
             obj_b1.set_attribute("name", db::value{"test_b1_2"});
 
-            obj_a.set_relation_object("child", {obj_b0});
+            obj_a.set_relation_objects("child", {obj_b0});
         });
 
     manager.save([self, &manager, &objects](auto result) {
@@ -1002,7 +1002,7 @@ using namespace yas;
         obj_b0.set_attribute("name", db::value{"test_b0_3"});
         obj_b1.set_attribute("name", db::value{"test_b1_3"});
 
-        obj_a.set_relation_object("child", {obj_b1, obj_b0});
+        obj_a.set_relation_objects("child", {obj_b1, obj_b0});
     });
 
     manager.save([self, &manager, &objects](auto result) {
@@ -1017,7 +1017,7 @@ using namespace yas;
         obj_b0.set_attribute("name", db::value{"test_b0_4"});
         obj_b1.set_attribute("name", db::value{"test_b1_4"});
 
-        obj_a.set_relation_object("child", {obj_b1});
+        obj_a.set_relation_objects("child", {obj_b1});
     });
 
     manager.save([self, &manager, &objects](auto result) {
