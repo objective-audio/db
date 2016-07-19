@@ -2,8 +2,8 @@
 //  yas_db_object_utils.cpp
 //
 
-#include "yas_db_object_utils.h"
 #include "yas_db_model.h"
+#include "yas_db_object_utils.h"
 #include "yas_stl_utils.h"
 
 using namespace yas;
