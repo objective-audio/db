@@ -206,12 +206,8 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
     void close_open_row_sets() {
         for (auto &pair : open_row_sets) {
             if (auto row_set = pair.second.lock()) {
-                if (auto db_settable_rs = row_set.db_settable()) {
-                    db_settable_rs.set_database(nullptr);
-                }
-                if (auto closable_rs = row_set.closable()) {
-                    closable_rs.close();
-                }
+                row_set.db_settable().set_database(nullptr);
+                row_set.closable().close();
             }
         }
         open_row_sets.clear();

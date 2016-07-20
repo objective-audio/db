@@ -224,9 +224,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
     db::object insert_object(std::string const entity_name) {
         db::object object{cast<manager>(), model, entity_name};
 
-        if (auto manageable_object = object.manageable()) {
-            manageable_object.load_insertion_data();
-        }
+        object.manageable().load_insertion_data();
 
         if (inserted_objects.count(entity_name) == 0) {
             inserted_objects.insert(std::make_pair(entity_name, db::object_deque{}));
@@ -407,9 +405,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                         } else {
                             throw "object_data.attributes is empty.";
                         }
-                        if (auto manageable_object = object.manageable()) {
-                            manageable_object.set_status(db::object_status::updating);
-                        }
+                        object.manageable().set_status(db::object_status::updating);
                     }
                 }
 
