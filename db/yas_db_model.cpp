@@ -24,8 +24,8 @@ namespace db {
 
 struct db::model::impl : public base::impl {
     yas::version version;
-    entity_map entities;
-    index_map indices;
+    db::entity_map entities;
+    db::index_map indices;
 
     impl(CFDictionaryRef const &cf_dict) {
         if (!cf_dict) {
@@ -130,11 +130,11 @@ yas::version const &db::model::version() const {
     return impl_ptr<impl>()->version;
 }
 
-db::model::entity_map const &db::model::entities() const {
+db::entity_map const &db::model::entities() const {
     return impl_ptr<impl>()->entities;
 }
 
-db::model::index_map const &db::model::indices() const {
+db::index_map const &db::model::indices() const {
     return impl_ptr<impl>()->indices;
 }
 

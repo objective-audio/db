@@ -19,25 +19,25 @@ class version;
 namespace db {
     class entity;
 
+    using entity_map = std::unordered_map<std::string, db::entity>;
+    using index_map = std::unordered_map<std::string, db::index>;
+
     class model : public base {
         class impl;
 
        public:
-        using entity_map = std::unordered_map<std::string, entity>;
-        using index_map = std::unordered_map<std::string, index>;
-
         model(CFDictionaryRef const &dict);
 
         yas::version const &version() const;
-        entity_map const &entities() const;
-        index_map const &indices() const;
+        db::entity_map const &entities() const;
+        db::index_map const &indices() const;
 
-        entity const &entity(std::string const &entity_name) const;
-        attribute_map const &attributes(std::string const &entity_name) const;
-        relation_map const &relations(std::string const &entity_name) const;
-        attribute const &attribute(std::string const &entity_name, std::string const &attr_name) const;
-        relation const &relation(std::string const &entity_name, std::string const &rel_name) const;
-        index const &index(std::string const &index_name) const;
+        db::entity const &entity(std::string const &entity_name) const;
+        db::attribute_map const &attributes(std::string const &entity_name) const;
+        db::relation_map const &relations(std::string const &entity_name) const;
+        db::attribute const &attribute(std::string const &entity_name, std::string const &attr_name) const;
+        db::relation const &relation(std::string const &entity_name, std::string const &rel_name) const;
+        db::index const &index(std::string const &index_name) const;
 
         bool entity_exists(std::string const &entity_name) const;
         bool attribute_exists(std::string const &entity_name, std::string const &attr_name) const;

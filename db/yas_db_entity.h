@@ -17,10 +17,10 @@ namespace db {
 
     struct entity {
         std::string const name;
-        attribute_map const attributes;
-        relation_map const relations;
+        db::attribute_map const attributes;
+        db::relation_map const relations;
 
-        entity(std::string const &name, attribute_map &&attributes, relation_map &&relations);
+        entity(std::string const &name, db::attribute_map &&attributes, db::relation_map &&relations);
 
         std::string sql_for_create() const;
         std::string sql_for_update() const;
