@@ -23,9 +23,9 @@ namespace db {
 }
 
 struct db::model::impl : public base::impl {
-    yas::version version;
-    db::entity_map entities;
-    db::index_map indices;
+    yas::version _version;
+    db::entity_map _entities;
+    db::index_map _indices;
 
     impl(CFDictionaryRef const &cf_dict) {
         if (!cf_dict) {
@@ -34,7 +34,7 @@ struct db::model::impl : public base::impl {
 
         auto version_str = get<std::string>(cf_dict, version_key);
         if (version_str.size() > 0) {
-            version = yas::version{version_str};
+            _version = yas::version{version_str};
         } else {
             throw "version not found.";
             return;
@@ -99,7 +99,7 @@ struct db::model::impl : public base::impl {
             }
 
             db::entity entity{entity_name, std::move(attributes), std::move(relations)};
-            entities.emplace(std::make_pair(entity_name, std::move(entity)));
+            _entities.emplace(std::make_pair(entity_name, std::move(entity)));
         }
 
         CFDictionaryRef cf_indices_dict = get<CFDictionaryRef>(cf_dict, indices_key);
@@ -117,7 +117,7 @@ struct db::model::impl : public base::impl {
                     return;
                 }
 
-                indices.emplace(std::make_pair(index_name, db::index{index_name, cf_index_dict}));
+                _indices.emplace(std::make_pair(index_name, db::index{index_name, cf_index_dict}));
             }
         }
     }
@@ -127,15 +127,15 @@ db::model::model(CFDictionaryRef const &cf_dict) : base(std::make_unique<impl>(c
 }
 
 yas::version const &db::model::version() const {
-    return impl_ptr<impl>()->version;
+    return impl_ptr<impl>()->_version;
 }
 
 db::entity_map const &db::model::entities() const {
-    return impl_ptr<impl>()->entities;
+    return impl_ptr<impl>()->_entities;
 }
 
 db::index_map const &db::model::indices() const {
-    return impl_ptr<impl>()->indices;
+    return impl_ptr<impl>()->_indices;
 }
 
 db::entity const &db::model::entity(std::string const &entity_name) const {
