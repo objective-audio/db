@@ -47,7 +47,7 @@ using namespace yas;
     db::value_vector_map relations{std::make_pair("child", db::value_vector{db::value{12}, db::value{34}})};
     db::object_data obj_data{.attributes = std::move(attributes), .relations = std::move(relations)};
 
-    obj.load_data(obj_data);
+    obj.manageable().load_data(obj_data);
 
     XCTAssertEqual(obj.get_attribute("age"), db::value{10});
     XCTAssertEqual(obj.get_attribute("name"), db::value{"name_val"});
@@ -90,14 +90,14 @@ using namespace yas;
     db::value_vector_map prev_relations{std::make_pair("child", db::value_vector{db::value{12}, db::value{34}})};
     db::object_data prev_obj_data{.attributes = std::move(prev_attributes), .relations = std::move(prev_relations)};
 
-    obj.load_data(prev_obj_data);
+    obj.manageable().load_data(prev_obj_data);
 
     db::value_map post_attributes{std::make_pair("age", db::value{543}), std::make_pair("hoge", db::value{"poke"})};
     db::value_vector_map post_relations{
         std::make_pair("child", db::value_vector{db::value{234}, db::value{567}, db::value{890}})};
     db::object_data post_obj_data{.attributes = std::move(post_attributes), .relations = std::move(post_relations)};
 
-    obj.load_data(post_obj_data);
+    obj.manageable().load_data(post_obj_data);
 
     XCTAssertEqual(obj.get_attribute("age"), db::value{543});
     XCTAssertFalse(obj.get_attribute("name"));
@@ -263,42 +263,42 @@ using namespace yas;
     db::object_data obj_data{
         .attributes = db::value_map{std::make_pair(db::action_field, db::value{db::insert_action})},
         .relations = db::value_vector_map{std::make_pair("child", db::value_vector{db::value{12}, db::value{34}})}};
-    obj.load_data(obj_data);
+    obj.manageable().load_data(obj_data);
     XCTAssertEqual(obj.action(), db::value{db::insert_action});
 
     obj.set_attribute("name", db::value{"test_name"});
     XCTAssertEqual(obj.action(), db::value{db::update_action});
 
     manageable_obj.set_status(db::object_status::updating);
-    obj.load_data(obj_data);
+    obj.manageable().load_data(obj_data);
     XCTAssertEqual(obj.action(), db::value{db::insert_action});
 
     obj.push_back_relation_id("child", db::value{2});
     XCTAssertEqual(obj.action(), db::value{db::update_action});
 
     manageable_obj.set_status(db::object_status::updating);
-    obj.load_data(obj_data);
+    obj.manageable().load_data(obj_data);
     XCTAssertEqual(obj.action(), db::value{db::insert_action});
 
     obj.set_relation_ids("child", {db::value{1}});
     XCTAssertEqual(obj.action(), db::value{db::update_action});
 
     manageable_obj.set_status(db::object_status::updating);
-    obj.load_data(obj_data);
+    obj.manageable().load_data(obj_data);
     XCTAssertEqual(obj.action(), db::value{db::insert_action});
 
     obj.erase_relation("child", 0);
     XCTAssertEqual(obj.action(), db::value{db::update_action});
 
     manageable_obj.set_status(db::object_status::updating);
-    obj.load_data(obj_data);
+    obj.manageable().load_data(obj_data);
     XCTAssertEqual(obj.action(), db::value{db::insert_action});
 
     obj.clear_relation("child");
     XCTAssertEqual(obj.action(), db::value{db::update_action});
 
     manageable_obj.set_status(db::object_status::updating);
-    obj.load_data(obj_data);
+    obj.manageable().load_data(obj_data);
     XCTAssertEqual(obj.action(), db::value{db::insert_action});
 
     obj.remove();
@@ -532,7 +532,7 @@ using namespace yas;
     db::value_vector_map relations{std::make_pair("child", db::value_vector{db::value{55}, db::value{66}})};
     db::object_data obj_data{.attributes = std::move(attributes), .relations = std::move(relations)};
 
-    obj.load_data(obj_data);
+    obj.manageable().load_data(obj_data);
 
     XCTAssertTrue(called);
 }
@@ -554,7 +554,7 @@ using namespace yas;
     XCTAssertEqual(obj.get_relation_id("child", 0), db::value{23});
     XCTAssertEqual(obj.get_relation_id("child", 1), db::value{45});
 
-    obj.clear_data();
+    obj.manageable().clear_data();
 
     XCTAssertEqual(obj.status(), db::object_status::invalid);
 
@@ -595,7 +595,7 @@ using namespace yas;
         called = true;
     });
 
-    obj.clear_data();
+    obj.manageable().clear_data();
 
     XCTAssertTrue(called);
 }
