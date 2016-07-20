@@ -64,7 +64,7 @@ namespace db {
        public:
         class impl;
 
-        using callback_function = std::function<int(value_map const &)>;
+        using callback_f = std::function<int(value_map const &)>;
 
         static std::string sqlite_lib_version();
         static bool sqlite_thread_safe();
@@ -89,8 +89,8 @@ namespace db {
         update_result execute_update(std::string const &sql, value_map const &arguments);
 
         update_result execute_statements(std::string const &sql);
-        update_result execute_statements(std::string const &sql, callback_function const &callback);
-        callback_function const &callback_for_execute_statements() const;
+        update_result execute_statements(std::string const &sql, callback_f const &callback);
+        callback_f const &callback_for_execute_statements() const;
 
         query_result execute_query(std::string const &sql) const;
         query_result execute_query(std::string const &sql, value_vector const &arguments) const;
