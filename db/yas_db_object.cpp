@@ -587,8 +587,11 @@ db::object const &db::object::null_object() {
     return _null_object;
 }
 
-db::manageable_object db::object::manageable() {
-    return manageable_object{impl_ptr<manageable_object::impl>()};
+db::manageable_object &db::object::manageable() {
+    if (!_manageable) {
+        _manageable = manageable_object{impl_ptr<manageable_object::impl>()};
+    }
+    return _manageable;
 }
 
 std::string yas::to_string(db::object_status const &status) {

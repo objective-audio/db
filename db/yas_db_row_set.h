@@ -52,8 +52,12 @@ namespace db {
 
         db::value_map value_map() const;
 
-        closable closable();
-        db_settable db_settable();
+        db::closable &closable();
+        db_settable &db_settable();
+
+       private:
+        db::closable _closable = nullptr;
+        db::db_settable _db_settable = nullptr;
     };
 }
 }

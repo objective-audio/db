@@ -108,7 +108,10 @@ namespace db {
 
         static object const &null_object();
 
-        manageable_object manageable();
+        manageable_object &manageable();
+
+       private:
+        manageable_object _manageable = nullptr;
     };
 
     using object_map = std::unordered_map<integer::type, object>;

@@ -712,8 +712,11 @@ std::chrono::time_point<std::chrono::system_clock> db::database::start_busy_retr
     return impl_ptr<impl>()->start_busy_retry_time;
 }
 
-db::row_set_observable db::database::row_set_observable() {
-    return db::row_set_observable{impl_ptr<row_set_observable::impl>()};
+db::row_set_observable &db::database::row_set_observable() {
+    if (!_row_set_observable) {
+        _row_set_observable = db::row_set_observable{impl_ptr<row_set_observable::impl>()};
+    }
+    return _row_set_observable;
 }
 
 #pragma mark -

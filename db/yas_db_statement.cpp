@@ -74,6 +74,9 @@ void db::statement::reset() {
     impl_ptr<impl>()->reset();
 }
 
-db::closable db::statement::closable() {
-    return db::closable{impl_ptr<closable::impl>()};
+db::closable &db::statement::closable() {
+    if (!_closable) {
+        _closable = db::closable{impl_ptr<closable::impl>()};
+    }
+    return _closable;
 }

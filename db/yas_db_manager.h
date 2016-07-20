@@ -154,14 +154,17 @@ namespace db {
         void save(vector_completion_f completion, operation_option_t option = {});
         void revert(revert_preparation_f preparation, vector_completion_f completion, operation_option_t option = {});
 
-        object cached_object(std::string const &entity_name, integer::type const object_id) const;
+        db::object cached_object(std::string const &entity_name, integer::type const object_id) const;
 
         bool has_inserted_objects() const;
         bool has_changed_objects() const;
         std::size_t inserted_object_count(std::string const &entity_name) const;
         std::size_t changed_object_count(std::string const &entity_name) const;
 
-        object_observable object_observable();
+        db::object_observable &object_observable();
+
+       private:
+        db::object_observable _object_observable = nullptr;
     };
 }
 

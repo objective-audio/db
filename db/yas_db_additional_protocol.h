@@ -49,6 +49,9 @@ namespace db {
         explicit manageable_object(std::shared_ptr<impl> impl) : protocol(std::move(impl)) {
         }
 
+        manageable_object(std::nullptr_t) : protocol(nullptr) {
+        }
+
         void set_status(object_status const &status) {
             impl_ptr<impl>()->set_status(status);
         }
@@ -65,6 +68,9 @@ namespace db {
         };
 
         explicit object_observable(std::shared_ptr<impl> impl) : protocol(std::move(impl)) {
+        }
+
+        object_observable(std::nullptr_t) : protocol(nullptr) {
         }
 
         void object_did_change(object const &obj) {
