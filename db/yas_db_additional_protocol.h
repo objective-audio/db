@@ -40,10 +40,18 @@ namespace db {
         updating,
     };
 
+    struct object_data {
+        value_map attributes;
+        value_vector_map relations;
+    };
+
     struct manageable_object : protocol {
         struct impl : protocol::impl {
             virtual void set_status(object_status const &) = 0;
             virtual void load_insertion_data() = 0;
+            virtual void load_data(object_data const &obj_data, bool const force) = 0;
+            virtual void load_save_id(db::value const &save_id) = 0;
+            virtual void clear_data() = 0;
         };
 
         explicit manageable_object(std::shared_ptr<impl> impl) : protocol(std::move(impl)) {
@@ -58,6 +66,18 @@ namespace db {
 
         void load_insertion_data() {
             impl_ptr<impl>()->load_insertion_data();
+        }
+
+        void load_data(object_data const &obj_data, bool const force = false) {
+            impl_ptr<impl>()->load_data(obj_data, force);
+        }
+
+        void load_save_id(db::value const &save_id) {
+            impl_ptr<impl>()->load_save_id(save_id);
+        }
+
+        void clear_data() {
+            impl_ptr<impl>()->clear_data();
         }
     };
 

@@ -236,7 +236,7 @@ class db::object::impl : public const_object::impl, public manageable_object::im
         return false;
     }
 
-    void load_data(object_data const &obj_data, bool const force) {
+    void load_data(object_data const &obj_data, bool const force) override {
         if (status != db::object_status::changed || force) {
             clear();
 
@@ -264,11 +264,11 @@ class db::object::impl : public const_object::impl, public manageable_object::im
         }
     }
 
-    void load_save_id(db::value const &save_id) {
+    void load_save_id(db::value const &save_id) override {
         set_attribute(save_id_field, save_id, true);
     }
 
-    void load_insertion_data() {
+    void load_insertion_data() override {
         status = db::object_status::inserted;
         set_attribute(action_field, db::value{insert_action}, true);
 
@@ -282,7 +282,7 @@ class db::object::impl : public const_object::impl, public manageable_object::im
         }
     }
 
-    void clear_data() {
+    void clear_data() override {
         clear();
 
         notify_did_change(method::loading_changed, "", false);
@@ -461,7 +461,7 @@ class db::object::impl : public const_object::impl, public manageable_object::im
         }
     }
 
-    void set_status(object_status const &stat) {
+    void set_status(object_status const &stat) override {
         status = stat;
     }
 
@@ -498,18 +498,6 @@ db::object::subject_t const &db::object::subject() const {
 
 db::object::subject_t &db::object::subject() {
     return impl_ptr<impl>()->subject;
-}
-
-void db::object::load_data(object_data const &obj_data, bool const force) {
-    impl_ptr<impl>()->load_data(obj_data, force);
-}
-
-void db::object::load_save_id(db::value const &save_id) {
-    impl_ptr<impl>()->load_save_id(save_id);
-}
-
-void db::object::clear_data() {
-    impl_ptr<impl>()->clear_data();
 }
 
 void db::object::set_attribute(std::string const &attr_name, db::value const &value) {

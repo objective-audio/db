@@ -268,7 +268,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                     }
                 }
 
-                object.load_data(data, force);
+                object.manageable().load_data(data, force);
 
                 return true;
             }
@@ -338,7 +338,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
         for (auto &entity_pair : cached_objects) {
             for (auto &object_pair : entity_pair.second) {
                 if (auto object = object_pair.second.lock()) {
-                    object.clear_data();
+                    object.manageable().clear_data();
                 }
             }
         }
@@ -351,7 +351,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
         for (auto &entity_pair : cached_objects) {
             for (auto &object_pair : entity_pair.second) {
                 if (auto object = object_pair.second.lock()) {
-                    object.load_save_id(one_value);
+                    object.manageable().load_save_id(one_value);
                 }
             }
         }

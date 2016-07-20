@@ -21,11 +21,6 @@ namespace db {
     class manager;
     class value;
 
-    struct object_data {
-        value_map attributes;
-        value_vector_map relations;
-    };
-
     using integer_set = std::set<integer::type>;
     using integer_set_map = std::unordered_map<std::string, integer_set>;
 
@@ -79,10 +74,6 @@ namespace db {
 
         subject_t const &subject() const;
         subject_t &subject();
-
-        void load_data(object_data const &obj_data, bool const force = false);
-        void load_save_id(db::value const &save_id);
-        void clear_data();
 
         void set_attribute(std::string const &attr_name, value const &value);
 
