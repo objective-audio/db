@@ -1762,8 +1762,11 @@ db::manager::subject_t &db::manager::subject() {
     return impl_ptr<impl>()->subject;
 }
 
-db::object_observable db::manager::object_observable() {
-    return db::object_observable{impl_ptr<object_observable::impl>()};
+db::object_observable &db::manager::object_observable() {
+    if (!_object_observable) {
+        _object_observable = db::object_observable{impl_ptr<object_observable::impl>()};
+    }
+    return _object_observable;
 }
 
 std::string yas::to_string(db::manager::error_type const &error) {

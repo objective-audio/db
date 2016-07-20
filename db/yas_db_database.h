@@ -113,7 +113,10 @@ namespace db {
         void set_start_busy_retry_time(const std::chrono::time_point<std::chrono::system_clock> &time);
         std::chrono::time_point<std::chrono::system_clock> start_busy_retry_time() const;
 
-        row_set_observable row_set_observable();
+        db::row_set_observable &row_set_observable();
+
+       private:
+        db::row_set_observable _row_set_observable = nullptr;
     };
 }
 std::string to_string(db::error_type const &);

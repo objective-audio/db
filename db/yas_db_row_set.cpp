@@ -183,10 +183,16 @@ db::value_map db::row_set::value_map() const {
     return map;
 }
 
-db::closable db::row_set::closable() {
-    return db::closable{impl_ptr<closable::impl>()};
+db::closable &db::row_set::closable() {
+    if (!_closable) {
+        _closable = db::closable{impl_ptr<closable::impl>()};
+    }
+    return _closable;
 }
 
-db::db_settable db::row_set::db_settable() {
-    return db::db_settable{impl_ptr<db_settable::impl>()};
+db::db_settable &db::row_set::db_settable() {
+    if (!_db_settable) {
+        _db_settable = db::db_settable{impl_ptr<db_settable::impl>()};
+    }
+    return _db_settable;
 }

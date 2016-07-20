@@ -18,6 +18,9 @@ namespace db {
         explicit closable(std::shared_ptr<impl> impl) : protocol(std::move(impl)) {
         }
 
+        closable(std::nullptr_t) : protocol(nullptr) {
+        }
+
         void close() {
             impl_ptr<impl>()->close();
         }
@@ -31,6 +34,9 @@ namespace db {
         explicit row_set_observable(std::shared_ptr<impl> impl) : protocol(std::move(impl)) {
         }
 
+        row_set_observable(std::nullptr_t) : protocol(nullptr) {
+        }
+
         void row_set_did_close(uintptr_t const identifier) {
             impl_ptr<impl>()->_row_set_did_close(identifier);
         }
@@ -42,6 +48,9 @@ namespace db {
         };
 
         explicit db_settable(std::shared_ptr<impl> impl) : protocol(std::move(impl)) {
+        }
+
+        db_settable(std::nullptr_t) : protocol(nullptr) {
         }
 
         void set_database(database const &db) {

@@ -37,7 +37,10 @@ namespace db {
 
         void reset();
 
-        closable closable();
+        db::closable &closable();
+
+       private:
+        db::closable _closable = nullptr;
     };
 }
 }
