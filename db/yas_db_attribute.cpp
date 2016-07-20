@@ -18,7 +18,7 @@ namespace db {
 }
 }
 
-db::attribute::attribute(std::string const &name, std::string const &type, value const &default_value,
+db::attribute::attribute(std::string const &name, std::string const &type, db::value const &default_value,
                          bool const not_null, bool const primary, bool const unique)
     : name(name), type(type), default_value(default_value), not_null(not_null), primary(primary), unique(unique) {
     if (name.size() == 0) {
@@ -46,8 +46,8 @@ db::attribute::attribute(std::string const &name, std::string const &type, value
 }
 
 db::attribute::attribute(std::string const &name, CFDictionaryRef const dict)
-    : attribute(name, get<std::string>(dict, type_key), get<value>(dict, default_key), get<bool>(dict, not_null_key),
-                false) {
+    : attribute(name, get<std::string>(dict, type_key), get<db::value>(dict, default_key),
+                get<bool>(dict, not_null_key), false) {
 }
 
 std::string db::attribute::sql() const {

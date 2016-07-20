@@ -112,14 +112,14 @@ namespace db {
         using subject_t = subject<change_info, method>;
         using observer_t = observer<change_info, method>;
 
-        manager(std::string const &db_path, model const &model, std::size_t const priority_count = 1,
+        manager(std::string const &db_path, db::model const &model, std::size_t const priority_count = 1,
                 dispatch_queue_t const dispatch_queue = dispatch_get_main_queue());
         manager(std::nullptr_t);
 
         std::string const &database_path() const;
-        database const &database() const;
+        db::database const &database() const;
         db::database &database();
-        model const &model() const;
+        db::model const &model() const;
         db::value const &current_save_id() const;
         db::value const &last_save_id() const;
 

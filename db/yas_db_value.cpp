@@ -61,12 +61,12 @@ struct db::value::impl_base : public base::impl {
 
 template <typename T>
 struct db::value::impl : public impl_base {
-    typename T::type value;
+    typename T::type _value;
 
-    impl(typename T::type const &val) : value(val) {
+    impl(typename T::type const &val) : _value(val) {
     }
 
-    impl(typename T::type &&val) : value(std::move(val)) {
+    impl(typename T::type &&val) : _value(std::move(val)) {
     }
 
     impl(impl const &) = delete;
@@ -80,7 +80,7 @@ struct db::value::impl : public impl_base {
         if (auto casted_rhs = std::dynamic_pointer_cast<impl>(rhs)) {
             auto &type_info = type();
             if (type_info == casted_rhs->type()) {
-                return value == casted_rhs->value;
+                return _value == casted_rhs->_value;
             }
         }
 
@@ -164,7 +164,7 @@ std::type_info const &db::value::type() const {
 template <typename T>
 typename T::type const &db::value::get() const {
     if (auto ip = std::dynamic_pointer_cast<impl<T>>(impl_ptr())) {
-        return ip->value;
+        return ip->_value;
     }
 
     static const typename T::type _default{};
