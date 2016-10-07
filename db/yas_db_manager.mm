@@ -1506,7 +1506,7 @@ void db::manager::purge(completion_f completion, operation_option_t option) {
 
 void db::manager::reset(completion_f completion, operation_option_t option) {
     auto preparation = [manager = *this]() {
-        return std::move(manager.impl_ptr<impl>()->changed_object_ids_for_reset());
+        return manager.impl_ptr<impl>()->changed_object_ids_for_reset();
     };
 
     auto impl_completion = [completion = std::move(completion), manager = *this](
