@@ -7,7 +7,7 @@
 #include "yas_db_row_set.h"
 #include "yas_db_statement.h"
 #include "yas_db_value.h"
-#include "yas_each_index.h"
+#include "yas_fast_each.h"
 #include "yas_result.h"
 #include "yas_stl_utils.h"
 
@@ -60,7 +60,9 @@ class db::row_set::impl : public base::impl, public closable::impl, public db_se
         if (_column_name_to_index_map.empty()) {
             auto *const stmt = _statement.stmt();
             int column_count = sqlite3_column_count(stmt);
-            for (auto &idx : make_each(column_count)) {
+            auto each = make_fast_each(column_count);
+            while (yas_each_next(each)) {
+                auto const &idx = yas_each_index(each);
                 _column_name_to_index_map.insert(std::make_pair(to_lower(sqlite3_column_name(stmt, idx)), idx));
             }
         }
@@ -176,7 +178,9 @@ db::value_map db::row_set::value_map() const {
     db::value_map map;
     map.reserve(column_count);
 
-    for (auto &idx : make_each(column_count)) {
+    auto each = make_fast_each(column_count);
+    while (yas_each_next(each)) {
+        auto const &idx = yas_each_index(each);
         map.insert(std::make_pair(sqlite3_column_name(stmt, idx), column_value(idx)));
     }
 

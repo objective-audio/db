@@ -120,7 +120,7 @@ using namespace yas;
         objects.emplace_back(manager.insert_object("sample_a"));
         objects.emplace_back(manager.insert_object("sample_a"));
 
-        for (auto const &idx : make_each(2)) {
+        for (auto const &idx : make_each_index(2)) {
             auto const &object = objects[idx];
 
             XCTAssertEqual(object.status(), db::object_status::inserted);
@@ -151,7 +151,7 @@ using namespace yas;
         auto &a_objects = result.value().at("sample_a");
         XCTAssertEqual(a_objects.size(), 2);
 
-        for (auto const &idx : make_each(2)) {
+        for (auto const &idx : make_each_index(2)) {
             auto &object = objects.at(idx);
             auto &saved_object = a_objects.at(idx);
 

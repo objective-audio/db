@@ -158,6 +158,8 @@
 		B6D0DDE81C81DAA90086AA8E /* yas_db_sample_controller.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_db_sample_controller.h; sourceTree = "<group>"; };
 		B6D0DDEF1C8310900086AA8E /* DBSampleObjectViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DBSampleObjectViewController.h; sourceTree = "<group>"; };
 		B6D0DDF01C8310900086AA8E /* DBSampleObjectViewController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = DBSampleObjectViewController.mm; sourceTree = "<group>"; };
+		B6E92FB31EA102E200060D0D /* yas_fast_each_private.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = yas_fast_each_private.h; sourceTree = "<group>"; };
+		B6E92FB41EA102E200060D0D /* yas_fast_each.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = yas_fast_each.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -195,6 +197,8 @@
 				B66ACEE11DB797480031CB88 /* yas_each_index.h */,
 				B66ACEE21DB797480031CB88 /* yas_exception.cpp */,
 				B66ACEE31DB797480031CB88 /* yas_exception.h */,
+				B6E92FB31EA102E200060D0D /* yas_fast_each_private.h */,
+				B6E92FB41EA102E200060D0D /* yas_fast_each.h */,
 				B66ACEE41DB797480031CB88 /* yas_flagset_private.h */,
 				B66ACEE51DB797480031CB88 /* yas_flagset.h */,
 				B66ACEE61DB797480031CB88 /* yas_flex_ptr.cpp */,
