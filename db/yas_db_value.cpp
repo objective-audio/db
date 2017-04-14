@@ -3,7 +3,7 @@
 //
 
 #include "yas_db_value.h"
-#include "yas_each_index.h"
+#include "yas_fast_each.h"
 
 using namespace yas;
 
@@ -30,7 +30,9 @@ bool db::blob::operator==(blob const &rhs) const {
     if (lhs_data == rhs_data) {
         return true;
     } else if (size() == rhs.size()) {
-        for (auto &idx : make_each(size())) {
+        auto each = make_fast_each(size());
+        while (yas_each_next(each)) {
+            auto const &idx = yas_each_index(each);
             if (lhs_data[idx] != rhs_data[idx]) {
                 return false;
             }

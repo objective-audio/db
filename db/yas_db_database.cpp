@@ -7,7 +7,7 @@
 #include "yas_db_row_set.h"
 #include "yas_db_statement.h"
 #include "yas_db_value.h"
-#include "yas_each_index.h"
+#include "yas_fast_each.h"
 #include "yas_result.h"
 #include "yas_stl_utils.h"
 
@@ -352,7 +352,9 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
             if (db::_databases.count(database_id) > 0) {
                 if (auto database = db::_databases.at(database_id).lock()) {
                     std::unordered_map<std::string, db::value> map;
-                    for (auto &idx : make_each(columns)) {
+                    auto each = make_fast_each(columns);
+                    while (yas_each_next(each)) {
+                        auto const &idx = yas_each_index(each);
                         auto const &name = names[idx];
                         auto const &value = values[idx];
                         if (name) {
