@@ -5,6 +5,7 @@
 #import <Foundation/Foundation.h>
 #include "yas_cf_utils.h"
 #include "yas_cf_ref.h"
+#include "yas_objc_ptr.h"
 #include "yas_db_sample_controller.h"
 
 using namespace yas;
@@ -34,14 +35,20 @@ void db_controller::setup(db::manager::completion_f completion) {
     _begin_processing();
 
     @autoreleasepool {
-        NSArray<NSString *> *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true);
-        NSString *path = [paths.firstObject stringByAppendingPathComponent:@"db.sqlite"];
+        auto model_dict = make_objc_ptr<NSDictionary *>([]() {
+            NSURL *modelURL = [[NSBundle mainBundle] URLForAuxiliaryExecutable:@"model.plist"];
+            return [NSDictionary dictionaryWithContentsOfURL:modelURL];
+        });
 
-        NSURL *modelURL = [[NSBundle mainBundle] URLForAuxiliaryExecutable:@"model.plist"];
-        NSDictionary *modelDict = [NSDictionary dictionaryWithContentsOfURL:modelURL];
-        db::model model{(__bridge CFDictionaryRef)modelDict};
+        db::model model{(__bridge CFDictionaryRef)model_dict.object()};
 
-        _manager = db::manager{to_string((__bridge CFStringRef)path), model};
+        auto path = make_objc_ptr<NSString *>([]() {
+            NSArray<NSString *> *paths =
+                NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true);
+            return [paths.firstObject stringByAppendingPathComponent:@"db.sqlite"];
+        });
+
+        _manager = db::manager{to_string((__bridge CFStringRef)path.object()), model};
 
         _manager.setup([weak = to_weak(shared_from_this()), completion = std::move(completion)](auto setup_result) {
             if (auto shared = weak.lock()) {
