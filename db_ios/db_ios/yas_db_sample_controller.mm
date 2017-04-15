@@ -4,6 +4,7 @@
 
 #import <Foundation/Foundation.h>
 #include "yas_cf_utils.h"
+#include "yas_cf_ref.h"
 #include "yas_db_sample_controller.h"
 
 using namespace yas;
@@ -108,11 +109,9 @@ void db_controller::add() {
     _manager.save([](auto result) {});
     _manager.insert_objects(
         []() {
-            CFUUIDRef cf_uuid = CFUUIDCreate(nullptr);
-            CFStringRef cf_str = CFUUIDCreateString(nullptr, cf_uuid);
-            CFRelease(cf_uuid);
-            db::value_map obj{{"name", db::value{to_string(cf_str)}}};
-            CFRelease(cf_str);
+            auto uuid = make_cf_ref(CFUUIDCreate(nullptr));
+            auto uuid_str = make_cf_ref(CFUUIDCreateString(nullptr, uuid.object()));
+            db::value_map obj{{"name", db::value{to_string(uuid_str.object())}}};
 
             return db::value_map_vector_map{{entity_name_a, {std::move(obj)}}};
         },
