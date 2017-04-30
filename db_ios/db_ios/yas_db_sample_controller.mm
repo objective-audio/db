@@ -4,6 +4,8 @@
 
 #import <Foundation/Foundation.h>
 #include "yas_cf_utils.h"
+#include "yas_cf_ref.h"
+#include "yas_objc_ptr.h"
 #include "yas_db_sample_controller.h"
 
 using namespace yas;
@@ -32,59 +34,61 @@ db_controller::db_controller() : _manager(nullptr), _objects() {
 void db_controller::setup(db::manager::completion_f completion) {
     _begin_processing();
 
-    @autoreleasepool {
-        NSArray<NSString *> *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true);
-        NSString *path = [paths.firstObject stringByAppendingPathComponent:@"db.sqlite"];
-
+    auto model_dict = make_objc_ptr<NSDictionary *>([]() {
         NSURL *modelURL = [[NSBundle mainBundle] URLForAuxiliaryExecutable:@"model.plist"];
-        NSDictionary *modelDict = [NSDictionary dictionaryWithContentsOfURL:modelURL];
-        db::model model{(__bridge CFDictionaryRef)modelDict};
+        return [NSDictionary dictionaryWithContentsOfURL:modelURL];
+    });
 
-        _manager = db::manager{to_string((__bridge CFStringRef)path), model};
+    db::model model{(__bridge CFDictionaryRef)model_dict.object()};
 
-        _manager.setup([weak = to_weak(shared_from_this()), completion = std::move(completion)](auto setup_result) {
-            if (auto shared = weak.lock()) {
-                if (setup_result) {
-                    shared->_update_objects(
-                        [weak = weak, setup_result = std::move(setup_result), completion = std::move(completion)](
-                            auto update_result) {
-                            if (auto shared = weak.lock()) {
-                                if (update_result) {
-                                    shared->_end_processing();
-                                    shared->_subject.notify(method::objects_updated);
-                                }
-                                completion(std::move(update_result));
-                            }
-                        });
-                } else {
-                    completion(std::move(setup_result));
-                }
-            }
-        });
+    auto path = make_objc_ptr<NSString *>([]() {
+        NSArray<NSString *> *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true);
+        return [paths.firstObject stringByAppendingPathComponent:@"db.sqlite"];
+    });
 
-        auto weak_manager = to_weak(_manager);
+    _manager = db::manager{to_string((__bridge CFStringRef)path.object()), model};
 
-        _observer = _manager.subject().make_wild_card_observer([&controller = *this](auto const &context) {
-            auto const &key = context.key;
-            auto const &change_info = context.value;
-
-            if (key == db::manager::method::object_changed) {
-                db::object const &object = change_info.object;
-                if (auto idx_opt = index(controller._objects, object)) {
-                    if (object.entity_name() == entity_name_a && object.is_removed()) {
-                        erase_if(controller._objects, [&object](auto const &vec_obj) { return object == vec_obj; });
+    _manager.setup([weak = to_weak(shared_from_this()), completion = std::move(completion)](auto setup_result) {
+        if (auto shared = weak.lock()) {
+            if (setup_result) {
+                shared->_update_objects([
+                    weak = weak, setup_result = std::move(setup_result), completion = std::move(completion)
+                ](auto update_result) {
+                    if (auto shared = weak.lock()) {
+                        if (update_result) {
+                            shared->_end_processing();
+                            shared->_subject.notify(method::objects_updated);
+                        }
+                        completion(std::move(update_result));
                     }
-                    controller._subject.notify(
-                        method::object_changed,
-                        {change_info.object, db::value{static_cast<db::integer::type>(*idx_opt)}});
-                } else {
-                    controller._subject.notify(method::object_changed);
-                }
-            } else if (key == db::manager::method::db_info_changed) {
-                controller._subject.notify(method::db_info_changed);
+                });
+            } else {
+                completion(std::move(setup_result));
             }
-        });
-    }
+        }
+    });
+
+    auto weak_manager = to_weak(_manager);
+
+    _observer = _manager.subject().make_wild_card_observer([&controller = *this](auto const &context) {
+        auto const &key = context.key;
+        auto const &change_info = context.value;
+
+        if (key == db::manager::method::object_changed) {
+            db::object const &object = change_info.object;
+            if (auto idx_opt = index(controller._objects, object)) {
+                if (object.entity_name() == entity_name_a && object.is_removed()) {
+                    erase_if(controller._objects, [&object](auto const &vec_obj) { return object == vec_obj; });
+                }
+                controller._subject.notify(method::object_changed,
+                                           {change_info.object, db::value{static_cast<db::integer::type>(*idx_opt)}});
+            } else {
+                controller._subject.notify(method::object_changed);
+            }
+        } else if (key == db::manager::method::db_info_changed) {
+            controller._subject.notify(method::db_info_changed);
+        }
+    });
 }
 
 void db_controller::add_temporary() {
@@ -108,11 +112,9 @@ void db_controller::add() {
     _manager.save([](auto result) {});
     _manager.insert_objects(
         []() {
-            CFUUIDRef cf_uuid = CFUUIDCreate(nullptr);
-            CFStringRef cf_str = CFUUIDCreateString(nullptr, cf_uuid);
-            CFRelease(cf_uuid);
-            db::value_map obj{{"name", db::value{to_string(cf_str)}}};
-            CFRelease(cf_str);
+            auto uuid = make_cf_ref(CFUUIDCreate(nullptr));
+            auto uuid_str = make_cf_ref(CFUUIDCreateString(nullptr, uuid.object()));
+            db::value_map obj{{"name", db::value{to_string(uuid_str.object())}}};
 
             return db::value_map_vector_map{{entity_name_a, {std::move(obj)}}};
         },
