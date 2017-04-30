@@ -15,7 +15,7 @@ db::blob::blob() : _vector(), _data(nullptr), _size(0) {
 template <>
 db::blob::blob(const void *const data, std::size_t const size, copy_tag_t const)
     : _vector(size), _data(data), _size(size) {
-    memcpy(_vector.data(), data, size);
+    memcpy(this->_vector.data(), data, size);
 }
 
 template <>
@@ -29,7 +29,7 @@ bool db::blob::operator==(blob const &rhs) const {
 
     if (lhs_data == rhs_data) {
         return true;
-    } else if (size() == rhs.size()) {
+    } else if (this->size() == rhs.size()) {
         auto each = make_fast_each(size());
         while (yas_each_next(each)) {
             auto const &idx = yas_each_index(each);
@@ -48,11 +48,11 @@ bool db::blob::operator!=(blob const &rhs) const {
 }
 
 const void *db::blob::data() const {
-    return _data;
+    return this->_data;
 }
 
 std::size_t db::blob::size() const {
-    return _size;
+    return this->_size;
 }
 
 #pragma mark - value::impl
@@ -82,7 +82,7 @@ struct db::value::impl : public impl_base {
         if (auto casted_rhs = std::dynamic_pointer_cast<impl>(rhs)) {
             auto &type_info = type();
             if (type_info == casted_rhs->type()) {
-                return _value == casted_rhs->_value;
+                return this->_value == casted_rhs->_value;
             }
         }
 
@@ -181,13 +181,13 @@ template db::null::type const &db::value::get<db::null>() const;
 
 std::string db::value::sql() const {
     auto const &type_info = type();
-    if (type_info == typeid(integer)) {
-        return std::to_string(get<integer>());
-    } else if (type_info == typeid(real)) {
-        return std::to_string(get<real>());
-    } else if (type_info == typeid(text)) {
-        return "'" + get<text>() + "'";
-    } else if (type_info == typeid(blob)) {
+    if (type_info == typeid(db::integer)) {
+        return std::to_string(get<db::integer>());
+    } else if (type_info == typeid(db::real)) {
+        return std::to_string(get<db::real>());
+    } else if (type_info == typeid(db::text)) {
+        return "'" + get<db::text>() + "'";
+    } else if (type_info == typeid(db::blob)) {
         throw std::runtime_error("don't get sql from blob value");
     } else {
         return "null";
@@ -202,7 +202,7 @@ db::value const &db::value::null_value() {
 }
 
 std::shared_ptr<db::value::impl<db::null>> const &db::value::null_value_impl_ptr() {
-    static auto _impl_ptr = std::make_shared<db::value::impl<null>>(nullptr);
+    static auto _impl_ptr = std::make_shared<db::value::impl<db::null>>(nullptr);
     return _impl_ptr;
 }
 

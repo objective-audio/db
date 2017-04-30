@@ -25,7 +25,7 @@ db::sqlite_result_code::sqlite_result_code(int const &value) : result_code(value
 }
 
 db::sqlite_result_code::operator bool() const {
-    auto value = raw_value();
+    auto value = this->raw_value();
     return value == SQLITE_OK || value == SQLITE_DONE;
 }
 
@@ -39,19 +39,19 @@ db::error::error(error_type const type, sqlite_result_code const &code, std::str
 }
 
 db::error::operator bool() const {
-    return _type != error_type::none;
+    return this->_type != error_type::none;
 }
 
 db::error_type const &db::error::type() const {
-    return _type;
+    return this->_type;
 }
 
 db::sqlite_result_code const &db::error::code() const {
-    return _code;
+    return this->_code;
 }
 
 std::string const &db::error::message() const {
-    return _message;
+    return this->_message;
 }
 
 #pragma mark - impl
@@ -76,56 +76,56 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
     }
 
     ~impl() {
-        close();
+        this->close();
 
-        _databases.erase(_db_key);
+        db::_databases.erase(_db_key);
     }
 
     const char *sqlite_path() const {
-        return _database_path.c_str();
+        return this->_database_path.c_str();
     }
 
     bool open() {
-        if (_sqlite_handle) {
+        if (this->_sqlite_handle) {
             return true;
         }
 
-        int err = sqlite3_open(sqlite_path(), &_sqlite_handle);
+        int err = sqlite3_open(this->sqlite_path(), &this->_sqlite_handle);
         if (err != SQLITE_OK) {
             return false;
         }
 
-        execute_update("pragma foreign_keys = ON;", {}, {});
+        this->execute_update("pragma foreign_keys = ON;", {}, {});
 
-        if (_max_busy_retry_time_interval > 0.0) {
-            set_max_busy_retry_time_interval(_max_busy_retry_time_interval);
+        if (this->_max_busy_retry_time_interval > 0.0) {
+            this->set_max_busy_retry_time_interval(this->_max_busy_retry_time_interval);
         }
 
         return true;
     }
 
     bool open(int flags) {
-        if (_sqlite_handle) {
+        if (this->_sqlite_handle) {
             return true;
         }
 
-        int err = sqlite3_open_v2(sqlite_path(), &_sqlite_handle, flags, NULL);
+        int err = sqlite3_open_v2(this->sqlite_path(), &this->_sqlite_handle, flags, NULL);
         if (err != SQLITE_OK) {
             return false;
         }
 
-        if (_max_busy_retry_time_interval > 0.0) {
-            set_max_busy_retry_time_interval(_max_busy_retry_time_interval);
+        if (this->_max_busy_retry_time_interval > 0.0) {
+            this->set_max_busy_retry_time_interval(this->_max_busy_retry_time_interval);
         }
 
         return true;
     }
 
     bool close() {
-        clear_cached_statements();
-        close_open_row_sets();
+        this->clear_cached_statements();
+        this->close_open_row_sets();
 
-        if (!_sqlite_handle) {
+        if (!this->_sqlite_handle) {
             return true;
         }
 
@@ -135,11 +135,11 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
 
         do {
             retry = false;
-            result_code = sqlite3_close(_sqlite_handle);
+            result_code = sqlite3_close(this->_sqlite_handle);
             if (SQLITE_BUSY == result_code || SQLITE_LOCKED == result_code) {
                 if (!tried_finalizing_open_statements) {
                     tried_finalizing_open_statements = true;
-                    while (auto stmt = sqlite3_next_stmt(_sqlite_handle, nullptr)) {
+                    while (auto stmt = sqlite3_next_stmt(this->_sqlite_handle, nullptr)) {
                         sqlite3_finalize(stmt);
                         retry = true;
                     }
@@ -149,29 +149,29 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
             }
         } while (retry);
 
-        _sqlite_handle = nullptr;
+        this->_sqlite_handle = nullptr;
 
         return true;
     }
 
     std::string last_error_message() const {
-        return sqlite3_errmsg(_sqlite_handle);
+        return sqlite3_errmsg(this->_sqlite_handle);
     }
 
     int last_error_code() const {
-        return sqlite3_errcode(_sqlite_handle);
+        return sqlite3_errcode(this->_sqlite_handle);
     }
 
     bool had_error() const {
-        int code = last_error_code();
+        int code = this->last_error_code();
         return (code > SQLITE_OK && code < SQLITE_ROW);
     }
 
 #pragma mark - private
 
     db::statement cached_statement(std::string const &query) {
-        if (_cached_statements.count(query) > 0) {
-            auto &statements = _cached_statements.at(query);
+        if (this->_cached_statements.count(query) > 0) {
+            auto &statements = this->_cached_statements.at(query);
             for (auto &pair : statements) {
                 if (!pair.second.in_use()) {
                     return pair.second;
@@ -185,39 +185,39 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
         db::statement cached_statement = statement;
         cached_statement.set_query(query);
 
-        if (_cached_statements.count(query) == 0) {
-            _cached_statements.insert(std::make_pair(query, std::unordered_map<uintptr_t, db::statement>{}));
+        if (this->_cached_statements.count(query) == 0) {
+            this->_cached_statements.insert(std::make_pair(query, std::unordered_map<uintptr_t, db::statement>{}));
         }
 
         _cached_statements.at(query).insert(std::make_pair(statement.identifier(), statement));
     }
 
     void clear_cached_statements() {
-        for (auto &pair : _cached_statements) {
+        for (auto &pair : this->_cached_statements) {
             for (auto &statementpair : pair.second) {
                 if (auto statement = statementpair.second.closable()) {
                     statement.close();
                 }
             }
         }
-        _cached_statements.clear();
+        this->_cached_statements.clear();
     }
 
     void close_open_row_sets() {
-        for (auto &pair : _open_row_sets) {
+        for (auto &pair : this->_open_row_sets) {
             if (auto row_set = pair.second.lock()) {
                 row_set.db_settable().set_database(nullptr);
                 row_set.closable().close();
             }
         }
-        _open_row_sets.clear();
+        this->_open_row_sets.clear();
     }
 
     bool database_exists() const {
-        return _sqlite_handle;
+        return this->_sqlite_handle;
     }
 
-    static void bind(value const &value, int column_idx, sqlite3_stmt *stmt) {
+    static void bind(db::value const &value, int column_idx, sqlite3_stmt *stmt) {
         std::type_info const &type = value.type();
 
         if (type == typeid(db::null)) {
@@ -239,23 +239,23 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
     }
 
     update_result_t execute_update(std::string const &sql, std::vector<db::value> const &vec,
-                                 std::unordered_map<std::string, db::value> const &map) {
-        if (!database_exists()) {
+                                   std::unordered_map<std::string, db::value> const &map) {
+        if (!this->database_exists()) {
             return update_result_t{error{error_type::closed}};
         }
 
-        if (_is_executing_statement) {
+        if (this->_is_executing_statement) {
             return update_result_t{error{error_type::in_use}};
         }
 
-        _is_executing_statement = true;
+        this->_is_executing_statement = true;
 
         sqlite_result_code result_code{SQLITE_OK};
         std::string error_message;
         sqlite3_stmt *stmt = nullptr;
         db::statement statement{nullptr};
 
-        if (_should_cache_statements) {
+        if (this->_should_cache_statements) {
             statement = cached_statement(sql);
             if (statement) {
                 stmt = statement.stmt();
@@ -264,12 +264,12 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
         }
 
         if (!stmt) {
-            result_code = sqlite3_prepare_v2(_sqlite_handle, sql.c_str(), -1, &stmt, 0);
+            result_code = sqlite3_prepare_v2(this->_sqlite_handle, sql.c_str(), -1, &stmt, 0);
 
             if (!result_code) {
                 auto result = update_result_t{error{error_type::sqlite, result_code, last_error_message()}};
                 sqlite3_finalize(stmt);
-                _is_executing_statement = false;
+                this->_is_executing_statement = false;
                 return result;
             }
         }
@@ -283,7 +283,7 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
 
                 int named_idx = sqlite3_bind_parameter_index(stmt, parameter_name.c_str());
                 if (named_idx > 0) {
-                    bind(pair.second, named_idx, stmt);
+                    this->bind(pair.second, named_idx, stmt);
                     ++idx;
                 } else {
                     //                NSLog(@"Could not find index for %@", dictionaryKey);
@@ -294,20 +294,20 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
                 auto &value = vec.at(idx);
 
                 ++idx;
-                bind(value, idx, stmt);
+                this->bind(value, idx, stmt);
             }
         }
 
         if (idx != query_count) {
             sqlite3_finalize(stmt);
-            _is_executing_statement = false;
+            this->_is_executing_statement = false;
             return update_result_t{error{error_type::invalid_query_count}};
         }
 
         result_code = sqlite3_step(stmt);
 
         if (!result_code) {
-            error_message = last_error_message();
+            error_message = this->last_error_message();
         }
 
         if (result_code.raw_value() == SQLITE_ROW) {
@@ -315,10 +315,10 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
                                      " : execute_update is being called with a query string '" + sql + "'.");
         }
 
-        if (_should_cache_statements && !statement) {
+        if (this->_should_cache_statements && !statement) {
             statement = db::statement{};
             statement.set_stmt(stmt);
-            set_cached_statement(statement, sql);
+            this->set_cached_statement(statement, sql);
         }
 
         sqlite_result_code close_result_code;
@@ -331,10 +331,10 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
 
         if (!close_result_code && result_code) {
             result_code = close_result_code;
-            error_message = last_error_message();
+            error_message = this->last_error_message();
         }
 
-        _is_executing_statement = false;
+        this->_is_executing_statement = false;
 
         if (result_code) {
             return update_result_t{nullptr};
@@ -344,8 +344,8 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
     }
 
     update_result_t execute_statements(std::string const &sql, callback_f const &function) {
-        callback_id callback_id{.database = _db_key};
-        _callback_for_execute_statements = function;
+        db::callback_id callback_id{.database = _db_key};
+        this->_callback_for_execute_statements = function;
 
         static auto execute_bulk_sql_callback = [](void *id, int columns, char **values, char **names) {
             auto database_id = (db::callback_id){id}.database;
@@ -378,9 +378,9 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
         char *errmsg = nullptr;
 
         sqlite_result_code result_code = sqlite3_exec(
-            _sqlite_handle, sql.c_str(), function ? execute_bulk_sql_callback : nullptr, callback_id.v, &errmsg);
+            this->_sqlite_handle, sql.c_str(), function ? execute_bulk_sql_callback : nullptr, callback_id.v, &errmsg);
 
-        _callback_for_execute_statements = nullptr;
+        this->_callback_for_execute_statements = nullptr;
 
         std::string error_message;
         if (errmsg) {
@@ -396,15 +396,15 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
     }
 
     db::query_result_t execute_query(std::string const &sql, value_vector_t const &vec, value_map_t const &map) {
-        if (!database_exists()) {
+        if (!this->database_exists()) {
             return query_result_t{error{error_type::closed}};
         }
 
-        if (_is_executing_statement) {
+        if (this->_is_executing_statement) {
             return query_result_t{error{error_type::in_use}};
         }
 
-        _is_executing_statement = true;
+        this->_is_executing_statement = true;
 
         sqlite_result_code result_code = 0;
         std::string error_message;
@@ -412,8 +412,8 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
         statement statement{nullptr};
         row_set row_set{nullptr};
 
-        if (_should_cache_statements) {
-            statement = cached_statement(sql);
+        if (this->_should_cache_statements) {
+            statement = this->cached_statement(sql);
             if (statement) {
                 stmt = statement.stmt();
                 statement.reset();
@@ -421,12 +421,12 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
         }
 
         if (!stmt) {
-            result_code = sqlite3_prepare_v2(_sqlite_handle, sql.c_str(), -1, &stmt, 0);
+            result_code = sqlite3_prepare_v2(this->_sqlite_handle, sql.c_str(), -1, &stmt, 0);
 
             if (!result_code) {
                 auto result = query_result_t{error{error_type::sqlite, result_code, last_error_message()}};
                 sqlite3_finalize(stmt);
-                _is_executing_statement = false;
+                this->_is_executing_statement = false;
                 return result;
             }
         }
@@ -455,7 +455,7 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
 
         if (idx != query_count) {
             sqlite3_finalize(stmt);
-            _is_executing_statement = false;
+            this->_is_executing_statement = false;
             return query_result_t{error{error_type::invalid_query_count, 0, error_message}};
         }
 
@@ -463,57 +463,57 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
             statement = db::statement{};
             statement.set_stmt(stmt);
 
-            if (_should_cache_statements && sql.size() > 0) {
-                set_cached_statement(statement, sql);
+            if (this->_should_cache_statements && sql.size() > 0) {
+                this->set_cached_statement(statement, sql);
             }
         }
 
         row_set = db::row_set{statement, cast<db::database>()};
 
-        _open_row_sets.insert(std::make_pair(row_set.identifier(), row_set));
+        this->_open_row_sets.insert(std::make_pair(row_set.identifier(), row_set));
 
-        _is_executing_statement = false;
+        this->_is_executing_statement = false;
 
         return query_result_t{std::move(row_set)};
     }
 
     row_result_t last_insert_row_id() {
-        if (_is_executing_statement) {
+        if (this->_is_executing_statement) {
             return row_result_t{error{error_type::in_use}};
         }
 
-        _is_executing_statement = true;
+        this->_is_executing_statement = true;
 
-        sqlite_int64 row_id = sqlite3_last_insert_rowid(_sqlite_handle);
+        sqlite_int64 row_id = sqlite3_last_insert_rowid(this->_sqlite_handle);
 
-        _is_executing_statement = false;
+        this->_is_executing_statement = false;
 
         return row_result_t{row_id};
     }
 
     count_result_t changes() {
-        if (_is_executing_statement) {
+        if (this->_is_executing_statement) {
             return count_result_t{error{error_type::in_use}};
         }
 
-        _is_executing_statement = true;
+        this->_is_executing_statement = true;
 
-        int changes = sqlite3_changes(_sqlite_handle);
+        int changes = sqlite3_changes(this->_sqlite_handle);
 
-        _is_executing_statement = false;
+        this->_is_executing_statement = false;
 
         return count_result_t{changes};
     }
 
     void set_max_busy_retry_time_interval(double const timeout) {
-        _max_busy_retry_time_interval = timeout;
+        this->_max_busy_retry_time_interval = timeout;
 
-        if (!_sqlite_handle) {
+        if (!this->_sqlite_handle) {
             return;
         }
 
         if (timeout > 0) {
-            callback_id id{.database = _db_key};
+            db::callback_id id{.database = _db_key};
 
             static auto sqlite_busy_handler = [](void *id, int count) {
                 auto database_id = (db::callback_id){id}.database;
@@ -535,18 +535,18 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
                 return 0;
             };
 
-            sqlite3_busy_handler(_sqlite_handle, sqlite_busy_handler, id.v);
+            sqlite3_busy_handler(this->_sqlite_handle, sqlite_busy_handler, id.v);
         } else {
-            sqlite3_busy_handler(_sqlite_handle, nullptr, nullptr);
+            sqlite3_busy_handler(this->_sqlite_handle, nullptr, nullptr);
         }
     }
 
     double max_busy_retry_time_interval() const {
-        return _max_busy_retry_time_interval;
+        return this->_max_busy_retry_time_interval;
     }
 
     void _row_set_did_close(uintptr_t const id) override {
-        _open_row_sets.erase(id);
+        this->_open_row_sets.erase(id);
     }
 
    private:
@@ -564,7 +564,7 @@ bool db::database::sqlite_thread_safe() {
 }
 
 db::database::database(std::string const &path) : base(std::make_shared<impl>(path)) {
-    if (auto key = min_empty_key(_databases)) {
+    if (auto key = min_empty_key(db::_databases)) {
         impl_ptr<impl>()->_db_key = *key;
         db::_databases.insert(std::make_pair(*key, *this));
     }
@@ -622,7 +622,7 @@ db::update_result_t db::database::execute_update(std::string const &sql, std::ve
 }
 
 db::update_result_t db::database::execute_update(std::string const &sql,
-                                               std::unordered_map<std::string, db::value> const &arguments) {
+                                                 std::unordered_map<std::string, db::value> const &arguments) {
     return impl_ptr<impl>()->execute_update(sql, {}, arguments);
 }
 
@@ -711,10 +711,10 @@ std::chrono::time_point<std::chrono::system_clock> db::database::start_busy_retr
 }
 
 db::row_set_observable &db::database::row_set_observable() {
-    if (!_row_set_observable) {
-        _row_set_observable = db::row_set_observable{impl_ptr<row_set_observable::impl>()};
+    if (!this->_row_set_observable) {
+        this->_row_set_observable = db::row_set_observable{impl_ptr<row_set_observable::impl>()};
     }
-    return _row_set_observable;
+    return this->_row_set_observable;
 }
 
 #pragma mark -

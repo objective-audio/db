@@ -23,62 +23,62 @@ struct db::const_object::impl : public base::impl {
 
     impl(db::model const &model, std::string const &entity_name, db::object_data const &obj_data = {})
         : _model(model), _entity_name(entity_name) {
-        load_data(obj_data);
+        this->load_data(obj_data);
     }
 
     void clear() {
-        _data.attributes.clear();
-        _data.relations.clear();
+        this->_data.attributes.clear();
+        this->_data.relations.clear();
     }
 
     void load_data(db::object_data const &obj_data) {
-        clear();
+        this->clear();
 
-        db::entity const &entity = _model.entities().at(_entity_name);
+        db::entity const &entity = this->_model.entities().at(_entity_name);
 
         for (auto const &pair : entity.attributes) {
             auto const &attr_name = pair.first;
             if (obj_data.attributes.count(attr_name) > 0) {
-                validate_attribute_name(attr_name);
+                this->validate_attribute_name(attr_name);
 
-                _data.attributes.emplace(std::make_pair(attr_name, obj_data.attributes.at(attr_name)));
+                this->_data.attributes.emplace(std::make_pair(attr_name, obj_data.attributes.at(attr_name)));
             }
         }
 
         for (auto const &pair : entity.relations) {
             auto const &rel_name = pair.first;
             if (obj_data.relations.count(rel_name) > 0) {
-                validate_relation_name(rel_name);
+                this->validate_relation_name(rel_name);
 
-                _data.relations.emplace(std::make_pair(rel_name, obj_data.relations.at(rel_name)));
+                this->_data.relations.emplace(std::make_pair(rel_name, obj_data.relations.at(rel_name)));
             }
         }
     }
 
     db::value const &get_attribute(std::string const &attr_name) {
-        validate_attribute_name(attr_name);
+        this->validate_attribute_name(attr_name);
 
-        if (_data.attributes.count(attr_name) > 0) {
-            return _data.attributes.at(attr_name);
+        if (this->_data.attributes.count(attr_name) > 0) {
+            return this->_data.attributes.at(attr_name);
         }
 
         return db::value::null_value();
     }
 
     db::value_vector_t get_relation_ids(std::string const &rel_name) {
-        validate_relation_name(rel_name);
+        this->validate_relation_name(rel_name);
 
-        if (_data.relations.count(rel_name) > 0) {
-            return _data.relations.at(rel_name);
+        if (this->_data.relations.count(rel_name) > 0) {
+            return this->_data.relations.at(rel_name);
         }
         return {};
     }
 
     db::value const &get_relation_id(std::string const &rel_name, std::size_t const idx) {
-        validate_relation_name(rel_name);
+        this->validate_relation_name(rel_name);
 
-        if (_data.relations.count(rel_name) > 0) {
-            auto const &ids = _data.relations.at(rel_name);
+        if (this->_data.relations.count(rel_name) > 0) {
+            auto const &ids = this->_data.relations.at(rel_name);
             if (idx < ids.size()) {
                 return ids.at(idx);
             }
@@ -87,10 +87,10 @@ struct db::const_object::impl : public base::impl {
     }
 
     std::size_t relation_size(std::string const &rel_name) {
-        validate_relation_name(rel_name);
+        this->validate_relation_name(rel_name);
 
-        if (_data.relations.count(rel_name) > 0) {
-            return _data.relations.at(rel_name).size();
+        if (this->_data.relations.count(rel_name) > 0) {
+            return this->_data.relations.at(rel_name).size();
         }
         return 0;
     }
@@ -98,19 +98,19 @@ struct db::const_object::impl : public base::impl {
     db::integer_set_map_t relation_ids_for_fetch() {
         db::integer_set_map_t relation_ids;
 
-        db::entity const &entity = _model.entity(_entity_name);
+        db::entity const &entity = this->_model.entity(_entity_name);
         for (auto const &pair : entity.relations) {
             auto const &rel_name = pair.first;
-            if (_data.relations.count(rel_name) > 0) {
+            if (this->_data.relations.count(rel_name) > 0) {
                 auto const &tgt_entity_name = pair.second.target_entity_name;
                 if (relation_ids.count(tgt_entity_name) == 0) {
                     relation_ids.emplace(std::make_pair(tgt_entity_name, db::integer_set_t{}));
                 }
 
                 auto &rel_id_set = relation_ids.at(tgt_entity_name);
-                auto const &rel = _data.relations.at(rel_name);
+                auto const &rel = this->_data.relations.at(rel_name);
                 for (auto const &tgt_id : rel) {
-                    rel_id_set.emplace(tgt_id.get<integer>());
+                    rel_id_set.emplace(tgt_id.get<db::integer>());
                 }
             }
         }
@@ -119,26 +119,26 @@ struct db::const_object::impl : public base::impl {
     }
 
     void validate_attribute_name(std::string const &attr_name) {
-        if (!_model.attribute_exists(_entity_name, attr_name)) {
-            throw "attribute name (" + attr_name + ") not found in " + _entity_name + ".";
+        if (!this->_model.attribute_exists(this->_entity_name, attr_name)) {
+            throw "attribute name (" + attr_name + ") not found in " + this->_entity_name + ".";
         }
     }
 
     void validate_relation_name(std::string const &rel_name) {
-        if (!_model.relation_exists(_entity_name, rel_name)) {
-            throw "relation name (" + rel_name + ") not found in " + _entity_name + ".";
+        if (!this->_model.relation_exists(this->_entity_name, rel_name)) {
+            throw "relation name (" + rel_name + ") not found in " + this->_entity_name + ".";
         }
     }
 
     void validate_relation_id(db::value const &rel_id) {
-        if (!rel_id || rel_id.get<integer>() <= 0) {
+        if (!rel_id || rel_id.get<db::integer>() <= 0) {
             throw "object_id not found for relation.";
         }
     }
 
     void validate_relation_ids(db::value_vector_t const &rel_ids) {
         for (auto const &rel_id : rel_ids) {
-            validate_relation_id(rel_id);
+            this->validate_relation_id(rel_id);
         }
     }
 };
@@ -183,15 +183,15 @@ std::size_t db::const_object::relation_size(std::string const &rel_name) const {
 }
 
 db::value const &db::const_object::object_id() const {
-    return get_attribute(object_id_field);
+    return this->get_attribute(object_id_field);
 }
 
 db::value const &db::const_object::save_id() const {
-    return get_attribute(save_id_field);
+    return this->get_attribute(save_id_field);
 }
 
 db::value const &db::const_object::action() const {
-    return get_attribute(action_field);
+    return this->get_attribute(action_field);
 }
 
 db::integer_set_map_t db::const_object::relation_ids_for_fetch() const {
@@ -205,19 +205,18 @@ db::const_object const &db::const_object::null_object() {
 
 #pragma mark - db::object::impl
 
-class db::object::impl : public const_object::impl, public manageable_object::impl {
-   public:
-    enum db::object_status status = db::object_status::invalid;
-    db::manager manager;
-    db::object::subject_t subject;
+struct db::object::impl : public const_object::impl, public manageable_object::impl {
+    enum db::object_status _status = db::object_status::invalid;
+    db::manager _manager;
+    db::object::subject_t _subject;
 
     impl(db::manager const &manager, db::model const &model, std::string const &entity_name)
-        : const_object::impl(model, entity_name), manager(manager) {
+        : const_object::impl(model, entity_name), _manager(manager) {
     }
 
     ~impl() {
-        if (manager) {
-            if (auto observable = manager.object_observable()) {
+        if (this->_manager) {
+            if (auto observable = this->_manager.object_observable()) {
                 observable.object_did_erase(_entity_name, get_attribute(object_id_field).get<integer>());
             }
         }
@@ -225,39 +224,39 @@ class db::object::impl : public const_object::impl, public manageable_object::im
 
     void clear() {
         const_object::impl::clear();
-        status = db::object_status::invalid;
+        this->_status = db::object_status::invalid;
     }
 
     bool is_equal_to_action(std::string const &action) {
-        if (_data.attributes.count(action_field) > 0) {
-            return _data.attributes.at(action_field).get<text>() == action;
+        if (this->_data.attributes.count(action_field) > 0) {
+            return this->_data.attributes.at(action_field).get<db::text>() == action;
         }
 
         return false;
     }
 
     void load_data(db::object_data const &obj_data, bool const force) override {
-        if (status != db::object_status::changed || force) {
-            clear();
+        if (this->_status != db::object_status::changed || force) {
+            this->clear();
 
-            db::entity const &entity = _model.entity(_entity_name);
+            db::entity const &entity = this->_model.entity(_entity_name);
 
             for (auto const &pair : entity.attributes) {
                 auto const &attr_name = pair.first;
                 if (obj_data.attributes.count(attr_name) > 0) {
-                    set_attribute(attr_name, obj_data.attributes.at(attr_name), true);
+                    this->set_attribute(attr_name, obj_data.attributes.at(attr_name), true);
                 }
             }
 
             for (auto const &pair : entity.relations) {
                 auto const &rel_name = pair.first;
                 if (obj_data.relations.count(rel_name) > 0) {
-                    set_relation(rel_name, obj_data.relations.at(rel_name), true);
+                    this->set_relation(rel_name, obj_data.relations.at(rel_name), true);
                 }
             }
 
-            if (obj_data.attributes.count(save_id_field) > 0) {
-                status = db::object_status::saved;
+            if (obj_data.attributes.count(db::save_id_field) > 0) {
+                this->_status = db::object_status::saved;
             }
 
             notify_did_change(method::loading_changed, "", false);
@@ -265,178 +264,178 @@ class db::object::impl : public const_object::impl, public manageable_object::im
     }
 
     void load_save_id(db::value const &save_id) override {
-        set_attribute(save_id_field, save_id, true);
+        this->set_attribute(db::save_id_field, save_id, true);
     }
 
     void load_insertion_data() override {
-        status = db::object_status::inserted;
-        set_attribute(action_field, db::value{insert_action}, true);
+        this->_status = db::object_status::inserted;
+        set_attribute(db::action_field, db::value{db::insert_action}, true);
 
         db::entity const &entity = _model.entity(_entity_name);
 
         for (auto const &pair : entity.attributes) {
             auto const &attr = pair.second;
             if (attr.default_value) {
-                set_attribute(attr.name, attr.default_value, true);
+                this->set_attribute(attr.name, attr.default_value, true);
             }
         }
     }
 
     void clear_data() override {
-        clear();
+        this->clear();
 
-        notify_did_change(method::loading_changed, "", false);
+        this->notify_did_change(db::object::method::loading_changed, "", false);
     }
 
     void set_attribute(std::string const &attr_name, db::value const &value, bool const loading = false) {
-        validate_attribute_name(attr_name);
+        this->validate_attribute_name(attr_name);
 
-        replace(_data.attributes, attr_name, value);
+        replace(this->_data.attributes, attr_name, value);
 
         if (!loading) {
-            if (attr_name != action_field) {
-                set_update_action();
+            if (attr_name != db::action_field) {
+                this->set_update_action();
             }
 
-            if (status != db::object_status::inserted) {
-                status = db::object_status::changed;
+            if (this->_status != db::object_status::inserted) {
+                this->_status = db::object_status::changed;
             }
 
-            notify_did_change(method::attribute_changed, attr_name, true);
+            this->notify_did_change(db::object::method::attribute_changed, attr_name, true);
         }
     }
 
     void set_relation(std::string const &rel_name, value_vector_t const &relation_ids, bool const loading = false) {
-        validate_relation_name(rel_name);
-        validate_relation_ids(relation_ids);
+        this->validate_relation_name(rel_name);
+        this->validate_relation_ids(relation_ids);
 
-        replace(_data.relations, rel_name, relation_ids);
+        replace(this->_data.relations, rel_name, relation_ids);
 
         if (!loading) {
-            set_update_action();
+            this->set_update_action();
 
-            if (status != db::object_status::inserted) {
-                status = db::object_status::changed;
+            if (this->_status != db::object_status::inserted) {
+                this->_status = db::object_status::changed;
             }
 
-            notify_did_change(method::relation_changed, rel_name, true);
+            this->notify_did_change(db::object::method::relation_changed, rel_name, true);
         }
     }
 
     void push_back_relation(std::string const &rel_name, db::value const &relation_id) {
-        validate_relation_name(rel_name);
-        validate_relation_id(relation_id);
+        this->validate_relation_name(rel_name);
+        this->validate_relation_id(relation_id);
 
-        if (_data.relations.count(rel_name) == 0) {
-            _data.relations.emplace(std::make_pair(rel_name, db::value_vector_t{}));
+        if (this->_data.relations.count(rel_name) == 0) {
+            this->_data.relations.emplace(std::make_pair(rel_name, db::value_vector_t{}));
         }
 
         auto &vector = _data.relations.at(rel_name);
         vector.push_back(relation_id);
 
-        set_update_action();
+        this->set_update_action();
 
-        if (status != db::object_status::inserted) {
-            status = db::object_status::changed;
+        if (this->_status != db::object_status::inserted) {
+            this->_status = db::object_status::changed;
         }
 
-        notify_did_change(method::relation_changed, rel_name, true);
+        this->notify_did_change(db::object::method::relation_changed, rel_name, true);
     }
 
     void erase_relation(std::string const &rel_name, db::value const &relation_id) {
-        validate_relation_name(rel_name);
-        validate_relation_id(relation_id);
+        this->validate_relation_name(rel_name);
+        this->validate_relation_id(relation_id);
 
-        if (_data.relations.count(rel_name) > 0) {
-            erase_if(_data.relations.at(rel_name),
+        if (this->_data.relations.count(rel_name) > 0) {
+            erase_if(this->_data.relations.at(rel_name),
                      [relation_id](db::value const &object_id) { return object_id == relation_id; });
 
-            set_update_action();
+            this->set_update_action();
 
-            if (status != db::object_status::inserted) {
-                status = db::object_status::changed;
+            if (this->_status != db::object_status::inserted) {
+                this->_status = db::object_status::changed;
             }
 
-            notify_did_change(method::relation_changed, rel_name, true);
+            this->notify_did_change(db::object::method::relation_changed, rel_name, true);
         }
     }
 
     void erase_relation(std::string const &rel_name, std::size_t const idx) {
-        validate_relation_name(rel_name);
+        this->validate_relation_name(rel_name);
 
-        if (_data.relations.count(rel_name) > 0) {
-            auto &ids = _data.relations.at(rel_name);
+        if (this->_data.relations.count(rel_name) > 0) {
+            auto &ids = this->_data.relations.at(rel_name);
             if (idx < ids.size()) {
                 ids.erase(ids.begin() + idx);
             }
 
-            set_update_action();
+            this->set_update_action();
 
-            if (status != db::object_status::inserted) {
-                status = db::object_status::changed;
+            if (this->_status != db::object_status::inserted) {
+                this->_status = db::object_status::changed;
             }
 
-            notify_did_change(method::relation_changed, rel_name, true);
+            this->notify_did_change(db::object::method::relation_changed, rel_name, true);
         }
     }
 
     void clear_relation(std::string const &rel_name) {
-        validate_relation_name(rel_name);
+        this->validate_relation_name(rel_name);
 
-        if (!_model.relation_exists(_entity_name, rel_name)) {
+        if (!this->_model.relation_exists(this->_entity_name, rel_name)) {
             throw "relation name (" + rel_name + ") not found";
         }
 
-        if (_data.relations.count(rel_name) > 0) {
-            _data.relations.erase(rel_name);
+        if (this->_data.relations.count(rel_name) > 0) {
+            this->_data.relations.erase(rel_name);
 
-            set_update_action();
+            this->set_update_action();
 
-            if (status != db::object_status::inserted) {
-                status = db::object_status::changed;
+            if (this->_status != db::object_status::inserted) {
+                this->_status = db::object_status::changed;
             }
 
-            notify_did_change(method::relation_changed, rel_name, true);
+            this->notify_did_change(db::object::method::relation_changed, rel_name, true);
         }
     }
 
     void remove() {
-        if (is_equal_to_action(remove_action)) {
+        if (this->is_equal_to_action(db::remove_action)) {
             return;
         }
 
-        erase_if(_data.attributes, [](auto const &pair) {
+        erase_if(this->_data.attributes, [](auto const &pair) {
             auto const &column_name = pair.first;
-            if (column_name == id_field || column_name == object_id_field || column_name == action_field) {
+            if (column_name == db::id_field || column_name == db::object_id_field || column_name == db::action_field) {
                 return false;
             }
             return true;
         });
 
-        _data.relations.clear();
+        this->_data.relations.clear();
 
-        set_attribute(action_field, db::value{remove_action});
+        this->set_attribute(db::action_field, db::value{db::remove_action});
     }
 
     db::object_data data_for_save() {
         db::value_map_t attributes;
         db::value_vector_map_t relations;
 
-        db::entity const &entity = _model.entity(_entity_name);
+        db::entity const &entity = this->_model.entity(this->_entity_name);
 
         for (auto const &pair : entity.attributes) {
             auto const &attr_name = pair.first;
 
-            if (attr_name == save_id_field) {
+            if (attr_name == db::save_id_field) {
                 continue;
             }
 
-            if (attr_name == object_id_field && status == object_status::inserted) {
+            if (attr_name == db::object_id_field && this->_status == db::object_status::inserted) {
                 continue;
             }
 
-            if (_data.attributes.count(attr_name) > 0) {
-                attributes.emplace(std::make_pair(attr_name, _data.attributes.at(attr_name)));
+            if (this->_data.attributes.count(attr_name) > 0) {
+                attributes.emplace(std::make_pair(attr_name, this->_data.attributes.at(attr_name)));
             } else if (pair.second.not_null) {
                 attributes.emplace(std::make_pair(attr_name, pair.second.default_value));
             } else {
@@ -446,8 +445,8 @@ class db::object::impl : public const_object::impl, public manageable_object::im
 
         for (auto const &pair : entity.relations) {
             auto const &rel_name = pair.first;
-            if (_data.relations.count(rel_name) > 0) {
-                relations.emplace(std::make_pair(rel_name, _data.relations.at(rel_name)));
+            if (this->_data.relations.count(rel_name) > 0) {
+                relations.emplace(std::make_pair(rel_name, this->_data.relations.at(rel_name)));
             }
         }
 
@@ -455,23 +454,23 @@ class db::object::impl : public const_object::impl, public manageable_object::im
     }
 
     void set_update_action() {
-        if (status != object_status::inserted && !is_equal_to_action(remove_action) &&
-            !is_equal_to_action(update_action)) {
-            set_attribute(action_field, db::value{update_action}, true);
+        if (this->_status != db::object_status::inserted && !this->is_equal_to_action(db::remove_action) &&
+            !this->is_equal_to_action(db::update_action)) {
+            this->set_attribute(db::action_field, db::value{db::update_action}, true);
         }
     }
 
-    void set_status(object_status const &stat) override {
-        status = stat;
+    void set_status(db::object_status const &stat) override {
+        this->_status = stat;
     }
 
-    void notify_did_change(method const &key, std::string const &name, bool const send_to_manager) {
-        if (subject.has_observer()) {
-            subject.notify(key, change_info{cast<db::object>(), name});
+    void notify_did_change(db::object::method const &key, std::string const &name, bool const send_to_manager) {
+        if (this->_subject.has_observer()) {
+            this->_subject.notify(key, db::object::change_info{cast<db::object>(), name});
         }
 
-        if (send_to_manager && manager) {
-            if (auto observable = manager.object_observable()) {
+        if (send_to_manager && this->_manager) {
+            if (auto observable = this->_manager.object_observable()) {
                 observable.object_did_change(cast<db::object>());
             }
         }
@@ -493,11 +492,11 @@ db::object::object(std::nullptr_t) : const_object(nullptr) {
 }
 
 db::object::subject_t const &db::object::subject() const {
-    return impl_ptr<impl>()->subject;
+    return impl_ptr<impl>()->_subject;
 }
 
 db::object::subject_t &db::object::subject() {
-    return impl_ptr<impl>()->subject;
+    return impl_ptr<impl>()->_subject;
 }
 
 void db::object::set_attribute(std::string const &attr_name, db::value const &value) {
@@ -507,13 +506,13 @@ void db::object::set_attribute(std::string const &attr_name, db::value const &va
 db::object_vector_t db::object::get_relation_objects(std::string const &rel_name) const {
     auto const &rel_ids = impl_ptr<impl>()->get_relation_ids(rel_name);
     return to_vector<db::object>(rel_ids, [manager = manager(), entity_name = entity_name()](db::value const &id) {
-        return manager.cached_object(entity_name, id.get<integer>());
+        return manager.cached_object(entity_name, id.get<db::integer>());
     });
 }
 
 db::object db::object::get_relation_object(std::string const &rel_name, std::size_t const idx) const {
-    std::string const &tgt_entity_name = model().relation(entity_name(), rel_name).target_entity_name;
-    return manager().cached_object(tgt_entity_name, get_relation_id(rel_name, idx).get<integer>());
+    std::string const &tgt_entity_name = this->model().relation(entity_name(), rel_name).target_entity_name;
+    return this->manager().cached_object(tgt_entity_name, get_relation_id(rel_name, idx).get<db::integer>());
 }
 
 void db::object::set_relation_ids(std::string const &rel_name, value_vector_t const &relation_ids) {
@@ -551,11 +550,11 @@ void db::object::clear_relation(std::string const &rel_name) {
 }
 
 db::manager const &db::object::manager() const {
-    return impl_ptr<impl>()->manager;
+    return impl_ptr<impl>()->_manager;
 }
 
 enum db::object_status db::object::status() const {
-    return impl_ptr<impl>()->status;
+    return impl_ptr<impl>()->_status;
 }
 
 void db::object::remove() {

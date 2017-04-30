@@ -46,44 +46,44 @@ db::attribute::attribute(std::string const &name, std::string const &type, db::v
 }
 
 db::attribute::attribute(std::string const &name, CFDictionaryRef const dict)
-    : attribute(name, get<std::string>(dict, type_key), get<db::value>(dict, default_key),
-                get<bool>(dict, not_null_key), false) {
+    : attribute(name, get<std::string>(dict, db::type_key), get<db::value>(dict, db::default_key),
+                get<bool>(dict, db::not_null_key), false) {
 }
 
 std::string db::attribute::sql() const {
     std::ostringstream stream;
-    stream << name << " " << type;
-    if (primary) {
+    stream << this->name << " " << this->type;
+    if (this->primary) {
         stream << " PRIMARY KEY AUTOINCREMENT";
     }
-    if (unique) {
+    if (this->unique) {
         stream << " UNIQUE";
     }
-    if (not_null) {
+    if (this->not_null) {
         stream << " NOT NULL";
     }
-    if (default_value) {
-        stream << " DEFAULT " << default_value.sql();
+    if (this->default_value) {
+        stream << " DEFAULT " << this->default_value.sql();
     }
     return stream.str();
 }
 
 db::attribute const &db::attribute::id_attribute() {
-    static db::attribute const attr{id_field, db::integer::name, nullptr, false, true};
+    static db::attribute const attr{db::id_field, db::integer::name, nullptr, false, true};
     return attr;
 }
 
 db::attribute const &db::attribute::object_id_attribute() {
-    static db::attribute const attr{object_id_field, db::integer::name, db::value{integer::type{0}}, true};
+    static db::attribute const attr{db::object_id_field, db::integer::name, db::value{db::integer::type{0}}, true};
     return attr;
 }
 
 db::attribute const &db::attribute::save_id_attribute() {
-    static db::attribute const attr{save_id_field, db::integer::name, db::value{integer::type{0}}, true};
+    static db::attribute const attr{db::save_id_field, db::integer::name, db::value{db::integer::type{0}}, true};
     return attr;
 }
 
 db::attribute const &db::attribute::action_attribute() {
-    static db::attribute const attr{action_field, db::text::name, db::value{insert_action}, true};
+    static db::attribute const attr{db::action_field, db::text::name, db::value{db::insert_action}, true};
     return attr;
 }

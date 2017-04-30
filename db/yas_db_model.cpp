@@ -32,15 +32,15 @@ struct db::model::impl : public base::impl {
             return;
         }
 
-        auto version_str = get<std::string>(cf_dict, version_key);
+        auto version_str = get<std::string>(cf_dict, db::version_key);
         if (version_str.size() > 0) {
-            _version = yas::version{version_str};
+            this->_version = yas::version{version_str};
         } else {
             throw "version not found.";
             return;
         }
 
-        CFDictionaryRef cf_entities_dict = get<CFDictionaryRef>(cf_dict, entities_key);
+        CFDictionaryRef cf_entities_dict = get<CFDictionaryRef>(cf_dict, db::entities_key);
         if (!cf_entities_dict) {
             throw "entities not found";
             return;
@@ -59,21 +59,21 @@ struct db::model::impl : public base::impl {
                 return;
             }
 
-            attribute_map_t attributes;
+            db::attribute_map_t attributes;
 
-            auto const &id_attr = attribute::id_attribute();
+            auto const &id_attr = db::attribute::id_attribute();
             attributes.emplace(std::make_pair(id_attr.name, id_attr));
 
-            auto const &obj_id_attr = attribute::object_id_attribute();
+            auto const &obj_id_attr = db::attribute::object_id_attribute();
             attributes.emplace(std::make_pair(obj_id_attr.name, obj_id_attr));
 
-            auto const &save_id_attr = attribute::save_id_attribute();
+            auto const &save_id_attr = db::attribute::save_id_attribute();
             attributes.emplace(std::make_pair(save_id_attr.name, save_id_attr));
 
-            auto const &action_attr = attribute::action_attribute();
+            auto const &action_attr = db::attribute::action_attribute();
             attributes.emplace(std::make_pair(action_attr.name, action_attr));
 
-            CFDictionaryRef cf_attributes = get<CFDictionaryRef>(cf_entity_dict, attributes_key);
+            CFDictionaryRef cf_attributes = get<CFDictionaryRef>(cf_entity_dict, db::attributes_key);
             if (cf_attributes) {
                 for (auto &cf_attribute_pair : each_dictionary(cf_attributes)) {
                     std::string attr_name = to_string((CFStringRef)cf_attribute_pair.first);
@@ -84,9 +84,9 @@ struct db::model::impl : public base::impl {
                 }
             }
 
-            relation_map_t relations;
+            db::relation_map_t relations;
 
-            CFDictionaryRef cf_relations = get<CFDictionaryRef>(cf_entity_dict, relations_key);
+            CFDictionaryRef cf_relations = get<CFDictionaryRef>(cf_entity_dict, db::relations_key);
             if (cf_relations) {
                 for (auto &cf_relation_pair : each_dictionary(cf_relations)) {
                     std::string relation_name = to_string((CFStringRef)cf_relation_pair.first);
@@ -99,10 +99,10 @@ struct db::model::impl : public base::impl {
             }
 
             db::entity entity{entity_name, std::move(attributes), std::move(relations)};
-            _entities.emplace(std::make_pair(entity_name, std::move(entity)));
+            this->_entities.emplace(std::make_pair(entity_name, std::move(entity)));
         }
 
-        CFDictionaryRef cf_indices_dict = get<CFDictionaryRef>(cf_dict, indices_key);
+        CFDictionaryRef cf_indices_dict = get<CFDictionaryRef>(cf_dict, db::indices_key);
         if (cf_indices_dict) {
             for (auto &cf_index_pair : each_dictionary(cf_indices_dict)) {
                 auto index_name = to_string((CFStringRef)cf_index_pair.first);
@@ -117,7 +117,7 @@ struct db::model::impl : public base::impl {
                     return;
                 }
 
-                _indices.emplace(std::make_pair(index_name, db::index{index_name, cf_index_dict}));
+                this->_indices.emplace(std::make_pair(index_name, db::index{index_name, cf_index_dict}));
             }
         }
     }
@@ -139,36 +139,36 @@ db::index_map_t const &db::model::indices() const {
 }
 
 db::entity const &db::model::entity(std::string const &entity_name) const {
-    return entities().at(entity_name);
+    return this->entities().at(entity_name);
 }
 
 db::attribute_map_t const &db::model::attributes(std::string const &entity_name) const {
-    return entities().at(entity_name).attributes;
+    return this->entities().at(entity_name).attributes;
 }
 
 db::relation_map_t const &db::model::relations(std::string const &entity_name) const {
-    return entities().at(entity_name).relations;
+    return this->entities().at(entity_name).relations;
 }
 
 db::attribute const &db::model::attribute(std::string const &entity_name, std::string const &attr_name) const {
-    return entities().at(entity_name).attributes.at(attr_name);
+    return this->entities().at(entity_name).attributes.at(attr_name);
 }
 
 db::relation const &db::model::relation(std::string const &entity_name, std::string const &rel_name) const {
-    return entities().at(entity_name).relations.at(rel_name);
+    return this->entities().at(entity_name).relations.at(rel_name);
 }
 
 db::index const &db::model::index(std::string const &index_name) const {
-    return indices().at(index_name);
+    return this->indices().at(index_name);
 }
 
 bool db::model::entity_exists(std::string const &entity_name) const {
-    return entities().count(entity_name) > 0;
+    return this->entities().count(entity_name) > 0;
 }
 
 bool db::model::attribute_exists(std::string const &entity_name, std::string const &attr_name) const {
-    if (entity_exists(entity_name)) {
-        if (entities().at(entity_name).attributes.count(attr_name) > 0) {
+    if (this->entity_exists(entity_name)) {
+        if (this->entities().at(entity_name).attributes.count(attr_name) > 0) {
             return true;
         }
     }
@@ -176,8 +176,8 @@ bool db::model::attribute_exists(std::string const &entity_name, std::string con
 }
 
 bool db::model::relation_exists(std::string const &entity_name, std::string const &rel_name) const {
-    if (entity_exists(entity_name)) {
-        if (entities().at(entity_name).relations.count(rel_name) > 0) {
+    if (this->entity_exists(entity_name)) {
+        if (this->entities().at(entity_name).relations.count(rel_name) > 0) {
             return true;
         }
     }
@@ -185,5 +185,5 @@ bool db::model::relation_exists(std::string const &entity_name, std::string cons
 }
 
 bool db::model::index_exists(std::string const &index_name) const {
-    return indices().count(index_name) > 0;
+    return this->indices().count(index_name) > 0;
 }
