@@ -44,7 +44,6 @@
 		B68217D61C75F7C000689F27 /* yas_db_utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B68217C41C75F7C000689F27 /* yas_db_utils.cpp */; };
 		B68217D71C75F7C000689F27 /* yas_db_value.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B68217C61C75F7C000689F27 /* yas_db_value.cpp */; };
 		B68218051C75F90C00689F27 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = B68218041C75F90C00689F27 /* libsqlite3.tbd */; };
-		B68218071C75FC6300689F27 /* model.plist in Resources */ = {isa = PBXBuildFile; fileRef = B68218061C75FC6300689F27 /* model.plist */; };
 		B68218101C76015A00689F27 /* DBSampleTableViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = B682180F1C76015A00689F27 /* DBSampleTableViewController.mm */; };
 		B6D0DDE91C81DAA90086AA8E /* yas_db_sample_controller.mm in Sources */ = {isa = PBXBuildFile; fileRef = B6D0DDE71C81DAA90086AA8E /* yas_db_sample_controller.mm */; };
 		B6D0DDF11C8310900086AA8E /* DBSampleObjectViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = B6D0DDF01C8310900086AA8E /* DBSampleObjectViewController.mm */; };
@@ -151,7 +150,6 @@
 		B68217C61C75F7C000689F27 /* yas_db_value.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = yas_db_value.cpp; sourceTree = "<group>"; };
 		B68217C71C75F7C000689F27 /* yas_db_value.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_db_value.h; sourceTree = "<group>"; };
 		B68218041C75F90C00689F27 /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
-		B68218061C75FC6300689F27 /* model.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = model.plist; sourceTree = "<group>"; };
 		B682180E1C76015A00689F27 /* DBSampleTableViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DBSampleTableViewController.h; sourceTree = "<group>"; };
 		B682180F1C76015A00689F27 /* DBSampleTableViewController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = DBSampleTableViewController.mm; sourceTree = "<group>"; };
 		B6D0DDE71C81DAA90086AA8E /* yas_db_sample_controller.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = yas_db_sample_controller.mm; sourceTree = "<group>"; };
@@ -277,7 +275,6 @@
 				B682179C1C75F79000689F27 /* Info.plist */,
 				B68217991C75F79000689F27 /* LaunchScreen.storyboard */,
 				B68217941C75F79000689F27 /* Main.storyboard */,
-				B68218061C75FC6300689F27 /* model.plist */,
 				B682178B1C75F79000689F27 /* Supporting Files */,
 				B6D0DDE81C81DAA90086AA8E /* yas_db_sample_controller.h */,
 				B6D0DDE71C81DAA90086AA8E /* yas_db_sample_controller.mm */,
@@ -399,7 +396,6 @@
 			files = (
 				B682179B1C75F79000689F27 /* LaunchScreen.storyboard in Resources */,
 				B68217981C75F79000689F27 /* Assets.xcassets in Resources */,
-				B68218071C75FC6300689F27 /* model.plist in Resources */,
 				B68217961C75F79000689F27 /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

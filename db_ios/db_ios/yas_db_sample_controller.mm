@@ -35,8 +35,17 @@ void db_controller::setup(db::manager::completion_f completion) {
     _begin_processing();
 
     auto model_dict = make_objc_ptr<NSDictionary *>([]() {
-        NSURL *modelURL = [[NSBundle mainBundle] URLForAuxiliaryExecutable:@"model.plist"];
-        return [NSDictionary dictionaryWithContentsOfURL:modelURL];
+        return @{
+            @"entities": @{
+                @"entity_a": @{
+                    @"attributes": @{
+                        @"age": @{@"type": @"INTEGER", @"default": @1},
+                        @"name": @{@"type": @"TEXT", @"default": @"empty_name"}
+                    }
+                }
+            },
+            @"version": @"1.0.0"
+        };
     });
 
     db::model model{(__bridge CFDictionaryRef)model_dict.object()};
