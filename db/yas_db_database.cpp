@@ -361,7 +361,7 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
                             if (value) {
                                 map.insert(std::make_pair(name, db::value{value}));
                             } else {
-                                map.insert(std::make_pair(name, db::value{nullptr}));
+                                map.insert(std::make_pair(name, db::value::null_value()));
                             }
                         }
                     }
