@@ -56,7 +56,7 @@ namespace sample {
 
        private:
         db::manager _manager;
-        db::object_vector _objects;
+        db::object_vector_t _objects;
         subject_t _subject;
         yas::db::manager::observer_t _observer;
         bool _processing;

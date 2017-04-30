@@ -9,7 +9,7 @@
 using namespace yas;
 
 std::vector<db::const_object> db::get_const_relation_objects(const_object const &object,
-                                                             const_object_map_map const &objects,
+                                                             const_object_map_map_t const &objects,
                                                              std::string const &rel_name) {
     auto const rel_ids = object.get_relation_ids(rel_name);
     std::string const &tgt_entity_name = object.model().relation(object.entity_name(), rel_name).target_entity_name;
@@ -28,7 +28,7 @@ std::vector<db::const_object> db::get_const_relation_objects(const_object const 
     return {};
 }
 
-db::const_object db::get_const_relation_object(const_object const &object, const_object_map_map const &objects,
+db::const_object db::get_const_relation_object(const_object const &object, const_object_map_map_t const &objects,
                                                std::string const &rel_name, std::size_t const idx) {
     auto const rel_id = object.get_relation_ids(rel_name).at(idx).get<integer>();
     std::string const &tgt_entity_name = object.model().relation(object.entity_name(), rel_name).target_entity_name;
@@ -43,8 +43,8 @@ db::const_object db::get_const_relation_object(const_object const &object, const
     return db::const_object::null_object();
 }
 
-db::object_map_map yas::to_object_map_map(db::object_vector_map objects_vector) {
-    db::object_map_map objects_map;
+db::object_map_map_t yas::to_object_map_map(db::object_vector_map_t objects_vector) {
+    db::object_map_map_t objects_map;
 
     for (auto &entity_pair : objects_vector) {
         auto &entity_name = entity_pair.first;
@@ -57,8 +57,8 @@ db::object_map_map yas::to_object_map_map(db::object_vector_map objects_vector) 
     return objects_map;
 }
 
-db::object_map yas::to_object_map(db::object_vector vec) {
-    db::object_map map;
+db::object_map_t yas::to_object_map(db::object_vector_t vec) {
+    db::object_map_t map;
 
     auto it = vec.begin();
     auto end = vec.end();

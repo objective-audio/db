@@ -309,7 +309,7 @@ using namespace yas;
 }
 
 - (void)test_time_point {
-    auto src_time_point = db::time_point{std::chrono::nanoseconds{1234}};
+    auto src_time_point = db::time_point_t{std::chrono::nanoseconds{1234}};
 
     XCTAssertEqual(src_time_point.time_since_epoch().count(), 1234);
 

@@ -88,7 +88,7 @@ using namespace yas;
 
     XCTAssertTrue(db::create_table(db, "test_table", {"field_a", "field_b"}));
 
-    db::value_vector args{db::value{"value_a"}, db::value{"value_b"}};
+    db::value_vector_t args{db::value{"value_a"}, db::value{"value_b"}};
     XCTAssertTrue(db.execute_update("insert into test_table(field_a, field_b) values(:field_a, :field_b)", args));
 
     auto query_result = db.execute_query("select * from test_table");
@@ -102,7 +102,7 @@ using namespace yas;
 
     XCTAssertFalse(row_set.next());
 
-    db::value_vector update_args{db::value{"value_a_2"}, db::value{"value_b_2"}};
+    db::value_vector_t update_args{db::value{"value_a_2"}, db::value{"value_b_2"}};
     XCTAssertTrue(db.execute_update("update test_table set field_a = :field_a, field_b = :field_b", update_args));
 
     query_result = db.execute_query("select * from test_table");
@@ -123,7 +123,7 @@ using namespace yas;
 
     XCTAssertTrue(db::create_table(db, "test_table", {"field_a", "field_b"}));
 
-    db::value_map args{std::make_pair("field_a", db::value{"value_a"}),
+    db::value_map_t args{std::make_pair("field_a", db::value{"value_a"}),
                        std::make_pair("field_b", db::value{"value_b"})};
     XCTAssertTrue(db.execute_update("insert into test_table(field_a, field_b) values(:field_a, :field_b)", args));
 
@@ -138,7 +138,7 @@ using namespace yas;
 
     XCTAssertFalse(row_set.next());
 
-    db::value_map update_args{std::make_pair("field_a", db::value{"value_a_2"}),
+    db::value_map_t update_args{std::make_pair("field_a", db::value{"value_a_2"}),
                               std::make_pair("field_b", db::value{"value_b_2"})};
     XCTAssertTrue(db.execute_update("update test_table set field_a = :field_a, field_b = :field_b", update_args));
 
@@ -174,18 +174,18 @@ using namespace yas;
     XCTAssertTrue(db.execute_statements(joined_insert_sql));
 
     XCTAssertTrue(db.execute_statements({"select * from test_table_a;"},
-                                        [self](db::value_map const &value_map) {
-                                            XCTAssertEqual(value_map.size(), 2);
-                                            XCTAssertEqual(value_map.at("field_a").get<db::text>(), "value_1");
-                                            XCTAssertEqual(value_map.at("field_b").get<db::text>(), "1");
+                                        [self](db::value_map_t const &value_map_t) {
+                                            XCTAssertEqual(value_map_t.size(), 2);
+                                            XCTAssertEqual(value_map_t.at("field_a").get<db::text>(), "value_1");
+                                            XCTAssertEqual(value_map_t.at("field_b").get<db::text>(), "1");
                                             return 0;
                                         }));
 
     XCTAssertTrue(db.execute_statements({"select * from test_table_b;"},
-                                        [self](db::value_map const &value_map) {
-                                            XCTAssertEqual(value_map.size(), 2);
-                                            XCTAssertEqual(value_map.at("field_a").get<db::text>(), "value_2");
-                                            XCTAssertTrue(value_map.at("field_b").type() == typeid(db::null));
+                                        [self](db::value_map_t const &value_map_t) {
+                                            XCTAssertEqual(value_map_t.size(), 2);
+                                            XCTAssertEqual(value_map_t.at("field_a").get<db::text>(), "value_2");
+                                            XCTAssertTrue(value_map_t.at("field_b").type() == typeid(db::null));
                                             return 0;
                                         }));
 }

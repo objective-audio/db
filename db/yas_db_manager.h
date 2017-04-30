@@ -23,7 +23,7 @@ namespace db {
     class model;
     class error;
 
-    using entity_count_map = std::unordered_map<std::string, std::size_t>;
+    using entity_count_map_t = std::unordered_map<std::string, std::size_t>;
 
     class manager : public base {
        public:
@@ -90,17 +90,17 @@ namespace db {
         enum class method { object_changed, db_info_changed };
 
         using result_t = result<std::nullptr_t, error>;
-        using vector_result_t = result<object_vector_map, error>;
-        using map_result_t = result<object_map_map, error>;
-        using const_vector_result_t = result<const_object_vector_map, error>;
-        using const_map_result_t = result<const_object_map_map, error>;
+        using vector_result_t = result<object_vector_map_t, error>;
+        using map_result_t = result<object_map_map_t, error>;
+        using const_vector_result_t = result<const_object_vector_map_t, error>;
+        using const_map_result_t = result<const_object_map_map_t, error>;
 
         using execution_f = std::function<void(operation const &)>;
 
-        using insert_preparation_count_f = std::function<entity_count_map(void)>;
-        using insert_preparation_values_f = std::function<value_map_vector_map(void)>;
+        using insert_preparation_count_f = std::function<entity_count_map_t(void)>;
+        using insert_preparation_values_f = std::function<value_map_vector_map_t(void)>;
         using fetch_preparation_option_f = std::function<select_option(void)>;
-        using fetch_preparation_ids_f = std::function<integer_set_map(void)>;
+        using fetch_preparation_ids_f = std::function<integer_set_map_t(void)>;
         using revert_preparation_f = std::function<integer::type(void)>;
 
         using completion_f = std::function<void(result_t)>;

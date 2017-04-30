@@ -35,7 +35,7 @@ using namespace yas;
 
     XCTAssertTrue(db.execute_update("create table test_table (field_a, field_b);"));
 
-    db::value_map args{std::make_pair("field_a", db::value{"value_a"}), std::make_pair("field_b", db::value{nullptr})};
+    db::value_map_t args{std::make_pair("field_a", db::value{"value_a"}), std::make_pair("field_b", db::value{nullptr})};
     XCTAssertTrue(db.execute_update("insert into test_table(field_a, field_b) values(:field_a, :field_b)", args));
 
     auto query_result = db.execute_query("select field_a, field_b from test_table");
@@ -66,7 +66,7 @@ using namespace yas;
 
     XCTAssertTrue(db.execute_update("create table test_table (field_a, field_b);"));
 
-    db::value_map args{std::make_pair("field_a", db::value{"value_a"}), std::make_pair("field_b", db::value{nullptr})};
+    db::value_map_t args{std::make_pair("field_a", db::value{"value_a"}), std::make_pair("field_b", db::value{nullptr})};
     XCTAssertTrue(db.execute_update("insert into test_table(field_a, field_b) values(:field_a, :field_b)", args));
 
     auto query_result = db.execute_query("select * from test_table");
@@ -96,7 +96,7 @@ using namespace yas;
 
     std::vector<uint8_t> vec{0, 1, 2, 3};
 
-    db::value_map args{std::make_pair("int_field", db::value{sqlite3_int64{1}}),
+    db::value_map_t args{std::make_pair("int_field", db::value{sqlite3_int64{1}}),
                        std::make_pair("float_field", db::value{double{2.0}}),
                        std::make_pair("string_field", db::value{"string_value"}),
                        std::make_pair("data_field", db::value{vec.data(), vec.size()}),
@@ -151,7 +151,7 @@ using namespace yas;
 
     std::vector<uint8_t> vec{0, 1, 2, 3};
 
-    db::value_map args{std::make_pair("int_field", db::value{sqlite3_int64{1}}),
+    db::value_map_t args{std::make_pair("int_field", db::value{sqlite3_int64{1}}),
                        std::make_pair("float_field", db::value{double{2.0}}),
                        std::make_pair("string_field", db::value{"string_value"}),
                        std::make_pair("data_field", db::value{vec.data(), vec.size()}),
@@ -168,7 +168,7 @@ using namespace yas;
 
     XCTAssertTrue(row_set.next());
 
-    auto map = row_set.value_map();
+    auto map = row_set.value_map_t();
 
     auto &int_value = map.at("int_field");
     auto &float_value = map.at("float_field");
@@ -203,7 +203,7 @@ using namespace yas;
     db.open();
     db.execute_update("create table test_table (test_field);");
 
-    db::value_map args{std::make_pair("test_field", db::value{"value"})};
+    db::value_map_t args{std::make_pair("test_field", db::value{"value"})};
     db.execute_update("insert into test_table(field_a) values(:field_a)", args);
 
     auto query_result = db.execute_query("select * from test_table");

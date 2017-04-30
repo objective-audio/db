@@ -36,7 +36,7 @@ namespace db {
         std::string table = "";
         std::vector<std::string> fields = {"*"};
         std::string where_exprs = "";
-        db::value_map arguments = {};
+        db::value_map_t arguments = {};
         std::vector<db::field_order> field_orders = {};
         db::range limit_range = range::empty();
     };

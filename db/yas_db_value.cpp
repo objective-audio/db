@@ -226,14 +226,14 @@ std::string yas::to_string(const db::value &value) {
     return std::string{};
 }
 
-db::time_point yas::to_time_point(db::value const &value) {
+db::time_point_t yas::to_time_point(db::value const &value) {
     if (value.type() == typeid(db::integer)) {
         auto integer_value = value.get<db::integer>();
-        return db::time_point{std::chrono::nanoseconds{integer_value}};
+        return db::time_point_t{std::chrono::nanoseconds{integer_value}};
     }
     return {};
 }
 
-db::value yas::to_value(db::time_point const &time_point) {
-    return db::value{time_point.time_since_epoch().count()};
+db::value yas::to_value(db::time_point_t const &time_point_t) {
+    return db::value{time_point_t.time_since_epoch().count()};
 }

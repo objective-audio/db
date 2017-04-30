@@ -236,7 +236,7 @@ using namespace yas;
     XCTAssertTrue(row_set);
     XCTAssertTrue(row_set.next());
 
-    auto map = row_set.value_map();
+    auto map = row_set.value_map_t();
 
     XCTAssertGreaterThan(map.count("sql"), 0);
     auto &sql_column_value = map.at("sql");
@@ -276,7 +276,7 @@ using namespace yas;
     XCTAssertTrue(row_set);
     XCTAssertTrue(row_set.next());
 
-    auto map = row_set.value_map();
+    auto map = row_set.value_map_t();
 
     XCTAssertGreaterThan(map.count("pk"), 0);
     XCTAssertGreaterThan(map.count("dflt_value"), 0);
@@ -289,7 +289,7 @@ using namespace yas;
 
     XCTAssertTrue(row_set.next());
 
-    map = row_set.value_map();
+    map = row_set.value_map_t();
 
     XCTAssertEqual(map.at("name").get<db::text>(), "field_b");
 
@@ -307,7 +307,7 @@ using namespace yas;
     XCTAssertTrue(row_set);
     XCTAssertTrue(row_set.next());
 
-    auto map = row_set.value_map();
+    auto map = row_set.value_map_t();
 
     XCTAssertEqual(map.at("type"), db::value{"index"});
     XCTAssertEqual(map.at("name"), db::value{"test_index"});
@@ -324,10 +324,10 @@ using namespace yas;
 
     XCTAssertTrue(db::create_table(db, table, {field_a, field_b}));
 
-    db::value_vector args_1{db::value{"value_a_1"}, db::value{"value_b_1"}};
+    db::value_vector_t args_1{db::value{"value_a_1"}, db::value{"value_b_1"}};
     XCTAssertTrue(db.execute_update(db::insert_sql(table, {field_a, field_b}), std::move(args_1)));
 
-    db::value_vector args_2{db::value{"value_a_2"}, db::value{"value_b_2"}};
+    db::value_vector_t args_2{db::value{"value_a_2"}, db::value{"value_b_2"}};
     XCTAssertTrue(db.execute_update(db::insert_sql(table, {field_a, field_b}), std::move(args_2)));
 
     auto const select_result = db::select(db, {.table = table,
@@ -349,7 +349,7 @@ using namespace yas;
 
     XCTAssertTrue(db::create_table(db, table_name, fields));
 
-    db::value_vector args;
+    db::value_vector_t args;
 
     args = {db::value{1}, db::value{"value_1"}, db::value{db::insert_action}};
 
@@ -393,7 +393,7 @@ using namespace yas;
 
     XCTAssertTrue(db::create_table(db, table_name, fields));
 
-    db::value_vector args;
+    db::value_vector_t args;
     args = {db::value{1}, db::value{"value_1_a"}, db::value{1}, insert_action_value};
     XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
     args = {db::value{2}, db::value{"value_2_a"}, db::value{1}, insert_action_value};
@@ -444,7 +444,7 @@ using namespace yas;
 
     XCTAssertTrue(db::create_table(db, table_name, fields));
 
-    db::value_vector args;
+    db::value_vector_t args;
     args = {db::value{1}, db::value{"value_1_a"}, db::value{1}, insert_action_value};
     XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
     args = {db::value{2}, db::value{"value_2_a"}, db::value{1}, insert_action_value};
@@ -487,7 +487,7 @@ using namespace yas;
 
     XCTAssertTrue(db::create_table(db, table_name, fields));
 
-    db::value_vector args;
+    db::value_vector_t args;
     args = {db::value{1}, db::value{"value_1_a"}, db::value{1}, db::value{db::insert_action}};
     XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
     args = {db::value{2}, db::value{"value_2_a"}, db::value{1}, db::value{db::insert_action}};
@@ -557,7 +557,7 @@ using namespace yas;
 
     XCTAssertTrue(db::create_table(db, table_name, fields));
 
-    db::value_vector args;
+    db::value_vector_t args;
     args = {db::value{1}, db::value{"value_1_a"}, db::value{1}};
     XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
     args = {db::value{2}, db::value{"value_2_a"}, db::value{1}};
@@ -613,7 +613,7 @@ using namespace yas;
 
     XCTAssertTrue(db::create_table(db, table_name, fields));
 
-    db::value_vector args;
+    db::value_vector_t args;
     args = {db::value{1}, db::value{"value_1_a"}, db::value{1}, db::value{db::insert_action}};
     XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
     args = {db::value{2}, db::value{"value_2_a"}, db::value{1}, db::value{db::insert_action}};
@@ -691,7 +691,7 @@ using namespace yas;
 
     XCTAssertTrue(db::create_table(db, table_name, fields));
 
-    db::value_vector args;
+    db::value_vector_t args;
     args = {db::value{1}, db::value{"value_1"}};
     XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
     args = {db::value{2}, db::value{"value_2"}};
@@ -734,7 +734,7 @@ using namespace yas;
     obj_a1.set_attribute(db::object_id_field, db::value{1});
     obj_a1.set_attribute("name", db::value{"a1"});
 
-    db::object_vector src_vec;
+    db::object_vector_t src_vec;
     src_vec.emplace_back(std::move(obj_a0));
     src_vec.emplace_back(std::move(obj_a1));
 
@@ -771,12 +771,12 @@ using namespace yas;
     obj_b1.set_attribute(db::object_id_field, db::value{3});
     obj_b1.set_attribute("name", db::value{"b3"});
 
-    db::object_vector_map src_map;
-    db::object_vector object_as;
+    db::object_vector_map_t src_map;
+    db::object_vector_t object_as;
     object_as.emplace_back(std::move(obj_a0));
     object_as.emplace_back(std::move(obj_a1));
     src_map.emplace(std::make_pair("sample_a", std::move(object_as)));
-    db::object_vector object_bs;
+    db::object_vector_t object_bs;
     object_bs.emplace_back(std::move(obj_b0));
     object_bs.emplace_back(std::move(obj_b1));
     src_map.emplace(std::make_pair("sample_b", std::move(object_bs)));
@@ -812,13 +812,13 @@ using namespace yas;
     db::model model_0_0_2{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_2]};
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_2)];
 
-    auto pair = std::make_pair(db::const_object{nullptr}, db::integer_set_map{});
+    auto pair = std::make_pair(db::const_object{nullptr}, db::integer_set_map_t{});
 
     manager.setup([self, &manager](auto result) mutable { XCTAssertTrue(result); });
 
     manager.insert_objects(
         []() {
-            return db::entity_count_map{{"sample_a", 2}, {"sample_b", 2}};
+            return db::entity_count_map_t{{"sample_a", 2}, {"sample_b", 2}};
         },
         [manager, self](auto result) mutable {
             XCTAssertTrue(result);
@@ -899,7 +899,7 @@ using namespace yas;
 
     manager.insert_objects(
         []() {
-            return db::entity_count_map{{"sample_a", 2}};
+            return db::entity_count_map_t{{"sample_a", 2}};
         },
         [self, &manager](auto result) {
             XCTAssertTrue(result);
@@ -968,11 +968,11 @@ using namespace yas;
 
     manager.setup([self, &manager](auto result) { XCTAssertTrue(result); });
 
-    db::object_vector_map objects;
+    db::object_vector_map_t objects;
 
     manager.insert_objects(
         []() {
-            return db::entity_count_map{{"sample_a", 1}, {"sample_b", 2}};
+            return db::entity_count_map_t{{"sample_a", 1}, {"sample_b", 2}};
         },
         [self, &manager, &objects](auto result) {
             XCTAssertTrue(result);

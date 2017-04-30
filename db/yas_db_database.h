@@ -55,16 +55,16 @@ namespace db {
         std::string _message;
     };
 
-    using update_result = result<std::nullptr_t, error>;
-    using query_result = result<row_set, error>;
-    using row_result = result<sqlite3_int64, error>;
-    using count_result = result<int, error>;
+    using update_result_t = result<std::nullptr_t, error>;
+    using query_result_t = result<row_set, error>;
+    using row_result_t = result<sqlite3_int64, error>;
+    using count_result_t = result<int, error>;
 
     class database : public base {
        public:
         class impl;
 
-        using callback_f = std::function<int(value_map const &)>;
+        using callback_f = std::function<int(value_map_t const &)>;
 
         static std::string sqlite_lib_version();
         static bool sqlite_thread_safe();
@@ -84,20 +84,20 @@ namespace db {
         void close();
         bool good_connection();
 
-        update_result execute_update(std::string const &sql);
-        update_result execute_update(std::string const &sql, value_vector const &arguments);
-        update_result execute_update(std::string const &sql, value_map const &arguments);
+        update_result_t execute_update(std::string const &sql);
+        update_result_t execute_update(std::string const &sql, value_vector_t const &arguments);
+        update_result_t execute_update(std::string const &sql, value_map_t const &arguments);
 
-        update_result execute_statements(std::string const &sql);
-        update_result execute_statements(std::string const &sql, callback_f const &callback);
+        update_result_t execute_statements(std::string const &sql);
+        update_result_t execute_statements(std::string const &sql, callback_f const &callback);
         callback_f const &callback_for_execute_statements() const;
 
-        query_result execute_query(std::string const &sql) const;
-        query_result execute_query(std::string const &sql, value_vector const &arguments) const;
-        query_result execute_query(std::string const &sql, value_map const &arguments) const;
+        query_result_t execute_query(std::string const &sql) const;
+        query_result_t execute_query(std::string const &sql, value_vector_t const &arguments) const;
+        query_result_t execute_query(std::string const &sql, value_map_t const &arguments) const;
 
-        row_result last_insert_row_id() const;
-        count_result changes() const;
+        row_result_t last_insert_row_id() const;
+        count_result_t changes() const;
 
         void clear_cached_statements();
         void close_open_row_sets();

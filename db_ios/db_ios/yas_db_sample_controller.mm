@@ -114,9 +114,9 @@ void db_controller::add() {
         []() {
             auto uuid = make_cf_ref(CFUUIDCreate(nullptr));
             auto uuid_str = make_cf_ref(CFUUIDCreateString(nullptr, uuid.object()));
-            db::value_map obj{{"name", db::value{to_string(uuid_str.object())}}};
+            db::value_map_t obj{{"name", db::value{to_string(uuid_str.object())}}};
 
-            return db::value_map_vector_map{{entity_name_a, {std::move(obj)}}};
+            return db::value_map_vector_map_t{{entity_name_a, {std::move(obj)}}};
         },
         [weak = to_weak(shared_from_this())](auto insert_result) {
             if (auto shared = weak.lock()) {

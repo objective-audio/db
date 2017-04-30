@@ -24,8 +24,8 @@ namespace db {
 
 struct db::model::impl : public base::impl {
     yas::version _version;
-    db::entity_map _entities;
-    db::index_map _indices;
+    db::entity_map_t _entities;
+    db::index_map_t _indices;
 
     impl(CFDictionaryRef const &cf_dict) {
         if (!cf_dict) {
@@ -59,7 +59,7 @@ struct db::model::impl : public base::impl {
                 return;
             }
 
-            attribute_map attributes;
+            attribute_map_t attributes;
 
             auto const &id_attr = attribute::id_attribute();
             attributes.emplace(std::make_pair(id_attr.name, id_attr));
@@ -84,7 +84,7 @@ struct db::model::impl : public base::impl {
                 }
             }
 
-            relation_map relations;
+            relation_map_t relations;
 
             CFDictionaryRef cf_relations = get<CFDictionaryRef>(cf_entity_dict, relations_key);
             if (cf_relations) {
@@ -130,11 +130,11 @@ yas::version const &db::model::version() const {
     return impl_ptr<impl>()->_version;
 }
 
-db::entity_map const &db::model::entities() const {
+db::entity_map_t const &db::model::entities() const {
     return impl_ptr<impl>()->_entities;
 }
 
-db::index_map const &db::model::indices() const {
+db::index_map_t const &db::model::indices() const {
     return impl_ptr<impl>()->_indices;
 }
 
@@ -142,11 +142,11 @@ db::entity const &db::model::entity(std::string const &entity_name) const {
     return entities().at(entity_name);
 }
 
-db::attribute_map const &db::model::attributes(std::string const &entity_name) const {
+db::attribute_map_t const &db::model::attributes(std::string const &entity_name) const {
     return entities().at(entity_name).attributes;
 }
 
-db::relation_map const &db::model::relations(std::string const &entity_name) const {
+db::relation_map_t const &db::model::relations(std::string const &entity_name) const {
     return entities().at(entity_name).relations;
 }
 

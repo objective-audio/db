@@ -11,7 +11,7 @@
 
 using namespace yas;
 
-db::entity::entity(std::string const &name, db::attribute_map &&attributes, db::relation_map &&relations)
+db::entity::entity(std::string const &name, db::attribute_map_t &&attributes, db::relation_map_t &&relations)
     : name(name), attributes(std::move(attributes)), relations(std::move(relations)) {
 }
 

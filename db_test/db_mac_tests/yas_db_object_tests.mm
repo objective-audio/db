@@ -42,9 +42,9 @@ using namespace yas;
     db::model model((__bridge CFDictionaryRef)model_dict);
     db::object obj{nullptr, model, "sample_a"};
 
-    db::value_map attributes{std::make_pair("age", db::value{10}), std::make_pair("name", db::value{"name_val"}),
+    db::value_map_t attributes{std::make_pair("age", db::value{10}), std::make_pair("name", db::value{"name_val"}),
                              std::make_pair("weight", db::value{53.4}), std::make_pair("hoge", db::value{"hage"})};
-    db::value_vector_map relations{std::make_pair("child", db::value_vector{db::value{12}, db::value{34}})};
+    db::value_vector_map_t relations{std::make_pair("child", db::value_vector_t{db::value{12}, db::value{34}})};
     db::object_data obj_data{.attributes = std::move(attributes), .relations = std::move(relations)};
 
     obj.manageable().load_data(obj_data);
@@ -63,9 +63,9 @@ using namespace yas;
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
 
-    db::value_map attributes{std::make_pair("age", db::value{10}), std::make_pair("name", db::value{"name_val"}),
+    db::value_map_t attributes{std::make_pair("age", db::value{10}), std::make_pair("name", db::value{"name_val"}),
                              std::make_pair("weight", db::value{53.4}), std::make_pair("hoge", db::value{"hage"})};
-    db::value_vector_map relations{std::make_pair("child", db::value_vector{db::value{12}, db::value{34}})};
+    db::value_vector_map_t relations{std::make_pair("child", db::value_vector_t{db::value{12}, db::value{34}})};
     db::object_data obj_data{.attributes = std::move(attributes), .relations = std::move(relations)};
 
     db::const_object obj{model, "sample_a", obj_data};
@@ -85,16 +85,16 @@ using namespace yas;
     db::model model((__bridge CFDictionaryRef)model_dict);
     db::object obj{nullptr, model, "sample_a"};
 
-    db::value_map prev_attributes{std::make_pair("age", db::value{10}), std::make_pair("name", db::value{"name_val"}),
+    db::value_map_t prev_attributes{std::make_pair("age", db::value{10}), std::make_pair("name", db::value{"name_val"}),
                                   std::make_pair("weight", db::value{53.4}), std::make_pair("hoge", db::value{"hage"})};
-    db::value_vector_map prev_relations{std::make_pair("child", db::value_vector{db::value{12}, db::value{34}})};
+    db::value_vector_map_t prev_relations{std::make_pair("child", db::value_vector_t{db::value{12}, db::value{34}})};
     db::object_data prev_obj_data{.attributes = std::move(prev_attributes), .relations = std::move(prev_relations)};
 
     obj.manageable().load_data(prev_obj_data);
 
-    db::value_map post_attributes{std::make_pair("age", db::value{543}), std::make_pair("hoge", db::value{"poke"})};
-    db::value_vector_map post_relations{
-        std::make_pair("child", db::value_vector{db::value{234}, db::value{567}, db::value{890}})};
+    db::value_map_t post_attributes{std::make_pair("age", db::value{543}), std::make_pair("hoge", db::value{"poke"})};
+    db::value_vector_map_t post_relations{
+        std::make_pair("child", db::value_vector_t{db::value{234}, db::value{567}, db::value{890}})};
     db::object_data post_obj_data{.attributes = std::move(post_attributes), .relations = std::move(post_relations)};
 
     obj.manageable().load_data(post_obj_data);
@@ -261,8 +261,8 @@ using namespace yas;
     XCTAssertEqual(obj.action(), db::value::null_value());
 
     db::object_data obj_data{
-        .attributes = db::value_map{std::make_pair(db::action_field, db::value{db::insert_action})},
-        .relations = db::value_vector_map{std::make_pair("child", db::value_vector{db::value{12}, db::value{34}})}};
+        .attributes = db::value_map_t{std::make_pair(db::action_field, db::value{db::insert_action})},
+        .relations = db::value_vector_map_t{std::make_pair("child", db::value_vector_t{db::value{12}, db::value{34}})}};
     obj.manageable().load_data(obj_data);
     XCTAssertEqual(obj.action(), db::value{db::insert_action});
 
@@ -319,7 +319,7 @@ using namespace yas;
     obj.set_attribute("data", db::value::null_value());
     obj.set_attribute(db::save_id_field, db::value{100});
 
-    obj.set_relation_ids("child", db::value_vector{db::value{33}, db::value{44}});
+    obj.set_relation_ids("child", db::value_vector_t{db::value{33}, db::value{44}});
 
     auto data = obj.data_for_save();
 
@@ -379,7 +379,7 @@ using namespace yas;
     db::model model((__bridge CFDictionaryRef)model_dict);
     db::object obj{nullptr, model, "sample_a"};
 
-    obj.set_relation_ids("child", db::value_vector{db::value{1}, db::value{2}, db::value{3}, db::value{2}});
+    obj.set_relation_ids("child", db::value_vector_t{db::value{1}, db::value{2}, db::value{3}, db::value{2}});
 
     XCTAssertEqual(obj.relation_size("child"), 4);
 
@@ -401,12 +401,12 @@ using namespace yas;
     db::model model((__bridge CFDictionaryRef)model_dict);
 
     db::object obj1{nullptr, model, "sample_a"};
-    obj1.set_relation_ids("child", db::value_vector{db::value{1}, db::value{2}, db::value{3}});
+    obj1.set_relation_ids("child", db::value_vector_t{db::value{1}, db::value{2}, db::value{3}});
 
     db::object obj2{nullptr, model, "sample_a"};
-    obj2.set_relation_ids("child", db::value_vector{db::value{5}, db::value{4}, db::value{3}});
+    obj2.set_relation_ids("child", db::value_vector_t{db::value{5}, db::value{4}, db::value{3}});
 
-    auto rel_ids = db::relation_ids(db::object_vector_map{std::make_pair("sample_a", db::object_vector{obj1, obj2})});
+    auto rel_ids = db::relation_ids(db::object_vector_map_t{std::make_pair("sample_a", db::object_vector_t{obj1, obj2})});
 
     XCTAssertEqual(rel_ids.count("sample_b"), 1);
 
@@ -480,7 +480,7 @@ using namespace yas;
         ++called_count;
     });
 
-    obj.set_relation_ids("child", db::value_vector{db::value{10}, db::value{20}});
+    obj.set_relation_ids("child", db::value_vector_t{db::value{10}, db::value{20}});
 
     XCTAssertEqual(called_count, 1);
 
@@ -527,9 +527,9 @@ using namespace yas;
         called = true;
     });
 
-    db::value_map attributes{std::make_pair("age", db::value{10}), std::make_pair("name", db::value{"name_val"}),
+    db::value_map_t attributes{std::make_pair("age", db::value{10}), std::make_pair("name", db::value{"name_val"}),
                              std::make_pair("weight", db::value{53.4})};
-    db::value_vector_map relations{std::make_pair("child", db::value_vector{db::value{55}, db::value{66}})};
+    db::value_vector_map_t relations{std::make_pair("child", db::value_vector_t{db::value{55}, db::value{66}})};
     db::object_data obj_data{.attributes = std::move(attributes), .relations = std::move(relations)};
 
     obj.manageable().load_data(obj_data);
@@ -625,7 +625,7 @@ using namespace yas;
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
 
-    db::value_map attributes{std::make_pair("age", db::value{10})};
+    db::value_map_t attributes{std::make_pair("age", db::value{10})};
     db::object_data obj_data{.attributes = std::move(attributes)};
 
     db::const_object obj{model, "sample_a", obj_data};

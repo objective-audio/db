@@ -29,7 +29,7 @@ namespace db {
        public:
         class impl;
 
-        using index_result = result<int, std::nullptr_t>;
+        using index_result_t = result<int, std::nullptr_t>;
 
         row_set(statement const &, database const &);
         row_set(std::nullptr_t);
@@ -42,7 +42,7 @@ namespace db {
         bool has_row();
 
         int column_count() const;
-        index_result column_index(std::string column_name) const;
+        index_result_t column_index(std::string column_name) const;
         std::string column_name(int const column_idx) const;
         bool column_is_null(int const column_idx);
         bool column_is_null(std::string column_name);
@@ -50,7 +50,7 @@ namespace db {
         db::value column_value(int const column_idx) const;
         db::value column_value(std::string column_name) const;
 
-        db::value_map value_map() const;
+        db::value_map_t value_map_t() const;
 
         db::closable &closable();
         db_settable &db_settable();

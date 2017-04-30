@@ -56,11 +56,11 @@ db::manager::change_info::change_info(db::object const &object) : object(object)
 
 namespace yas {
 namespace db {
-    using object_data_result = result<db::object_data, db::error>;
-    using object_datas_result = result<db::object_data_vector, db::error>;
+    using object_data_result_t = result<db::object_data, db::error>;
+    using object_data_vector_result_t = result<db::object_data_vector_t, db::error>;
 
-    object_data_result fetch_object_data(db::database &db, db::relation_map const &rel_models, db::value_map &attrs) {
-        db::value_vector_map relations;
+    object_data_result_t fetch_object_data(db::database &db, db::relation_map_t const &rel_models, db::value_map_t &attrs) {
+        db::value_vector_map_t relations;
 
         if (attrs.count(save_id_field) > 0) {
             for (auto const &rel_model_pair : rel_models) {
@@ -75,36 +75,36 @@ namespace db {
 
                 if (auto select_result = db::select(db, option)) {
                     auto const &result_rels = select_result.value();
-                    db::value_vector rel_tgts;
+                    db::value_vector_t rel_tgts;
                     rel_tgts.reserve(result_rels.size());
                     for (auto const &result_rel : result_rels) {
                         rel_tgts.push_back(result_rel.at(tgt_obj_id_field));
                     }
                     relations.emplace(std::make_pair(rel_name, std::move(rel_tgts)));
                 } else {
-                    return object_data_result{std::move(select_result.error())};
+                    return object_data_result_t{std::move(select_result.error())};
                 }
             }
         }
 
-        return object_data_result{object_data{.attributes = std::move(attrs), .relations = std::move(relations)}};
+        return object_data_result_t{object_data{.attributes = std::move(attrs), .relations = std::move(relations)}};
     }
 
-    object_datas_result fetch_entity_object_datas(db::database &db, std::string const &entity_name,
-                                                  db::relation_map const &rel_models,
-                                                  db::value_map_vector const &entity_attrs) {
-        db::object_data_vector entity_datas;
+    object_data_vector_result_t fetch_entity_object_datas(db::database &db, std::string const &entity_name,
+                                                  db::relation_map_t const &rel_models,
+                                                  db::value_map_vector_t const &entity_attrs) {
+        db::object_data_vector_t entity_datas;
         entity_datas.reserve(entity_attrs.size());
 
-        for (value_map attrs : entity_attrs) {
+        for (value_map_t attrs : entity_attrs) {
             if (auto obj_data_result = fetch_object_data(db, rel_models, attrs)) {
                 entity_datas.emplace_back(std::move(obj_data_result.value()));
             } else {
-                return object_datas_result{std::move(obj_data_result.error())};
+                return object_data_vector_result_t{std::move(obj_data_result.error())};
             }
         }
 
-        return object_datas_result{std::move(entity_datas)};
+        return object_data_vector_result_t{std::move(entity_datas)};
     }
 
     result<db::value, db::manager::error> select_current_save_id(db::database &db) {
@@ -156,14 +156,14 @@ namespace db {
         return db::manager::result_t{nullptr};
     }
 
-    db::const_object_vector_map to_const_vector_objects(db::model const &model,
-                                                        db::object_data_vector_map const &datas) {
-        db::const_object_vector_map objects;
+    db::const_object_vector_map_t to_const_vector_objects(db::model const &model,
+                                                        db::object_data_vector_map_t const &datas) {
+        db::const_object_vector_map_t objects;
         for (auto const &entity_pair : datas) {
             auto const &entity_name = entity_pair.first;
             auto const &entity_datas = entity_pair.second;
 
-            db::const_object_vector entity_objects;
+            db::const_object_vector_t entity_objects;
             entity_objects.reserve(entity_datas.size());
 
             for (auto const &data : entity_datas) {
@@ -177,13 +177,13 @@ namespace db {
         return objects;
     }
 
-    db::const_object_map_map to_const_map_objects(db::model const &model, db::object_data_vector_map const &datas) {
-        db::const_object_map_map objects;
+    db::const_object_map_map_t to_const_map_objects(db::model const &model, db::object_data_vector_map_t const &datas) {
+        db::const_object_map_map_t objects;
         for (auto const &entity_pair : datas) {
             auto const &entity_name = entity_pair.first;
             auto const &entity_datas = entity_pair.second;
 
-            db::const_object_map entity_objects;
+            db::const_object_map_t entity_objects;
             entity_objects.reserve(entity_datas.size());
 
             for (auto const &data : entity_datas) {
@@ -205,10 +205,10 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
     db::database _database;
     db::model _model;
     operation_queue _op_queue;
-    db::weak_object_map_map _cached_objects;
-    db::object_deque_map _inserted_objects;
-    db::object_map_map _changed_objects;
-    db::value_map _db_info;
+    db::weak_object_map_map_t _cached_objects;
+    db::object_deque_map_t _inserted_objects;
+    db::object_map_map_t _changed_objects;
+    db::value_map_t _db_info;
     db::manager::subject_t _subject;
     dispatch_queue_t _dispatch_queue;
 
@@ -232,7 +232,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
         object.manageable().load_insertion_data();
 
         if (_inserted_objects.count(entity_name) == 0) {
-            _inserted_objects.insert(std::make_pair(entity_name, db::object_deque{}));
+            _inserted_objects.insert(std::make_pair(entity_name, db::object_deque_t{}));
         }
 
         _inserted_objects.at(entity_name).push_back(object);
@@ -243,7 +243,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
     bool load_object_data(db::object &object, std::string const &entity_name, db::object_data const &data,
                           bool const force) {
         if (_cached_objects.count(entity_name) == 0) {
-            _cached_objects.emplace(std::make_pair(entity_name, weak_object_map{}));
+            _cached_objects.emplace(std::make_pair(entity_name, weak_object_map_t{}));
         }
 
         auto manager = cast<db::manager>();
@@ -284,14 +284,14 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
         return false;
     }
 
-    db::object_vector_map load_object_datas(db::object_data_vector_map const &datas, bool const force,
+    db::object_vector_map_t load_object_datas(db::object_data_vector_map_t const &datas, bool const force,
                                             bool const is_save) {
-        db::object_vector_map loaded_objects;
+        db::object_vector_map_t loaded_objects;
         for (auto const &entity_pair : datas) {
             auto const &entity_name = entity_pair.first;
             auto const &entity_datas = entity_pair.second;
 
-            db::object_vector objects;
+            db::object_vector_t objects;
             objects.reserve(entity_datas.size());
 
             for (auto const &data : entity_datas) {
@@ -318,13 +318,13 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
         return loaded_objects;
     }
 
-    db::object_map_map load_map_object_datas(db::object_data_vector_map const &datas, bool const force) {
-        db::object_map_map loaded_objects;
+    db::object_map_map_t load_map_object_datas(db::object_data_vector_map_t const &datas, bool const force) {
+        db::object_map_map_t loaded_objects;
         for (auto const &entity_pair : datas) {
             auto const &entity_name = entity_pair.first;
             auto const &entity_datas = entity_pair.second;
 
-            db::object_map objects;
+            db::object_map_t objects;
             objects.reserve(entity_datas.size());
 
             for (auto const &data : entity_datas) {
@@ -363,7 +363,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
         }
     }
 
-    void set_db_info(db::value_map &&info) {
+    void set_db_info(db::value_map_t &&info) {
         _db_info = std::move(info);
 
         if (_subject.has_observer()) {
@@ -371,8 +371,8 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
         }
     }
 
-    db::object_data_vector_map changed_datas_for_save() {
-        db::object_data_vector_map changed_datas;
+    db::object_data_vector_map_t changed_datas_for_save() {
+        db::object_data_vector_map_t changed_datas;
 
         for (auto const &entity_pair : _model.entities()) {
             auto const &entity_name = entity_pair.first;
@@ -384,7 +384,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
             std::size_t const total_count = inserted_count + changed_count;
 
             if (total_count > 0) {
-                db::object_data_vector entity_datas;
+                db::object_data_vector_t entity_datas;
                 entity_datas.reserve(total_count);
 
                 if (inserted_count > 0) {
@@ -424,14 +424,14 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
         return changed_datas;
     }
 
-    db::integer_set_map changed_object_ids_for_reset() {
-        db::integer_set_map changed_obj_ids;
+    db::integer_set_map_t changed_object_ids_for_reset() {
+        db::integer_set_map_t changed_obj_ids;
 
         for (auto const &entity_pair : _changed_objects) {
             auto const &entity_name = entity_pair.first;
             auto const &entity_objects = entity_pair.second;
 
-            db::integer_set entity_ids;
+            db::integer_set_t entity_ids;
 
             for (auto const &object_pair : entity_objects) {
                 auto object = object_pair.second;
@@ -446,7 +446,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
         return changed_obj_ids;
     }
 
-    void erase_changed_objects(db::object_data_vector_map const &object_datas) {
+    void erase_changed_objects(db::object_data_vector_map_t const &object_datas) {
         for (auto &entity_pair : object_datas) {
             auto const &entity_name = entity_pair.first;
             if (_changed_objects.count(entity_name) > 0) {
@@ -490,7 +490,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
             }
         } else {
             if (_changed_objects.count(entity_name) == 0) {
-                _changed_objects.insert(std::make_pair(entity_name, db::object_map{}));
+                _changed_objects.insert(std::make_pair(entity_name, db::object_map_t{}));
             }
 
             _changed_objects.at(entity_name).emplace(std::make_pair(object.object_id().get<integer>(), object));
@@ -520,12 +520,12 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
         _op_queue.push_back(operation{std::move(op_lambda), std::move(option)});
     }
 
-    void execute_setup(std::function<void(result_t &&, db::value_map &&)> &&completion, operation_option_t &&option) {
+    void execute_setup(std::function<void(result_t &&, db::value_map_t &&)> &&completion, operation_option_t &&option) {
         execute([completion = std::move(completion), manager = cast<manager>()](operation const &op) mutable {
             auto &db = manager.database();
             auto const &model = manager.model();
 
-            db::value_map db_info;
+            db::value_map_t db_info;
             result_t state{nullptr};
 
             if (auto begin_result = db::begin_transaction(db)) {
@@ -621,7 +621,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
 
                     if (auto create_result = db.execute_update(db::create_table_sql(
                             info_table, {version_field, current_save_id_field, last_save_id_field}))) {
-                        db::value_vector args{db::value{model.version().str()}, db::value{integer::type{0}},
+                        db::value_vector_t args{db::value{model.version().str()}, db::value{integer::type{0}},
                                               db::value{integer::type{0}}};
                         if (auto ul = unless(db.execute_update(
                                 db::insert_sql(info_table, {version_field, current_save_id_field, last_save_id_field}),
@@ -693,12 +693,12 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                 std::move(option));
     }
 
-    void execute_clear(std::function<void(result_t &&, db::value_map &&)> &&completion, operation_option_t &&option) {
+    void execute_clear(std::function<void(result_t &&, db::value_map_t &&)> &&completion, operation_option_t &&option) {
         execute([completion = std::move(completion), manager = cast<manager>()](operation const &op) mutable {
             auto &db = manager.database();
             auto const &model = manager.model();
 
-            db::value_map db_info;
+            db::value_map_t db_info;
             result_t state{nullptr};
 
             if (auto begin_result = db::begin_transaction(db)) {
@@ -726,7 +726,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
 
             if (state) {
                 auto const sql = update_sql(info_table, {current_save_id_field, last_save_id_field});
-                db::value_vector const params{db::value{integer::type{0}}, db::value{integer::type{0}}};
+                db::value_vector_t const params{db::value{integer::type{0}}, db::value{integer::type{0}}};
                 if (auto update_result = db.execute_update(sql, params)) {
                     if (auto select_result = db::select_db_info(db)) {
                         db_info = std::move(select_result.value());
@@ -750,14 +750,14 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                 std::move(option));
     }
 
-    void execute_purge(std::function<void(result_t &&, db::value_map &&)> &&completion, operation_option_t &&option) {
+    void execute_purge(std::function<void(result_t &&, db::value_map_t &&)> &&completion, operation_option_t &&option) {
         execute([completion = std::move(completion), manager = cast<manager>()](operation const &op) mutable {
             auto &db = manager.database();
             auto const &model = manager.model();
 
             db::value const one_value = db::value{integer::type{1}};
 
-            db::value_map db_info;
+            db::value_map_t db_info;
             db::manager::result_t state{nullptr};
 
             if (auto begin_result = db::begin_transaction(db)) {
@@ -827,7 +827,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
 
                 if (state) {
                     auto const sql = update_sql(info_table, {current_save_id_field, last_save_id_field}, "");
-                    db::value_vector const args{one_value, one_value};
+                    db::value_vector_t const args{one_value, one_value};
                     if (auto update_result = db.execute_update(sql, args)) {
                         if (auto select_result = db::select_db_info(db)) {
                             db_info = select_result.value();
@@ -861,11 +861,11 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
     }
 
     void execute_insert(insert_preparation_values_f &&preparation,
-                        std::function<void(result_t &&, object_data_vector_map &&, db::value_map &&)> &&completion,
+                        std::function<void(result_t &&, object_data_vector_map_t &&, db::value_map_t &&)> &&completion,
                         operation_option_t &&option) {
         execute([preparation = std::move(preparation), completion = std::move(completion), manager = cast<manager>()](
                     operation const &op) mutable {
-            value_map_vector_map values;
+            value_map_vector_map_t values;
 
             auto preparation_on_main = [&values, &preparation]() { values = preparation(); };
 
@@ -874,8 +874,8 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
             auto &db = manager.database();
             auto const &model = manager.model();
 
-            db::value_map db_info;
-            object_data_vector_map inserted_datas;
+            db::value_map_t db_info;
+            object_data_vector_map_t inserted_datas;
             db::integer::type start_obj_id = 1;
 
             result_t state{nullptr};
@@ -923,7 +923,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                             db::value obj_id_value{start_obj_id + idx};
 
                             std::vector<std::string> fields{object_id_field, save_id_field};
-                            db::value_vector args{obj_id_value, next_save_id};
+                            db::value_vector_t args{obj_id_value, next_save_id};
 
                             fields.reserve(obj_values.size() + 2);
                             args.reserve(obj_values.size() + 2);
@@ -947,7 +947,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                             auto select_result = db::select(db, std::move(option));
                             if (select_result) {
                                 if (inserted_datas.count(entity_name) == 0) {
-                                    object_data_vector entity_datas{};
+                                    object_data_vector_t entity_datas{};
                                     entity_datas.reserve(entity_values.size());
                                     inserted_datas.emplace(std::make_pair(entity_name, std::move(entity_datas)));
                                 }
@@ -966,7 +966,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
 
                 if (state) {
                     auto const sql = update_sql(info_table, {current_save_id_field, last_save_id_field});
-                    db::value_vector const args{next_save_id, next_save_id};
+                    db::value_vector_t const args{next_save_id, next_save_id};
                     if (auto update_result = db.execute_update(sql, args)) {
                         if (auto select_result = db::select_db_info(db)) {
                             db_info = select_result.value();
@@ -995,7 +995,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
 
     void execute_fetch_object_datas(
         fetch_preparation_option_f &&preparation,
-        std::function<void(result_t &&state, db::object_data_vector_map &&fetched_datas)> &&completion,
+        std::function<void(result_t &&state, db::object_data_vector_map_t &&fetched_datas)> &&completion,
         operation_option_t &&option) {
         execute(
             [preparation = std::move(preparation), completion = std::move(completion), manager = cast<db::manager>()](
@@ -1013,7 +1013,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                 auto const &rel_models = manager.model().relations(entity_name);
                 result_t state{nullptr};
 
-                db::object_data_vector_map fetched_datas;
+                db::object_data_vector_map_t fetched_datas;
 
                 if (auto begin_result = db::begin_transaction(db)) {
                     db::value current_save_id{nullptr};
@@ -1057,11 +1057,11 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
 
     void execute_fetch_object_datas(
         fetch_preparation_ids_f &&preparation,
-        std::function<void(result_t &&state, db::object_data_vector_map &&fetched_datas)> &&completion,
+        std::function<void(result_t &&state, db::object_data_vector_map_t &&fetched_datas)> &&completion,
         operation_option_t &&option) {
         execute([completion = std::move(completion), preparation = std::move(preparation), manager = cast<manager>()](
                     operation const &) mutable {
-            db::integer_set_map obj_ids;
+            db::integer_set_map_t obj_ids;
 
             auto preparation_on_main = [&obj_ids, &preparation]() { obj_ids = preparation(); };
 
@@ -1071,7 +1071,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
 
             result_t state{nullptr};
 
-            object_data_vector_map fetched_datas;
+            object_data_vector_map_t fetched_datas;
 
             if (auto begin_result = db::begin_transaction(db)) {
                 db::value current_save_id{nullptr};
@@ -1118,11 +1118,11 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                 std::move(option));
     }
 
-    void execute_save(std::function<void(result_t &&state, db::object_data_vector_map &&saved_datas,
-                                         db::value_map &&db_info)> &&completion,
+    void execute_save(std::function<void(result_t &&state, db::object_data_vector_map_t &&saved_datas,
+                                         db::value_map_t &&db_info)> &&completion,
                       operation_option_t &&option) {
         execute([completion = std::move(completion), manager = cast<manager>()](operation const &) mutable {
-            db::object_data_vector_map changed_datas;
+            db::object_data_vector_map_t changed_datas;
             auto manager_impl = manager.impl_ptr<impl>();
 
             auto get_change_lambda = [&manager_impl, &changed_datas]() {
@@ -1134,8 +1134,8 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
             auto &db = manager.database();
             auto const &model = manager.model();
 
-            db::value_map db_info;
-            db::object_data_vector_map saved_datas;
+            db::value_map_t db_info;
+            db::object_data_vector_map_t saved_datas;
 
             result_t state{nullptr};
 
@@ -1180,7 +1180,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                             auto const entity_insert_sql = manager.model().entity(entity_name).sql_for_insert();
                             auto const &rel_models = manager.model().relations(entity_name);
 
-                            db::object_data_vector entity_saved_datas;
+                            db::object_data_vector_t entity_saved_datas;
 
                             for (auto data : changed_entity_datas) {
                                 erase_if_exists(data.attributes, id_field);
@@ -1209,7 +1209,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
 
                                             for (auto const &rel_tgt_obj_id : rel) {
                                                 auto tgt_obj_id_pair = std::make_pair(tgt_obj_id_field, rel_tgt_obj_id);
-                                                db::value_map args{src_rowid_pair, src_obj_id_pair,
+                                                db::value_map_t args{src_rowid_pair, src_obj_id_pair,
                                                                    std::move(tgt_obj_id_pair), save_id_pair};
                                                 if (auto ul =
                                                         unless(db.execute_update(rel_insert_sql, std::move(args)))) {
@@ -1243,7 +1243,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
 
                     if (state) {
                         auto const sql = update_sql(info_table, {current_save_id_field, last_save_id_field});
-                        db::value_vector const params{next_save_id, next_save_id};
+                        db::value_vector_t const params{next_save_id, next_save_id};
                         if (auto ul = unless(db.execute_update(sql, params))) {
                             state = result_t{error{error_type::update_info_failed, std::move(ul.value.error())}};
                         }
@@ -1274,8 +1274,8 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
     }
 
     void execute_revert(revert_preparation_f preparation,
-                        std::function<void(result_t &&state, db::object_data_vector_map &&reverted_datas,
-                                           db::value_map &&db_info)> &&completion,
+                        std::function<void(result_t &&state, db::object_data_vector_map_t &&reverted_datas,
+                                           db::value_map_t &&db_info)> &&completion,
                         operation_option_t &&option) {
         execute(
             [preparation = std::move(preparation), completion = std::move(completion), manager = cast<db::manager>()](
@@ -1290,9 +1290,9 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
 
                 result_t state{nullptr};
 
-                db::value_map_vector_map reverted_attrs;
-                db::object_data_vector_map reverted_datas;
-                db::value_map db_info;
+                db::value_map_vector_map_t reverted_attrs;
+                db::object_data_vector_map_t reverted_datas;
+                db::value_map_t db_info;
 
                 if (auto begin_result = db::begin_transaction(db)) {
                     db::integer::type last_save_id = 0;
@@ -1440,7 +1440,7 @@ db::object db::manager::insert_object(std::string const entity_name) {
 
 void db::manager::setup(completion_f completion, operation_option_t option) {
     auto impl_completion =
-        [completion = std::move(completion), manager = *this](result_t && state, value_map && db_info) mutable {
+        [completion = std::move(completion), manager = *this](result_t && state, value_map_t && db_info) mutable {
         auto lambda = [
             manager,
             state = std::move(state),
@@ -1461,7 +1461,7 @@ void db::manager::setup(completion_f completion, operation_option_t option) {
 
 void db::manager::clear(completion_f completion, operation_option_t option) {
     auto impl_completion =
-        [completion = std::move(completion), manager = *this](result_t && state, value_map && db_info) {
+        [completion = std::move(completion), manager = *this](result_t && state, value_map_t && db_info) {
         auto lambda = [
             completion = std::move(completion),
             manager,
@@ -1483,7 +1483,7 @@ void db::manager::clear(completion_f completion, operation_option_t option) {
 
 void db::manager::purge(completion_f completion, operation_option_t option) {
     auto impl_completion =
-        [completion = std::move(completion), manager = *this](result_t && state, value_map && db_info) {
+        [completion = std::move(completion), manager = *this](result_t && state, value_map_t && db_info) {
         auto lambda = [
             completion = std::move(completion),
             manager,
@@ -1510,7 +1510,7 @@ void db::manager::reset(completion_f completion, operation_option_t option) {
     };
 
     auto impl_completion = [completion = std::move(completion), manager = *this](
-        result_t && state, object_data_vector_map && fetched_datas) {
+        result_t && state, object_data_vector_map_t && fetched_datas) {
         auto lambda = [
             manager,
             completion = std::move(completion),
@@ -1541,10 +1541,10 @@ void db::manager::insert_objects(insert_preparation_count_f preparation, vector_
                                  operation_option_t option) {
     auto impl_preparation = [preparation = std::move(preparation)]() {
         auto counts = preparation();
-        db::value_map_vector_map values{};
+        db::value_map_vector_map_t values{};
 
         for (auto &count_pair : counts) {
-            values.emplace(std::make_pair(count_pair.first, db::value_map_vector{count_pair.second}));
+            values.emplace(std::make_pair(count_pair.first, db::value_map_vector_t{count_pair.second}));
         }
 
         return values;
@@ -1556,7 +1556,7 @@ void db::manager::insert_objects(insert_preparation_count_f preparation, vector_
 void db::manager::insert_objects(insert_preparation_values_f preparation, vector_completion_f completion,
                                  operation_option_t option) {
     auto impl_completion = [completion = std::move(completion), manager = *this](
-        result_t && state, object_data_vector_map && inserted_datas, db::value_map && db_info) {
+        result_t && state, object_data_vector_map_t && inserted_datas, db::value_map_t && db_info) {
         auto lambda = [
             state = std::move(state),
             inserted_datas = std::move(inserted_datas),
@@ -1582,7 +1582,7 @@ void db::manager::insert_objects(insert_preparation_values_f preparation, vector
 void db::manager::fetch_objects(fetch_preparation_option_f preparation, vector_completion_f completion,
                                 operation_option_t option) {
     auto impl_completion = [completion = std::move(completion), manager = *this](
-        result_t && state, db::object_data_vector_map && fetched_datas) {
+        result_t && state, db::object_data_vector_map_t && fetched_datas) {
         auto lambda = [
             state = std::move(state),
             completion = std::move(completion),
@@ -1606,7 +1606,7 @@ void db::manager::fetch_objects(fetch_preparation_option_f preparation, vector_c
 void db::manager::fetch_const_objects(fetch_preparation_option_f preparation, const_vector_completion_f completion,
                                       operation_option_t option) {
     auto impl_completion = [completion = std::move(completion), manager = *this](
-        result_t && state, db::object_data_vector_map && fetched_datas) {
+        result_t && state, db::object_data_vector_map_t && fetched_datas) {
         auto lambda = [
             state = std::move(state),
             completion = std::move(completion),
@@ -1629,7 +1629,7 @@ void db::manager::fetch_const_objects(fetch_preparation_option_f preparation, co
 void db::manager::fetch_objects(fetch_preparation_ids_f preparation, map_completion_f completion,
                                 operation_option_t option) {
     auto impl_completion = [completion = std::move(completion), manager = *this](
-        result_t && state, db::object_data_vector_map && fetched_datas) {
+        result_t && state, db::object_data_vector_map_t && fetched_datas) {
         auto lambda = [
             manager,
             completion = std::move(completion),
@@ -1653,7 +1653,7 @@ void db::manager::fetch_objects(fetch_preparation_ids_f preparation, map_complet
 void db::manager::fetch_const_objects(fetch_preparation_ids_f preparation, const_map_completion_f completion,
                                       operation_option_t option) {
     auto impl_completion = [completion = std::move(completion), manager = *this](
-        result_t && state, db::object_data_vector_map && fetched_datas) {
+        result_t && state, db::object_data_vector_map_t && fetched_datas) {
         auto lambda = [
             manager,
             completion = std::move(completion),
@@ -1675,7 +1675,7 @@ void db::manager::fetch_const_objects(fetch_preparation_ids_f preparation, const
 
 void db::manager::save(vector_completion_f completion, operation_option_t option) {
     auto impl_completion = [completion = std::move(completion), manager = *this](
-        result_t && state, db::object_data_vector_map && saved_datas, db::value_map && db_info) {
+        result_t && state, db::object_data_vector_map_t && saved_datas, db::value_map_t && db_info) {
         auto lambda = [
             manager,
             state = std::move(state),
@@ -1701,7 +1701,7 @@ void db::manager::save(vector_completion_f completion, operation_option_t option
 
 void db::manager::revert(revert_preparation_f preparation, vector_completion_f completion, operation_option_t option) {
     auto impl_completion = [completion = std::move(completion), manager = *this](
-        result_t && state, db::object_data_vector_map && reverted_datas, db::value_map && db_info) {
+        result_t && state, db::object_data_vector_map_t && reverted_datas, db::value_map_t && db_info) {
         auto lambda = [
             manager,
             state = std::move(state),
