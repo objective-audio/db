@@ -19,8 +19,8 @@ class version;
 namespace db {
     class entity;
 
-    using entity_map = std::unordered_map<std::string, db::entity>;
-    using index_map = std::unordered_map<std::string, db::index>;
+    using entity_map_t = std::unordered_map<std::string, db::entity>;
+    using index_map_t = std::unordered_map<std::string, db::index>;
 
     class model : public base {
         class impl;
@@ -29,12 +29,12 @@ namespace db {
         model(CFDictionaryRef const &dict);
 
         yas::version const &version() const;
-        db::entity_map const &entities() const;
-        db::index_map const &indices() const;
+        db::entity_map_t const &entities() const;
+        db::index_map_t const &indices() const;
 
         db::entity const &entity(std::string const &entity_name) const;
-        db::attribute_map const &attributes(std::string const &entity_name) const;
-        db::relation_map const &relations(std::string const &entity_name) const;
+        db::attribute_map_t const &attributes(std::string const &entity_name) const;
+        db::relation_map_t const &relations(std::string const &entity_name) const;
         db::attribute const &attribute(std::string const &entity_name, std::string const &attr_name) const;
         db::relation const &relation(std::string const &entity_name, std::string const &rel_name) const;
         db::index const &index(std::string const &index_name) const;

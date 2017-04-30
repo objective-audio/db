@@ -23,23 +23,23 @@ namespace db {
     class const_object;
     class object;
 
-    using integer_set = std::set<integer::type>;
-    using integer_set_map = std::unordered_map<std::string, integer_set>;
+    using integer_set_t = std::set<integer::type>;
+    using integer_set_map_t = std::unordered_map<std::string, integer_set_t>;
 
-    using object_map = std::unordered_map<integer::type, object>;
-    using object_map_map = std::unordered_map<std::string, object_map>;
-    using object_vector = std::vector<object>;
-    using object_vector_map = std::unordered_map<std::string, object_vector>;
-    using object_deque = std::deque<object>;
-    using object_deque_map = std::unordered_map<std::string, object_deque>;
-    using const_object_map = std::unordered_map<integer::type, const_object>;
-    using const_object_map_map = std::unordered_map<std::string, const_object_map>;
-    using const_object_vector = std::vector<const_object>;
-    using const_object_vector_map = std::unordered_map<std::string, const_object_vector>;
-    using weak_object_map = std::unordered_map<integer::type, weak<object>>;
-    using weak_object_map_map = std::unordered_map<std::string, weak_object_map>;
-    using object_data_vector = std::vector<object_data>;
-    using object_data_vector_map = std::unordered_map<std::string, object_data_vector>;
+    using object_map_t = std::unordered_map<integer::type, object>;
+    using object_map_map_t = std::unordered_map<std::string, object_map_t>;
+    using object_vector_t = std::vector<object>;
+    using object_vector_map_t = std::unordered_map<std::string, object_vector_t>;
+    using object_deque_t = std::deque<object>;
+    using object_deque_map_t = std::unordered_map<std::string, object_deque_t>;
+    using const_object_map_t = std::unordered_map<integer::type, const_object>;
+    using const_object_map_map_t = std::unordered_map<std::string, const_object_map_t>;
+    using const_object_vector_t = std::vector<const_object>;
+    using const_object_vector_map_t = std::unordered_map<std::string, const_object_vector_t>;
+    using weak_object_map_t = std::unordered_map<integer::type, weak<object>>;
+    using weak_object_map_map_t = std::unordered_map<std::string, weak_object_map_t>;
+    using object_data_vector_t = std::vector<object_data>;
+    using object_data_vector_map_t = std::unordered_map<std::string, object_data_vector_t>;
 
     class const_object : public base {
        public:
@@ -53,7 +53,7 @@ namespace db {
 
         db::value const &get_attribute(std::string const &attr_name) const;
 
-        db::value_vector get_relation_ids(std::string const &rel_name) const;
+        db::value_vector_t get_relation_ids(std::string const &rel_name) const;
         db::value const &get_relation_id(std::string const &rel_name, std::size_t const idx) const;
         std::size_t relation_size(std::string const &rel_name) const;
 
@@ -61,7 +61,7 @@ namespace db {
         db::value const &save_id() const;
         db::value const &action() const;
 
-        integer_set_map relation_ids_for_fetch() const;
+        db::integer_set_map_t relation_ids_for_fetch() const;
 
         static db::const_object const &null_object();
 
@@ -94,12 +94,12 @@ namespace db {
 
         void set_attribute(std::string const &attr_name, value const &value);
 
-        std::vector<db::object> get_relation_objects(std::string const &rel_name) const;
+        db::object_vector_t get_relation_objects(std::string const &rel_name) const;
         db::object get_relation_object(std::string const &rel_name, std::size_t const idx) const;
-        void set_relation_ids(std::string const &rel_name, db::value_vector const &relation_ids);
+        void set_relation_ids(std::string const &rel_name, db::value_vector_t const &relation_ids);
         void push_back_relation_id(std::string const &rel_name, db::value const &relation_id);
         void erase_relation_id(std::string const &rel_name, db::value const &relation_id);
-        void set_relation_objects(std::string const &rel_name, db::object_vector const &rel_objects);
+        void set_relation_objects(std::string const &rel_name, db::object_vector_t const &rel_objects);
         void push_back_relation_object(std::string const &rel_name, db::object const &rel_object);
         void erase_relation_object(std::string const &rel_name, db::object const &rel_object);
         void erase_relation(std::string const &rel_name, std::size_t const idx);

@@ -238,14 +238,14 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
         }
     }
 
-    update_result execute_update(std::string const &sql, std::vector<db::value> const &vec,
+    update_result_t execute_update(std::string const &sql, std::vector<db::value> const &vec,
                                  std::unordered_map<std::string, db::value> const &map) {
         if (!database_exists()) {
-            return update_result{error{error_type::closed}};
+            return update_result_t{error{error_type::closed}};
         }
 
         if (_is_executing_statement) {
-            return update_result{error{error_type::in_use}};
+            return update_result_t{error{error_type::in_use}};
         }
 
         _is_executing_statement = true;
@@ -267,7 +267,7 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
             result_code = sqlite3_prepare_v2(_sqlite_handle, sql.c_str(), -1, &stmt, 0);
 
             if (!result_code) {
-                auto result = update_result{error{error_type::sqlite, result_code, last_error_message()}};
+                auto result = update_result_t{error{error_type::sqlite, result_code, last_error_message()}};
                 sqlite3_finalize(stmt);
                 _is_executing_statement = false;
                 return result;
@@ -301,7 +301,7 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
         if (idx != query_count) {
             sqlite3_finalize(stmt);
             _is_executing_statement = false;
-            return update_result{error{error_type::invalid_query_count}};
+            return update_result_t{error{error_type::invalid_query_count}};
         }
 
         result_code = sqlite3_step(stmt);
@@ -337,13 +337,13 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
         _is_executing_statement = false;
 
         if (result_code) {
-            return update_result{nullptr};
+            return update_result_t{nullptr};
         } else {
-            return update_result{error{error_type::sqlite, result_code, error_message}};
+            return update_result_t{error{error_type::sqlite, result_code, error_message}};
         }
     }
 
-    update_result execute_statements(std::string const &sql, callback_f const &function) {
+    update_result_t execute_statements(std::string const &sql, callback_f const &function) {
         callback_id callback_id{.database = _db_key};
         _callback_for_execute_statements = function;
 
@@ -389,19 +389,19 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
         }
 
         if (result_code) {
-            return update_result{nullptr};
+            return update_result_t{nullptr};
         } else {
-            return update_result{error{error_type::sqlite, result_code, error_message}};
+            return update_result_t{error{error_type::sqlite, result_code, error_message}};
         }
     }
 
-    db::query_result execute_query(std::string const &sql, value_vector const &vec, value_map const &map) {
+    db::query_result_t execute_query(std::string const &sql, value_vector_t const &vec, value_map_t const &map) {
         if (!database_exists()) {
-            return query_result{error{error_type::closed}};
+            return query_result_t{error{error_type::closed}};
         }
 
         if (_is_executing_statement) {
-            return query_result{error{error_type::in_use}};
+            return query_result_t{error{error_type::in_use}};
         }
 
         _is_executing_statement = true;
@@ -424,7 +424,7 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
             result_code = sqlite3_prepare_v2(_sqlite_handle, sql.c_str(), -1, &stmt, 0);
 
             if (!result_code) {
-                auto result = query_result{error{error_type::sqlite, result_code, last_error_message()}};
+                auto result = query_result_t{error{error_type::sqlite, result_code, last_error_message()}};
                 sqlite3_finalize(stmt);
                 _is_executing_statement = false;
                 return result;
@@ -456,7 +456,7 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
         if (idx != query_count) {
             sqlite3_finalize(stmt);
             _is_executing_statement = false;
-            return query_result{error{error_type::invalid_query_count, 0, error_message}};
+            return query_result_t{error{error_type::invalid_query_count, 0, error_message}};
         }
 
         if (!statement) {
@@ -474,12 +474,12 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
 
         _is_executing_statement = false;
 
-        return query_result{std::move(row_set)};
+        return query_result_t{std::move(row_set)};
     }
 
-    row_result last_insert_row_id() {
+    row_result_t last_insert_row_id() {
         if (_is_executing_statement) {
-            return row_result{error{error_type::in_use}};
+            return row_result_t{error{error_type::in_use}};
         }
 
         _is_executing_statement = true;
@@ -488,12 +488,12 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
 
         _is_executing_statement = false;
 
-        return row_result{row_id};
+        return row_result_t{row_id};
     }
 
-    count_result changes() {
+    count_result_t changes() {
         if (_is_executing_statement) {
-            return count_result{error{error_type::in_use}};
+            return count_result_t{error{error_type::in_use}};
         }
 
         _is_executing_statement = true;
@@ -502,7 +502,7 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
 
         _is_executing_statement = false;
 
-        return count_result{changes};
+        return count_result_t{changes};
     }
 
     void set_max_busy_retry_time_interval(double const timeout) {
@@ -613,24 +613,24 @@ bool db::database::good_connection() {
     return false;
 }
 
-db::update_result db::database::execute_update(std::string const &sql) {
+db::update_result_t db::database::execute_update(std::string const &sql) {
     return impl_ptr<impl>()->execute_update(sql, {}, {});
 }
 
-db::update_result db::database::execute_update(std::string const &sql, std::vector<db::value> const &arguments) {
+db::update_result_t db::database::execute_update(std::string const &sql, std::vector<db::value> const &arguments) {
     return impl_ptr<impl>()->execute_update(sql, arguments, {});
 }
 
-db::update_result db::database::execute_update(std::string const &sql,
+db::update_result_t db::database::execute_update(std::string const &sql,
                                                std::unordered_map<std::string, db::value> const &arguments) {
     return impl_ptr<impl>()->execute_update(sql, {}, arguments);
 }
 
-db::update_result db::database::execute_statements(std::string const &sql) {
+db::update_result_t db::database::execute_statements(std::string const &sql) {
     return impl_ptr<impl>()->execute_statements(sql, nullptr);
 }
 
-db::update_result db::database::execute_statements(std::string const &sql, callback_f const &callback) {
+db::update_result_t db::database::execute_statements(std::string const &sql, callback_f const &callback) {
     return impl_ptr<impl>()->execute_statements(sql, callback);
 }
 
@@ -638,23 +638,23 @@ db::database::callback_f const &db::database::callback_for_execute_statements() 
     return impl_ptr<impl>()->_callback_for_execute_statements;
 }
 
-db::query_result db::database::execute_query(std::string const &sql) const {
+db::query_result_t db::database::execute_query(std::string const &sql) const {
     return impl_ptr<impl>()->execute_query(sql, {}, {});
 }
 
-db::query_result db::database::execute_query(std::string const &sql, value_vector const &arguments) const {
+db::query_result_t db::database::execute_query(std::string const &sql, value_vector_t const &arguments) const {
     return impl_ptr<impl>()->execute_query(sql, arguments, {});
 }
 
-db::query_result db::database::execute_query(std::string const &sql, value_map const &arguments) const {
+db::query_result_t db::database::execute_query(std::string const &sql, value_map_t const &arguments) const {
     return impl_ptr<impl>()->execute_query(sql, {}, arguments);
 }
 
-db::row_result db::database::last_insert_row_id() const {
+db::row_result_t db::database::last_insert_row_id() const {
     return impl_ptr<impl>()->last_insert_row_id();
 }
 
-db::count_result db::database::changes() const {
+db::count_result_t db::database::changes() const {
     return impl_ptr<impl>()->changes();
 }
 

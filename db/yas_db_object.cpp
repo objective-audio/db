@@ -65,7 +65,7 @@ struct db::const_object::impl : public base::impl {
         return db::value::null_value();
     }
 
-    db::value_vector get_relation_ids(std::string const &rel_name) {
+    db::value_vector_t get_relation_ids(std::string const &rel_name) {
         validate_relation_name(rel_name);
 
         if (_data.relations.count(rel_name) > 0) {
@@ -95,8 +95,8 @@ struct db::const_object::impl : public base::impl {
         return 0;
     }
 
-    integer_set_map relation_ids_for_fetch() {
-        integer_set_map relation_ids;
+    db::integer_set_map_t relation_ids_for_fetch() {
+        db::integer_set_map_t relation_ids;
 
         db::entity const &entity = _model.entity(_entity_name);
         for (auto const &pair : entity.relations) {
@@ -104,7 +104,7 @@ struct db::const_object::impl : public base::impl {
             if (_data.relations.count(rel_name) > 0) {
                 auto const &tgt_entity_name = pair.second.target_entity_name;
                 if (relation_ids.count(tgt_entity_name) == 0) {
-                    relation_ids.emplace(std::make_pair(tgt_entity_name, integer_set{}));
+                    relation_ids.emplace(std::make_pair(tgt_entity_name, db::integer_set_t{}));
                 }
 
                 auto &rel_id_set = relation_ids.at(tgt_entity_name);
@@ -136,7 +136,7 @@ struct db::const_object::impl : public base::impl {
         }
     }
 
-    void validate_relation_ids(db::value_vector const &rel_ids) {
+    void validate_relation_ids(db::value_vector_t const &rel_ids) {
         for (auto const &rel_id : rel_ids) {
             validate_relation_id(rel_id);
         }
@@ -170,7 +170,7 @@ db::value const &db::const_object::get_attribute(std::string const &attr_name) c
     return impl_ptr<impl>()->get_attribute(attr_name);
 }
 
-db::value_vector db::const_object::get_relation_ids(std::string const &rel_name) const {
+db::value_vector_t db::const_object::get_relation_ids(std::string const &rel_name) const {
     return impl_ptr<impl>()->get_relation_ids(rel_name);
 }
 
@@ -194,7 +194,7 @@ db::value const &db::const_object::action() const {
     return get_attribute(action_field);
 }
 
-db::integer_set_map db::const_object::relation_ids_for_fetch() const {
+db::integer_set_map_t db::const_object::relation_ids_for_fetch() const {
     return impl_ptr<impl>()->relation_ids_for_fetch();
 }
 
@@ -306,7 +306,7 @@ class db::object::impl : public const_object::impl, public manageable_object::im
         }
     }
 
-    void set_relation(std::string const &rel_name, value_vector const &relation_ids, bool const loading = false) {
+    void set_relation(std::string const &rel_name, value_vector_t const &relation_ids, bool const loading = false) {
         validate_relation_name(rel_name);
         validate_relation_ids(relation_ids);
 
@@ -328,7 +328,7 @@ class db::object::impl : public const_object::impl, public manageable_object::im
         validate_relation_id(relation_id);
 
         if (_data.relations.count(rel_name) == 0) {
-            _data.relations.emplace(std::make_pair(rel_name, db::value_vector{}));
+            _data.relations.emplace(std::make_pair(rel_name, db::value_vector_t{}));
         }
 
         auto &vector = _data.relations.at(rel_name);
@@ -419,8 +419,8 @@ class db::object::impl : public const_object::impl, public manageable_object::im
     }
 
     db::object_data data_for_save() {
-        db::value_map attributes;
-        db::value_vector_map relations;
+        db::value_map_t attributes;
+        db::value_vector_map_t relations;
 
         db::entity const &entity = _model.entity(_entity_name);
 
@@ -504,7 +504,7 @@ void db::object::set_attribute(std::string const &attr_name, db::value const &va
     impl_ptr<impl>()->set_attribute(attr_name, value);
 }
 
-db::object_vector db::object::get_relation_objects(std::string const &rel_name) const {
+db::object_vector_t db::object::get_relation_objects(std::string const &rel_name) const {
     auto const &rel_ids = impl_ptr<impl>()->get_relation_ids(rel_name);
     return to_vector<db::object>(rel_ids, [manager = manager(), entity_name = entity_name()](db::value const &id) {
         return manager.cached_object(entity_name, id.get<integer>());
@@ -516,7 +516,7 @@ db::object db::object::get_relation_object(std::string const &rel_name, std::siz
     return manager().cached_object(tgt_entity_name, get_relation_id(rel_name, idx).get<integer>());
 }
 
-void db::object::set_relation_ids(std::string const &rel_name, value_vector const &relation_ids) {
+void db::object::set_relation_ids(std::string const &rel_name, value_vector_t const &relation_ids) {
     impl_ptr<impl>()->set_relation(rel_name, relation_ids);
 }
 
@@ -528,7 +528,7 @@ void db::object::erase_relation_id(std::string const &rel_name, db::value const 
     impl_ptr<impl>()->erase_relation(rel_name, relation_id);
 }
 
-void db::object::set_relation_objects(std::string const &rel_name, object_vector const &rel_objects) {
+void db::object::set_relation_objects(std::string const &rel_name, object_vector_t const &rel_objects) {
     impl_ptr<impl>()->set_relation(
         rel_name,
         to_vector<db::value>(rel_objects, [entity_name = entity_name()](auto const &obj) { return obj.object_id(); }));

@@ -113,16 +113,16 @@ namespace db {
         static std::shared_ptr<db::value::impl<null>> const &null_value_impl_ptr();
     };
 
-    using value_vector = std::vector<value>;
-    using value_map = std::unordered_map<std::string, value>;
-    using value_vector_map = std::unordered_map<std::string, value_vector>;
-    using value_map_vector = std::vector<db::value_map>;
-    using value_map_vector_map = std::unordered_map<std::string, value_map_vector>;
-    using time_point = std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>;
+    using value_vector_t = std::vector<value>;
+    using value_map_t = std::unordered_map<std::string, value>;
+    using value_vector_map_t = std::unordered_map<std::string, value_vector_t>;
+    using value_map_vector_t = std::vector<db::value_map_t>;
+    using value_map_vector_map_t = std::unordered_map<std::string, value_map_vector_t>;
+    using time_point_t = std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>;
 }
 
 std::string to_string(db::value const &);
 
-db::time_point to_time_point(db::value const &);
-db::value to_value(db::time_point const &);
+db::time_point_t to_time_point(db::value const &);
+db::value to_value(db::time_point_t const &);
 }

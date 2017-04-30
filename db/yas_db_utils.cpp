@@ -16,41 +16,41 @@
 
 using namespace yas;
 
-db::update_result db::create_table(db::database &db, std::string const &table_name,
+db::update_result_t db::create_table(db::database &db, std::string const &table_name,
                                    std::vector<std::string> const &fields) {
     return db.execute_update(create_table_sql(table_name, fields));
 }
 
-db::update_result db::alter_table(db::database &db, std::string const &table_name, std::string const &field) {
+db::update_result_t db::alter_table(db::database &db, std::string const &table_name, std::string const &field) {
     return db.execute_update(alter_table_sql(table_name, field));
 }
 
-db::update_result db::drop_table(db::database &db, std::string const &table_name) {
+db::update_result_t db::drop_table(db::database &db, std::string const &table_name) {
     return db.execute_update(drop_table_sql(table_name));
 }
 
-db::update_result db::create_index(database &db, std::string const &index_name, std::string const &table_name,
+db::update_result_t db::create_index(database &db, std::string const &index_name, std::string const &table_name,
                                    std::vector<std::string> const &fields) {
     return db.execute_update(create_index_sql(index_name, table_name, fields));
 }
 
-db::update_result db::drop_index(database &db, std::string const &index_name) {
+db::update_result_t db::drop_index(database &db, std::string const &index_name) {
     return db.execute_update(drop_index_sql(index_name));
 }
 
-db::update_result db::begin_transaction(db::database &db) {
+db::update_result_t db::begin_transaction(db::database &db) {
     return db.execute_update("BEGIN EXCLUSIVE TRANSACTION");
 }
 
-db::update_result db::begin_deferred_transaction(db::database &db) {
+db::update_result_t db::begin_deferred_transaction(db::database &db) {
     return db.execute_update("BEGIN DEFERRED TRANSACTION");
 }
 
-db::update_result db::commit(db::database &db) {
+db::update_result_t db::commit(db::database &db) {
     return db.execute_update("COMMIT TRANSACTION");
 }
 
-db::update_result db::rollback(db::database &db) {
+db::update_result_t db::rollback(db::database &db) {
     return db.execute_update("ROLLBACK TRANSACTION");
 }
 
@@ -64,28 +64,28 @@ namespace db {
 }
 }
 
-db::update_result db::start_save_point(db::database &db, std::string const &name) {
+db::update_result_t db::start_save_point(db::database &db, std::string const &name) {
     if (name.size() == 0) {
-        return update_result{error{error_type::invalid_argument}};
+        return update_result_t{error{error_type::invalid_argument}};
     }
     return db.execute_update("SAVEPOINT '" + escape_save_point_name(name) + "';");
 }
 
-db::update_result db::release_save_point(db::database &db, std::string const &name) {
+db::update_result_t db::release_save_point(db::database &db, std::string const &name) {
     if (name.size() == 0) {
-        return update_result{error{error_type::invalid_argument}};
+        return update_result_t{error{error_type::invalid_argument}};
     }
     return db.execute_update("RELEASE SAVEPOINT '" + escape_save_point_name(name) + "';");
 }
 
-db::update_result db::rollback_save_point(db::database &db, std::string const &name) {
+db::update_result_t db::rollback_save_point(db::database &db, std::string const &name) {
     if (name.size() == 0) {
-        return update_result{error{error_type::invalid_argument}};
+        return update_result_t{error{error_type::invalid_argument}};
     }
     return db.execute_update("ROLLBACK TRANSACTION TO SAVEPOINT '" + escape_save_point_name(name) + "';");
 }
 
-db::update_result db::in_save_point(db::database &db, std::function<void(bool &rollback)> const function) {
+db::update_result_t db::in_save_point(db::database &db, std::function<void(bool &rollback)> const function) {
     static unsigned long save_point_idx = 0;
     std::string const name = "db_save_point_" + std::to_string(save_point_idx++);
 
@@ -165,25 +165,25 @@ bool db::column_exists(database const &db, std::string column_name, std::string 
     return false;
 }
 
-db::select_result db::select(db::database const &db, select_option const &option) {
+db::select_result_t db::select(db::database const &db, select_option const &option) {
     auto const sql =
         select_sql(option.table, option.fields, option.where_exprs, option.field_orders, option.limit_range);
 
-    db::value_map_vector value_map_vector;
+    db::value_map_vector_t value_map_vector_t;
 
     if (auto query_result = db.execute_query(sql, option.arguments)) {
         auto row_set = query_result.value();
         while (row_set.next()) {
-            value_map_vector.emplace_back(row_set.value_map());
+            value_map_vector_t.emplace_back(row_set.value_map_t());
         }
     } else {
-        return select_result{std::move(query_result.error())};
+        return select_result_t{std::move(query_result.error())};
     }
 
-    return select_result{value_map_vector};
+    return select_result_t{value_map_vector_t};
 }
 
-db::select_result db::select_last(database const &db, select_option option, value const &save_id,
+db::select_result_t db::select_last(database const &db, select_option option, value const &save_id,
                                   bool const include_removed) {
     std::vector<std::string> components;
 
@@ -208,7 +208,7 @@ db::select_result db::select_last(database const &db, select_option option, valu
     return select(db, option);
 }
 
-db::select_result db::select_undo(database const &db, std::string const &table_name, integer::type const revert_save_id,
+db::select_result_t db::select_undo(database const &db, std::string const &table_name, integer::type const revert_save_id,
                                   integer::type const current_save_id) {
     if (current_save_id <= revert_save_id) {
         throw "revert_save_id greater than or equal to current_save_id";
@@ -229,7 +229,7 @@ db::select_result db::select_undo(database const &db, std::string const &table_n
 
     auto result = select(db, option);
     if (!result) {
-        return select_result{std::move(result.error())};
+        return select_result_t{std::move(result.error())};
     }
 
     select_option empty_option{.table = table_name,
@@ -242,13 +242,13 @@ db::select_result db::select_undo(database const &db, std::string const &table_n
                                .field_orders = {{object_id_field, order::ascending}}};
     auto empty_result = select(db, empty_option);
     if (!empty_result) {
-        return select_result{std::move(empty_result.error())};
+        return select_result_t{std::move(empty_result.error())};
     }
 
-    return select_result{connect(std::move(result.value()), std::move(empty_result.value()))};
+    return select_result_t{connect(std::move(result.value()), std::move(empty_result.value()))};
 }
 
-db::select_result db::select_redo(database const &db, std::string const &table_name, integer::type const revert_save_id,
+db::select_result_t db::select_redo(database const &db, std::string const &table_name, integer::type const revert_save_id,
                                   integer::type const current_save_id) {
     if (revert_save_id <= current_save_id) {
         throw "current_save_id greater than or equal to revert_save_id";
@@ -264,7 +264,7 @@ db::select_result db::select_redo(database const &db, std::string const &table_n
     return select_last(db, std::move(option), db::value{revert_save_id}, true);
 }
 
-db::select_result db::select_revert(database const &db, std::string const &table_name,
+db::select_result_t db::select_revert(database const &db, std::string const &table_name,
                                     integer::type const revert_save_id, integer::type const current_save_id) {
     if (revert_save_id < current_save_id) {
         return select_undo(db, table_name, revert_save_id, current_save_id);
@@ -272,32 +272,32 @@ db::select_result db::select_revert(database const &db, std::string const &table
         return select_redo(db, table_name, revert_save_id, current_save_id);
     }
 
-    return select_result{value_map_vector{}};
+    return select_result_t{value_map_vector_t{}};
 }
 
-db::select_single_result db::select_single(database const &db, select_option option) {
+db::select_single_result_t db::select_single(database const &db, select_option option) {
     option.limit_range = {.location = 0, .length = 1};
 
     if (auto result = select(db, option)) {
         if (result.value().size() > 0) {
-            return select_single_result{std::move(result.value().at(0))};
+            return select_single_result_t{std::move(result.value().at(0))};
         }
     }
 
-    return select_single_result{nullptr};
+    return select_single_result_t{nullptr};
 }
 
-db::select_single_result db::select_db_info(database const &db) {
+db::select_single_result_t db::select_db_info(database const &db) {
     return select_single(db, db::select_option{.table = db::info_table});
 }
 
-db::update_result db::purge(database &db, std::string const &table_name) {
+db::update_result_t db::purge(database &db, std::string const &table_name) {
     std::string where_exprs =
         "NOT rowid IN (SELECT MAX(rowid) FROM " + table_name + " GROUP BY " + db::object_id_field + ")";
     return db.execute_update(delete_sql(table_name, where_exprs));
 }
 
-db::update_result db::purge_relation(database &db, std::string const &table_name, std::string const &src_table_name) {
+db::update_result_t db::purge_relation(database &db, std::string const &table_name, std::string const &src_table_name) {
     std::string where_exprs = "NOT " + db::src_id_field + " IN (SELECT rowid FROM " + src_table_name + ")";
     return db.execute_update(delete_sql(table_name, where_exprs));
 }

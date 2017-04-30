@@ -41,8 +41,8 @@ namespace db {
     };
 
     struct object_data {
-        value_map attributes;
-        value_vector_map relations;
+        value_map_t attributes;
+        value_vector_map_t relations;
     };
 
     struct manageable_object : protocol {

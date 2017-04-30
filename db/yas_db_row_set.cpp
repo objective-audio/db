@@ -113,16 +113,16 @@ int db::row_set::column_count() const {
     return sqlite3_column_count(impl_ptr<impl>()->statement().stmt());
 }
 
-db::row_set::index_result db::row_set::column_index(std::string column_name) const {
+db::row_set::index_result_t db::row_set::column_index(std::string column_name) const {
     std::string lower_column_name = to_lower(std::move(column_name));
 
     auto const &map = impl_ptr<impl>()->column_name_to_index_map();
 
     if (map.count(lower_column_name) > 0) {
-        return index_result{map.at(lower_column_name)};
+        return index_result_t{map.at(lower_column_name)};
     }
 
-    return index_result{nullptr};
+    return index_result_t{nullptr};
 }
 
 std::string db::row_set::column_name(int const column_idx) const {
@@ -171,11 +171,11 @@ db::value db::row_set::column_value(std::string column_name) const {
     return db::value{nullptr};
 }
 
-db::value_map db::row_set::value_map() const {
+db::value_map_t db::row_set::value_map_t() const {
     auto *const stmt = impl_ptr<impl>()->statement().stmt();
     int const column_count = sqlite3_data_count(stmt);
 
-    db::value_map map;
+    db::value_map_t map;
     map.reserve(column_count);
 
     auto each = make_fast_each(column_count);
