@@ -24,38 +24,37 @@ auto model_dict = make_objc_ptr<NSDictionary *>([]() {
 db::model model{(__bridge CFDictionaryRef)model_dict.object()};
 ```
 
-|関数名|説明|補足|
-|:-|:-|:-|
-|version|モデルのバージョン|モデルの構造を変更した時は値を上げる必要がある。バージョンを上げるとdb::managerのセットアップ時に自動でテーブルの更新・追加が行われる。|
-|entities|エンティティ定義の配列|要素の詳細は`entity`の項目を参照。|
-|indices|インデックス定義の配列|要素の詳細は`index`の項目を参照。|
-|:-|:-|:-|
-|entity|エンティティ名を指定して`db::entity`を取得||
-|attributes|エンティティ名を指定して属性の定義の辞書を取得||
-|relations|エンティティ名を指定して関連の定義の辞書を取得||
-|attribute|エンティティと属性名を指定して属性の定義を取得||
-|relation|エンティティと関連名を指定して関連の定義を取得||
-|index|インデックス名を指定してインデックス定義を取得||
+|関数名|説明|
+|:-|:-|
+|version|モデルのバージョン。モデルの構造を変更した時は値を上げる必要がある。バージョンを上げるとdb::managerのセットアップ時に自動でテーブルの更新・追加が行われる。|
+|entities|エンティティ定義の配列。要素の詳細は`entity`の項目を参照。|
+|indices|インデックス定義の配列。要素の詳細は`index`の項目を参照。|
+|entity|エンティティ名を指定して`db::entity`を取得|
+|attributes|エンティティ名を指定して属性の定義の辞書を取得|
+|relations|エンティティ名を指定して関連の定義の辞書を取得|
+|attribute|エンティティと属性名を指定して属性の定義を取得|
+|relation|エンティティと関連名を指定して関連の定義を取得|
+|index|インデックス名を指定してインデックス定義を取得|
 
 ## db::entity
 データベースオブジェクトの定義。`db::object`を扱う元となる情報。
 
-|メンバ変数|説明|補足|
-|:-|:-|:-|
-|attributes|属性情報の辞書|Keyは属性の名前。要素の詳細は`attribute`の項目を参照|
-|relations|関連情報の辞書|Keyは関連の名前。要素の詳細は`relation`の項目を参照|
+|メンバ変数|説明|
+|:-|:-|
+|attributes|属性情報の辞書。Keyは属性の名前。要素の詳細は`attribute`の項目を参照|
+|relations|関連情報の辞書。Keyは関連の名前。要素の詳細は`relation`の項目を参照|
 
 ## db::attribute
 オブジェクトの属性の定義。`db::object`で`db::value`を扱う元となる情報。
 
-|メンバ変数|型|説明|補足|
-|:-|:-|:-|:-|
-|name|std::string|名前||
-|type|std::string|データ型|`INTEGER`・`TEXT`・`REAL`・`BLOB`のいずれか|
-|not_null|bool|カラム生成時に`NOT NULL`を定義|`NULL`を格納できない|
-|default_value|db::value|カラム生成時に`DEFAULT`で定義するデフォルト値||
-|primary|bool|カラム生成時に`PRIMARY KEY AUTOINCREMENT`を定義||
-|unique|bool|カラム生成時に`UNIQUE`を定義|他のデータと被らない値しか格納できない|
+|メンバ変数|型|説明|
+|:-|:-|:-|
+|name|std::string|名前|
+|type|std::string|データ型。`INTEGER`・`TEXT`・`REAL`・`BLOB`のいずれか|
+|not_null|bool|カラム生成時に`NOT NULL`を定義。`NULL`を格納できなくする|
+|default_value|db::value|カラム生成時に`DEFAULT`で定義するデフォルト値|
+|primary|bool|カラム生成時に`PRIMARY KEY AUTOINCREMENT`を定義|
+|unique|bool|カラム生成時に`UNIQUE`を定義。他のデータと被らない値しか格納できなくする|
 
 ## db::relation
 関連の定義
@@ -80,12 +79,12 @@ value.get<db::integer>(); // -> 1
 
 メンバ関数`get`では以下のいずれかをテンプレートパラメータで指定して、実際の型で値を取得する。
 
-|テンプレートパラメータ|実際の型|説明|補足|
-|:-|:-|:-|:-|
-|db::integer|sqlite3_int64|整数||
-|db::real|double|浮動小数点数||
-|db::text|std::string|文字列||
-|db::blob|db::blob|バイトデータ|blobオブジェクト内にdataを持つ|
+|テンプレートパラメータ|実際の型|説明|
+|:-|:-|:-|
+|db::integer|sqlite3_int64|整数|
+|db::real|double|浮動小数点数|
+|db::text|std::string|文字列|
+|db::blob|db::blob|バイトデータ。blobオブジェクト内にdataを持つ|
 
 `db::value`の値が`NULL`の場合は、`operator bool()`で`false`を返す。
 
