@@ -94,53 +94,57 @@ value.get<db::integer>(); // -> 1
 
 `db::entity`の情報を元に`db::manager`によって生成される。直接オブジェクトを生成することはしない。
 
-|関数名|返り値|説明|補足|
-|:-|:-|:-|:-|
-|model|db::model|モデル||
-|entity_name|std::string|エンティティ名||
-|get_attribute|db::value|属性の値を取得||
-|get_relation_ids|db::value_vector|関連先のIDの配列を取得||
-|get_relation_id|db::value|idxの位置の関連先のIDを取得||
-|relaiton_size|std::size_t|関連の数||
-|object_id|db::value|オブジェクト固有のID||
-|save_id|db::value|セーブID|保存されたタイミングごとにインクリメントされるID|
-|action|db::value|データベース上の編集状態|`insert`・`update`・`remove`のいずれか|
+|関数名|返り値|説明|
+|:-|:-|:-|
+|model|db::model|モデル|
+|entity_name|std::string|エンティティ名|
+|get_attribute|db::value|属性の値を取得|
+|get_relation_ids|db::value_vector|関連先のIDの配列を取得|
+|get_relation_id|db::value|idxの位置の関連先のIDを取得|
+|relaiton_size|std::size_t|関連の数|
+|object_id|db::value|オブジェクト固有のID|
+|save_id|db::value|セーブID（保存されたタイミングごとにインクリメントされるID）|
+|action|db::value|データベース上の編集状態。`insert`・`update`・`remove`のいずれか|
 
 ## db::object
 データベース用のオブジェクト。`db::const_object`を継承し、値の変更ができるようにしたもの。
 
-|関数名|返り値|説明|補足|
-|:-|:-|:-|:-|
-|subject|subject_t|オブジェクトの変更を通知するオブジェクト||
-|get_relation_objects|db::object_vector_t|関連先のオブジェクトの配列を取得||
-|get_relation_object|db::object|idxの位置の関連先のオブジェクトを取得||
-|manager|db::manager|オブジェクトの属するマネージャ||
-|status|db::object_status|オブジェクトの状態。詳細は`object_status`の項目を参照||
-|is_removed|bool|オブジェクトが削除されているか||
+### Getter
 
-|関数名|引数|説明|補足|
-|:-|:-|:-|:-|
-|set_attribute|std::string attr_name, db::value value|属性の値をセット||
-|set_relation_ids|std::string rel_name, db::value_vector_t relation_ids|関連先のIDの配列をセット||
-|push_back_relation_id|std::string rel_name, db::value relation_id|関連先のIDを配列の最後に追加||
-|erase_relation_id|std::string rel_name, db::value relation_id|指定した関連先のIDを削除||
-|set_relation_objects|std::string rel_name, db::object_vector_t rel_objects|関連先のオブジェクトの配列をセット||
-|push_back_relation_object|std::string rel_name, db::object rel_object|関連先のオブジェクトを配列の最後に追加||
-|erase_relation_object|std::string rel_name, db::object rel_object|関連先のオブジェクトを関連から外す||
-|erase_relation|std::string rel_name, std::size_t idx|idxの位置の関連先のIDを削除||
-|clear_relation|std::string rel_name|関連先のIDの配列を削除||
-|remove|void|オブジェクトをデータベースから削除||
+|関数名|返り値|説明|
+|:-|:-|:-|
+|subject|subject_t|オブジェクトの変更を通知するオブジェクト|
+|get_relation_objects|db::object_vector_t|関連先のオブジェクトの配列を取得|
+|get_relation_object|db::object|idxの位置の関連先のオブジェクトを取得|
+|manager|db::manager|オブジェクトの属するマネージャ|
+|status|db::object_status|オブジェクトの状態。詳細は`object_status`の項目を参照|
+|is_removed|bool|オブジェクトが削除されているか|
+
+### Setter
+
+|関数名|引数|説明|
+|:-|:-|:-|
+|set_attribute|std::string attr_name, db::value value|属性の値をセット|
+|set_relation_ids|std::string rel_name, db::value_vector_t relation_ids|関連先のIDの配列をセット|
+|push_back_relation_id|std::string rel_name, db::value relation_id|関連先のIDを配列の最後に追加|
+|erase_relation_id|std::string rel_name, db::value relation_id|指定した関連先のIDを削除|
+|set_relation_objects|std::string rel_name, db::object_vector_t rel_objects|関連先のオブジェクトの配列をセット|
+|push_back_relation_object|std::string rel_name, db::object rel_object|関連先のオブジェクトを配列の最後に追加|
+|erase_relation_object|std::string rel_name, db::object rel_object|関連先のオブジェクトを関連から外す|
+|erase_relation|std::string rel_name, std::size_t idx|idxの位置の関連先のIDを削除|
+|clear_relation|std::string rel_name|関連先のIDの配列を削除|
+|remove|void|オブジェクトをデータベースから削除|
 
 ## db::object_status
 `db::object`のマネージャー上での状態を表す。enumで定義されている。
 
-|要素名|状態||
-|:-|:-|:-|
-|invalid|マネージャに管理されていない状態||
-|inserted|マネージャに挿入されてデータベースに保存されていない状態||
-|saved|データベースに保存された状態||
-|changed|データベースに保存されていてマネージャ上で変更された状態||
-|updating|データベースに保存中の状態||
+|要素名|状態|
+|:-|:-|
+|invalid|マネージャに管理されていない状態|
+|inserted|マネージャに挿入されてデータベースに保存されていない状態|
+|saved|データベースに保存された状態|
+|changed|データベースに保存されていてマネージャ上で変更された状態|
+|updating|データベースに保存中の状態|
 
 ## db::manager
 
