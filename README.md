@@ -112,23 +112,23 @@ value.get<db::integer>(); // -> 1
 |関数名|返り値|説明|補足|
 |:-|:-|:-|:-|
 |subject|subject_t|オブジェクトの変更を通知するオブジェクト||
-|set_attribute|void|属性の値をセット||
 |get_relation_objects|db::object_vector_t|関連先のオブジェクトの配列を取得||
 |get_relation_object|db::object|idxの位置の関連先のオブジェクトを取得||
-|set_relation_ids|void|関連先のIDの配列をセット||
-|push_back_relation_id|void|関連先のIDを追加||
-|erase_relation_id|void|idxの位置の関連先のIDを削除||
-|set_relation_objects|void|関連先のオブジェクトの配列をセット||
-|push_back_relation_object|void|関連先のオブジェクトを追加||
-|erase_relation_object|void|関連先のオブジェクトを関連から外す||
-|erase_relation|void|idxの位置の関連先のIDを削除||
-|clear_relation|void|関連先のIDの配列を削除||
 |manager|db::manager|オブジェクトの属するマネージャ||
 |status|db::object_status|オブジェクトの状態。詳細は`object_status`の項目を参照||
-|remove|void|オブジェクトをデータベースから削除||
 |is_removed|bool|オブジェクトが削除されているか||
 
-## db::manager
+|関数名|引数|説明|補足|
+|set_attribute|std::string attr_name, db::value value|属性の値をセット||
+|set_relation_ids|std::string rel_name, db::value_vector_t relation_ids|関連先のIDの配列をセット||
+|push_back_relation_id|std::string rel_name, db::value relation_id|関連先のIDを配列の最後に追加||
+|erase_relation_id|std::string rel_name, db::value relation_id|指定した関連先のIDを削除||
+|set_relation_objects|std::string rel_name, db::object_vector_t rel_objects|関連先のオブジェクトの配列をセット||
+|push_back_relation_object|std::string rel_name, db::object rel_object|関連先のオブジェクトを配列の最後に追加||
+|erase_relation_object|std::string rel_name, db::object rel_object|関連先のオブジェクトを関連から外す||
+|erase_relation|std::string rel_name, std::size_t idx|idxの位置の関連先のIDを削除||
+|clear_relation|std::string rel_name|関連先のIDの配列を削除||
+|remove|void|オブジェクトをデータベースから削除||
 
 ## db::object_status
 `db::object`のマネージャー上での状態を表す。enumで定義されている。
@@ -140,6 +140,10 @@ value.get<db::integer>(); // -> 1
 |saved|データベースに保存された状態||
 |changed|データベースに保存されていてマネージャ上で変更された状態||
 |updating|データベースに保存中の状態||
+
+## db::manager
+
+
 
 ## cf_utils
 ## object_utils
