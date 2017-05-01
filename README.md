@@ -119,6 +119,7 @@ value.get<db::integer>(); // -> 1
 |is_removed|bool|オブジェクトが削除されているか||
 
 |関数名|引数|説明|補足|
+|:-|:-|:-|:-|
 |set_attribute|std::string attr_name, db::value value|属性の値をセット||
 |set_relation_ids|std::string rel_name, db::value_vector_t relation_ids|関連先のIDの配列をセット||
 |push_back_relation_id|std::string rel_name, db::value relation_id|関連先のIDを配列の最後に追加||
