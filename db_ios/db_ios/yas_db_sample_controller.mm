@@ -131,8 +131,8 @@ void db_controller::add() {
             if (auto shared = weak.lock()) {
                 shared->_update_objects([weak = weak, insert_result = std::move(insert_result)](auto update_result) {
                     if (auto shared = weak.lock()) {
-                        db::value idx_value{nullptr};
-                        db::object object{nullptr};
+                        auto idx_value = db::value::null_value();
+                        auto object = db::object::null_object();
 
                         auto &a_objects = insert_result.value().at(entity_name_a);
 

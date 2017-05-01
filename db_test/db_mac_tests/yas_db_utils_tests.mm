@@ -812,7 +812,7 @@ using namespace yas;
     db::model model_0_0_2{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_2]};
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_2)];
 
-    auto pair = std::make_pair(db::const_object{nullptr}, db::integer_set_map_t{});
+    auto pair = std::make_pair(db::const_object::null_object(), db::integer_set_map_t{});
 
     manager.setup([self, &manager](auto result) mutable { XCTAssertTrue(result); });
 
