@@ -14,7 +14,7 @@ result_code::result_code(int const &value) : _raw_value(value) {
 result_code::~result_code() = default;
 
 int result_code::raw_value() const {
-    return _raw_value;
+    return this->_raw_value;
 }
 
 std::string yas::to_string(db::result_code const &code) {

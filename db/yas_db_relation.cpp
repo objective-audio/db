@@ -19,25 +19,26 @@ namespace db {
 }
 }
 
-db::relation::relation(std::string const entity_name, std::string const &attribute_name, CFDictionaryRef const &dict)
+db::relation::relation(std::string const entity_name, std::string const &attr_name, CFDictionaryRef const &dict)
     : entity_name(entity_name),
-      name(attribute_name),
-      target_entity_name(get<std::string>(dict, target_key)),
-      many(get<bool>(dict, many_key)),
-      table_name("rel_" + entity_name + "_" + name) {
+      name(attr_name),
+      target_entity_name(get<std::string>(dict, db::target_key)),
+      many(get<bool>(dict, db::many_key)),
+      table_name("rel_" + entity_name + "_" + this->name) {
 }
 
 std::string db::relation::sql_for_create() const {
     auto id_sql = db::attribute::id_attribute().sql();
-    auto src_id_sql = db::attribute{src_id_field, db::integer::name}.sql();
-    auto src_obj_id_sql = db::attribute{src_obj_id_field, db::integer::name}.sql();
-    auto tgt_obj_id_sql = db::attribute{tgt_obj_id_field, db::integer::name}.sql();
-    auto save_id_sql = db::attribute{save_id_field, db::integer::name}.sql();
+    auto src_id_sql = db::attribute{db::src_id_field, db::integer::name}.sql();
+    auto src_obj_id_sql = db::attribute{db::src_obj_id_field, db::integer::name}.sql();
+    auto tgt_obj_id_sql = db::attribute{db::tgt_obj_id_field, db::integer::name}.sql();
+    auto save_id_sql = db::attribute{db::save_id_field, db::integer::name}.sql();
 
-    return db::create_table_sql(table_name, {std::move(id_sql), std::move(src_id_sql), std::move(src_obj_id_sql),
-                                             std::move(tgt_obj_id_sql), std::move(save_id_sql)});
+    return db::create_table_sql(this->table_name, {std::move(id_sql), std::move(src_id_sql), std::move(src_obj_id_sql),
+                                                   std::move(tgt_obj_id_sql), std::move(save_id_sql)});
 }
 
 std::string db::relation::sql_for_insert() const {
-    return db::insert_sql(table_name, {src_id_field, src_obj_id_field, tgt_obj_id_field, save_id_field});
+    return db::insert_sql(this->table_name,
+                          {db::src_id_field, db::src_obj_id_field, db::tgt_obj_id_field, db::save_id_field});
 }

@@ -11,24 +11,24 @@ using namespace yas;
 class db::statement::impl : public base::impl, public closable::impl {
    public:
     ~impl() {
-        close();
+        this->close();
     }
 
     void close() override {
-        if (_stmt) {
-            sqlite3_finalize(_stmt);
-            _stmt = nullptr;
+        if (this->_stmt) {
+            sqlite3_finalize(this->_stmt);
+            this->_stmt = nullptr;
         }
 
-        _in_use = false;
+        this->_in_use = false;
     }
 
     void reset() {
-        if (_stmt) {
-            sqlite3_reset(_stmt);
+        if (this->_stmt) {
+            sqlite3_reset(this->_stmt);
         }
 
-        _in_use = false;
+        this->_in_use = false;
     }
 
     sqlite3_stmt *_stmt;
@@ -75,8 +75,8 @@ void db::statement::reset() {
 }
 
 db::closable &db::statement::closable() {
-    if (!_closable) {
-        _closable = db::closable{impl_ptr<closable::impl>()};
+    if (!this->_closable) {
+        this->_closable = db::closable{impl_ptr<db::closable::impl>()};
     }
-    return _closable;
+    return this->_closable;
 }

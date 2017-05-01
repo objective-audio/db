@@ -19,7 +19,7 @@ db::next_result_code::next_result_code(int const &value) : result_code(value) {
 }
 
 db::next_result_code::operator bool() const {
-    return raw_value() == SQLITE_ROW;
+    return this->raw_value() == SQLITE_ROW;
 }
 
 #pragma mark - impl
@@ -27,47 +27,47 @@ db::next_result_code::operator bool() const {
 class db::row_set::impl : public base::impl, public closable::impl, public db_settable::impl {
    public:
     impl(db::statement const &statement, database const &database) : _statement(statement), _database(database) {
-        _statement.set_in_use(true);
+        this->_statement.set_in_use(true);
     }
 
     ~impl() {
-        close();
+        this->close();
     }
 
     void close() override {
-        _statement.reset();
-        if (_database) {
-            if (auto observable_db = _database.row_set_observable()) {
+        this->_statement.reset();
+        if (this->_database) {
+            if (auto observable_db = this->_database.row_set_observable()) {
                 observable_db.row_set_did_close(identifier());
             }
-            _database = nullptr;
+            this->_database = nullptr;
         }
     }
 
     void _set_database(database const &database) override {
-        _database = database;
+        this->_database = database;
     }
 
     database const &database() const {
-        return _database;
+        return this->_database;
     }
 
     db::statement const &statement() const {
-        return _statement;
+        return this->_statement;
     }
 
     std::unordered_map<std::string, int> const &column_name_to_index_map() const {
-        if (_column_name_to_index_map.empty()) {
-            auto *const stmt = _statement.stmt();
+        if (this->_column_name_to_index_map.empty()) {
+            auto *const stmt = this->_statement.stmt();
             int column_count = sqlite3_column_count(stmt);
             auto each = make_fast_each(column_count);
             while (yas_each_next(each)) {
                 auto const &idx = yas_each_index(each);
-                _column_name_to_index_map.insert(std::make_pair(to_lower(sqlite3_column_name(stmt, idx)), idx));
+                this->_column_name_to_index_map.insert(std::make_pair(to_lower(sqlite3_column_name(stmt, idx)), idx));
             }
         }
 
-        return _column_name_to_index_map;
+        return this->_column_name_to_index_map;
     }
 
    private:
@@ -119,10 +119,10 @@ db::row_set::index_result_t db::row_set::column_index(std::string column_name) c
     auto const &map = impl_ptr<impl>()->column_name_to_index_map();
 
     if (map.count(lower_column_name) > 0) {
-        return index_result_t{map.at(lower_column_name)};
+        return db::row_set::index_result_t{map.at(lower_column_name)};
     }
 
-    return index_result_t{nullptr};
+    return db::row_set::index_result_t{nullptr};
 }
 
 std::string db::row_set::column_name(int const column_idx) const {
@@ -135,7 +135,7 @@ bool db::row_set::column_is_null(int const column_idx) {
 
 bool db::row_set::column_is_null(std::string column_name) {
     if (auto const index_result = column_index(std::move(column_name))) {
-        return column_is_null(index_result.value());
+        return this->column_is_null(index_result.value());
     }
     return true;
 }
@@ -166,7 +166,7 @@ db::value db::row_set::column_value(int const column_idx) const {
 
 db::value db::row_set::column_value(std::string column_name) const {
     if (auto index_result = column_index(std::move(column_name))) {
-        return column_value(index_result.value());
+        return this->column_value(index_result.value());
     }
     return db::value::null_value();
 }
@@ -188,15 +188,15 @@ db::value_map_t db::row_set::value_map_t() const {
 }
 
 db::closable &db::row_set::closable() {
-    if (!_closable) {
-        _closable = db::closable{impl_ptr<closable::impl>()};
+    if (!this->_closable) {
+        this->_closable = db::closable{impl_ptr<closable::impl>()};
     }
-    return _closable;
+    return this->_closable;
 }
 
 db::db_settable &db::row_set::db_settable() {
-    if (!_db_settable) {
-        _db_settable = db::db_settable{impl_ptr<db_settable::impl>()};
+    if (!this->_db_settable) {
+        this->_db_settable = db::db_settable{impl_ptr<db_settable::impl>()};
     }
-    return _db_settable;
+    return this->_db_settable;
 }
