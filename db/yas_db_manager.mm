@@ -111,7 +111,7 @@ namespace db {
     result<db::value, db::manager::error> select_current_save_id(db::database &db) {
         db::manager::result_t state{nullptr};
 
-        db::value current_save_id{nullptr};
+        auto current_save_id = db::value::null_value();
         if (auto db_info_result = db::select_db_info(db)) {
             auto &db_info = db_info_result.value();
             if (db_info.count(db::current_save_id_field) > 0) {
@@ -296,7 +296,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
             objects.reserve(entity_datas.size());
 
             for (auto const &data : entity_datas) {
-                db::object object{nullptr};
+                auto object = db::object::null_object();
                 if (is_save && this->_inserted_objects.count(entity_name)) {
                     auto &entity_objects = this->_inserted_objects.at(entity_name);
                     if (entity_objects.size() > 0) {
@@ -329,8 +329,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
             objects.reserve(entity_datas.size());
 
             for (auto const &data : entity_datas) {
-                db::object object{nullptr};
-
+                auto object = db::object::null_object();
                 if (this->load_object_data(object, entity_name, data, force)) {
                     objects.emplace(std::make_pair(object.object_id().get<db::integer>(), std::move(object)));
                 }
@@ -765,8 +764,8 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
             db::manager::result_t state{nullptr};
 
             if (auto begin_result = db::begin_transaction(db)) {
-                db::value current_save_id{nullptr};
-                db::value last_save_id{nullptr};
+                auto current_save_id = db::value::null_value();
+                auto last_save_id = db::value::null_value();
 
                 if (auto select_result = db::select_db_info(db)) {
                     auto const &db_info = select_result.value();
@@ -887,9 +886,9 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
             db::manager::result_t state{nullptr};
 
             if (auto begin_result = db::begin_transaction(db)) {
-                db::value current_save_id{nullptr};
-                db::value last_save_id{nullptr};
-                db::value next_save_id{nullptr};
+                auto current_save_id = db::value::null_value();
+                auto last_save_id = db::value::null_value();
+                auto next_save_id = db::value::null_value();
 
                 if (auto select_result = db::select_db_info(db)) {
                     auto const &db_info = select_result.value();
@@ -1024,7 +1023,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                 db::object_data_vector_map_t fetched_datas;
 
                 if (auto begin_result = db::begin_transaction(db)) {
-                    db::value current_save_id{nullptr};
+                    auto current_save_id = db::value::null_value();
                     auto cur_save_id_result = db::select_current_save_id(db);
                     if (cur_save_id_result) {
                         current_save_id = std::move(cur_save_id_result.value());
@@ -1082,7 +1081,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
             object_data_vector_map_t fetched_datas;
 
             if (auto begin_result = db::begin_transaction(db)) {
-                db::value current_save_id{nullptr};
+                auto current_save_id = db::value::null_value();
                 auto cur_save_id_result = db::select_current_save_id(db);
                 if (cur_save_id_result) {
                     current_save_id = std::move(cur_save_id_result.value());
@@ -1149,9 +1148,9 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
 
             if (changed_datas.size() > 0) {
                 if (auto begin_result = db::begin_transaction(db)) {
-                    db::value current_save_id{nullptr};
-                    db::value next_save_id{nullptr};
-                    db::value last_save_id{nullptr};
+                    auto current_save_id = db::value::null_value();
+                    auto next_save_id = db::value::null_value();
+                    auto last_save_id = db::value::null_value();
 
                     if (auto select_result = db::select_db_info(db)) {
                         auto const &db_info = select_result.value();

@@ -943,7 +943,7 @@ using namespace yas;
 
     XCTestExpectation *exp3 = [self expectationWithDescription:@"3"];
 
-    db::object object_a{nullptr};
+    auto object_a = db::object::null_object();
 
     manager.fetch_objects([]() { return db::select_option{.table = "sample_a"}; },
                           [self, exp3, &object_a](auto const &fetch_result) {
@@ -1291,7 +1291,7 @@ using namespace yas;
     db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
 
-    db::object a_object{nullptr};
+    auto a_object = db::object::null_object();
 
     manager.setup([self, &manager](auto result) {
         XCTAssertTrue(result);
@@ -1546,7 +1546,7 @@ using namespace yas;
     db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
 
-    db::object object{nullptr};
+    auto object = db::object::null_object();
 
     manager.setup([self, &manager](auto result) { XCTAssertTrue(result); });
 

@@ -613,7 +613,7 @@ using namespace yas;
     XCTAssertTrue(obj2);
     XCTAssertFalse(obj);
 
-    db::object obj3{nullptr};
+    auto obj3 = db::object::null_object();
 
     obj3 = std::move(obj2);
 
@@ -635,7 +635,7 @@ using namespace yas;
     XCTAssertTrue(obj2);
     XCTAssertFalse(obj);
 
-    db::const_object obj3{nullptr};
+    auto obj3 = db::const_object::null_object();
 
     obj3 = std::move(obj2);
 
