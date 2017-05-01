@@ -59,13 +59,13 @@ db::model model{(__bridge CFDictionaryRef)model_dict.object()};
 ## db::relation
 関連の定義
 
-|メンバ変数|型|説明|補足|
-|:-|:-|:-|:-|
-|entity_name|std::string|関連元のエンティティ名||
-|name|std::string|関連の名前||
-|target_entity_name|std::string|関連先のエンティティ名||
-|many|bool|対多か||
-|table_name|std::string|関連のテーブル名|`entity_name`と`name`から自動で生成される|
+|メンバ変数|型|説明|
+|:-|:-|:-|
+|entity_name|std::string|関連元のエンティティ名|
+|name|std::string|関連の名前|
+|target_entity_name|std::string|関連先のエンティティ名|
+|many|bool|対多か|
+|table_name|std::string|関連のテーブル名。`entity_name`と`name`から自動で生成される|
 
 ## db::value
 データベース用の値を保持するオブジェクト。immutableで値の変更はできない。
