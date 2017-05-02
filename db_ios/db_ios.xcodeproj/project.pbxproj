@@ -152,6 +152,9 @@
 		B68218041C75F90C00689F27 /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
 		B682180E1C76015A00689F27 /* DBSampleTableViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DBSampleTableViewController.h; sourceTree = "<group>"; };
 		B682180F1C76015A00689F27 /* DBSampleTableViewController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = DBSampleTableViewController.mm; sourceTree = "<group>"; };
+		B6B4EEEF1EB8E293002CD9BE /* yas_to_floating_point.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_to_floating_point.h; sourceTree = "<group>"; };
+		B6B4EEF01EB8E293002CD9BE /* yas_to_integer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_to_integer.h; sourceTree = "<group>"; };
+		B6B4EEF11EB8E293002CD9BE /* yas_to_string.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_to_string.h; sourceTree = "<group>"; };
 		B6D0DDE71C81DAA90086AA8E /* yas_db_sample_controller.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = yas_db_sample_controller.mm; sourceTree = "<group>"; };
 		B6D0DDE81C81DAA90086AA8E /* yas_db_sample_controller.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_db_sample_controller.h; sourceTree = "<group>"; };
 		B6D0DDEF1C8310900086AA8E /* DBSampleObjectViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DBSampleObjectViewController.h; sourceTree = "<group>"; };
@@ -221,6 +224,9 @@
 				B66ACEF91DB797480031CB88 /* yas_stl_utils.cpp */,
 				B66ACEFA1DB797480031CB88 /* yas_stl_utils.h */,
 				B66ACEFB1DB797480031CB88 /* yas_to_bool.h */,
+				B6B4EEEF1EB8E293002CD9BE /* yas_to_floating_point.h */,
+				B6B4EEF01EB8E293002CD9BE /* yas_to_integer.h */,
+				B6B4EEF11EB8E293002CD9BE /* yas_to_string.h */,
 				B66ACEFC1DB797480031CB88 /* yas_type_traits.h */,
 				B66ACEFD1DB797480031CB88 /* yas_types.h */,
 				B66ACEFE1DB797480031CB88 /* yas_unless.h */,
