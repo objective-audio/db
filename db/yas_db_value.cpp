@@ -208,6 +208,26 @@ std::shared_ptr<db::value::impl<db::null>> const &db::value::null_value_impl_ptr
 
 #pragma mark -
 
+db::value db::make_integer_value(std::string const &str) {
+    db::integer::type value = 0;
+    try {
+        value = std::stoll(str);
+    } catch (...) {
+    }
+    return db::value{value};
+}
+
+db::value db::make_real_value(std::string const &str) {
+    db::real::type value = 0.0;
+    try {
+        value = std::stod(str);
+    } catch (...) {
+    }
+    return db::value{value};
+}
+
+#pragma mark -
+
 std::string yas::to_string(const db::value &value) {
     auto const &type = value.type();
 

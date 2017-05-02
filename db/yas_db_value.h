@@ -119,6 +119,9 @@ namespace db {
     using value_map_vector_t = std::vector<db::value_map_t>;
     using value_map_vector_map_t = std::unordered_map<std::string, value_map_vector_t>;
     using time_point_t = std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>;
+
+    db::value make_integer_value(std::string const &);
+    db::value make_real_value(std::string const &);
 }
 
 std::string to_string(db::value const &);

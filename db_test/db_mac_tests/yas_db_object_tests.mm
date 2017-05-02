@@ -651,4 +651,21 @@ using namespace yas;
     XCTAssertEqual(to_string(db::object_status::updating), "updating");
 }
 
+- (void)test_make_integer_value {
+    XCTAssertEqual(db::make_integer_value("100"), db::value{db::integer::type{100}});
+    XCTAssertEqual(db::make_integer_value("12a34"), db::value{db::integer::type{12}});
+    XCTAssertEqual(db::make_integer_value("a12"), db::value{db::integer::type{0}});
+    XCTAssertEqual(db::make_integer_value("abc"), db::value{db::integer::type{0}});
+    XCTAssertEqual(db::make_integer_value(""), db::value{db::integer::type{0}});
+}
+
+- (void)test_make_real_value {
+    XCTAssertEqual(db::make_real_value("123.45"), db::value{db::real::type{123.45}});
+    XCTAssertEqual(db::make_real_value("100"), db::value{db::real::type{100}});
+    XCTAssertEqual(db::make_real_value("123a.45"), db::value{db::real::type{123}});
+    XCTAssertEqual(db::make_real_value("a12"), db::value{db::real::type{0}});
+    XCTAssertEqual(db::make_real_value("abc"), db::value{db::real::type{0}});
+    XCTAssertEqual(db::make_real_value(""), db::value{db::real::type{0}});
+}
+
 @end
