@@ -158,6 +158,9 @@
 		B6B281E51C34D321009053E1 /* yas_db_cf_utils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = yas_db_cf_utils.cpp; sourceTree = "<group>"; };
 		B6B281E61C34D321009053E1 /* yas_db_cf_utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_db_cf_utils.h; sourceTree = "<group>"; };
 		B6B281E81C34D9E9009053E1 /* yas_db_cf_utils_tests.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = yas_db_cf_utils_tests.mm; sourceTree = "<group>"; };
+		B6B4EEF21EB8E2A0002CD9BE /* yas_to_floating_point.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_to_floating_point.h; sourceTree = "<group>"; };
+		B6B4EEF31EB8E2A0002CD9BE /* yas_to_integer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_to_integer.h; sourceTree = "<group>"; };
+		B6B4EEF41EB8E2A0002CD9BE /* yas_to_string.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_to_string.h; sourceTree = "<group>"; };
 		B6C5A2CC1C30D96800E100EC /* yas_db_sql_utils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = yas_db_sql_utils.cpp; sourceTree = "<group>"; };
 		B6C5A2CD1C30D96800E100EC /* yas_db_sql_utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_db_sql_utils.h; sourceTree = "<group>"; };
 		B6C5A2CF1C31453600E100EC /* yas_db_sql_utils_tests.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = yas_db_sql_utils_tests.mm; sourceTree = "<group>"; };
@@ -251,6 +254,9 @@
 				B66ACF371DB7975E0031CB88 /* yas_stl_utils.cpp */,
 				B66ACF381DB7975E0031CB88 /* yas_stl_utils.h */,
 				B66ACF391DB7975E0031CB88 /* yas_to_bool.h */,
+				B6B4EEF21EB8E2A0002CD9BE /* yas_to_floating_point.h */,
+				B6B4EEF31EB8E2A0002CD9BE /* yas_to_integer.h */,
+				B6B4EEF41EB8E2A0002CD9BE /* yas_to_string.h */,
 				B66ACF3A1DB7975E0031CB88 /* yas_type_traits.h */,
 				B66ACF3B1DB7975E0031CB88 /* yas_types.h */,
 				B66ACF3C1DB7975E0031CB88 /* yas_unless.h */,
