@@ -162,6 +162,10 @@ db::model const &db::const_object::model() const {
     return impl_ptr<impl>()->_model;
 }
 
+db::entity const &db::const_object::entity() const {
+    return this->model().entity(this->entity_name());
+}
+
 std::string const &db::const_object::entity_name() const {
     return impl_ptr<impl>()->_entity_name;
 }

@@ -49,6 +49,7 @@ namespace db {
         const_object(std::nullptr_t);
 
         db::model const &model() const;
+        db::entity const &entity() const;
         std::string const &entity_name() const;
 
         db::value const &get_attribute(std::string const &attr_name) const;
