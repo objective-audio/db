@@ -52,10 +52,10 @@ namespace db {
         db::entity const &entity() const;
         std::string const &entity_name() const;
 
-        db::value const &get_attribute(std::string const &attr_name) const;
+        db::value const &attribute_value(std::string const &attr_name) const;
 
-        db::value_vector_t get_relation_ids(std::string const &rel_name) const;
-        db::value const &get_relation_id(std::string const &rel_name, std::size_t const idx) const;
+        db::value_vector_t relation_ids(std::string const &rel_name) const;
+        db::value const &relation_id(std::string const &rel_name, std::size_t const idx) const;
         std::size_t relation_size(std::string const &rel_name) const;
 
         db::value const &object_id() const;
@@ -93,18 +93,19 @@ namespace db {
         subject_t const &subject() const;
         subject_t &subject();
 
-        void set_attribute(std::string const &attr_name, value const &value);
+        void set_attribute_value(std::string const &attr_name, value const &value);
 
-        db::object_vector_t get_relation_objects(std::string const &rel_name) const;
-        db::object get_relation_object(std::string const &rel_name, std::size_t const idx) const;
+        db::object_vector_t relation_objects(std::string const &rel_name) const;
+        db::object relation_object_at(std::string const &rel_name, std::size_t const idx) const;
+
         void set_relation_ids(std::string const &rel_name, db::value_vector_t const &relation_ids);
-        void push_back_relation_id(std::string const &rel_name, db::value const &relation_id);
-        void erase_relation_id(std::string const &rel_name, db::value const &relation_id);
+        void add_relation_id(std::string const &rel_name, db::value const &relation_id);
+        void remove_relation_id(std::string const &rel_name, db::value const &relation_id);
         void set_relation_objects(std::string const &rel_name, db::object_vector_t const &rel_objects);
-        void push_back_relation_object(std::string const &rel_name, db::object const &rel_object);
-        void erase_relation_object(std::string const &rel_name, db::object const &rel_object);
-        void erase_relation(std::string const &rel_name, std::size_t const idx);
-        void clear_relation(std::string const &rel_name);
+        void add_relation_object(std::string const &rel_name, db::object const &rel_object);
+        void remove_relation_object(std::string const &rel_name, db::object const &rel_object);
+        void remove_relation_at(std::string const &rel_name, std::size_t const idx);
+        void remove_all_relations(std::string const &rel_name);
 
         manager const &manager() const;
 

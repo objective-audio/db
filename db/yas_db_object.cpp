@@ -55,7 +55,7 @@ struct db::const_object::impl : public base::impl {
         }
     }
 
-    db::value const &get_attribute(std::string const &attr_name) {
+    db::value const &attribute_value(std::string const &attr_name) {
         this->validate_attribute_name(attr_name);
 
         if (this->_data.attributes.count(attr_name) > 0) {
@@ -65,7 +65,7 @@ struct db::const_object::impl : public base::impl {
         return db::value::null_value();
     }
 
-    db::value_vector_t get_relation_ids(std::string const &rel_name) {
+    db::value_vector_t relation_ids(std::string const &rel_name) {
         this->validate_relation_name(rel_name);
 
         if (this->_data.relations.count(rel_name) > 0) {
@@ -74,7 +74,7 @@ struct db::const_object::impl : public base::impl {
         return {};
     }
 
-    db::value const &get_relation_id(std::string const &rel_name, std::size_t const idx) {
+    db::value const &relation_id(std::string const &rel_name, std::size_t const idx) {
         this->validate_relation_name(rel_name);
 
         if (this->_data.relations.count(rel_name) > 0) {
@@ -170,16 +170,16 @@ std::string const &db::const_object::entity_name() const {
     return impl_ptr<impl>()->_entity_name;
 }
 
-db::value const &db::const_object::get_attribute(std::string const &attr_name) const {
-    return impl_ptr<impl>()->get_attribute(attr_name);
+db::value const &db::const_object::attribute_value(std::string const &attr_name) const {
+    return impl_ptr<impl>()->attribute_value(attr_name);
 }
 
-db::value_vector_t db::const_object::get_relation_ids(std::string const &rel_name) const {
-    return impl_ptr<impl>()->get_relation_ids(rel_name);
+db::value_vector_t db::const_object::relation_ids(std::string const &rel_name) const {
+    return impl_ptr<impl>()->relation_ids(rel_name);
 }
 
-db::value const &db::const_object::get_relation_id(std::string const &rel_name, std::size_t const idx) const {
-    return impl_ptr<impl>()->get_relation_id(rel_name, idx);
+db::value const &db::const_object::relation_id(std::string const &rel_name, std::size_t const idx) const {
+    return impl_ptr<impl>()->relation_id(rel_name, idx);
 }
 
 std::size_t db::const_object::relation_size(std::string const &rel_name) const {
@@ -187,15 +187,15 @@ std::size_t db::const_object::relation_size(std::string const &rel_name) const {
 }
 
 db::value const &db::const_object::object_id() const {
-    return this->get_attribute(object_id_field);
+    return this->attribute_value(object_id_field);
 }
 
 db::value const &db::const_object::save_id() const {
-    return this->get_attribute(save_id_field);
+    return this->attribute_value(save_id_field);
 }
 
 db::value const &db::const_object::action() const {
-    return this->get_attribute(action_field);
+    return this->attribute_value(action_field);
 }
 
 db::integer_set_map_t db::const_object::relation_ids_for_fetch() const {
@@ -221,7 +221,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
     ~impl() {
         if (this->_manager) {
             if (auto observable = this->_manager.object_observable()) {
-                observable.object_did_erase(_entity_name, get_attribute(object_id_field).get<integer>());
+                observable.object_did_erase(_entity_name, attribute_value(object_id_field).get<integer>());
             }
         }
     }
@@ -248,7 +248,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
             for (auto const &pair : entity.attributes) {
                 auto const &attr_name = pair.first;
                 if (obj_data.attributes.count(attr_name) > 0) {
-                    this->set_attribute(attr_name, obj_data.attributes.at(attr_name), true);
+                    this->set_attribute_value(attr_name, obj_data.attributes.at(attr_name), true);
                 }
             }
 
@@ -268,19 +268,19 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
     }
 
     void load_save_id(db::value const &save_id) override {
-        this->set_attribute(db::save_id_field, save_id, true);
+        this->set_attribute_value(db::save_id_field, save_id, true);
     }
 
     void load_insertion_data() override {
         this->_status = db::object_status::inserted;
-        set_attribute(db::action_field, db::value{db::insert_action}, true);
+        set_attribute_value(db::action_field, db::value{db::insert_action}, true);
 
         db::entity const &entity = _model.entity(_entity_name);
 
         for (auto const &pair : entity.attributes) {
             auto const &attr = pair.second;
             if (attr.default_value) {
-                this->set_attribute(attr.name, attr.default_value, true);
+                this->set_attribute_value(attr.name, attr.default_value, true);
             }
         }
     }
@@ -291,7 +291,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
         this->notify_did_change(db::object::method::loading_changed, "", false);
     }
 
-    void set_attribute(std::string const &attr_name, db::value const &value, bool const loading = false) {
+    void set_attribute_value(std::string const &attr_name, db::value const &value, bool const loading = false) {
         this->validate_attribute_name(attr_name);
 
         replace(this->_data.attributes, attr_name, value);
@@ -346,7 +346,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
         this->notify_did_change(db::object::method::relation_changed, rel_name, true);
     }
 
-    void erase_relation(std::string const &rel_name, db::value const &relation_id) {
+    void remove_relation_at(std::string const &rel_name, db::value const &relation_id) {
         this->validate_relation_name(rel_name);
         this->validate_relation_id(relation_id);
 
@@ -364,7 +364,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
         }
     }
 
-    void erase_relation(std::string const &rel_name, std::size_t const idx) {
+    void remove_relation_at(std::string const &rel_name, std::size_t const idx) {
         this->validate_relation_name(rel_name);
 
         if (this->_data.relations.count(rel_name) > 0) {
@@ -383,7 +383,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
         }
     }
 
-    void clear_relation(std::string const &rel_name) {
+    void remove_all_relations(std::string const &rel_name) {
         this->validate_relation_name(rel_name);
 
         if (!this->_model.relation_exists(this->_entity_name, rel_name)) {
@@ -418,7 +418,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
 
         this->_data.relations.clear();
 
-        this->set_attribute(db::action_field, db::value{db::remove_action});
+        this->set_attribute_value(db::action_field, db::value{db::remove_action});
     }
 
     db::object_data data_for_save() {
@@ -460,7 +460,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
     void set_update_action() {
         if (this->_status != db::object_status::inserted && !this->is_equal_to_action(db::remove_action) &&
             !this->is_equal_to_action(db::update_action)) {
-            this->set_attribute(db::action_field, db::value{db::update_action}, true);
+            this->set_attribute_value(db::action_field, db::value{db::update_action}, true);
         }
     }
 
@@ -503,32 +503,32 @@ db::object::subject_t &db::object::subject() {
     return impl_ptr<impl>()->_subject;
 }
 
-void db::object::set_attribute(std::string const &attr_name, db::value const &value) {
-    impl_ptr<impl>()->set_attribute(attr_name, value);
+void db::object::set_attribute_value(std::string const &attr_name, db::value const &value) {
+    impl_ptr<impl>()->set_attribute_value(attr_name, value);
 }
 
-db::object_vector_t db::object::get_relation_objects(std::string const &rel_name) const {
-    auto const &rel_ids = impl_ptr<impl>()->get_relation_ids(rel_name);
+db::object_vector_t db::object::relation_objects(std::string const &rel_name) const {
+    auto const &rel_ids = impl_ptr<impl>()->relation_ids(rel_name);
     return to_vector<db::object>(rel_ids, [manager = manager(), entity_name = entity_name()](db::value const &id) {
         return manager.cached_object(entity_name, id.get<db::integer>());
     });
 }
 
-db::object db::object::get_relation_object(std::string const &rel_name, std::size_t const idx) const {
+db::object db::object::relation_object_at(std::string const &rel_name, std::size_t const idx) const {
     std::string const &tgt_entity_name = this->model().relation(entity_name(), rel_name).target_entity_name;
-    return this->manager().cached_object(tgt_entity_name, get_relation_id(rel_name, idx).get<db::integer>());
+    return this->manager().cached_object(tgt_entity_name, relation_id(rel_name, idx).get<db::integer>());
 }
 
 void db::object::set_relation_ids(std::string const &rel_name, value_vector_t const &relation_ids) {
     impl_ptr<impl>()->set_relation(rel_name, relation_ids);
 }
 
-void db::object::push_back_relation_id(std::string const &rel_name, db::value const &relation_id) {
+void db::object::add_relation_id(std::string const &rel_name, db::value const &relation_id) {
     impl_ptr<impl>()->push_back_relation(rel_name, relation_id);
 }
 
-void db::object::erase_relation_id(std::string const &rel_name, db::value const &relation_id) {
-    impl_ptr<impl>()->erase_relation(rel_name, relation_id);
+void db::object::remove_relation_id(std::string const &rel_name, db::value const &relation_id) {
+    impl_ptr<impl>()->remove_relation_at(rel_name, relation_id);
 }
 
 void db::object::set_relation_objects(std::string const &rel_name, object_vector_t const &rel_objects) {
@@ -537,20 +537,20 @@ void db::object::set_relation_objects(std::string const &rel_name, object_vector
         to_vector<db::value>(rel_objects, [entity_name = entity_name()](auto const &obj) { return obj.object_id(); }));
 }
 
-void db::object::push_back_relation_object(std::string const &rel_name, object const &rel_object) {
+void db::object::add_relation_object(std::string const &rel_name, object const &rel_object) {
     impl_ptr<impl>()->push_back_relation(rel_name, rel_object.object_id());
 }
 
-void db::object::erase_relation_object(std::string const &rel_name, object const &rel_object) {
-    impl_ptr<impl>()->erase_relation(rel_name, rel_object.object_id());
+void db::object::remove_relation_object(std::string const &rel_name, object const &rel_object) {
+    impl_ptr<impl>()->remove_relation_at(rel_name, rel_object.object_id());
 }
 
-void db::object::erase_relation(std::string const &rel_name, std::size_t const idx) {
-    impl_ptr<impl>()->erase_relation(rel_name, idx);
+void db::object::remove_relation_at(std::string const &rel_name, std::size_t const idx) {
+    impl_ptr<impl>()->remove_relation_at(rel_name, idx);
 }
 
-void db::object::clear_relation(std::string const &rel_name) {
-    impl_ptr<impl>()->clear_relation(rel_name);
+void db::object::remove_all_relations(std::string const &rel_name) {
+    impl_ptr<impl>()->remove_all_relations(rel_name);
 }
 
 db::manager const &db::object::manager() const {
