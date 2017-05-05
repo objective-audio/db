@@ -132,6 +132,7 @@ namespace db {
 
         void suspend();
         void resume();
+        bool is_suspended() const;
 
         void execute(execution_f &&execution, operation_option_t &&option = {});
 

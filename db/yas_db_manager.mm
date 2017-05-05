@@ -209,6 +209,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
     db::database _database;
     db::model _model;
     operation_queue _op_queue;
+    std::size_t _suspend_count = 0;
     db::weak_object_map_map_t _cached_objects;
     db::object_deque_map_t _inserted_objects;
     db::object_map_map_t _changed_objects;
@@ -1402,6 +1403,26 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
             },
             std::move(option));
     }
+
+    void suspend() {
+        if (_suspend_count == 0) {
+            _op_queue.suspend();
+        }
+
+        ++_suspend_count;
+    }
+
+    void resume() {
+        if (_suspend_count == 0) {
+            throw std::underflow_error("resume too much.");
+        }
+
+        --_suspend_count;
+
+        if (_suspend_count == 0) {
+            _op_queue.resume();
+        }
+    }
 };
 
 #pragma mark - manager
@@ -1415,11 +1436,15 @@ db::manager::manager(std::nullptr_t) : base(nullptr) {
 }
 
 void db::manager::suspend() {
-    impl_ptr<impl>()->_op_queue.suspend();
+    impl_ptr<impl>()->suspend();
 }
 
 void db::manager::resume() {
-    impl_ptr<impl>()->_op_queue.resume();
+    impl_ptr<impl>()->resume();
+}
+
+bool db::manager::is_suspended() const {
+    return impl_ptr<impl>()->_op_queue.is_suspended();
 }
 
 std::string const &db::manager::database_path() const {
