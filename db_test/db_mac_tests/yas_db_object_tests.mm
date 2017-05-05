@@ -28,6 +28,7 @@ using namespace yas;
     db::object obj{nullptr, model, "sample_a"};
 
     XCTAssertEqual(obj.model(), model);
+    XCTAssertEqual(obj.entity().name, "sample_a");
     XCTAssertEqual(obj.entity_name(), "sample_a");
     XCTAssertFalse(obj.get_attribute("age"));
     XCTAssertFalse(obj.get_attribute("name"));
