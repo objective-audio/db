@@ -1,5 +1,5 @@
 //
-//  yas_db_sample_controller.h
+//  yas_sample_db_controller.h
 //
 
 #pragma once
@@ -10,6 +10,7 @@ namespace yas {
 namespace sample {
     class db_controller : public std::enable_shared_from_this<db_controller> {
        public:
+        enum class entity { a, b };
         enum class method { objects_updated, object_inserted, processing_changed, object_changed, db_info_changed };
 
         struct change_info {
@@ -27,9 +28,9 @@ namespace sample {
 
         void setup(db::manager::completion_f completion);
 
-        void add_temporary();
-        void add();
-        void remove(std::size_t const &idx);
+        void add_temporary(entity const &);
+        void add(entity const &);
+        void remove(entity const &, std::size_t const &idx);
         void undo();
         void redo();
         void clear();
@@ -44,8 +45,8 @@ namespace sample {
         bool can_purge() const;
         bool has_changed() const;
 
-        db::object const &object(std::size_t const idx) const;
-        std::size_t object_count() const;
+        db::object const &object(entity const &, std::size_t const idx) const;
+        std::size_t object_count(entity const &) const;
 
         db::integer::type const &current_save_id() const;
         db::integer::type const &last_save_id() const;
@@ -53,15 +54,19 @@ namespace sample {
         subject_t &subject();
 
         bool is_processing() const;
+        
+        static entity entity_for_name(std::string const &);
 
        private:
         db::manager _manager;
-        db::object_vector_t _objects;
+        db::object_vector_map_t _objects;
         subject_t _subject;
         yas::db::manager::observer_t _observer;
         bool _processing;
 
+        db::object_vector_t &_objects_at(entity const &);
         void _update_objects(std::function<void(db::manager::result_t)> &&);
+        void _update_objects(entity const &entity, std::function<void(db::manager::result_t)> &&);
         void _begin_processing();
         void _end_processing();
     };

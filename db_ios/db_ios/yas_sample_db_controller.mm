@@ -1,12 +1,12 @@
 //
-//  yas_db_sample_controller.mm
+//  yas_sample_db_controller.mm
 //
 
 #import <Foundation/Foundation.h>
 #include "yas_cf_utils.h"
 #include "yas_cf_ref.h"
 #include "yas_objc_ptr.h"
-#include "yas_db_sample_controller.h"
+#include "yas_sample_db_controller.h"
 
 using namespace yas;
 using namespace yas::sample;
@@ -14,6 +14,16 @@ using namespace yas::sample;
 namespace yas {
 namespace sample {
     std::string const entity_name_a = "entity_a";
+    std::string const entity_name_b = "entity_b";
+
+    std::string to_entity_name(db_controller::entity const &entity) {
+        switch (entity) {
+            case db_controller::entity::a:
+                return entity_name_a;
+            case db_controller::entity::b:
+                return entity_name_b;
+        }
+    }
 }
 }
 
@@ -41,14 +51,20 @@ void db_controller::setup(db::manager::completion_f completion) {
                     @"attributes": @{
                         @"age": @{@"type": @"INTEGER", @"default": @1},
                         @"name": @{@"type": @"TEXT", @"default": @"empty_name"}
-                    }
-                }
+                    },
+                    @"relations": @{@"b": @{@"target": @"entity_b", @"many": @YES}}
+                },
+                @"entity_b": @{@"attributes": @{@"name": @{@"type": @"TEXT", @"default": @"empty_name"}}}
             },
-            @"version": @"1.0.0"
+            @"version": @"1.0.1"
         };
     });
 
     db::model model{(__bridge CFDictionaryRef)model_dict.object()};
+
+    for (auto const &pair : model.entities()) {
+        _objects.emplace(pair.first, db::object_vector_t{});
+    }
 
     auto path = make_objc_ptr<NSString *>([]() {
         NSArray<NSString *> *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true);
@@ -85,9 +101,11 @@ void db_controller::setup(db::manager::completion_f completion) {
 
         if (key == db::manager::method::object_changed) {
             db::object const &object = change_info.object;
-            if (auto idx_opt = index(controller._objects, object)) {
-                if (object.entity_name() == entity_name_a && object.is_removed()) {
-                    erase_if(controller._objects, [&object](auto const &vec_obj) { return object == vec_obj; });
+            auto const &entity_name = object.entity_name();
+            auto &objects = controller._objects.at(entity_name);
+            if (auto idx_opt = index(objects, object)) {
+                if (object.is_removed()) {
+                    erase_if(objects, [&object](auto const &vec_obj) { return object == vec_obj; });
                 }
                 controller._subject.notify(method::object_changed,
                                            {change_info.object, db::value{static_cast<db::integer::type>(*idx_opt)}});
@@ -100,66 +118,79 @@ void db_controller::setup(db::manager::completion_f completion) {
     });
 }
 
-void db_controller::add_temporary() {
+void db_controller::add_temporary(entity const &entity) {
     if (_processing) {
         return;
     }
 
-    auto object = _manager.insert_object(entity_name_a);
-    auto idx = _objects.size();
-    _objects.push_back(object);
+    auto object = _manager.insert_object(sample::to_entity_name(entity));
+    auto &objects = _objects_at(entity);
+
+    auto idx = objects.size();
+    objects.push_back(object);
     _subject.notify(method::object_inserted, {object, db::value{static_cast<db::integer::type>(idx)}});
 }
 
-void db_controller::add() {
+void db_controller::add(entity const &entity) {
     if (_processing) {
         return;
     }
 
     _begin_processing();
 
+    _manager.suspend();
+
     _manager.save([](auto result) {});
+
+    auto inserted_object = std::make_shared<db::object>(db::object::null_object());
+
     _manager.insert_objects(
-        []() {
+        [entity]() {
             auto uuid = make_cf_ref(CFUUIDCreate(nullptr));
             auto uuid_str = make_cf_ref(CFUUIDCreateString(nullptr, uuid.object()));
             db::value_map_t obj{{"name", db::value{to_string(uuid_str.object())}}};
 
-            return db::value_map_vector_map_t{{entity_name_a, {std::move(obj)}}};
+            return db::value_map_vector_map_t{{to_entity_name(entity), {std::move(obj)}}};
         },
-        [weak = to_weak(shared_from_this())](auto insert_result) {
-            if (auto shared = weak.lock()) {
-                shared->_update_objects([weak = weak, insert_result = std::move(insert_result)](auto update_result) {
-                    if (auto shared = weak.lock()) {
-                        auto idx_value = db::value::null_value();
-                        auto object = db::object::null_object();
-
-                        auto &a_objects = insert_result.value().at(entity_name_a);
-
-                        if (a_objects.size() > 0) {
-                            object = a_objects.at(0);
-                            auto &objects = shared->_objects;
-
-                            if (auto idx = index(objects, object)) {
-                                idx_value = db::value{static_cast<db::integer::type>(*idx)};
-                            }
-                        }
-
-                        shared->_end_processing();
-                        shared->_subject.notify(method::object_inserted, {object, idx_value});
-                    }
-                });
+        [inserted_object, entity](auto insert_result) mutable {
+            if (insert_result) {
+                auto objects = insert_result.value().at(to_entity_name(entity));
+                if (objects.size() > 0) {
+                    *inserted_object = objects.at(0);
+                }
             }
         });
+
+    this->_update_objects([weak = to_weak(shared_from_this()), inserted_object, entity](auto update_result) {
+        if (auto shared = weak.lock()) {
+            auto idx_value = db::value::null_value();
+            auto object = *inserted_object;
+
+            if (object) {
+                auto &objects = shared->_objects_at(entity);
+
+                if (auto idx = index(objects, object)) {
+                    idx_value = db::value{static_cast<db::integer::type>(*idx)};
+                }
+            }
+
+            shared->_end_processing();
+            shared->_subject.notify(method::object_inserted, {object, idx_value});
+        }
+    });
+
+    _manager.resume();
 }
 
-void db_controller::remove(std::size_t const &idx) {
-    if (_objects.size() > idx) {
+void db_controller::remove(entity const &entity, std::size_t const &idx) {
+    auto &objects = _objects_at(entity);
+
+    if (objects.size() > idx) {
         if (_processing) {
             return;
         }
 
-        _objects.at(idx).remove();
+        objects.at(idx).remove();
     }
 }
 
@@ -176,18 +207,20 @@ void db_controller::undo() {
 
     auto const undo_id = current_save_id() - 1;
 
+    _manager.suspend();
+
     _manager.reset([](auto result) mutable {});
-    _manager.revert([undo_id]() { return undo_id; },
-                    [weak = to_weak(shared_from_this())](auto revert_result) {
-                        if (auto shared = weak.lock()) {
-                            shared->_update_objects([weak = weak](auto update_result) {
-                                if (auto shared = weak.lock()) {
-                                    shared->_end_processing();
-                                    shared->_subject.notify(method::objects_updated);
-                                }
-                            });
-                        }
-                    });
+
+    _manager.revert([undo_id]() { return undo_id; }, [](auto revert_result) {});
+
+    this->_update_objects([weak = to_weak(shared_from_this())](auto update_result) {
+        if (auto shared = weak.lock()) {
+            shared->_end_processing();
+            shared->_subject.notify(method::objects_updated);
+        }
+    });
+
+    _manager.resume();
 }
 
 void db_controller::redo() {
@@ -203,18 +236,20 @@ void db_controller::redo() {
 
     auto const redo_id = current_save_id() + 1;
 
+    _manager.suspend();
+
     _manager.reset([](auto result) mutable {});
-    _manager.revert([redo_id]() { return redo_id; },
-                    [weak = to_weak(shared_from_this())](auto revert_result) {
-                        if (auto shared = weak.lock()) {
-                            shared->_update_objects([weak = weak](auto update_result) {
-                                if (auto shared = weak.lock()) {
-                                    shared->_end_processing();
-                                    shared->_subject.notify(method::objects_updated);
-                                }
-                            });
-                        }
-                    });
+
+    _manager.revert([redo_id]() { return redo_id; }, [](auto revert_result) {});
+
+    this->_update_objects([weak = to_weak(shared_from_this())](auto update_result) {
+        if (auto shared = weak.lock()) {
+            shared->_end_processing();
+            shared->_subject.notify(method::objects_updated);
+        }
+    });
+
+    _manager.resume();
 }
 
 void db_controller::clear() {
@@ -228,16 +263,18 @@ void db_controller::clear() {
 
     _begin_processing();
 
-    _manager.clear([weak = to_weak(shared_from_this())](auto clear_result) {
+    _manager.suspend();
+
+    _manager.clear([](auto clear_result) {});
+
+    this->_update_objects([weak = to_weak(shared_from_this())](auto update_result) {
         if (auto shared = weak.lock()) {
-            shared->_update_objects([weak = weak](auto update_result) {
-                if (auto shared = weak.lock()) {
-                    shared->_end_processing();
-                    shared->_subject.notify(method::objects_updated);
-                }
-            });
+            shared->_end_processing();
+            shared->_subject.notify(method::objects_updated);
         }
     });
+
+    _manager.resume();
 }
 
 void db_controller::purge() {
@@ -251,17 +288,20 @@ void db_controller::purge() {
 
     _begin_processing();
 
+    _manager.suspend();
+
     _manager.save([](auto result) {});
-    _manager.purge([weak = to_weak(shared_from_this())](auto purge_result) {
+
+    _manager.purge([](auto purge_result) {});
+
+    this->_update_objects([weak = to_weak(shared_from_this())](auto update_result) {
         if (auto shared = weak.lock()) {
-            shared->_update_objects([weak = weak](auto update_result) {
-                if (auto shared = weak.lock()) {
-                    shared->_end_processing();
-                    shared->_subject.notify(method::objects_updated);
-                }
-            });
+            shared->_end_processing();
+            shared->_subject.notify(method::objects_updated);
         }
     });
+
+    _manager.resume();
 }
 
 void db_controller::save_changed() {
@@ -275,16 +315,18 @@ void db_controller::save_changed() {
 
     _begin_processing();
 
-    _manager.save([weak = to_weak(shared_from_this())](auto save_result) {
+    _manager.suspend();
+
+    _manager.save([](auto save_result) {});
+
+    this->_update_objects([weak = to_weak(shared_from_this())](auto update_result) {
         if (auto shared = weak.lock()) {
-            shared->_update_objects([weak = weak](auto update_result) {
-                if (auto shared = weak.lock()) {
-                    shared->_end_processing();
-                    shared->_subject.notify(method::objects_updated);
-                }
-            });
+            shared->_end_processing();
+            shared->_subject.notify(method::objects_updated);
         }
     });
+
+    _manager.resume();
 }
 
 void db_controller::cancel_changed() {
@@ -298,13 +340,18 @@ void db_controller::cancel_changed() {
 
     _begin_processing();
 
+    _manager.suspend();
+
     _manager.reset([](auto result) mutable {});
-    _update_objects([weak = to_weak(shared_from_this())](auto update_result) {
+
+    this->_update_objects([weak = to_weak(shared_from_this())](auto update_result) {
         if (auto shared = weak.lock()) {
             shared->_end_processing();
             shared->_subject.notify(method::objects_updated);
         }
     });
+
+    _manager.resume();
 }
 
 bool db_controller::can_add() const {
@@ -331,12 +378,12 @@ bool db_controller::has_changed() const {
     return _manager.has_changed_objects() || _manager.has_inserted_objects();
 }
 
-db::object const &db_controller::object(std::size_t const idx) const {
-    return _objects.at(idx);
+db::object const &db_controller::object(entity const &entity, std::size_t const idx) const {
+    return _objects.at(to_entity_name(entity)).at(idx);
 }
 
-std::size_t db_controller::object_count() const {
-    return _objects.size();
+std::size_t db_controller::object_count(entity const &entity) const {
+    return _objects.at(to_entity_name(entity)).size();
 }
 
 db::integer::type const &db_controller::current_save_id() const {
@@ -355,21 +402,65 @@ bool db_controller::is_processing() const {
     return _processing;
 }
 
+db_controller::entity db_controller::entity_for_name(std::string const &entity_name) {
+    if (entity_name == entity_name_a) {
+        return entity::a;
+    } else if (entity_name == entity_name_b) {
+        return entity::b;
+    }
+    
+    throw std::invalid_argument("invalid entity_name (" + entity_name + ").");
+}
+
+db::object_vector_t &db_controller::_objects_at(db_controller::entity const &entity) {
+    return _objects.at(to_entity_name(entity));
+}
+
 void db_controller::_update_objects(std::function<void(db::manager::result_t)> &&completion) {
+    _manager.suspend();
+    
+    auto results = std::make_shared<std::vector<db::manager::result_t>>();
+    
+    for (auto const &entity_pair : _manager.model().entities()) {
+        auto const entity = this->entity_for_name(entity_pair.second.name);
+        this->_update_objects(entity, [results](auto result) {
+            results->emplace_back(std::move(result));
+        });
+    }
+    
+    _manager.execute([completion = std::move(completion), results](operation const &){
+        for (auto const &result : *results) {
+            if (!result) {
+                completion(result);
+                return;
+            }
+        }
+        completion(db::manager::result_t{nullptr});
+    });
+    
+    _manager.resume();
+}
+
+void db_controller::_update_objects(entity const &entity, std::function<void(db::manager::result_t)> &&completion) {
+    _manager.suspend();
+
+    auto const entity_name = to_entity_name(entity);
+
     _manager.fetch_objects(
-        []() {
-            return db::select_option{.table = entity_name_a,
+        [entity_name]() {
+            return db::select_option{.table = entity_name,
                                      .field_orders = {{db::object_id_field, db::order::ascending}}};
         },
-        [&controller = *this, completion = std::move(completion)](auto fetch_result) {
+        [&controller = *this, completion = std::move(completion),
+         entity_name](db::manager::vector_result_t fetch_result) {
             db::manager::result_t result{nullptr};
 
             if (fetch_result) {
                 auto &objects = fetch_result.value();
-                if (objects.count(entity_name_a) > 0) {
-                    controller._objects = std::move(objects.at(entity_name_a));
+                if (objects.count(entity_name) > 0) {
+                    replace(controller._objects, entity_name, std::move(objects.at(entity_name)));
                 } else {
-                    controller._objects.clear();
+                    controller._objects.at(entity_name).clear();
                 }
             } else {
                 result = db::manager::result_t{std::move(fetch_result.error())};
@@ -377,6 +468,8 @@ void db_controller::_update_objects(std::function<void(db::manager::result_t)> &
 
             completion(std::move(result));
         });
+
+    _manager.resume();
 }
 
 void db_controller::_begin_processing() {
