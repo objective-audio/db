@@ -146,6 +146,10 @@ db::attribute_map_t const &db::model::attributes(std::string const &entity_name)
     return this->entities().at(entity_name).attributes;
 }
 
+db::attribute_map_t const &db::model::custom_attributes(std::string const &entity_name) const {
+    return this->entities().at(entity_name).custom_attributes;
+}
+
 db::relation_map_t const &db::model::relations(std::string const &entity_name) const {
     return this->entities().at(entity_name).relations;
 }

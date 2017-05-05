@@ -12,7 +12,18 @@
 using namespace yas;
 
 db::entity::entity(std::string const &name, db::attribute_map_t &&attributes, db::relation_map_t &&relations)
-    : name(name), attributes(std::move(attributes)), relations(std::move(relations)) {
+    : name(name),
+      attributes(std::move(attributes)),
+      custom_attributes(filter(this->attributes,
+                               [](auto const &pair) {
+                                   auto const &attr_name = pair.first;
+                                   if (attr_name == db::id_field || attr_name == db::object_id_field ||
+                                       attr_name == db::save_id_field || attr_name == db::action_field) {
+                                       return false;
+                                   }
+                                   return true;
+                               })),
+      relations(std::move(relations)) {
 }
 
 std::string db::entity::sql_for_create() const {
