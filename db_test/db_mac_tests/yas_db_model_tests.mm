@@ -30,8 +30,8 @@ using namespace yas;
     auto &entities = model.entities();
     XCTAssertEqual(entities.size(), 2);
 
-    auto &entity = entities.at("sample_a");
-    auto &attributes = entity.attributes;
+    auto &entity_a = entities.at("sample_a");
+    auto &attributes = entity_a.attributes;
     XCTAssertEqual(attributes.size(), 8);
 
     auto &id_attr = attributes.at(db::id_field);
@@ -104,6 +104,17 @@ using namespace yas;
     XCTAssertEqual(data.primary, false);
     XCTAssertEqual(data.unique, false);
 
+    auto const &custom_attributes_a = entity_a.custom_attributes;
+    XCTAssertEqual(custom_attributes_a.size(), 4);
+    XCTAssertEqual(custom_attributes_a.count(db::id_field), 0);
+    XCTAssertEqual(custom_attributes_a.count(db::object_id_field), 0);
+    XCTAssertEqual(custom_attributes_a.count(db::save_id_field), 0);
+    XCTAssertEqual(custom_attributes_a.count(db::action_field), 0);
+    XCTAssertEqual(custom_attributes_a.count("age"), 1);
+    XCTAssertEqual(custom_attributes_a.count("name"), 1);
+    XCTAssertEqual(custom_attributes_a.count("weight"), 1);
+    XCTAssertEqual(custom_attributes_a.count("data"), 1);
+
     auto &entity_b = entities.at("sample_b");
     auto &attributes_b = entity_b.attributes;
     XCTAssertEqual(attributes_b.size(), 5);
@@ -151,7 +162,15 @@ using namespace yas;
     XCTAssertEqual(name_b.primary, false);
     XCTAssertEqual(name_b.unique, false);
 
-    auto &relations = entity.relations;
+    auto const &custom_attributes_b = entity_b.custom_attributes;
+    XCTAssertEqual(custom_attributes_b.size(), 1);
+    XCTAssertEqual(custom_attributes_b.count(db::id_field), 0);
+    XCTAssertEqual(custom_attributes_b.count(db::object_id_field), 0);
+    XCTAssertEqual(custom_attributes_b.count(db::save_id_field), 0);
+    XCTAssertEqual(custom_attributes_b.count(db::action_field), 0);
+    XCTAssertEqual(custom_attributes_b.count("name"), 1);
+
+    auto &relations = entity_a.relations;
     XCTAssertEqual(relations.size(), 1);
 
     auto &child = relations.at("child");
