@@ -1542,6 +1542,31 @@ using namespace yas;
     [self waitForExpectationsWithTimeout:1.0 handler:nil];
 }
 
+- (void)test_suspend_count {
+    db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
+    auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1) priority_count:2];
+    
+    XCTAssertFalse(manager.is_suspended());
+    
+    manager.suspend();
+    
+    XCTAssertTrue(manager.is_suspended());
+    
+    manager.suspend();
+    
+    XCTAssertTrue(manager.is_suspended());
+    
+    manager.resume();
+    
+    XCTAssertTrue(manager.is_suspended());
+    
+    manager.resume();
+    
+    XCTAssertFalse(manager.is_suspended());
+    
+    XCTAssertThrows(manager.resume());
+}
+
 - (void)test_clear {
     db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
