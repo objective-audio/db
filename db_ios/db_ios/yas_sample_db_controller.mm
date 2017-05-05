@@ -15,15 +15,6 @@ namespace yas {
 namespace sample {
     std::string const entity_name_a = "entity_a";
     std::string const entity_name_b = "entity_b";
-
-    std::string to_entity_name(db_controller::entity const &entity) {
-        switch (entity) {
-            case db_controller::entity::a:
-                return entity_name_a;
-            case db_controller::entity::b:
-                return entity_name_b;
-        }
-    }
 }
 }
 
@@ -123,7 +114,7 @@ void db_controller::add_temporary(entity const &entity) {
         return;
     }
 
-    auto object = _manager.insert_object(sample::to_entity_name(entity));
+    auto object = _manager.insert_object(to_entity_name(entity));
     auto &objects = _objects_at(entity);
 
     auto idx = objects.size();
@@ -482,4 +473,13 @@ void db_controller::_end_processing() {
     _processing = false;
 
     subject().notify(method::processing_changed, {nullptr, db::value{static_cast<db::integer::type>(false)}});
+}
+
+std::string yas::to_entity_name(db_controller::entity const &entity) {
+    switch (entity) {
+        case db_controller::entity::a:
+            return entity_name_a;
+        case db_controller::entity::b:
+            return entity_name_b;
+    }
 }

@@ -71,4 +71,6 @@ namespace sample {
         void _end_processing();
     };
 }
+
+std::string to_entity_name(sample::db_controller::entity const &);
 }

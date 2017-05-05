@@ -4,6 +4,6 @@
 
 #import <UIKit/UIKit.h>
 
-@interface DBSampleTableViewController : UITableViewController
+@interface DBSampleTopViewController : UITableViewController
 
 @end
