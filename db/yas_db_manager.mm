@@ -573,7 +573,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
 
                             if (db::table_exists(db, entity_name)) {
                                 // alter table
-                                for (auto const &attr_pair : entity.attributes) {
+                                for (auto const &attr_pair : entity.all_attributes) {
                                     if (!db::column_exists(db, attr_pair.first, entity_name)) {
                                         auto const &attr = attr_pair.second;
                                         if (auto ul =

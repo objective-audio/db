@@ -17,7 +17,7 @@ namespace db {
 
     struct entity {
         std::string const name;
-        db::attribute_map_t const attributes;
+        db::attribute_map_t const all_attributes;
         db::attribute_map_t const custom_attributes;
         db::relation_map_t const relations;
 

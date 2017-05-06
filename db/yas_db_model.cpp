@@ -143,7 +143,7 @@ db::entity const &db::model::entity(std::string const &entity_name) const {
 }
 
 db::attribute_map_t const &db::model::attributes(std::string const &entity_name) const {
-    return this->entities().at(entity_name).attributes;
+    return this->entities().at(entity_name).all_attributes;
 }
 
 db::attribute_map_t const &db::model::custom_attributes(std::string const &entity_name) const {
@@ -155,7 +155,7 @@ db::relation_map_t const &db::model::relations(std::string const &entity_name) c
 }
 
 db::attribute const &db::model::attribute(std::string const &entity_name, std::string const &attr_name) const {
-    return this->entities().at(entity_name).attributes.at(attr_name);
+    return this->entities().at(entity_name).all_attributes.at(attr_name);
 }
 
 db::relation const &db::model::relation(std::string const &entity_name, std::string const &rel_name) const {
@@ -172,7 +172,7 @@ bool db::model::entity_exists(std::string const &entity_name) const {
 
 bool db::model::attribute_exists(std::string const &entity_name, std::string const &attr_name) const {
     if (this->entity_exists(entity_name)) {
-        if (this->entities().at(entity_name).attributes.count(attr_name) > 0) {
+        if (this->entities().at(entity_name).all_attributes.count(attr_name) > 0) {
             return true;
         }
     }

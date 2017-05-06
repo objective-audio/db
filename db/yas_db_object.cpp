@@ -36,7 +36,7 @@ struct db::const_object::impl : public base::impl {
 
         db::entity const &entity = this->_model.entities().at(_entity_name);
 
-        for (auto const &pair : entity.attributes) {
+        for (auto const &pair : entity.all_attributes) {
             auto const &attr_name = pair.first;
             if (obj_data.attributes.count(attr_name) > 0) {
                 this->validate_attribute_name(attr_name);
@@ -245,7 +245,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
 
             db::entity const &entity = this->_model.entity(_entity_name);
 
-            for (auto const &pair : entity.attributes) {
+            for (auto const &pair : entity.all_attributes) {
                 auto const &attr_name = pair.first;
                 if (obj_data.attributes.count(attr_name) > 0) {
                     this->set_attribute_value(attr_name, obj_data.attributes.at(attr_name), true);
@@ -277,7 +277,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
 
         db::entity const &entity = _model.entity(_entity_name);
 
-        for (auto const &pair : entity.attributes) {
+        for (auto const &pair : entity.all_attributes) {
             auto const &attr = pair.second;
             if (attr.default_value) {
                 this->set_attribute_value(attr.name, attr.default_value, true);
@@ -427,7 +427,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
 
         db::entity const &entity = this->_model.entity(this->_entity_name);
 
-        for (auto const &pair : entity.attributes) {
+        for (auto const &pair : entity.all_attributes) {
             auto const &attr_name = pair.first;
 
             if (attr_name == db::save_id_field) {

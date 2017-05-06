@@ -31,7 +31,7 @@ using namespace yas;
     XCTAssertEqual(entities.size(), 2);
 
     auto &entity_a = entities.at("sample_a");
-    auto &attributes = entity_a.attributes;
+    auto &attributes = entity_a.all_attributes;
     XCTAssertEqual(attributes.size(), 8);
 
     auto &id_attr = attributes.at(db::id_field);
@@ -116,7 +116,7 @@ using namespace yas;
     XCTAssertEqual(custom_attributes_a.count("data"), 1);
 
     auto &entity_b = entities.at("sample_b");
-    auto &attributes_b = entity_b.attributes;
+    auto &attributes_b = entity_b.all_attributes;
     XCTAssertEqual(attributes_b.size(), 5);
 
     auto &id_attr_b = attributes_b.at(db::id_field);
@@ -183,7 +183,7 @@ using namespace yas;
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
 
-    XCTAssertEqual(model.entity("sample_a").attributes.size(), 8);
+    XCTAssertEqual(model.entity("sample_a").all_attributes.size(), 8);
     XCTAssertEqual(model.entity("sample_a").relations.size(), 1);
 }
 
