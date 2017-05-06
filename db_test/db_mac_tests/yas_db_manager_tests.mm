@@ -298,6 +298,44 @@ using namespace yas;
     [self waitForExpectationsWithTimeout:1.0 handler:nil];
 }
 
+- (void)test_object_relation_objects {
+    db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
+    auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
+
+    XCTestExpectation *setup_exp = [self expectationWithDescription:@"setup manager"];
+
+    manager.setup([setup_exp](auto result) { [setup_exp fulfill]; });
+
+    [self waitForExpectations:@[setup_exp] timeout:10.0];
+
+    db::object obj = manager.insert_object("sample_a");
+    db::object obj_b1 = manager.insert_object("sample_b");
+    db::object obj_b2 = manager.insert_object("sample_b");
+    db::object obj_b3 = manager.insert_object("sample_b");
+
+    XCTestExpectation *save_exp = [self expectationWithDescription:@"setup manager"];
+
+    manager.save([save_exp](auto save_result) { [save_exp fulfill]; });
+
+    [self waitForExpectations:@[save_exp] timeout:10.0];
+
+    obj.add_relation_object("child", obj_b1);
+    obj.add_relation_object("child", obj_b2);
+    obj.add_relation_object("child", obj_b3);
+
+    auto rel_objects = obj.relation_objects("child");
+
+    XCTAssertEqual(rel_objects.size(), 3);
+
+    XCTAssertTrue(rel_objects.at(0));
+    XCTAssertTrue(rel_objects.at(1));
+    XCTAssertTrue(rel_objects.at(2));
+
+    XCTAssertEqual(rel_objects.at(0).object_id(), obj_b1.object_id());
+    XCTAssertEqual(rel_objects.at(1).object_id(), obj_b2.object_id());
+    XCTAssertEqual(rel_objects.at(2).object_id(), obj_b3.object_id());
+}
+
 - (void)test_setup_migration {
     db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
