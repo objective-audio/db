@@ -517,8 +517,9 @@ void db::object::set_attribute_value(std::string const &attr_name, db::value con
 
 db::object_vector_t db::object::relation_objects(std::string const &rel_name) const {
     auto const &rel_ids = impl_ptr<impl>()->relation_ids(rel_name);
-    return to_vector<db::object>(rel_ids, [manager = manager(), entity_name = entity_name()](db::value const &id) {
-        return manager.cached_object(entity_name, id.get<db::integer>());
+    std::string const &tgt_entity_name = this->model().relation(entity_name(), rel_name).target_entity_name;
+    return to_vector<db::object>(rel_ids, [manager = manager(), &tgt_entity_name](db::value const &id) {
+        return manager.cached_object(tgt_entity_name, id.get<db::integer>());
     });
 }
 
