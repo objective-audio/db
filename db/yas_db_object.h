@@ -100,9 +100,11 @@ namespace db {
 
         void set_relation_ids(std::string const &rel_name, db::value_vector_t const &relation_ids);
         void add_relation_id(std::string const &rel_name, db::value const &relation_id);
+        void insert_relation_id(std::string const &rel_name, db::value const &relation_id, std::size_t const idx);
         void remove_relation_id(std::string const &rel_name, db::value const &relation_id);
         void set_relation_objects(std::string const &rel_name, db::object_vector_t const &rel_objects);
         void add_relation_object(std::string const &rel_name, db::object const &rel_object);
+        void insert_relation_object(std::string const &rel_name, db::object const &rel_object, std::size_t const idx);
         void remove_relation_object(std::string const &rel_name, db::object const &rel_object);
         void remove_relation_at(std::string const &rel_name, std::size_t const idx);
         void remove_all_relations(std::string const &rel_name);

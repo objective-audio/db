@@ -215,6 +215,64 @@ using namespace yas;
     XCTAssertEqual(obj.relation_size("child"), 0);
 }
 
+- (void)test_insert_relation_id {
+    NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
+    db::model model((__bridge CFDictionaryRef)model_dict);
+
+    db::object obj{nullptr, model, "sample_a"};
+    db::object obj_b1{nullptr, model, "sample_b"};
+    db::object obj_b2{nullptr, model, "sample_b"};
+    db::object obj_b3{nullptr, model, "sample_b"};
+    obj_b1.set_attribute_value(db::object_id_field, db::value{5});
+    obj_b2.set_attribute_value(db::object_id_field, db::value{6});
+    obj_b3.set_attribute_value(db::object_id_field, db::value{7});
+
+    obj.insert_relation_id("child", obj_b1.object_id(), 0);
+
+    XCTAssertEqual(obj.relation_ids("child").size(), 1);
+
+    obj.insert_relation_id("child", obj_b2.object_id(), 1);
+
+    XCTAssertEqual(obj.relation_ids("child").size(), 2);
+
+    obj.insert_relation_id("child", obj_b3.object_id(), 0);
+
+    XCTAssertEqual(obj.relation_ids("child").size(), 3);
+
+    XCTAssertEqual(obj.relation_id("child", 0), db::value{7});
+    XCTAssertEqual(obj.relation_id("child", 1), db::value{5});
+    XCTAssertEqual(obj.relation_id("child", 2), db::value{6});
+}
+
+- (void)test_insert_relation_object {
+    NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
+    db::model model((__bridge CFDictionaryRef)model_dict);
+
+    db::object obj{nullptr, model, "sample_a"};
+    db::object obj_b1{nullptr, model, "sample_b"};
+    db::object obj_b2{nullptr, model, "sample_b"};
+    db::object obj_b3{nullptr, model, "sample_b"};
+    obj_b1.set_attribute_value(db::object_id_field, db::value{5});
+    obj_b2.set_attribute_value(db::object_id_field, db::value{6});
+    obj_b3.set_attribute_value(db::object_id_field, db::value{7});
+
+    obj.insert_relation_object("child", obj_b1, 0);
+
+    XCTAssertEqual(obj.relation_ids("child").size(), 1);
+
+    obj.insert_relation_object("child", obj_b2, 1);
+
+    XCTAssertEqual(obj.relation_ids("child").size(), 2);
+
+    obj.insert_relation_object("child", obj_b3, 0);
+
+    XCTAssertEqual(obj.relation_ids("child").size(), 3);
+
+    XCTAssertEqual(obj.relation_id("child", 0), db::value{7});
+    XCTAssertEqual(obj.relation_id("child", 1), db::value{5});
+    XCTAssertEqual(obj.relation_id("child", 2), db::value{6});
+}
+
 - (void)test_replace_value {
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
