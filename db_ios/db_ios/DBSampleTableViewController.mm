@@ -349,9 +349,9 @@ typedef NS_ENUM(NSUInteger, DBSampleInfoRow) {
 }
 
 - (void)updateObjectCell:(UITableViewCell *)cell withObject:(db::object const &)object {
-    CFStringRef cf_id_str = to_cf_object(to_string(object.get_attribute(db::object_id_field)));
-    CFStringRef cf_age_str = to_cf_object(to_string(object.get_attribute("age")));
-    CFStringRef cf_name_str = to_cf_object(to_string(object.get_attribute("name")));
+    CFStringRef cf_id_str = to_cf_object(to_string(object.attribute_value(db::object_id_field)));
+    CFStringRef cf_age_str = to_cf_object(to_string(object.attribute_value("age")));
+    CFStringRef cf_name_str = to_cf_object(to_string(object.attribute_value("name")));
     cell.textLabel.text = [NSString stringWithFormat:@"obj_id:%@ age:%@ name:%@", cf_id_str, cf_age_str, cf_name_str];
     cell.selectionStyle = UITableViewCellSelectionStyleNone;
 }

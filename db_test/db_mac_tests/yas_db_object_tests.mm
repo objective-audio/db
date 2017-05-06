@@ -28,12 +28,13 @@ using namespace yas;
     db::object obj{nullptr, model, "sample_a"};
 
     XCTAssertEqual(obj.model(), model);
+    XCTAssertEqual(obj.entity().name, "sample_a");
     XCTAssertEqual(obj.entity_name(), "sample_a");
-    XCTAssertFalse(obj.get_attribute("age"));
-    XCTAssertFalse(obj.get_attribute("name"));
-    XCTAssertFalse(obj.get_attribute("weight"));
+    XCTAssertFalse(obj.attribute_value("age"));
+    XCTAssertFalse(obj.attribute_value("name"));
+    XCTAssertFalse(obj.attribute_value("weight"));
     XCTAssertFalse(obj.object_id());
-    XCTAssertEqual(obj.get_relation_ids("child").size(), 0);
+    XCTAssertEqual(obj.relation_ids("child").size(), 0);
     XCTAssertFalse(obj.is_removed());
 }
 
@@ -43,20 +44,20 @@ using namespace yas;
     db::object obj{nullptr, model, "sample_a"};
 
     db::value_map_t attributes{std::make_pair("age", db::value{10}), std::make_pair("name", db::value{"name_val"}),
-                             std::make_pair("weight", db::value{53.4}), std::make_pair("hoge", db::value{"hage"})};
+                               std::make_pair("weight", db::value{53.4}), std::make_pair("hoge", db::value{"hage"})};
     db::value_vector_map_t relations{std::make_pair("child", db::value_vector_t{db::value{12}, db::value{34}})};
     db::object_data obj_data{.attributes = std::move(attributes), .relations = std::move(relations)};
 
     obj.manageable().load_data(obj_data);
 
-    XCTAssertEqual(obj.get_attribute("age"), db::value{10});
-    XCTAssertEqual(obj.get_attribute("name"), db::value{"name_val"});
-    XCTAssertEqual(obj.get_attribute("weight"), db::value{53.4});
-    XCTAssertThrows(obj.get_attribute("hoge"));
+    XCTAssertEqual(obj.attribute_value("age"), db::value{10});
+    XCTAssertEqual(obj.attribute_value("name"), db::value{"name_val"});
+    XCTAssertEqual(obj.attribute_value("weight"), db::value{53.4});
+    XCTAssertThrows(obj.attribute_value("hoge"));
 
     XCTAssertEqual(obj.relation_size("child"), 2);
-    XCTAssertEqual(obj.get_relation_id("child", 0), db::value{12});
-    XCTAssertEqual(obj.get_relation_id("child", 1), db::value{34});
+    XCTAssertEqual(obj.relation_id("child", 0), db::value{12});
+    XCTAssertEqual(obj.relation_id("child", 1), db::value{34});
 }
 
 - (void)test_create_const_object {
@@ -64,20 +65,20 @@ using namespace yas;
     db::model model((__bridge CFDictionaryRef)model_dict);
 
     db::value_map_t attributes{std::make_pair("age", db::value{10}), std::make_pair("name", db::value{"name_val"}),
-                             std::make_pair("weight", db::value{53.4}), std::make_pair("hoge", db::value{"hage"})};
+                               std::make_pair("weight", db::value{53.4}), std::make_pair("hoge", db::value{"hage"})};
     db::value_vector_map_t relations{std::make_pair("child", db::value_vector_t{db::value{12}, db::value{34}})};
     db::object_data obj_data{.attributes = std::move(attributes), .relations = std::move(relations)};
 
     db::const_object obj{model, "sample_a", obj_data};
 
-    XCTAssertEqual(obj.get_attribute("age"), db::value{10});
-    XCTAssertEqual(obj.get_attribute("name"), db::value{"name_val"});
-    XCTAssertEqual(obj.get_attribute("weight"), db::value{53.4});
-    XCTAssertThrows(obj.get_attribute("hoge"));
+    XCTAssertEqual(obj.attribute_value("age"), db::value{10});
+    XCTAssertEqual(obj.attribute_value("name"), db::value{"name_val"});
+    XCTAssertEqual(obj.attribute_value("weight"), db::value{53.4});
+    XCTAssertThrows(obj.attribute_value("hoge"));
 
     XCTAssertEqual(obj.relation_size("child"), 2);
-    XCTAssertEqual(obj.get_relation_id("child", 0), db::value{12});
-    XCTAssertEqual(obj.get_relation_id("child", 1), db::value{34});
+    XCTAssertEqual(obj.relation_id("child", 0), db::value{12});
+    XCTAssertEqual(obj.relation_id("child", 1), db::value{34});
 }
 
 - (void)test_reload_values {
@@ -86,7 +87,8 @@ using namespace yas;
     db::object obj{nullptr, model, "sample_a"};
 
     db::value_map_t prev_attributes{std::make_pair("age", db::value{10}), std::make_pair("name", db::value{"name_val"}),
-                                  std::make_pair("weight", db::value{53.4}), std::make_pair("hoge", db::value{"hage"})};
+                                    std::make_pair("weight", db::value{53.4}),
+                                    std::make_pair("hoge", db::value{"hage"})};
     db::value_vector_map_t prev_relations{std::make_pair("child", db::value_vector_t{db::value{12}, db::value{34}})};
     db::object_data prev_obj_data{.attributes = std::move(prev_attributes), .relations = std::move(prev_relations)};
 
@@ -99,15 +101,15 @@ using namespace yas;
 
     obj.manageable().load_data(post_obj_data);
 
-    XCTAssertEqual(obj.get_attribute("age"), db::value{543});
-    XCTAssertFalse(obj.get_attribute("name"));
-    XCTAssertFalse(obj.get_attribute("weight"));
-    XCTAssertThrows(obj.get_attribute("hoge"));
+    XCTAssertEqual(obj.attribute_value("age"), db::value{543});
+    XCTAssertFalse(obj.attribute_value("name"));
+    XCTAssertFalse(obj.attribute_value("weight"));
+    XCTAssertThrows(obj.attribute_value("hoge"));
 
     XCTAssertEqual(obj.relation_size("child"), 3);
-    XCTAssertEqual(obj.get_relation_id("child", 0), db::value{234});
-    XCTAssertEqual(obj.get_relation_id("child", 1), db::value{567});
-    XCTAssertEqual(obj.get_relation_id("child", 2), db::value{890});
+    XCTAssertEqual(obj.relation_id("child", 0), db::value{234});
+    XCTAssertEqual(obj.relation_id("child", 1), db::value{567});
+    XCTAssertEqual(obj.relation_id("child", 2), db::value{890});
 }
 
 - (void)test_set_and_get_value {
@@ -115,56 +117,56 @@ using namespace yas;
     db::model model((__bridge CFDictionaryRef)model_dict);
     db::object obj{nullptr, model, "sample_a"};
 
-    obj.set_attribute("age", db::value{24});
-    obj.set_attribute("name", db::value{"nabe"});
-    obj.set_attribute("weight", db::value{5783.23});
+    obj.set_attribute_value("age", db::value{24});
+    obj.set_attribute_value("name", db::value{"nabe"});
+    obj.set_attribute_value("weight", db::value{5783.23});
 
-    XCTAssertEqual(obj.get_attribute("age"), db::value{24});
-    XCTAssertEqual(obj.get_attribute("name"), db::value{"nabe"});
-    XCTAssertEqual(obj.get_attribute("weight"), db::value{5783.23});
+    XCTAssertEqual(obj.attribute_value("age"), db::value{24});
+    XCTAssertEqual(obj.attribute_value("name"), db::value{"nabe"});
+    XCTAssertEqual(obj.attribute_value("weight"), db::value{5783.23});
 }
 
-- (void)test_push_back_and_erase_relation_id {
+- (void)test_add_and_remove_relation_id {
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
     db::object obj{nullptr, model, "sample_a"};
 
-    obj.push_back_relation_id("child", db::value{321});
+    obj.add_relation_id("child", db::value{321});
 
-    XCTAssertEqual(obj.get_relation_ids("child").size(), 1);
+    XCTAssertEqual(obj.relation_ids("child").size(), 1);
 
-    obj.push_back_relation_id("child", db::value{654});
+    obj.add_relation_id("child", db::value{654});
 
-    XCTAssertEqual(obj.get_relation_ids("child").size(), 2);
+    XCTAssertEqual(obj.relation_ids("child").size(), 2);
 
-    obj.push_back_relation_id("child", db::value{987});
+    obj.add_relation_id("child", db::value{987});
 
-    XCTAssertEqual(obj.get_relation_ids("child").size(), 3);
+    XCTAssertEqual(obj.relation_ids("child").size(), 3);
     XCTAssertEqual(obj.relation_size("child"), 3);
-    XCTAssertEqual(obj.get_relation_ids("child").at(0), db::value{321});
-    XCTAssertEqual(obj.get_relation_ids("child").at(1), db::value{654});
-    XCTAssertEqual(obj.get_relation_ids("child").at(2), db::value{987});
-    XCTAssertEqual(obj.get_relation_id("child", 0), db::value{321});
-    XCTAssertEqual(obj.get_relation_id("child", 1), db::value{654});
-    XCTAssertEqual(obj.get_relation_id("child", 2), db::value{987});
+    XCTAssertEqual(obj.relation_ids("child").at(0), db::value{321});
+    XCTAssertEqual(obj.relation_ids("child").at(1), db::value{654});
+    XCTAssertEqual(obj.relation_ids("child").at(2), db::value{987});
+    XCTAssertEqual(obj.relation_id("child", 0), db::value{321});
+    XCTAssertEqual(obj.relation_id("child", 1), db::value{654});
+    XCTAssertEqual(obj.relation_id("child", 2), db::value{987});
 
-    obj.erase_relation_id("child", db::value{654});
+    obj.remove_relation_id("child", db::value{654});
 
     XCTAssertEqual(obj.relation_size("child"), 2);
-    XCTAssertEqual(obj.get_relation_id("child", 0), db::value{321});
-    XCTAssertEqual(obj.get_relation_id("child", 1), db::value{987});
+    XCTAssertEqual(obj.relation_id("child", 0), db::value{321});
+    XCTAssertEqual(obj.relation_id("child", 1), db::value{987});
 
-    obj.erase_relation("child", 0);
+    obj.remove_relation_at("child", 0);
 
     XCTAssertEqual(obj.relation_size("child"), 1);
-    XCTAssertEqual(obj.get_relation_id("child", 0), db::value{987});
+    XCTAssertEqual(obj.relation_id("child", 0), db::value{987});
 
-    obj.clear_relation("child");
+    obj.remove_all_relations("child");
 
     XCTAssertEqual(obj.relation_size("child"), 0);
 }
 
-- (void)test_push_back_and_erase_relation_object {
+- (void)test_add_and_remove_relation_object {
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
 
@@ -172,45 +174,103 @@ using namespace yas;
     db::object obj_b1{nullptr, model, "sample_b"};
     db::object obj_b2{nullptr, model, "sample_b"};
     db::object obj_b3{nullptr, model, "sample_b"};
-    obj_b1.set_attribute(db::object_id_field, db::value{5});
-    obj_b2.set_attribute(db::object_id_field, db::value{6});
-    obj_b3.set_attribute(db::object_id_field, db::value{7});
+    obj_b1.set_attribute_value(db::object_id_field, db::value{5});
+    obj_b2.set_attribute_value(db::object_id_field, db::value{6});
+    obj_b3.set_attribute_value(db::object_id_field, db::value{7});
 
-    obj.push_back_relation_object("child", obj_b1);
+    obj.add_relation_object("child", obj_b1);
 
-    XCTAssertEqual(obj.get_relation_ids("child").size(), 1);
+    XCTAssertEqual(obj.relation_ids("child").size(), 1);
 
-    obj.push_back_relation_object("child", obj_b2);
+    obj.add_relation_object("child", obj_b2);
 
-    XCTAssertEqual(obj.get_relation_ids("child").size(), 2);
+    XCTAssertEqual(obj.relation_ids("child").size(), 2);
 
-    obj.push_back_relation_object("child", obj_b3);
+    obj.add_relation_object("child", obj_b3);
 
-    XCTAssertEqual(obj.get_relation_ids("child").size(), 3);
+    XCTAssertEqual(obj.relation_ids("child").size(), 3);
 
     XCTAssertEqual(obj.relation_size("child"), 3);
 
-    XCTAssertEqual(obj.get_relation_ids("child").at(0), db::value{5});
-    XCTAssertEqual(obj.get_relation_ids("child").at(1), db::value{6});
-    XCTAssertEqual(obj.get_relation_ids("child").at(2), db::value{7});
-    XCTAssertEqual(obj.get_relation_id("child", 0), db::value{5});
-    XCTAssertEqual(obj.get_relation_id("child", 1), db::value{6});
-    XCTAssertEqual(obj.get_relation_id("child", 2), db::value{7});
+    XCTAssertEqual(obj.relation_ids("child").at(0), db::value{5});
+    XCTAssertEqual(obj.relation_ids("child").at(1), db::value{6});
+    XCTAssertEqual(obj.relation_ids("child").at(2), db::value{7});
+    XCTAssertEqual(obj.relation_id("child", 0), db::value{5});
+    XCTAssertEqual(obj.relation_id("child", 1), db::value{6});
+    XCTAssertEqual(obj.relation_id("child", 2), db::value{7});
 
-    obj.erase_relation_object("child", obj_b2);
+    obj.remove_relation_object("child", obj_b2);
 
     XCTAssertEqual(obj.relation_size("child"), 2);
-    XCTAssertEqual(obj.get_relation_id("child", 0), db::value{5});
-    XCTAssertEqual(obj.get_relation_id("child", 1), db::value{7});
+    XCTAssertEqual(obj.relation_id("child", 0), db::value{5});
+    XCTAssertEqual(obj.relation_id("child", 1), db::value{7});
 
-    obj.erase_relation("child", 0);
+    obj.remove_relation_at("child", 0);
 
     XCTAssertEqual(obj.relation_size("child"), 1);
-    XCTAssertEqual(obj.get_relation_id("child", 0), db::value{7});
+    XCTAssertEqual(obj.relation_id("child", 0), db::value{7});
 
-    obj.clear_relation("child");
+    obj.remove_all_relations("child");
 
     XCTAssertEqual(obj.relation_size("child"), 0);
+}
+
+- (void)test_insert_relation_id {
+    NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
+    db::model model((__bridge CFDictionaryRef)model_dict);
+
+    db::object obj{nullptr, model, "sample_a"};
+    db::object obj_b1{nullptr, model, "sample_b"};
+    db::object obj_b2{nullptr, model, "sample_b"};
+    db::object obj_b3{nullptr, model, "sample_b"};
+    obj_b1.set_attribute_value(db::object_id_field, db::value{5});
+    obj_b2.set_attribute_value(db::object_id_field, db::value{6});
+    obj_b3.set_attribute_value(db::object_id_field, db::value{7});
+
+    obj.insert_relation_id("child", obj_b1.object_id(), 0);
+
+    XCTAssertEqual(obj.relation_ids("child").size(), 1);
+
+    obj.insert_relation_id("child", obj_b2.object_id(), 1);
+
+    XCTAssertEqual(obj.relation_ids("child").size(), 2);
+
+    obj.insert_relation_id("child", obj_b3.object_id(), 0);
+
+    XCTAssertEqual(obj.relation_ids("child").size(), 3);
+
+    XCTAssertEqual(obj.relation_id("child", 0), db::value{7});
+    XCTAssertEqual(obj.relation_id("child", 1), db::value{5});
+    XCTAssertEqual(obj.relation_id("child", 2), db::value{6});
+}
+
+- (void)test_insert_relation_object {
+    NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
+    db::model model((__bridge CFDictionaryRef)model_dict);
+
+    db::object obj{nullptr, model, "sample_a"};
+    db::object obj_b1{nullptr, model, "sample_b"};
+    db::object obj_b2{nullptr, model, "sample_b"};
+    db::object obj_b3{nullptr, model, "sample_b"};
+    obj_b1.set_attribute_value(db::object_id_field, db::value{5});
+    obj_b2.set_attribute_value(db::object_id_field, db::value{6});
+    obj_b3.set_attribute_value(db::object_id_field, db::value{7});
+
+    obj.insert_relation_object("child", obj_b1, 0);
+
+    XCTAssertEqual(obj.relation_ids("child").size(), 1);
+
+    obj.insert_relation_object("child", obj_b2, 1);
+
+    XCTAssertEqual(obj.relation_ids("child").size(), 2);
+
+    obj.insert_relation_object("child", obj_b3, 0);
+
+    XCTAssertEqual(obj.relation_ids("child").size(), 3);
+
+    XCTAssertEqual(obj.relation_id("child", 0), db::value{7});
+    XCTAssertEqual(obj.relation_id("child", 1), db::value{5});
+    XCTAssertEqual(obj.relation_id("child", 2), db::value{6});
 }
 
 - (void)test_replace_value {
@@ -218,13 +278,13 @@ using namespace yas;
     db::model model((__bridge CFDictionaryRef)model_dict);
     db::object obj{nullptr, model, "sample_a"};
 
-    obj.set_attribute("age", db::value{1});
+    obj.set_attribute_value("age", db::value{1});
 
-    XCTAssertEqual(obj.get_attribute("age"), db::value{1});
+    XCTAssertEqual(obj.attribute_value("age"), db::value{1});
 
-    obj.set_attribute("age", db::value{5});
+    obj.set_attribute_value("age", db::value{5});
 
-    XCTAssertEqual(obj.get_attribute("age"), db::value{5});
+    XCTAssertEqual(obj.attribute_value("age"), db::value{5});
 }
 
 - (void)test_remove {
@@ -234,22 +294,22 @@ using namespace yas;
 
     XCTAssertFalse(obj.is_removed());
 
-    obj.set_attribute(db::id_field, db::value{11});
-    obj.set_attribute(db::object_id_field, db::value{45});
-    obj.set_attribute("name", db::value{"tanaka"});
+    obj.set_attribute_value(db::id_field, db::value{11});
+    obj.set_attribute_value(db::object_id_field, db::value{45});
+    obj.set_attribute_value("name", db::value{"tanaka"});
     obj.set_relation_ids("child", {db::value{111}});
 
-    XCTAssertEqual(obj.get_attribute(db::object_id_field), db::value{45});
-    XCTAssertEqual(obj.get_attribute("name"), db::value{"tanaka"});
-    XCTAssertEqual(obj.get_relation_ids("child").at(0), db::value{111});
+    XCTAssertEqual(obj.attribute_value(db::object_id_field), db::value{45});
+    XCTAssertEqual(obj.attribute_value("name"), db::value{"tanaka"});
+    XCTAssertEqual(obj.relation_ids("child").at(0), db::value{111});
 
     obj.remove();
 
     XCTAssertTrue(obj.is_removed());
-    XCTAssertFalse(obj.get_attribute("name"));
-    XCTAssertEqual(obj.get_attribute(db::id_field), db::value{11});
-    XCTAssertEqual(obj.get_attribute(db::object_id_field), db::value{45});
-    XCTAssertEqual(obj.get_relation_ids("child").size(), 0);
+    XCTAssertFalse(obj.attribute_value("name"));
+    XCTAssertEqual(obj.attribute_value(db::id_field), db::value{11});
+    XCTAssertEqual(obj.attribute_value(db::object_id_field), db::value{45});
+    XCTAssertEqual(obj.relation_ids("child").size(), 0);
 }
 
 - (void)test_action {
@@ -266,14 +326,14 @@ using namespace yas;
     obj.manageable().load_data(obj_data);
     XCTAssertEqual(obj.action(), db::value{db::insert_action});
 
-    obj.set_attribute("name", db::value{"test_name"});
+    obj.set_attribute_value("name", db::value{"test_name"});
     XCTAssertEqual(obj.action(), db::value{db::update_action});
 
     manageable_obj.set_status(db::object_status::updating);
     obj.manageable().load_data(obj_data);
     XCTAssertEqual(obj.action(), db::value{db::insert_action});
 
-    obj.push_back_relation_id("child", db::value{2});
+    obj.add_relation_id("child", db::value{2});
     XCTAssertEqual(obj.action(), db::value{db::update_action});
 
     manageable_obj.set_status(db::object_status::updating);
@@ -287,14 +347,14 @@ using namespace yas;
     obj.manageable().load_data(obj_data);
     XCTAssertEqual(obj.action(), db::value{db::insert_action});
 
-    obj.erase_relation("child", 0);
+    obj.remove_relation_at("child", 0);
     XCTAssertEqual(obj.action(), db::value{db::update_action});
 
     manageable_obj.set_status(db::object_status::updating);
     obj.manageable().load_data(obj_data);
     XCTAssertEqual(obj.action(), db::value{db::insert_action});
 
-    obj.clear_relation("child");
+    obj.remove_all_relations("child");
     XCTAssertEqual(obj.action(), db::value{db::update_action});
 
     manageable_obj.set_status(db::object_status::updating);
@@ -311,13 +371,13 @@ using namespace yas;
     db::model model((__bridge CFDictionaryRef)model_dict);
     db::object obj{nullptr, model, "sample_a"};
 
-    obj.set_attribute(db::id_field, db::value{22});
-    obj.set_attribute(db::object_id_field, db::value{55});
-    obj.set_attribute("name", db::value{"suzuki"});
-    obj.set_attribute("age", db::value{32});
-    obj.set_attribute("weight", db::value{90.1});
-    obj.set_attribute("data", db::value::null_value());
-    obj.set_attribute(db::save_id_field, db::value{100});
+    obj.set_attribute_value(db::id_field, db::value{22});
+    obj.set_attribute_value(db::object_id_field, db::value{55});
+    obj.set_attribute_value("name", db::value{"suzuki"});
+    obj.set_attribute_value("age", db::value{32});
+    obj.set_attribute_value("weight", db::value{90.1});
+    obj.set_attribute_value("data", db::value::null_value());
+    obj.set_attribute_value(db::save_id_field, db::value{100});
 
     obj.set_relation_ids("child", db::value_vector_t{db::value{33}, db::value{44}});
 
@@ -406,7 +466,8 @@ using namespace yas;
     db::object obj2{nullptr, model, "sample_a"};
     obj2.set_relation_ids("child", db::value_vector_t{db::value{5}, db::value{4}, db::value{3}});
 
-    auto rel_ids = db::relation_ids(db::object_vector_map_t{std::make_pair("sample_a", db::object_vector_t{obj1, obj2})});
+    auto rel_ids =
+        db::relation_ids(db::object_vector_map_t{std::make_pair("sample_a", db::object_vector_t{obj1, obj2})});
 
     XCTAssertEqual(rel_ids.count("sample_b"), 1);
 
@@ -433,12 +494,12 @@ using namespace yas;
         auto const &name = info.name;
 
         XCTAssertEqual(name, "name");
-        XCTAssertEqual(obj.get_attribute(name), db::value{"test_value"});
+        XCTAssertEqual(obj.attribute_value(name), db::value{"test_value"});
 
         called = true;
     });
 
-    obj.set_attribute("name", db::value{"test_value"});
+    obj.set_attribute_value("name", db::value{"test_value"});
 
     XCTAssertTrue(called);
 }
@@ -464,15 +525,15 @@ using namespace yas;
 
         if (called_count == 0) {
             XCTAssertEqual(obj.relation_size(name), 2);
-            XCTAssertEqual(obj.get_relation_id(name, 0), db::value{10});
-            XCTAssertEqual(obj.get_relation_id(name, 1), db::value{20});
+            XCTAssertEqual(obj.relation_id(name, 0), db::value{10});
+            XCTAssertEqual(obj.relation_id(name, 1), db::value{20});
         } else if (called_count == 1) {
             XCTAssertEqual(obj.relation_size(name), 3);
-            XCTAssertEqual(obj.get_relation_id(name, 2), db::value{30});
+            XCTAssertEqual(obj.relation_id(name, 2), db::value{30});
         } else if (called_count == 2) {
             XCTAssertEqual(obj.relation_size(name), 2);
-            XCTAssertEqual(obj.get_relation_id(name, 0), db::value{10});
-            XCTAssertEqual(obj.get_relation_id(name, 1), db::value{30});
+            XCTAssertEqual(obj.relation_id(name, 0), db::value{10});
+            XCTAssertEqual(obj.relation_id(name, 1), db::value{30});
         } else if (called_count == 3) {
             XCTAssertEqual(obj.relation_size(name), 0);
         }
@@ -484,15 +545,15 @@ using namespace yas;
 
     XCTAssertEqual(called_count, 1);
 
-    obj.push_back_relation_id("child", db::value{30});
+    obj.add_relation_id("child", db::value{30});
 
     XCTAssertEqual(called_count, 2);
 
-    obj.erase_relation_id("child", db::value{20});
+    obj.remove_relation_id("child", db::value{20});
 
     XCTAssertEqual(called_count, 3);
 
-    obj.clear_relation("child");
+    obj.remove_all_relations("child");
 
     XCTAssertEqual(called_count, 4);
 }
@@ -516,19 +577,19 @@ using namespace yas;
 
         XCTAssertEqual(name.size(), 0);
 
-        XCTAssertEqual(obj.get_attribute("age"), db::value{10});
-        XCTAssertEqual(obj.get_attribute("name"), db::value{"name_val"});
-        XCTAssertEqual(obj.get_attribute("weight"), db::value{53.4});
+        XCTAssertEqual(obj.attribute_value("age"), db::value{10});
+        XCTAssertEqual(obj.attribute_value("name"), db::value{"name_val"});
+        XCTAssertEqual(obj.attribute_value("weight"), db::value{53.4});
 
         XCTAssertEqual(obj.relation_size("child"), 2);
-        XCTAssertEqual(obj.get_relation_id("child", 0), db::value{55});
-        XCTAssertEqual(obj.get_relation_id("child", 1), db::value{66});
+        XCTAssertEqual(obj.relation_id("child", 0), db::value{55});
+        XCTAssertEqual(obj.relation_id("child", 1), db::value{66});
 
         called = true;
     });
 
     db::value_map_t attributes{std::make_pair("age", db::value{10}), std::make_pair("name", db::value{"name_val"}),
-                             std::make_pair("weight", db::value{53.4})};
+                               std::make_pair("weight", db::value{53.4})};
     db::value_vector_map_t relations{std::make_pair("child", db::value_vector_t{db::value{55}, db::value{66}})};
     db::object_data obj_data{.attributes = std::move(attributes), .relations = std::move(relations)};
 
@@ -543,23 +604,23 @@ using namespace yas;
 
     db::object obj{nullptr, model, "sample_a"};
 
-    obj.set_attribute("age", db::value{20});
-    obj.set_attribute("name", db::value{"test_name"});
+    obj.set_attribute_value("age", db::value{20});
+    obj.set_attribute_value("name", db::value{"test_name"});
     obj.set_relation_ids("child", {db::value{23}, db::value{45}});
 
     XCTAssertEqual(obj.status(), db::object_status::changed);
 
-    XCTAssertEqual(obj.get_attribute("age"), db::value{20});
-    XCTAssertEqual(obj.get_attribute("name"), db::value{"test_name"});
-    XCTAssertEqual(obj.get_relation_id("child", 0), db::value{23});
-    XCTAssertEqual(obj.get_relation_id("child", 1), db::value{45});
+    XCTAssertEqual(obj.attribute_value("age"), db::value{20});
+    XCTAssertEqual(obj.attribute_value("name"), db::value{"test_name"});
+    XCTAssertEqual(obj.relation_id("child", 0), db::value{23});
+    XCTAssertEqual(obj.relation_id("child", 1), db::value{45});
 
     obj.manageable().clear_data();
 
     XCTAssertEqual(obj.status(), db::object_status::invalid);
 
-    XCTAssertFalse(obj.get_attribute("age"));
-    XCTAssertFalse(obj.get_attribute("name"));
+    XCTAssertFalse(obj.attribute_value("age"));
+    XCTAssertFalse(obj.attribute_value("name"));
     XCTAssertEqual(obj.relation_size("child"), 0);
 }
 
@@ -569,7 +630,7 @@ using namespace yas;
 
     db::object obj{nullptr, model, "sample_a"};
 
-    obj.set_attribute("name", db::value{"test_name"});
+    obj.set_attribute_value("name", db::value{"test_name"});
     obj.set_relation_ids("child", {db::value{101}, db::value{102}});
 
     XCTAssertEqual(obj.status(), db::object_status::changed);
@@ -589,7 +650,7 @@ using namespace yas;
 
         XCTAssertEqual(name.size(), 0);
 
-        XCTAssertFalse(obj.get_attribute("name"));
+        XCTAssertFalse(obj.attribute_value("name"));
         XCTAssertEqual(obj.relation_size("child"), 0);
 
         called = true;

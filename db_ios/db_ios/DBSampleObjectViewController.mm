@@ -32,13 +32,13 @@ using namespace yas::sample;
 - (void)viewDidLoad {
     [super viewDidLoad];
 
-    CFStringRef cf_id_str = to_cf_object(to_string(_holder.object.get_attribute(db::object_id_field)));
+    CFStringRef cf_id_str = to_cf_object(to_string(_holder.object.attribute_value(db::object_id_field)));
     self.idLabel.text = [NSString stringWithFormat:@"object_id : %@", cf_id_str];
 
-    CFStringRef cf_name_str = to_cf_object(to_string(_holder.object.get_attribute("name")));
+    CFStringRef cf_name_str = to_cf_object(to_string(_holder.object.attribute_value("name")));
     self.nameTextField.text = (__bridge NSString *)cf_name_str;
 
-    auto age = _holder.object.get_attribute("age").get<db::integer>();
+    auto age = _holder.object.attribute_value("age").get<db::integer>();
     self.ageTextField.text = @(age).stringValue;
 }
 
@@ -56,10 +56,10 @@ using namespace yas::sample;
 - (IBAction)testFieldEditingChanged:(UITextField *)textField {
     if ([textField isEqual:self.nameTextField]) {
         CFStringRef cf_str = (__bridge CFStringRef)textField.text;
-        _holder.object.set_attribute("name", db::value{to_string(cf_str)});
+        _holder.object.set_attribute_value("name", db::value{to_string(cf_str)});
     } else if ([textField isEqual:self.ageTextField]) {
         auto value = db::value{db::integer::type{[textField.text integerValue]}};
-        _holder.object.set_attribute("age", value);
+        _holder.object.set_attribute_value("age", value);
     }
 }
 

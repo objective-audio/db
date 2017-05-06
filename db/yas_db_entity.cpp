@@ -12,22 +12,34 @@
 using namespace yas;
 
 db::entity::entity(std::string const &name, db::attribute_map_t &&attributes, db::relation_map_t &&relations)
-    : name(name), attributes(std::move(attributes)), relations(std::move(relations)) {
+    : name(name),
+      all_attributes(std::move(attributes)),
+      custom_attributes(filter(this->all_attributes,
+                               [](auto const &pair) {
+                                   auto const &attr_name = pair.first;
+                                   if (attr_name == db::id_field || attr_name == db::object_id_field ||
+                                       attr_name == db::save_id_field || attr_name == db::action_field) {
+                                       return false;
+                                   }
+                                   return true;
+                               })),
+      relations(std::move(relations)) {
 }
 
 std::string db::entity::sql_for_create() const {
-    auto mapped_attrs = to_vector<std::string>(this->attributes, [](auto const &pair) { return pair.second.sql(); });
+    auto mapped_attrs =
+        to_vector<std::string>(this->all_attributes, [](auto const &pair) { return pair.second.sql(); });
     return db::create_table_sql(this->name, mapped_attrs);
 }
 
 std::string db::entity::sql_for_update() const {
-    auto mapped_fields = to_vector<std::string>(this->attributes, [](auto const &pair) { return pair.first; });
+    auto mapped_fields = to_vector<std::string>(this->all_attributes, [](auto const &pair) { return pair.first; });
     return db::update_sql(this->name, mapped_fields, db::equal_field_expr(id_field));
 }
 
 std::string db::entity::sql_for_insert() const {
     std::vector<std::string> mapped_fields;
-    for (auto const &pair : this->attributes) {
+    for (auto const &pair : this->all_attributes) {
         auto const &field_name = pair.first;
         if (field_name != db::id_field) {
             mapped_fields.push_back(field_name);

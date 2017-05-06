@@ -34,6 +34,7 @@ namespace db {
 
         db::entity const &entity(std::string const &entity_name) const;
         db::attribute_map_t const &attributes(std::string const &entity_name) const;
+        db::attribute_map_t const &custom_attributes(std::string const &entity_name) const;
         db::relation_map_t const &relations(std::string const &entity_name) const;
         db::attribute const &attribute(std::string const &entity_name, std::string const &attr_name) const;
         db::relation const &relation(std::string const &entity_name, std::string const &rel_name) const;

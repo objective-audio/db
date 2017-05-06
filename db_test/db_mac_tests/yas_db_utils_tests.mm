@@ -729,10 +729,10 @@ using namespace yas;
     db::object obj_a0{nullptr, model, "sample_a"};
     db::object obj_a1{nullptr, model, "sample_a"};
 
-    obj_a0.set_attribute(db::object_id_field, db::value{0});
-    obj_a0.set_attribute("name", db::value{"a0"});
-    obj_a1.set_attribute(db::object_id_field, db::value{1});
-    obj_a1.set_attribute("name", db::value{"a1"});
+    obj_a0.set_attribute_value(db::object_id_field, db::value{0});
+    obj_a0.set_attribute_value("name", db::value{"a0"});
+    obj_a1.set_attribute_value(db::object_id_field, db::value{1});
+    obj_a1.set_attribute_value("name", db::value{"a1"});
 
     db::object_vector_t src_vec;
     src_vec.emplace_back(std::move(obj_a0));
@@ -747,8 +747,8 @@ using namespace yas;
     XCTAssertEqual(dst_map.size(), 2);
     XCTAssertEqual(dst_map.count(0), 1);
     XCTAssertEqual(dst_map.count(1), 1);
-    XCTAssertEqual(dst_map.at(0).get_attribute("name"), db::value{"a0"});
-    XCTAssertEqual(dst_map.at(1).get_attribute("name"), db::value{"a1"});
+    XCTAssertEqual(dst_map.at(0).attribute_value("name"), db::value{"a0"});
+    XCTAssertEqual(dst_map.at(1).attribute_value("name"), db::value{"a1"});
 
     XCTAssertEqual(src_vec.size(), 0);
 }
@@ -762,14 +762,14 @@ using namespace yas;
     db::object obj_b0{nullptr, model, "sample_b"};
     db::object obj_b1{nullptr, model, "sample_b"};
 
-    obj_a0.set_attribute(db::object_id_field, db::value{0});
-    obj_a0.set_attribute("name", db::value{"a0"});
-    obj_a1.set_attribute(db::object_id_field, db::value{1});
-    obj_a1.set_attribute("name", db::value{"a1"});
-    obj_b0.set_attribute(db::object_id_field, db::value{2});
-    obj_b0.set_attribute("name", db::value{"b2"});
-    obj_b1.set_attribute(db::object_id_field, db::value{3});
-    obj_b1.set_attribute("name", db::value{"b3"});
+    obj_a0.set_attribute_value(db::object_id_field, db::value{0});
+    obj_a0.set_attribute_value("name", db::value{"a0"});
+    obj_a1.set_attribute_value(db::object_id_field, db::value{1});
+    obj_a1.set_attribute_value("name", db::value{"a1"});
+    obj_b0.set_attribute_value(db::object_id_field, db::value{2});
+    obj_b0.set_attribute_value("name", db::value{"b2"});
+    obj_b1.set_attribute_value(db::object_id_field, db::value{3});
+    obj_b1.set_attribute_value("name", db::value{"b3"});
 
     db::object_vector_map_t src_map;
     db::object_vector_t object_as;
@@ -798,10 +798,10 @@ using namespace yas;
     XCTAssertEqual(dst_map.count("sample_b"), 1);
     XCTAssertEqual(dst_map.at("sample_a").size(), 2);
     XCTAssertEqual(dst_map.at("sample_b").size(), 2);
-    XCTAssertEqual(dst_map.at("sample_a").at(0).get_attribute("name"), db::value{"a0"});
-    XCTAssertEqual(dst_map.at("sample_a").at(1).get_attribute("name"), db::value{"a1"});
-    XCTAssertEqual(dst_map.at("sample_b").at(2).get_attribute("name"), db::value{"b2"});
-    XCTAssertEqual(dst_map.at("sample_b").at(3).get_attribute("name"), db::value{"b3"});
+    XCTAssertEqual(dst_map.at("sample_a").at(0).attribute_value("name"), db::value{"a0"});
+    XCTAssertEqual(dst_map.at("sample_a").at(1).attribute_value("name"), db::value{"a1"});
+    XCTAssertEqual(dst_map.at("sample_b").at(2).attribute_value("name"), db::value{"b2"});
+    XCTAssertEqual(dst_map.at("sample_b").at(3).attribute_value("name"), db::value{"b3"});
 
     XCTAssertEqual(src_map.size(), 0);
     XCTAssertEqual(src_map.count("sample_a"), 0);
@@ -824,14 +824,14 @@ using namespace yas;
             XCTAssertTrue(result);
 
             auto &objects = result.value();
-            objects.at("sample_a").at(0).set_attribute("name", db::value{"value_1"});
+            objects.at("sample_a").at(0).set_attribute_value("name", db::value{"value_1"});
             objects.at("sample_a")
                 .at(0)
                 .set_relation_objects("child", {objects.at("sample_b").at(0), objects.at("sample_b").at(1)});
-            objects.at("sample_a").at(1).set_attribute("name", db::value{"value_2"});
+            objects.at("sample_a").at(1).set_attribute_value("name", db::value{"value_2"});
 
-            objects.at("sample_b").at(0).set_attribute("name", db::value{"value_3"});
-            objects.at("sample_b").at(1).set_attribute("name", db::value{"value_4"});
+            objects.at("sample_b").at(0).set_attribute_value("name", db::value{"value_3"});
+            objects.at("sample_b").at(1).set_attribute_value("name", db::value{"value_4"});
 
         });
 
@@ -862,26 +862,26 @@ using namespace yas;
             XCTAssertEqual(objects.count("sample_b"), 1);
             XCTAssertEqual(objects.at("sample_b").size(), 2);
             XCTAssertEqual(objects.at("sample_b").count(1), 1);
-            XCTAssertEqual(objects.at("sample_b").at(1).get_attribute("name"), db::value{"value_3"});
+            XCTAssertEqual(objects.at("sample_b").at(1).attribute_value("name"), db::value{"value_3"});
             XCTAssertEqual(objects.at("sample_b").count(2), 1);
-            XCTAssertEqual(objects.at("sample_b").at(2).get_attribute("name"), db::value{"value_4"});
+            XCTAssertEqual(objects.at("sample_b").at(2).attribute_value("name"), db::value{"value_4"});
 
             auto const &object_a = pair.first;
-            XCTAssertEqual(object_a.get_attribute("name"), db::value{"value_1"});
+            XCTAssertEqual(object_a.attribute_value("name"), db::value{"value_1"});
             XCTAssertEqual(object_a.relation_size("child"), 2);
-            XCTAssertEqual(object_a.get_relation_id("child", 0), db::value{1});
-            XCTAssertEqual(object_a.get_relation_id("child", 1), db::value{2});
+            XCTAssertEqual(object_a.relation_id("child", 0), db::value{1});
+            XCTAssertEqual(object_a.relation_id("child", 1), db::value{2});
 
             auto const_objects = db::get_const_relation_objects(object_a, objects, "child");
             XCTAssertEqual(const_objects.size(), 2);
-            XCTAssertEqual(const_objects.at(0).get_attribute("name"), db::value{"value_3"});
-            XCTAssertEqual(const_objects.at(1).get_attribute("name"), db::value{"value_4"});
+            XCTAssertEqual(const_objects.at(0).attribute_value("name"), db::value{"value_3"});
+            XCTAssertEqual(const_objects.at(1).attribute_value("name"), db::value{"value_4"});
 
             auto const_object_b0 = db::get_const_relation_object(object_a, objects, "child", 0);
-            XCTAssertEqual(const_object_b0.get_attribute("name"), db::value{"value_3"});
+            XCTAssertEqual(const_object_b0.attribute_value("name"), db::value{"value_3"});
 
             auto const_object_b1 = db::get_const_relation_object(object_a, objects, "child", 1);
-            XCTAssertEqual(const_object_b1.get_attribute("name"), db::value{"value_4"});
+            XCTAssertEqual(const_object_b1.attribute_value("name"), db::value{"value_4"});
         });
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
@@ -909,11 +909,11 @@ using namespace yas;
             auto &a_objects = objects.at("sample_a");
 
             auto &object = a_objects.at(0);
-            object.set_attribute("name", db::value{"name_0_1"});
+            object.set_attribute_value("name", db::value{"name_0_1"});
             XCTAssertEqual(object.object_id(), db::value{1});
 
             object = a_objects.at(1);
-            object.set_attribute("name", db::value{"name_1_1"});
+            object.set_attribute_value("name", db::value{"name_1_1"});
             XCTAssertEqual(object.object_id(), db::value{2});
         });
 
@@ -926,7 +926,7 @@ using namespace yas;
 
         for (auto &object : a_objects) {
             if (object.object_id() == db::value{1}) {
-                object.set_attribute("name", db::value{"name_0_2"});
+                object.set_attribute_value("name", db::value{"name_0_2"});
             }
         }
     });
@@ -983,9 +983,9 @@ using namespace yas;
             db::object &obj_b0 = objects.at("sample_b").at(0);
             db::object &obj_b1 = objects.at("sample_b").at(1);
 
-            obj_a.set_attribute("name", db::value{"test_a_2"});
-            obj_b0.set_attribute("name", db::value{"test_b0_2"});
-            obj_b1.set_attribute("name", db::value{"test_b1_2"});
+            obj_a.set_attribute_value("name", db::value{"test_a_2"});
+            obj_b0.set_attribute_value("name", db::value{"test_b0_2"});
+            obj_b1.set_attribute_value("name", db::value{"test_b1_2"});
 
             obj_a.set_relation_objects("child", {obj_b0});
         });
@@ -998,9 +998,9 @@ using namespace yas;
         db::object &obj_b0 = objects.at("sample_b").at(0);
         db::object &obj_b1 = objects.at("sample_b").at(1);
 
-        obj_a.set_attribute("name", db::value{"test_a_3"});
-        obj_b0.set_attribute("name", db::value{"test_b0_3"});
-        obj_b1.set_attribute("name", db::value{"test_b1_3"});
+        obj_a.set_attribute_value("name", db::value{"test_a_3"});
+        obj_b0.set_attribute_value("name", db::value{"test_b0_3"});
+        obj_b1.set_attribute_value("name", db::value{"test_b1_3"});
 
         obj_a.set_relation_objects("child", {obj_b1, obj_b0});
     });
@@ -1013,9 +1013,9 @@ using namespace yas;
         db::object &obj_b0 = objects.at("sample_b").at(0);
         db::object &obj_b1 = objects.at("sample_b").at(1);
 
-        obj_a.set_attribute("name", db::value{"test_a_4"});
-        obj_b0.set_attribute("name", db::value{"test_b0_4"});
-        obj_b1.set_attribute("name", db::value{"test_b1_4"});
+        obj_a.set_attribute_value("name", db::value{"test_a_4"});
+        obj_b0.set_attribute_value("name", db::value{"test_b0_4"});
+        obj_b1.set_attribute_value("name", db::value{"test_b1_4"});
 
         obj_a.set_relation_objects("child", {obj_b1});
     });

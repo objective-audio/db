@@ -30,7 +30,8 @@ using namespace yas;
     db::entity entity{"entity_name", {{attr.name, std::move(attr)}}, {{rel.name, std::move(rel)}}};
 
     XCTAssertEqual(entity.name, "entity_name");
-    XCTAssertEqual(entity.attributes.size(), 1);
+    XCTAssertEqual(entity.all_attributes.size(), 1);
+    XCTAssertEqual(entity.custom_attributes.size(), 1);
     XCTAssertEqual(entity.relations.size(), 1);
 
     XCTAssertEqual(entity.sql_for_create(), "CREATE TABLE IF NOT EXISTS entity_name (attr_name INTEGER DEFAULT 1);");
