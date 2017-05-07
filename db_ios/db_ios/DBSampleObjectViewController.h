@@ -3,11 +3,10 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "yas_db.h"
-#import "yas_db_sample_controller.h"
+#import "yas_sample_db_controller.h"
 
-@interface DBSampleObjectViewController : UIViewController
+@interface DBSampleObjectViewController : UITableViewController
 
-- (void)setDbController:(std::shared_ptr<yas::sample::db_controller>)controller dbObject:(yas::db::object)object;
+- (void)set_db_controller:(std::weak_ptr<yas::sample::db_controller>)controller db_object:(yas::db::object)object;
 
 @end
