@@ -520,6 +520,7 @@ using namespace yas;
 
         auto const &obj = info.object;
         auto const &name = info.name;
+        auto const &rel_info = info.relation_change_info();
 
         XCTAssertEqual(name, "child");
 
@@ -527,15 +528,23 @@ using namespace yas;
             XCTAssertEqual(obj.relation_size(name), 2);
             XCTAssertEqual(obj.relation_id(name, 0), db::value{10});
             XCTAssertEqual(obj.relation_id(name, 1), db::value{20});
+            XCTAssertEqual(rel_info.reason, db::object::change_reason::replaced);
+            XCTAssertEqual(rel_info.indices.size(), 0);
         } else if (called_count == 1) {
             XCTAssertEqual(obj.relation_size(name), 3);
             XCTAssertEqual(obj.relation_id(name, 2), db::value{30});
+            XCTAssertEqual(rel_info.reason, db::object::change_reason::inserted);
+            XCTAssertEqual(rel_info.indices.size(), 1);
         } else if (called_count == 2) {
             XCTAssertEqual(obj.relation_size(name), 2);
             XCTAssertEqual(obj.relation_id(name, 0), db::value{10});
             XCTAssertEqual(obj.relation_id(name, 1), db::value{30});
+            XCTAssertEqual(rel_info.reason, db::object::change_reason::removed);
+            XCTAssertEqual(rel_info.indices.size(), 1);
         } else if (called_count == 3) {
             XCTAssertEqual(obj.relation_size(name), 0);
+            XCTAssertEqual(rel_info.reason, db::object::change_reason::removed);
+            XCTAssertEqual(rel_info.indices.size(), 2);
         }
 
         ++called_count;

@@ -11,6 +11,7 @@
 #include "yas_db_value.h"
 #include "yas_observing.h"
 #include "yas_stl_utils.h"
+#include "yas_fast_each.h"
 
 using namespace yas;
 
@@ -322,7 +323,8 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
                 this->_status = db::object_status::changed;
             }
 
-            this->notify_did_change(db::object::method::relation_changed, rel_name, true);
+            this->notify_did_change(db::object::method::relation_changed, rel_name, {change_reason::replaced, {}},
+                                    true);
         }
     }
 
@@ -351,7 +353,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
             this->_status = db::object_status::changed;
         }
 
-        this->notify_did_change(db::object::method::relation_changed, rel_name, true);
+        this->notify_did_change(db::object::method::relation_changed, rel_name, {change_reason::inserted, {idx}}, true);
     }
 
     void remove_relation_id(std::string const &rel_name, db::value const &relation_id) {
@@ -359,8 +361,17 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
         this->validate_relation_id(relation_id);
 
         if (this->_data.relations.count(rel_name) > 0) {
-            erase_if(this->_data.relations.at(rel_name),
-                     [relation_id](db::value const &object_id) { return object_id == relation_id; });
+            std::size_t idx = 0;
+            std::vector<std::size_t> indices;
+
+            erase_if(this->_data.relations.at(rel_name), [relation_id, &idx, &indices](db::value const &object_id) {
+                bool const result = object_id == relation_id;
+                if (result) {
+                    indices.push_back(idx);
+                }
+                ++idx;
+                return result;
+            });
 
             this->set_update_action();
 
@@ -368,7 +379,8 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
                 this->_status = db::object_status::changed;
             }
 
-            this->notify_did_change(db::object::method::relation_changed, rel_name, true);
+            this->notify_did_change(db::object::method::relation_changed, rel_name,
+                                    {change_reason::removed, std::move(indices)}, true);
         }
     }
 
@@ -387,7 +399,8 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
                 this->_status = db::object_status::changed;
             }
 
-            this->notify_did_change(db::object::method::relation_changed, rel_name, true);
+            this->notify_did_change(db::object::method::relation_changed, rel_name, {change_reason::removed, {idx}},
+                                    true);
         }
     }
 
@@ -399,6 +412,8 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
         }
 
         if (this->_data.relations.count(rel_name) > 0) {
+            auto const rel_size = this->_data.relations.at(rel_name).size();
+
             this->_data.relations.erase(rel_name);
 
             this->set_update_action();
@@ -407,7 +422,15 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
                 this->_status = db::object_status::changed;
             }
 
-            this->notify_did_change(db::object::method::relation_changed, rel_name, true);
+            std::vector<std::size_t> indices;
+            indices.reserve(rel_size);
+            auto each = make_fast_each(rel_size);
+            while (yas_each_next(each)) {
+                indices.push_back(yas_each_index(each));
+            }
+
+            this->notify_did_change(db::object::method::relation_changed, rel_name,
+                                    {change_reason::removed, std::move(indices)}, true);
         }
     }
 
@@ -487,12 +510,34 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
             }
         }
     }
+
+    void notify_did_change(db::object::method const &key, std::string const &name,
+                           db::object::relation_change_info &&rel_change_info, bool const send_to_manager) {
+        if (this->_subject.has_observer()) {
+            this->_subject.notify(key, db::object::change_info{cast<db::object>(), name, std::move(rel_change_info)});
+        }
+
+        if (send_to_manager && this->_manager) {
+            if (auto observable = this->_manager.object_observable()) {
+                observable.object_did_change(cast<db::object>());
+            }
+        }
+    }
 };
 
 #pragma mark - db::object::change_info
 
-db::object::change_info::change_info(class object const &object, std::string const &name)
-    : object(object), name(name){};
+db::object::change_info::change_info(db::object const &object, std::string const &name) : object(object), name(name) {
+}
+
+db::object::change_info::change_info(db::object const &object, std::string const &name,
+                                     db::object::relation_change_info &&rel_change_info)
+    : object(object), name(name), _rel_change_info(std::move(rel_change_info)) {
+}
+
+db::object::relation_change_info const &db::object::change_info::relation_change_info() const {
+    return *_rel_change_info;
+}
 
 #pragma mark - db::object
 
@@ -554,7 +599,8 @@ void db::object::add_relation_object(std::string const &rel_name, object const &
     impl_ptr<impl>()->add_relation_id(rel_name, rel_object.object_id());
 }
 
-void db::object::insert_relation_object(std::string const &rel_name, db::object const &rel_object, std::size_t const idx) {
+void db::object::insert_relation_object(std::string const &rel_name, db::object const &rel_object,
+                                        std::size_t const idx) {
     impl_ptr<impl>()->insert_relation_id(rel_name, rel_object.object_id(), idx);
 }
 
