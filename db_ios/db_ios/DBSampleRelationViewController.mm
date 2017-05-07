@@ -88,11 +88,29 @@ rel_control_row_type_t to_idx(rel_control_row const &row) {
         db::object::change_info const &info = context.value;
         if (info.name == rel_name) {
             if (auto self = unowned_self.object().object) {
-                [self.tableView reloadData];
+                auto const &rel_info = info.relation_change_info();
+                auto indexPaths = [[NSMutableArray<NSIndexPath *> alloc] init];
+                for (auto const &idx : rel_info.indices) {
+                    [indexPaths addObject:[NSIndexPath indexPathForRow:idx inSection:NSInteger(rel_section::objects)]];
+                }
+
+                switch (rel_info.reason) {
+                    case db::object::change_reason::inserted: {
+                        [self.tableView insertRowsAtIndexPaths:indexPaths
+                                              withRowAnimation:UITableViewRowAnimationAutomatic];
+                    } break;
+
+                    case db::object::change_reason::removed: {
+                        [self.tableView deleteRowsAtIndexPaths:indexPaths
+                                              withRowAnimation:UITableViewRowAnimationAutomatic];
+                    } break;
+
+                    default: { [self.tableView reloadData]; } break;
+                }
             }
         }
     };
-    
+
     auto observer = _db_object->subject().make_observer(db::object::method::relation_changed, rel_changed_handler);
 
     _observers.emplace_back(std::move(observer));
