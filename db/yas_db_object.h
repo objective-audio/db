@@ -7,6 +7,7 @@
 #include <deque>
 #include <set>
 #include <unordered_map>
+#include <experimental/optional>
 #include "yas_base.h"
 #include "yas_db_additional_protocol.h"
 
@@ -76,12 +77,24 @@ namespace db {
         class impl;
 
         enum class method { attribute_changed, relation_changed, loading_changed };
+        enum class change_reason { replaced, inserted, removed };
+        
+        struct relation_change_info {
+            db::object::change_reason const reason;
+            std::vector<std::size_t> const indices;
+        };
 
         struct change_info {
             db::object const &object;
             std::string const name;
 
             change_info(db::object const &, std::string const &);
+            change_info(db::object const &, std::string const &, relation_change_info &&rel_change_info);
+            
+            db::object::relation_change_info const &relation_change_info() const;
+            
+        private:
+            std::experimental::optional<db::object::relation_change_info> const _rel_change_info;
         };
 
         using subject_t = subject<change_info, method>;
