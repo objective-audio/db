@@ -103,7 +103,7 @@ namespace db {
         entity_datas.reserve(entity_attrs.size());
 
         for (db::value_map_t attrs : entity_attrs) {
-            if (auto obj_data_result = fetch_object_data(db, rel_models, attrs)) {
+            if (auto obj_data_result = db::fetch_object_data(db, rel_models, attrs)) {
                 entity_datas.emplace_back(std::move(obj_data_result.value()));
             } else {
                 return db::object_data_vector_result_t{std::move(obj_data_result.error())};
@@ -1652,7 +1652,7 @@ void db::manager::fetch_const_objects(db::manager::fetch_preparation_option_f pr
             manager
         ]() mutable {
             if (state) {
-                completion(db::manager::const_vector_result_t{to_const_vector_objects(manager.model(), fetched_datas)});
+                completion(db::manager::const_vector_result_t{db::to_const_vector_objects(manager.model(), fetched_datas)});
             } else {
                 completion(db::manager::const_vector_result_t{std::move(state.error())});
             }
@@ -1695,7 +1695,7 @@ void db::manager::fetch_const_objects(db::manager::fetch_preparation_ids_f prepa
             fetched_datas = std::move(fetched_datas)
         ]() mutable {
             if (state) {
-                completion(db::manager::const_map_result_t{to_const_map_objects(manager.model(), fetched_datas)});
+                completion(db::manager::const_map_result_t{db::to_const_map_objects(manager.model(), fetched_datas)});
             } else {
                 completion(db::manager::const_map_result_t{std::move(state.error())});
             }
