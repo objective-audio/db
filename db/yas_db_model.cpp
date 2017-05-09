@@ -46,6 +46,9 @@ struct db::model::impl : public base::impl {
             return;
         }
 
+        std::unordered_map<std::string, std::pair<db::attribute_map_t, db::relation_map_t>> entity_params;
+        std::unordered_map<std::string, db::string_set_map_t> entity_inv_rel_names;
+
         for (auto &cf_entities_pair : each_dictionary(cf_entities_dict)) {
             auto entity_name = to_string((CFStringRef)cf_entities_pair.first);
             if (entity_name.size() == 0) {
@@ -92,13 +95,34 @@ struct db::model::impl : public base::impl {
                     std::string relation_name = to_string((CFStringRef)cf_relation_pair.first);
                     CFDictionaryRef cf_relation_dict = get<CFDictionaryRef>(cf_relations, relation_name);
                     if (cf_relation_dict) {
-                        db::relation relation{entity_name, std::move(relation_name), cf_relation_dict};
+                        db::relation relation{entity_name, relation_name, cf_relation_dict};
+
+                        auto const &tgt_entity_name = relation.target_entity_name;
+                        if (entity_inv_rel_names.count(tgt_entity_name) == 0) {
+                            entity_inv_rel_names.insert(std::make_pair(tgt_entity_name, db::string_set_map_t{}));
+                        }
+                        auto &inv_rel_names = entity_inv_rel_names.at(tgt_entity_name);
+                        if (inv_rel_names.count(entity_name) == 0) {
+                            inv_rel_names.insert(std::make_pair(entity_name, db::string_set_t{}));
+                        }
+                        inv_rel_names.at(entity_name).insert(relation_name);
+
                         relations.emplace(std::make_pair(std::move(relation_name), std::move(relation)));
                     }
                 }
             }
 
-            db::entity entity{entity_name, std::move(attributes), std::move(relations)};
+            entity_params.emplace(entity_name, std::make_pair(std::move(attributes), std::move(relations)));
+        }
+
+        for (auto &entity_pair : entity_params) {
+            auto const &entity_name = entity_pair.first;
+            db::string_set_map_t inv_rel_names;
+            if (entity_inv_rel_names.count(entity_name)) {
+                inv_rel_names = std::move(entity_inv_rel_names.at(entity_name));
+            }
+            db::entity entity{entity_name, std::move(entity_pair.second.first), std::move(entity_pair.second.second),
+                              std::move(inv_rel_names)};
             this->_entities.emplace(std::make_pair(entity_name, std::move(entity)));
         }
 

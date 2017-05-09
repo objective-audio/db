@@ -19,7 +19,7 @@ namespace db {
 }
 }
 
-db::relation::relation(std::string const entity_name, std::string const &attr_name, CFDictionaryRef const &dict)
+db::relation::relation(std::string const &entity_name, std::string const &attr_name, CFDictionaryRef const &dict)
     : entity_name(entity_name),
       name(attr_name),
       target_entity_name(get<std::string>(dict, db::target_key)),

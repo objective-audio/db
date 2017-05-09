@@ -26,8 +26,9 @@ using namespace yas;
     db::attribute attr{"attr_name", (__bridge CFDictionaryRef)attr_dict};
     NSDictionary *rel_dict = @{ @"target": @"test_target" };
     db::relation rel{"entity_name", "rel_name", (__bridge CFDictionaryRef)rel_dict};
+    db::string_set_map_t inv_rels{{"inv_entity_name", {"inv_rel_name_1", "inv_rel_name_2"}}};
 
-    db::entity entity{"entity_name", {{attr.name, std::move(attr)}}, {{rel.name, std::move(rel)}}};
+    db::entity entity{"entity_name", {{attr.name, std::move(attr)}}, {{rel.name, std::move(rel)}}, std::move(inv_rels)};
 
     XCTAssertEqual(entity.name, "entity_name");
     XCTAssertEqual(entity.all_attributes.size(), 1);
