@@ -11,7 +11,8 @@
 
 using namespace yas;
 
-db::entity::entity(std::string const &name, db::attribute_map_t &&attributes, db::relation_map_t &&relations)
+db::entity::entity(std::string const &name, db::attribute_map_t &&attributes, db::relation_map_t &&relations,
+                   db::string_set_map_t &&inv_rel_names)
     : name(name),
       all_attributes(std::move(attributes)),
       custom_attributes(filter(this->all_attributes,
@@ -23,7 +24,8 @@ db::entity::entity(std::string const &name, db::attribute_map_t &&attributes, db
                                    }
                                    return true;
                                })),
-      relations(std::move(relations)) {
+      relations(std::move(relations)),
+      inverse_relation_names(std::move(inv_rel_names)) {
 }
 
 std::string db::entity::sql_for_create() const {

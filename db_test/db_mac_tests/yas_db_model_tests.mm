@@ -177,6 +177,16 @@ using namespace yas;
     XCTAssertEqual(child.entity_name, "sample_a");
     XCTAssertEqual(child.name, "child");
     XCTAssertEqual(child.target_entity_name, "sample_b");
+
+    auto const &inv_rel_names_a = entity_a.inverse_relation_names;
+    XCTAssertEqual(inv_rel_names_a.size(), 0);
+
+    auto const &inv_rel_names_b = entity_b.inverse_relation_names;
+    XCTAssertEqual(inv_rel_names_b.size(), 1);
+    XCTAssertEqual(inv_rel_names_b.count("sample_a"), 1);
+    auto const &sample_a_inv_rel_names = inv_rel_names_b.at("sample_a");
+    XCTAssertEqual(sample_a_inv_rel_names.size(), 1);
+    XCTAssertEqual(sample_a_inv_rel_names.count("child"), 1);
 }
 
 - (void)test_get_entity {
