@@ -171,7 +171,7 @@ namespace db {
             entity_objects.reserve(entity_datas.size());
 
             for (auto const &data : entity_datas) {
-                if (db::const_object obj{model, entity_name, data}) {
+                if (db::const_object obj{model.entity(entity_name), data}) {
                     entity_objects.emplace_back(std::move(obj));
                 }
             }
@@ -191,7 +191,7 @@ namespace db {
             entity_objects.reserve(entity_datas.size());
 
             for (auto const &data : entity_datas) {
-                if (db::const_object obj{model, entity_name, data}) {
+                if (db::const_object obj{model.entity(entity_name), data}) {
                     entity_objects.emplace(std::make_pair(obj.object_id().get<db::integer>(), std::move(obj)));
                 }
             }
@@ -232,7 +232,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
     }
 
     db::object insert_object(std::string const entity_name) {
-        db::object object{cast<db::manager>(), _model, entity_name};
+        db::object object{cast<db::manager>(), this->_model.entity(entity_name)};
 
         object.manageable().load_insertion_data();
 
@@ -273,7 +273,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                     }
 
                     if (!object) {
-                        object = db::object{manager, this->_model, entity_name};
+                        object = db::object{manager, this->_model.entity(entity_name)};
                         entity_cached_objects.emplace(std::make_pair(object_id, to_weak(object)));
                     }
                 }

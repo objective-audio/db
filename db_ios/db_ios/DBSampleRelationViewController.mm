@@ -60,7 +60,7 @@ rel_control_row_type_t to_idx(rel_control_row const &row) {
 
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
     if (auto viewController = objc_cast<DBSampleObjectSelectionViewController>(segue.destinationViewController)) {
-        auto const &relation = _db_object->model().relation(_db_object->entity_name(), _rel_name);
+        auto const &relation = _db_object->entity().relations.at(_rel_name);
 
         auto unowned_self = make_objc_ptr([[YASUnownedObject<typeof(self)> alloc] initWithObject:self]);
 

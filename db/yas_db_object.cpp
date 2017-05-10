@@ -18,12 +18,10 @@ using namespace yas;
 #pragma mark - db::const_object::impl
 
 struct db::const_object::impl : public base::impl {
-    db::model _model;
-    std::string _entity_name;
+    db::entity _entity;
     db::object_data _data;
 
-    impl(db::model const &model, std::string const &entity_name, db::object_data const &obj_data = {})
-        : _model(model), _entity_name(entity_name) {
+    impl(db::entity const &entity, db::object_data const &obj_data = {}) : _entity(entity) {
         this->load_data(obj_data);
     }
 
@@ -43,9 +41,7 @@ struct db::const_object::impl : public base::impl {
     void load_data(db::object_data const &obj_data) {
         this->clear();
 
-        db::entity const &entity = this->_model.entities().at(_entity_name);
-
-        for (auto const &pair : entity.all_attributes) {
+        for (auto const &pair : this->_entity.all_attributes) {
             auto const &attr_name = pair.first;
             if (obj_data.attributes.count(attr_name) > 0) {
                 this->validate_attribute_name(attr_name);
@@ -54,7 +50,7 @@ struct db::const_object::impl : public base::impl {
             }
         }
 
-        for (auto const &pair : entity.relations) {
+        for (auto const &pair : this->_entity.relations) {
             auto const &rel_name = pair.first;
             if (obj_data.relations.count(rel_name) > 0) {
                 this->validate_relation_name(rel_name);
@@ -107,8 +103,7 @@ struct db::const_object::impl : public base::impl {
     db::integer_set_map_t relation_ids_for_fetch() {
         db::integer_set_map_t relation_ids;
 
-        db::entity const &entity = this->_model.entity(this->_entity_name);
-        for (auto const &pair : entity.relations) {
+        for (auto const &pair : this->_entity.relations) {
             auto const &rel_name = pair.first;
             if (this->_data.relations.count(rel_name) > 0) {
                 auto const &tgt_entity_name = pair.second.target_entity_name;
@@ -128,14 +123,14 @@ struct db::const_object::impl : public base::impl {
     }
 
     void validate_attribute_name(std::string const &attr_name) {
-        if (!this->_model.attribute_exists(this->_entity_name, attr_name)) {
-            throw "attribute name (" + attr_name + ") not found in " + this->_entity_name + ".";
+        if (!this->_entity.all_attributes.count(attr_name)) {
+            throw "attribute name (" + attr_name + ") not found in " + this->_entity.name + ".";
         }
     }
 
     void validate_relation_name(std::string const &rel_name) {
-        if (!this->_model.relation_exists(this->_entity_name, rel_name)) {
-            throw "relation name (" + rel_name + ") not found in " + this->_entity_name + ".";
+        if (!this->_entity.relations.count(rel_name)) {
+            throw "relation name (" + rel_name + ") not found in " + this->_entity.name + ".";
         }
     }
 
@@ -154,8 +149,8 @@ struct db::const_object::impl : public base::impl {
 
 #pragma mark - db::const_object
 
-db::const_object::const_object(db::model const &model, std::string const &entity_name, db::object_data const &obj_data)
-    : base(std::make_unique<impl>(model, entity_name, obj_data)) {
+db::const_object::const_object(db::entity const &entity, db::object_data const &obj_data)
+    : base(std::make_unique<impl>(entity, obj_data)) {
 }
 
 db::const_object::const_object(std::nullptr_t) : base(nullptr) {
@@ -167,16 +162,12 @@ db::const_object::const_object(std::shared_ptr<impl> const &impl) : base(impl) {
 db::const_object::const_object(std::shared_ptr<impl> &&impl) : base(std::move(impl)) {
 }
 
-db::model const &db::const_object::model() const {
-    return impl_ptr<impl>()->_model;
-}
-
 db::entity const &db::const_object::entity() const {
-    return this->model().entity(this->entity_name());
+    return impl_ptr<impl>()->_entity;
 }
 
 std::string const &db::const_object::entity_name() const {
-    return impl_ptr<impl>()->_entity_name;
+    return impl_ptr<impl>()->_entity.name;
 }
 
 db::value const &db::const_object::attribute_value(std::string const &attr_name) const {
@@ -239,14 +230,13 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
     db::manager _manager;
     db::object::subject_t _subject;
 
-    impl(db::manager const &manager, db::model const &model, std::string const &entity_name)
-        : const_object::impl(model, entity_name), _manager(manager) {
+    impl(db::manager const &manager, db::entity const &entity) : const_object::impl(entity), _manager(manager) {
     }
 
     ~impl() {
         if (this->_manager) {
             if (auto observable = this->_manager.object_observable()) {
-                observable.object_did_erase(_entity_name, attribute_value(object_id_field).get<integer>());
+                observable.object_did_erase(_entity.name, attribute_value(object_id_field).get<integer>());
             }
         }
     }
@@ -260,16 +250,14 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
         if (this->_status != db::object_status::changed || force) {
             this->clear();
 
-            db::entity const &entity = this->_model.entity(_entity_name);
-
-            for (auto const &pair : entity.all_attributes) {
+            for (auto const &pair : this->_entity.all_attributes) {
                 auto const &attr_name = pair.first;
                 if (obj_data.attributes.count(attr_name) > 0) {
                     this->set_attribute_value(attr_name, obj_data.attributes.at(attr_name), true);
                 }
             }
 
-            for (auto const &pair : entity.relations) {
+            for (auto const &pair : this->_entity.relations) {
                 auto const &rel_name = pair.first;
                 if (obj_data.relations.count(rel_name) > 0) {
                     this->set_relation_ids(rel_name, obj_data.relations.at(rel_name), true);
@@ -292,9 +280,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
         this->_status = db::object_status::inserted;
         set_attribute_value(db::action_field, db::value{db::insert_action}, true);
 
-        db::entity const &entity = _model.entity(_entity_name);
-
-        for (auto const &pair : entity.all_attributes) {
+        for (auto const &pair : this->_entity.all_attributes) {
             auto const &attr = pair.second;
             if (attr.default_value) {
                 this->set_attribute_value(attr.name, attr.default_value, true);
@@ -423,7 +409,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
     void remove_all_relations(std::string const &rel_name) {
         this->validate_relation_name(rel_name);
 
-        if (!this->_model.relation_exists(this->_entity_name, rel_name)) {
+        if (this->_entity.relations.count(rel_name) == 0) {
             throw "relation name (" + rel_name + ") not found";
         }
 
@@ -472,9 +458,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
         db::value_map_t attributes;
         db::value_vector_map_t relations;
 
-        db::entity const &entity = this->_model.entity(this->_entity_name);
-
-        for (auto const &pair : entity.all_attributes) {
+        for (auto const &pair : this->_entity.all_attributes) {
             auto const &attr_name = pair.first;
 
             if (attr_name == db::save_id_field) {
@@ -494,7 +478,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
             }
         }
 
-        for (auto const &pair : entity.relations) {
+        for (auto const &pair : this->_entity.relations) {
             auto const &rel_name = pair.first;
             if (this->_data.relations.count(rel_name) > 0) {
                 relations.emplace(std::make_pair(rel_name, this->_data.relations.at(rel_name)));
@@ -557,8 +541,8 @@ db::object::relation_change_info const &db::object::change_info::relation_change
 
 #pragma mark - db::object
 
-db::object::object(db::manager const &manager, db::model const &model, std::string const &entity_name)
-    : const_object(std::make_unique<impl>(manager, model, entity_name)) {
+db::object::object(db::manager const &manager, db::entity const &entity)
+    : const_object(std::make_unique<impl>(manager, entity)) {
 }
 
 db::object::object(std::nullptr_t) : const_object(nullptr) {
@@ -578,14 +562,14 @@ void db::object::set_attribute_value(std::string const &attr_name, db::value con
 
 db::object_vector_t db::object::relation_objects(std::string const &rel_name) const {
     auto const &rel_ids = impl_ptr<impl>()->relation_ids(rel_name);
-    std::string const &tgt_entity_name = this->model().relation(entity_name(), rel_name).target_entity_name;
+    std::string const &tgt_entity_name = this->entity().relations.at(rel_name).target_entity_name;
     return to_vector<db::object>(rel_ids, [manager = manager(), &tgt_entity_name](db::value const &id) {
         return manager.cached_object(tgt_entity_name, id.get<db::integer>());
     });
 }
 
 db::object db::object::relation_object_at(std::string const &rel_name, std::size_t const idx) const {
-    std::string const &tgt_entity_name = this->model().relation(entity_name(), rel_name).target_entity_name;
+    std::string const &tgt_entity_name = this->entity().relations.at(rel_name).target_entity_name;
     return this->manager().cached_object(tgt_entity_name, relation_id(rel_name, idx).get<db::integer>());
 }
 

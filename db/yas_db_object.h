@@ -46,10 +46,9 @@ namespace db {
        public:
         class impl;
 
-        const_object(db::model const &model, std::string const &entity_name, db::object_data const &obj_data);
+        const_object(db::entity const &entity, db::object_data const &obj_data);
         const_object(std::nullptr_t);
 
-        db::model const &model() const;
         db::entity const &entity() const;
         std::string const &entity_name() const;
 
@@ -106,7 +105,7 @@ namespace db {
         using subject_t = subject<change_info, method>;
         using observer_t = observer<change_info, method>;
 
-        object(db::manager const &manager, db::model const &model, std::string const &entity_name);
+        object(db::manager const &manager, db::entity const &entity);
         object(std::nullptr_t);
 
         subject_t const &subject() const;
