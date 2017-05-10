@@ -63,6 +63,12 @@ namespace db {
         db::value const &save_id() const;
         db::value const &action() const;
 
+        bool is_inserted() const;
+        bool is_updated() const;
+        bool is_removed() const;
+
+        bool is_temporary() const;
+
         db::integer_set_map_t relation_ids_for_fetch() const;
 
         static db::const_object const &null_object();
@@ -78,7 +84,7 @@ namespace db {
 
         enum class method { attribute_changed, relation_changed, loading_changed };
         enum class change_reason { replaced, inserted, removed };
-        
+
         struct relation_change_info {
             db::object::change_reason const reason;
             std::vector<std::size_t> const indices;
@@ -90,10 +96,10 @@ namespace db {
 
             change_info(db::object const &, std::string const &);
             change_info(db::object const &, std::string const &, relation_change_info &&rel_change_info);
-            
+
             db::object::relation_change_info const &relation_change_info() const;
-            
-        private:
+
+           private:
             std::experimental::optional<db::object::relation_change_info> const _rel_change_info;
         };
 
@@ -127,7 +133,6 @@ namespace db {
         db::object_status status() const;
 
         void remove();
-        bool is_removed() const;
 
         db::object_data data_for_save() const;
 
