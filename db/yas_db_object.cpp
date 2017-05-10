@@ -32,6 +32,14 @@ struct db::const_object::impl : public base::impl {
         this->_data.relations.clear();
     }
 
+    bool is_equal_to_action(std::string const &action) {
+        if (this->_data.attributes.count(action_field) > 0) {
+            return this->_data.attributes.at(action_field).get<db::text>() == action;
+        }
+
+        return false;
+    }
+
     void load_data(db::object_data const &obj_data) {
         this->clear();
 
@@ -199,6 +207,22 @@ db::value const &db::const_object::action() const {
     return this->attribute_value(action_field);
 }
 
+bool db::const_object::is_inserted() const {
+    return impl_ptr<impl>()->is_equal_to_action(db::insert_action);
+}
+
+bool db::const_object::is_updated() const {
+    return impl_ptr<impl>()->is_equal_to_action(db::update_action);
+}
+
+bool db::const_object::is_removed() const {
+    return impl_ptr<impl>()->is_equal_to_action(db::remove_action);
+}
+
+bool db::const_object::is_temporary() const {
+    return this->save_id().get<db::integer>() <= 0;
+}
+
 db::integer_set_map_t db::const_object::relation_ids_for_fetch() const {
     return impl_ptr<impl>()->relation_ids_for_fetch();
 }
@@ -230,14 +254,6 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
     void clear() {
         const_object::impl::clear();
         this->_status = db::object_status::invalid;
-    }
-
-    bool is_equal_to_action(std::string const &action) {
-        if (this->_data.attributes.count(action_field) > 0) {
-            return this->_data.attributes.at(action_field).get<db::text>() == action;
-        }
-
-        return false;
     }
 
     void load_data(db::object_data const &obj_data, bool const force) override {
@@ -626,10 +642,6 @@ enum db::object_status db::object::status() const {
 
 void db::object::remove() {
     impl_ptr<impl>()->remove();
-}
-
-bool db::object::is_removed() const {
-    return impl_ptr<impl>()->is_equal_to_action(remove_action);
 }
 
 db::object_data db::object::data_for_save() const {

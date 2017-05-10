@@ -4,6 +4,7 @@
 
 #import "yas_db_test_utils.h"
 #import "yas_db_utils.h"
+#import "yas_objc_ptr.h"
 
 using namespace yas;
 
@@ -1583,25 +1584,25 @@ using namespace yas;
 - (void)test_suspend_count {
     db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1) priority_count:2];
-    
+
     XCTAssertFalse(manager.is_suspended());
-    
+
     manager.suspend();
-    
+
     XCTAssertTrue(manager.is_suspended());
-    
+
     manager.suspend();
-    
+
     XCTAssertTrue(manager.is_suspended());
-    
+
     manager.resume();
-    
+
     XCTAssertTrue(manager.is_suspended());
-    
+
     manager.resume();
-    
+
     XCTAssertFalse(manager.is_suspended());
-    
+
     XCTAssertThrows(manager.resume());
 }
 
@@ -1901,6 +1902,33 @@ using namespace yas;
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
     manager.execute([exp](auto const &op) { [exp fulfill]; });
     [self waitForExpectationsWithTimeout:1.0 handler:nil];
+}
+
+- (void)test_is_temporary {
+    db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
+    auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
+
+    XCTestExpectation *setupExp = [self expectationWithDescription:@"setup"];
+
+    manager.setup([self, setupExp](auto result) {
+        XCTAssertTrue(result);
+
+        [setupExp fulfill];
+    });
+
+    [self waitForExpectations:@[setupExp] timeout:10.0];
+
+    auto object = manager.insert_object("sample_a");
+
+    XCTAssertTrue(object.is_temporary());
+
+    XCTestExpectation *saveExp = [self expectationWithDescription:@"save"];
+
+    manager.save([saveExp](auto result) { [saveExp fulfill]; });
+
+    [self waitForExpectations:@[saveExp] timeout:10.0];
+
+    XCTAssertFalse(object.is_temporary());
 }
 
 - (void)test_reset {
