@@ -721,4 +721,58 @@ using namespace yas;
     XCTAssertEqual(to_string(db::object_status::updating), "updating");
 }
 
+- (void)test_is_inserted {
+    NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
+    db::model model((__bridge CFDictionaryRef)model_dict);
+    db::object obj{nullptr, model, "sample_a"};
+
+    obj.set_attribute_value(db::action_field, db::value{db::insert_action});
+
+    XCTAssertTrue(obj.is_inserted());
+
+    obj.set_attribute_value(db::action_field, db::value{db::update_action});
+
+    XCTAssertFalse(obj.is_inserted());
+
+    obj.set_attribute_value(db::action_field, db::value{db::remove_action});
+
+    XCTAssertFalse(obj.is_inserted());
+}
+
+- (void)test_is_updated {
+    NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
+    db::model model((__bridge CFDictionaryRef)model_dict);
+    db::object obj{nullptr, model, "sample_a"};
+
+    obj.set_attribute_value(db::action_field, db::value{db::update_action});
+
+    XCTAssertTrue(obj.is_updated());
+
+    obj.set_attribute_value(db::action_field, db::value{db::insert_action});
+
+    XCTAssertFalse(obj.is_updated());
+
+    obj.set_attribute_value(db::action_field, db::value{db::remove_action});
+
+    XCTAssertFalse(obj.is_updated());
+}
+
+- (void)test_is_removed {
+    NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
+    db::model model((__bridge CFDictionaryRef)model_dict);
+    db::object obj{nullptr, model, "sample_a"};
+
+    obj.set_attribute_value(db::action_field, db::value{db::remove_action});
+
+    XCTAssertTrue(obj.is_removed());
+
+    obj.set_attribute_value(db::action_field, db::value{db::insert_action});
+
+    XCTAssertFalse(obj.is_removed());
+
+    obj.set_attribute_value(db::action_field, db::value{db::update_action});
+
+    XCTAssertFalse(obj.is_removed());
+}
+
 @end
