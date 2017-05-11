@@ -25,9 +25,8 @@ using namespace yas;
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
 
-    db::object obj{nullptr, model, "sample_a"};
+    db::object obj{nullptr, model.entity("sample_a")};
 
-    XCTAssertEqual(obj.model(), model);
     XCTAssertEqual(obj.entity().name, "sample_a");
     XCTAssertEqual(obj.entity_name(), "sample_a");
     XCTAssertFalse(obj.attribute_value("age"));
@@ -41,7 +40,7 @@ using namespace yas;
 - (void)test_load_values {
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
-    db::object obj{nullptr, model, "sample_a"};
+    db::object obj{nullptr, model.entity("sample_a")};
 
     db::value_map_t attributes{std::make_pair("age", db::value{10}), std::make_pair("name", db::value{"name_val"}),
                                std::make_pair("weight", db::value{53.4}), std::make_pair("hoge", db::value{"hage"})};
@@ -69,7 +68,7 @@ using namespace yas;
     db::value_vector_map_t relations{std::make_pair("child", db::value_vector_t{db::value{12}, db::value{34}})};
     db::object_data obj_data{.attributes = std::move(attributes), .relations = std::move(relations)};
 
-    db::const_object obj{model, "sample_a", obj_data};
+    db::const_object obj{model.entity("sample_a"), obj_data};
 
     XCTAssertEqual(obj.attribute_value("age"), db::value{10});
     XCTAssertEqual(obj.attribute_value("name"), db::value{"name_val"});
@@ -84,7 +83,7 @@ using namespace yas;
 - (void)test_reload_values {
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
-    db::object obj{nullptr, model, "sample_a"};
+    db::object obj{nullptr, model.entity("sample_a")};
 
     db::value_map_t prev_attributes{std::make_pair("age", db::value{10}), std::make_pair("name", db::value{"name_val"}),
                                     std::make_pair("weight", db::value{53.4}),
@@ -115,7 +114,7 @@ using namespace yas;
 - (void)test_set_and_get_value {
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
-    db::object obj{nullptr, model, "sample_a"};
+    db::object obj{nullptr, model.entity("sample_a")};
 
     obj.set_attribute_value("age", db::value{24});
     obj.set_attribute_value("name", db::value{"nabe"});
@@ -129,7 +128,7 @@ using namespace yas;
 - (void)test_add_and_remove_relation_id {
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
-    db::object obj{nullptr, model, "sample_a"};
+    db::object obj{nullptr, model.entity("sample_a")};
 
     obj.add_relation_id("child", db::value{321});
 
@@ -170,10 +169,10 @@ using namespace yas;
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
 
-    db::object obj{nullptr, model, "sample_a"};
-    db::object obj_b1{nullptr, model, "sample_b"};
-    db::object obj_b2{nullptr, model, "sample_b"};
-    db::object obj_b3{nullptr, model, "sample_b"};
+    db::object obj{nullptr, model.entity("sample_a")};
+    db::object obj_b1{nullptr, model.entity("sample_b")};
+    db::object obj_b2{nullptr, model.entity("sample_b")};
+    db::object obj_b3{nullptr, model.entity("sample_b")};
     obj_b1.set_attribute_value(db::object_id_field, db::value{5});
     obj_b2.set_attribute_value(db::object_id_field, db::value{6});
     obj_b3.set_attribute_value(db::object_id_field, db::value{7});
@@ -219,10 +218,10 @@ using namespace yas;
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
 
-    db::object obj{nullptr, model, "sample_a"};
-    db::object obj_b1{nullptr, model, "sample_b"};
-    db::object obj_b2{nullptr, model, "sample_b"};
-    db::object obj_b3{nullptr, model, "sample_b"};
+    db::object obj{nullptr, model.entity("sample_a")};
+    db::object obj_b1{nullptr, model.entity("sample_b")};
+    db::object obj_b2{nullptr, model.entity("sample_b")};
+    db::object obj_b3{nullptr, model.entity("sample_b")};
     obj_b1.set_attribute_value(db::object_id_field, db::value{5});
     obj_b2.set_attribute_value(db::object_id_field, db::value{6});
     obj_b3.set_attribute_value(db::object_id_field, db::value{7});
@@ -248,10 +247,10 @@ using namespace yas;
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
 
-    db::object obj{nullptr, model, "sample_a"};
-    db::object obj_b1{nullptr, model, "sample_b"};
-    db::object obj_b2{nullptr, model, "sample_b"};
-    db::object obj_b3{nullptr, model, "sample_b"};
+    db::object obj{nullptr, model.entity("sample_a")};
+    db::object obj_b1{nullptr, model.entity("sample_b")};
+    db::object obj_b2{nullptr, model.entity("sample_b")};
+    db::object obj_b3{nullptr, model.entity("sample_b")};
     obj_b1.set_attribute_value(db::object_id_field, db::value{5});
     obj_b2.set_attribute_value(db::object_id_field, db::value{6});
     obj_b3.set_attribute_value(db::object_id_field, db::value{7});
@@ -276,7 +275,7 @@ using namespace yas;
 - (void)test_replace_value {
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
-    db::object obj{nullptr, model, "sample_a"};
+    db::object obj{nullptr, model.entity("sample_a")};
 
     obj.set_attribute_value("age", db::value{1});
 
@@ -290,7 +289,7 @@ using namespace yas;
 - (void)test_remove {
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
-    db::object obj{nullptr, model, "sample_a"};
+    db::object obj{nullptr, model.entity("sample_a")};
 
     XCTAssertFalse(obj.is_removed());
 
@@ -315,7 +314,7 @@ using namespace yas;
 - (void)test_action {
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
-    db::object obj{nullptr, model, "sample_a"};
+    db::object obj{nullptr, model.entity("sample_a")};
     auto manageable_obj = obj.manageable();
 
     XCTAssertEqual(obj.action(), db::value::null_value());
@@ -369,7 +368,7 @@ using namespace yas;
 - (void)test_data_for_save {
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
-    db::object obj{nullptr, model, "sample_a"};
+    db::object obj{nullptr, model.entity("sample_a")};
 
     obj.set_attribute_value(db::id_field, db::value{22});
     obj.set_attribute_value(db::object_id_field, db::value{55});
@@ -411,7 +410,7 @@ using namespace yas;
 - (void)test_change_status {
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
-    db::object obj{nullptr, model, "sample_a"};
+    db::object obj{nullptr, model.entity("sample_a")};
 
     auto manageable_obj = obj.manageable();
 
@@ -437,7 +436,7 @@ using namespace yas;
 - (void)test_relation_ids_for_fetch {
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
-    db::object obj{nullptr, model, "sample_a"};
+    db::object obj{nullptr, model.entity("sample_a")};
 
     obj.set_relation_ids("child", db::value_vector_t{db::value{1}, db::value{2}, db::value{3}, db::value{2}});
 
@@ -460,10 +459,10 @@ using namespace yas;
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
 
-    db::object obj1{nullptr, model, "sample_a"};
+    db::object obj1{nullptr, model.entity("sample_a")};
     obj1.set_relation_ids("child", db::value_vector_t{db::value{1}, db::value{2}, db::value{3}});
 
-    db::object obj2{nullptr, model, "sample_a"};
+    db::object obj2{nullptr, model.entity("sample_a")};
     obj2.set_relation_ids("child", db::value_vector_t{db::value{5}, db::value{4}, db::value{3}});
 
     auto rel_ids =
@@ -480,7 +479,7 @@ using namespace yas;
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
 
-    db::object obj{nullptr, model, "sample_a"};
+    db::object obj{nullptr, model.entity("sample_a")};
 
     bool called = false;
 
@@ -508,7 +507,7 @@ using namespace yas;
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
 
-    db::object obj{nullptr, model, "sample_a"};
+    db::object obj{nullptr, model.entity("sample_a")};
 
     size_t called_count = 0;
 
@@ -571,7 +570,7 @@ using namespace yas;
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
 
-    db::object obj{nullptr, model, "sample_a"};
+    db::object obj{nullptr, model.entity("sample_a")};
 
     bool called = false;
 
@@ -611,7 +610,7 @@ using namespace yas;
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
 
-    db::object obj{nullptr, model, "sample_a"};
+    db::object obj{nullptr, model.entity("sample_a")};
 
     obj.set_attribute_value("age", db::value{20});
     obj.set_attribute_value("name", db::value{"test_name"});
@@ -637,7 +636,7 @@ using namespace yas;
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
 
-    db::object obj{nullptr, model, "sample_a"};
+    db::object obj{nullptr, model.entity("sample_a")};
 
     obj.set_attribute_value("name", db::value{"test_name"});
     obj.set_relation_ids("child", {db::value{101}, db::value{102}});
@@ -674,7 +673,7 @@ using namespace yas;
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
 
-    db::object obj{nullptr, model, "sample_a"};
+    db::object obj{nullptr, model.entity("sample_a")};
 
     XCTAssertTrue(obj);
 
@@ -698,7 +697,7 @@ using namespace yas;
     db::value_map_t attributes{std::make_pair("age", db::value{10})};
     db::object_data obj_data{.attributes = std::move(attributes)};
 
-    db::const_object obj{model, "sample_a", obj_data};
+    db::const_object obj{model.entity("sample_a"), obj_data};
 
     db::const_object obj2 = std::move(obj);
 
@@ -724,7 +723,7 @@ using namespace yas;
 - (void)test_is_inserted {
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
-    db::object obj{nullptr, model, "sample_a"};
+    db::object obj{nullptr, model.entity("sample_a")};
 
     obj.set_attribute_value(db::action_field, db::value{db::insert_action});
 
@@ -742,7 +741,7 @@ using namespace yas;
 - (void)test_is_updated {
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
-    db::object obj{nullptr, model, "sample_a"};
+    db::object obj{nullptr, model.entity("sample_a")};
 
     obj.set_attribute_value(db::action_field, db::value{db::update_action});
 
@@ -760,7 +759,7 @@ using namespace yas;
 - (void)test_is_removed {
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
-    db::object obj{nullptr, model, "sample_a"};
+    db::object obj{nullptr, model.entity("sample_a")};
 
     obj.set_attribute_value(db::action_field, db::value{db::remove_action});
 

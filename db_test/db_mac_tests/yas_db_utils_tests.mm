@@ -726,8 +726,8 @@ using namespace yas;
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
 
-    db::object obj_a0{nullptr, model, "sample_a"};
-    db::object obj_a1{nullptr, model, "sample_a"};
+    db::object obj_a0{nullptr, model.entity("sample_a")};
+    db::object obj_a1{nullptr, model.entity("sample_a")};
 
     obj_a0.set_attribute_value(db::object_id_field, db::value{0});
     obj_a0.set_attribute_value("name", db::value{"a0"});
@@ -757,10 +757,10 @@ using namespace yas;
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
 
-    db::object obj_a0{nullptr, model, "sample_a"};
-    db::object obj_a1{nullptr, model, "sample_a"};
-    db::object obj_b0{nullptr, model, "sample_b"};
-    db::object obj_b1{nullptr, model, "sample_b"};
+    db::object obj_a0{nullptr, model.entity("sample_a")};
+    db::object obj_a1{nullptr, model.entity("sample_a")};
+    db::object obj_b0{nullptr, model.entity("sample_b")};
+    db::object obj_b1{nullptr, model.entity("sample_b")};
 
     obj_a0.set_attribute_value(db::object_id_field, db::value{0});
     obj_a0.set_attribute_value("name", db::value{"a0"});
