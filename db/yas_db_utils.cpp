@@ -18,15 +18,15 @@ using namespace yas;
 
 db::update_result_t db::create_table(db::database &db, std::string const &table_name,
                                      std::vector<std::string> const &fields) {
-    return db.execute_update(create_table_sql(table_name, fields));
+    return db.execute_update(db::create_table_sql(table_name, fields));
 }
 
 db::update_result_t db::alter_table(db::database &db, std::string const &table_name, std::string const &field) {
-    return db.execute_update(alter_table_sql(table_name, field));
+    return db.execute_update(db::alter_table_sql(table_name, field));
 }
 
 db::update_result_t db::drop_table(db::database &db, std::string const &table_name) {
-    return db.execute_update(drop_table_sql(table_name));
+    return db.execute_update(db::drop_table_sql(table_name));
 }
 
 db::update_result_t db::create_index(db::database &db, std::string const &index_name, std::string const &table_name,
@@ -89,7 +89,7 @@ db::update_result_t db::in_save_point(db::database &db, std::function<void(bool 
     static unsigned long save_point_idx = 0;
     std::string const name = "db_save_point_" + std::to_string(save_point_idx++);
 
-    if (auto ul = unless(start_save_point(db, name))) {
+    if (auto ul = unless(db::start_save_point(db, name))) {
         return std::move(ul.value);
     }
 
@@ -106,7 +106,7 @@ db::update_result_t db::in_save_point(db::database &db, std::function<void(bool 
 
 #endif
 
-bool db::table_exists(database const &db, std::string const &table_name) {
+bool db::table_exists(db::database const &db, std::string const &table_name) {
     if (auto row_set = db::get_table_schema(db, table_name)) {
         if (row_set.next()) {
             return true;
@@ -240,7 +240,7 @@ db::select_result_t db::select_undo(db::database const &db, std::string const &t
             {db::expr(db::save_id_field, "<=", std::to_string(current_save_id)),
              db::expr(db::save_id_field, ">", std::to_string(revert_save_id)), db::equal_field_expr(db::action_field)},
             " AND "),
-        .arguments = {{db::action_field, db::value{insert_action}}},
+        .arguments = {{db::action_field, db::value{db::insert_action}}},
         .field_orders = {{db::object_id_field, db::order::ascending}}};
     auto empty_result = db::select(db, empty_option);
     if (!empty_result) {

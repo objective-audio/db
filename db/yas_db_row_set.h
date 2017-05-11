@@ -38,7 +38,7 @@ namespace db {
 
         statement const &statement() const;
 
-        next_result_code next();
+        db::next_result_code next();
         bool has_row();
 
         int column_count() const;
