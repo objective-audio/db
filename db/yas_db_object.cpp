@@ -107,7 +107,7 @@ struct db::const_object::impl : public base::impl {
     db::integer_set_map_t relation_ids_for_fetch() {
         db::integer_set_map_t relation_ids;
 
-        db::entity const &entity = this->_model.entity(_entity_name);
+        db::entity const &entity = this->_model.entity(this->_entity_name);
         for (auto const &pair : entity.relations) {
             auto const &rel_name = pair.first;
             if (this->_data.relations.count(rel_name) > 0) {

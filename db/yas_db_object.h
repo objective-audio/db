@@ -24,29 +24,29 @@ namespace db {
     class const_object;
     class object;
 
-    using integer_set_t = std::set<integer::type>;
-    using integer_set_map_t = std::unordered_map<std::string, integer_set_t>;
+    using integer_set_t = std::set<db::integer::type>;
+    using integer_set_map_t = std::unordered_map<std::string, db::integer_set_t>;
 
-    using object_map_t = std::unordered_map<integer::type, object>;
-    using object_map_map_t = std::unordered_map<std::string, object_map_t>;
-    using object_vector_t = std::vector<object>;
-    using object_vector_map_t = std::unordered_map<std::string, object_vector_t>;
-    using object_deque_t = std::deque<object>;
-    using object_deque_map_t = std::unordered_map<std::string, object_deque_t>;
-    using const_object_map_t = std::unordered_map<integer::type, const_object>;
-    using const_object_map_map_t = std::unordered_map<std::string, const_object_map_t>;
-    using const_object_vector_t = std::vector<const_object>;
-    using const_object_vector_map_t = std::unordered_map<std::string, const_object_vector_t>;
-    using weak_object_map_t = std::unordered_map<integer::type, weak<object>>;
-    using weak_object_map_map_t = std::unordered_map<std::string, weak_object_map_t>;
-    using object_data_vector_t = std::vector<object_data>;
-    using object_data_vector_map_t = std::unordered_map<std::string, object_data_vector_t>;
+    using object_map_t = std::unordered_map<db::integer::type, object>;
+    using object_map_map_t = std::unordered_map<std::string, db::object_map_t>;
+    using object_vector_t = std::vector<db::object>;
+    using object_vector_map_t = std::unordered_map<std::string, db::object_vector_t>;
+    using object_deque_t = std::deque<db::object>;
+    using object_deque_map_t = std::unordered_map<std::string, db::object_deque_t>;
+    using const_object_map_t = std::unordered_map<db::integer::type, db::const_object>;
+    using const_object_map_map_t = std::unordered_map<std::string, db::const_object_map_t>;
+    using const_object_vector_t = std::vector<db::const_object>;
+    using const_object_vector_map_t = std::unordered_map<std::string, db::const_object_vector_t>;
+    using weak_object_map_t = std::unordered_map<db::integer::type, weak<db::object>>;
+    using weak_object_map_map_t = std::unordered_map<std::string, db::weak_object_map_t>;
+    using object_data_vector_t = std::vector<db::object_data>;
+    using object_data_vector_map_t = std::unordered_map<std::string, db::object_data_vector_t>;
 
     class const_object : public base {
        public:
         class impl;
 
-        const_object(model const &model, std::string const &entity_name, db::object_data const &obj_data);
+        const_object(db::model const &model, std::string const &entity_name, db::object_data const &obj_data);
         const_object(std::nullptr_t);
 
         db::model const &model() const;
@@ -106,13 +106,13 @@ namespace db {
         using subject_t = subject<change_info, method>;
         using observer_t = observer<change_info, method>;
 
-        object(manager const &manager, db::model const &model, std::string const &entity_name);
+        object(db::manager const &manager, db::model const &model, std::string const &entity_name);
         object(std::nullptr_t);
 
         subject_t const &subject() const;
         subject_t &subject();
 
-        void set_attribute_value(std::string const &attr_name, value const &value);
+        void set_attribute_value(std::string const &attr_name, db::value const &value);
 
         db::object_vector_t relation_objects(std::string const &rel_name) const;
         db::object relation_object_at(std::string const &rel_name, std::size_t const idx) const;
@@ -128,7 +128,7 @@ namespace db {
         void remove_relation_at(std::string const &rel_name, std::size_t const idx);
         void remove_all_relations(std::string const &rel_name);
 
-        manager const &manager() const;
+        db::manager const &manager() const;
 
         db::object_status status() const;
 
