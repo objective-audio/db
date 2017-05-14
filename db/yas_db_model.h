@@ -7,21 +7,13 @@
 #include <CoreFoundation/CoreFoundation.h>
 #include <memory>
 #include <string>
+#include "yas_db_additional_protocol.h"
 #include "yas_base.h"
-#include "yas_db_attribute.h"
-#include "yas_db_entity.h"
-#include "yas_db_index.h"
-#include "yas_db_relation.h"
 
 namespace yas {
 class version;
 
 namespace db {
-    class entity;
-
-    using entity_map_t = std::unordered_map<std::string, db::entity>;
-    using index_map_t = std::unordered_map<std::string, db::index>;
-
     class model : public base {
         class impl;
 
