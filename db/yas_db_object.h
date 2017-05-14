@@ -18,30 +18,8 @@ template <typename T, typename K>
 class observer;
 
 namespace db {
-    class model;
     class manager;
-    class value;
-    class const_object;
-    class object;
     class entity;
-
-    using integer_set_t = std::set<db::integer::type>;
-    using integer_set_map_t = std::unordered_map<std::string, db::integer_set_t>;
-
-    using object_map_t = std::unordered_map<db::integer::type, object>;
-    using object_map_map_t = std::unordered_map<std::string, db::object_map_t>;
-    using object_vector_t = std::vector<db::object>;
-    using object_vector_map_t = std::unordered_map<std::string, db::object_vector_t>;
-    using object_deque_t = std::deque<db::object>;
-    using object_deque_map_t = std::unordered_map<std::string, db::object_deque_t>;
-    using const_object_map_t = std::unordered_map<db::integer::type, db::const_object>;
-    using const_object_map_map_t = std::unordered_map<std::string, db::const_object_map_t>;
-    using const_object_vector_t = std::vector<db::const_object>;
-    using const_object_vector_map_t = std::unordered_map<std::string, db::const_object_vector_t>;
-    using weak_object_map_t = std::unordered_map<db::integer::type, weak<db::object>>;
-    using weak_object_map_map_t = std::unordered_map<std::string, db::weak_object_map_t>;
-    using object_data_vector_t = std::vector<db::object_data>;
-    using object_data_vector_map_t = std::unordered_map<std::string, db::object_data_vector_t>;
 
     class const_object : public base {
        public:
