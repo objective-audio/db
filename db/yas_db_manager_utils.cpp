@@ -15,49 +15,53 @@
 
 using namespace yas;
 
+namespace yas {
+namespace db {
+    // 単独の関連の関連先のidの配列をDBから取得する
+    db::value_vector_result_t select_relation_target_ids(db::database &db, std::string const &rel_table_name,
+                                                         db::value const &save_id, db::value const &src_id) {
+        std::string where_exprs =
+            joined({db::equal_field_expr(db::save_id_field), db::equal_field_expr(db::src_obj_id_field)}, " and ");
+        db::select_option option{.table = rel_table_name,
+                                 .where_exprs = std::move(where_exprs),
+                                 .arguments = {{db::save_id_field, save_id}, {db::src_obj_id_field, src_id}}};
+
+        if (auto select_result = db::select(db, option)) {
+            auto const &result_rels = select_result.value();
+            db::value_vector_t rel_tgts;
+            rel_tgts.reserve(result_rels.size());
+            for (auto const &result_rel : result_rels) {
+                rel_tgts.push_back(result_rel.at(db::tgt_obj_id_field));
+            }
+            return db::value_vector_result_t{std::move(rel_tgts)};
+        } else {
+            return db::value_vector_result_t{std::move(select_result.error())};
+        }
+    }
+
+    // 単独のオブジェクトの全ての関連の関連先のidの配列をDBから取得する
+    db::value_vector_map_result_t select_relation_data(db::database &db, db::relation_map_t const &rel_models,
+                                                       db::value const &save_id, db::value const &src_id) {
+        db::value_vector_map_t relations;
+
+        for (auto const &rel_model_pair : rel_models) {
+            auto const &rel_name = rel_model_pair.first;
+            auto const &rel_table_name = rel_model_pair.second.table_name;
+
+            if (auto select_result = db::select_relation_target_ids(db, rel_table_name, save_id, src_id)) {
+                relations.emplace(std::make_pair(rel_name, std::move(select_result.value())));
+            } else {
+                return db::value_vector_map_result_t{std::move(select_result.error())};
+            }
+        }
+
+        return db::value_vector_map_result_t{std::move(relations)};
+    }
+}
+}
+
 db::manager::result_t db::make_error_result(db::manager::error_type const &error_type, db::error db_error) {
     return db::manager::result_t{db::manager::error{error_type, std::move(db_error)}};
-}
-
-// 単独の関連のtarget_object_idのvectorをデータベースから読み込んで返す
-db::value_vector_result_t db::select_relation_target_ids(db::database &db, std::string const &rel_table_name,
-                                                         db::value const &save_id, db::value const &src_id) {
-    std::string where_exprs =
-        joined({db::equal_field_expr(db::save_id_field), db::equal_field_expr(db::src_obj_id_field)}, " and ");
-    db::select_option option{.table = rel_table_name,
-                             .where_exprs = std::move(where_exprs),
-                             .arguments = {{db::save_id_field, save_id}, {db::src_obj_id_field, src_id}}};
-
-    if (auto select_result = db::select(db, option)) {
-        auto const &result_rels = select_result.value();
-        db::value_vector_t rel_tgts;
-        rel_tgts.reserve(result_rels.size());
-        for (auto const &result_rel : result_rels) {
-            rel_tgts.push_back(result_rel.at(db::tgt_obj_id_field));
-        }
-        return db::value_vector_result_t{std::move(rel_tgts)};
-    } else {
-        return db::value_vector_result_t{std::move(select_result.error())};
-    }
-}
-
-// 単独のオブジェクトの関連のデータをデータベースから読み込む
-db::value_vector_map_result_t db::select_relation_data(db::database &db, db::relation_map_t const &rel_models,
-                                                       db::value const &save_id, db::value const &src_id) {
-    db::value_vector_map_t relations;
-
-    for (auto const &rel_model_pair : rel_models) {
-        auto const &rel_name = rel_model_pair.first;
-        auto const &rel_table_name = rel_model_pair.second.table_name;
-
-        if (auto select_result = db::select_relation_target_ids(db, rel_table_name, save_id, src_id)) {
-            relations.emplace(std::make_pair(rel_name, std::move(select_result.value())));
-        } else {
-            return db::value_vector_map_result_t{std::move(select_result.error())};
-        }
-    }
-
-    return db::value_vector_map_result_t{std::move(relations)};
 }
 
 // 単独のエンティティでオブジェクトのアトリビュートの値を元に関連の値をデータベースから取得してobject_dataのvectorを生成する
@@ -111,10 +115,9 @@ db::manager::value_result_t db::select_current_save_id(db::database &db) {
 }
 
 // 指定したsave_idより大きいsave_idのデータを、全てのエンティティに対してデータベース上から削除する
-db::manager::result_t db::delete_next_to_last(db::database &db, db::model const &model,
-                                              db::value const &current_save_id) {
+db::manager::result_t db::delete_next_to_last(db::database &db, db::model const &model, db::value const &save_id) {
     auto const &entity_models = model.entities();
-    auto const delete_exprs = expr(db::save_id_field, ">", to_string(current_save_id));
+    auto const delete_exprs = expr(db::save_id_field, ">", to_string(save_id));
 
     for (auto const &entity_pair : entity_models) {
         auto const &entity_name = entity_pair.first;
