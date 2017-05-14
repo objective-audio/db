@@ -9,6 +9,7 @@
 #include "yas_db_database.h"
 #include "yas_db_object.h"
 #include "yas_operation_protocol.h"
+#include <dispatch/dispatch.h>
 
 namespace yas {
 class operation;
@@ -90,6 +91,7 @@ namespace db {
         enum class method { object_changed, db_info_changed };
 
         using result_t = result<std::nullptr_t, error>;
+        using value_result_t = result<db::value, error>;
         using vector_result_t = result<object_vector_map_t, error>;
         using map_result_t = result<object_map_map_t, error>;
         using const_vector_result_t = result<const_object_vector_map_t, error>;
