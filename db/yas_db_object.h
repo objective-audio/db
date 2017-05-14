@@ -23,6 +23,7 @@ namespace db {
     class value;
     class const_object;
     class object;
+    class entity;
 
     using integer_set_t = std::set<db::integer::type>;
     using integer_set_map_t = std::unordered_map<std::string, db::integer_set_t>;
