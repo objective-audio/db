@@ -79,6 +79,8 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
         yas_dispatch_queue_release(dispatch_queue);
     }
 
+    // データベースに保存せず仮にオブジェクトを生成する
+    // この時点ではobject_idやsave_idは振られていない
     db::object insert_object(std::string const entity_name) {
         db::object object{cast<db::manager>(), this->_model.entity(entity_name)};
 
@@ -93,6 +95,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
         return object;
     }
 
+    // 1つのオブジェクトにデータベースから読み込まれたデータをロードする
     bool load_object_data(db::object &object, std::string const &entity_name, db::object_data const &data,
                           bool const force) {
         if (this->_cached_objects.count(entity_name) == 0) {
@@ -137,6 +140,8 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
         return false;
     }
 
+    // 複数のエンティティのデータをロードする
+    // エンティティごとのオブジェクトは順番がある状態で返される
     db::object_vector_map_t load_vector_object_datas(db::object_data_vector_map_t const &datas, bool const force,
                                                      bool const is_save) {
         db::object_vector_map_t loaded_objects;
@@ -149,9 +154,12 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
 
             for (auto const &data : entity_datas) {
                 auto object = db::object::null_object();
+                // セーブ時で仮に挿入されたオブジェクトがある場合
                 if (is_save && this->_inserted_objects.count(entity_name)) {
                     auto &entity_objects = this->_inserted_objects.at(entity_name);
                     if (entity_objects.size() > 0) {
+                        // 前から順に消していけば一致している？
+                        // 後から挿入されたオブジェクトが間違えて消されることはないか？
                         object = entity_objects.front();
                         entity_objects.pop_front();
 
@@ -171,6 +179,8 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
         return loaded_objects;
     }
 
+    // 複数のエンティティのデータをロードする
+    // エンティティごとのオブジェクトはobject_idをキーとしたmapで返される
     db::object_map_map_t load_map_object_datas(db::object_data_vector_map_t const &datas, bool const force) {
         db::object_map_map_t loaded_objects;
         for (auto const &entity_pair : datas) {
@@ -192,6 +202,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
         return loaded_objects;
     }
 
+    // キャッシュされている全てのオブジェクトをクリアする
     void clear_cached_objects() {
         for (auto &entity_pair : this->_cached_objects) {
             for (auto &object_pair : entity_pair.second) {
@@ -203,6 +214,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
         this->_cached_objects.clear();
     }
 
+    // キャッシュされている全てのオブジェクトをパージする（save_idを全て1にする）
     void purge_cached_objects() {
         db::value const one_value{db::integer::type{1}};
 
@@ -215,6 +227,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
         }
     }
 
+    // データベース情報を置き換える
     void set_db_info(db::value_map_t &&info) {
         this->_db_info = std::move(info);
 
@@ -223,6 +236,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
         }
     }
 
+    // データベースに保存するために、全てのエンティティで変更のあったオブジェクトのobject_dataを取得する
     db::object_data_vector_map_t changed_datas_for_save() {
         db::object_data_vector_map_t changed_datas;
 
@@ -276,6 +290,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
         return changed_datas;
     }
 
+    // リセットするために、全てのエンティティで変更のあったオブジェクトのobject_idを取得する
     db::integer_set_map_t changed_object_ids_for_reset() {
         db::integer_set_map_t changed_obj_ids;
 
@@ -298,6 +313,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
         return changed_obj_ids;
     }
 
+    // object_datasに含まれるオブジェクトIDと一致するものは_changed_objectsから取り除く。データベースに保存された後などに呼ばれる。
     void erase_changed_objects(db::object_data_vector_map_t const &object_datas) {
         for (auto &entity_pair : object_datas) {
             auto const &entity_name = entity_pair.first;
@@ -318,6 +334,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
         }
     }
 
+    // キャッシュされた単独のオブジェクトをエンティティ名とオブジェクトIDを指定して取得する
     db::object cached_object(std::string const &entity_name, db::integer::type object_id) {
         if (this->_cached_objects.count(entity_name) > 0) {
             auto &entity_objects = this->_cached_objects.at(entity_name);
@@ -332,6 +349,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
         return db::object::null_object();
     }
 
+    // オブジェクトに変更があった時の処理
     void _object_did_change(db::object const &object) {
         auto const &entity_name = object.entity_name();
 
@@ -354,12 +372,14 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
         }
     }
 
+    // オブジェクトが解放された時の処理
     void _object_did_erase(std::string const &entity_name, db::integer::type const object_id) {
         if (this->_cached_objects.count(entity_name) > 0) {
             erase_if_exists(this->_cached_objects.at(entity_name), object_id);
         }
     }
 
+    // バックグラウンドでデータベースの処理をする
     void execute(execution_f &&execution, operation_option_t &&option) {
         auto op_lambda = [execution = std::move(execution), manager = cast<manager>()](operation const &op) mutable {
             if (!op.is_canceled()) {
@@ -373,6 +393,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
         this->_op_queue.push_back(operation{std::move(op_lambda), std::move(option)});
     }
 
+    // バックグラウンドでマネージャのセットアップ処理をする
     void execute_setup(std::function<void(db::manager::result_t &&, db::value_map_t &&)> &&completion,
                        operation_option_t &&option) {
         this->execute([completion = std::move(completion), manager = cast<manager>()](operation const &op) mutable {
@@ -550,6 +571,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                       std::move(option));
     }
 
+    // バックグラウンドでデータベース上のデータをクリアする
     void execute_clear(std::function<void(db::manager::result_t &&, db::value_map_t &&)> &&completion,
                        operation_option_t &&option) {
         this->execute([completion = std::move(completion), manager = cast<manager>()](operation const &op) mutable {
@@ -608,6 +630,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                       std::move(option));
     }
 
+    // バックグラウンドでデータベース上のデータをパージする
     void execute_purge(std::function<void(db::manager::result_t &&, db::value_map_t &&)> &&completion,
                        operation_option_t &&option) {
         this->execute([completion = std::move(completion), manager = cast<manager>()](operation const &op) mutable {
@@ -721,6 +744,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                       std::move(option));
     }
 
+    // バックグラウンドでデータベース上にオブジェクトデータを挿入する
     void execute_insert(
         insert_preparation_values_f &&preparation,
         std::function<void(db::manager::result_t &&, db::object_data_vector_map_t &&, db::value_map_t &&)> &&completion,
@@ -863,6 +887,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
             std::move(option));
     }
 
+    // バックグラウンドでデータベースからオブジェクトデータを取得する。条件はselect_optionで指定。単独のエンティティのみ
     void execute_fetch_object_datas(
         fetch_preparation_option_f &&preparation,
         std::function<void(db::manager::result_t &&state, db::object_data_vector_map_t &&fetched_datas)> &&completion,
@@ -927,6 +952,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
             std::move(option));
     }
 
+    // バックグラウンドでデータベースからオブジェクトデータを取得する。条件はobject_idで指定。単独のエンティティのみ
     void execute_fetch_object_datas(
         fetch_preparation_ids_f &&preparation,
         std::function<void(db::manager::result_t &&state, db::object_data_vector_map_t &&fetched_datas)> &&completion,
@@ -994,6 +1020,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
             std::move(option));
     }
 
+    // バックグラウンドでデータベースにオブジェクトの変更を保存する
     void execute_save(std::function<void(db::manager::result_t &&state, db::object_data_vector_map_t &&saved_datas,
                                          db::value_map_t &&db_info)> &&completion,
                       operation_option_t &&option) {
@@ -1152,6 +1179,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                       std::move(option));
     }
 
+    // バックグラウンドでリバートする
     void execute_revert(db::manager::revert_preparation_f preparation,
                         std::function<void(db::manager::result_t &&state, db::object_data_vector_map_t &&reverted_datas,
                                            db::value_map_t &&db_info)> &&completion,
@@ -1259,6 +1287,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
             std::move(option));
     }
 
+    // バックグラウンド処理を保留するカウントをあげる
     void suspend() {
         if (_suspend_count == 0) {
             _op_queue.suspend();
@@ -1267,6 +1296,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
         ++_suspend_count;
     }
 
+    // バックグラウンド処理を保留するカウントを下げる。カウントが0になれば再開
     void resume() {
         if (_suspend_count == 0) {
             throw std::underflow_error("resume too much.");

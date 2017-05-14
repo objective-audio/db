@@ -246,6 +246,9 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
         this->_status = db::object_status::invalid;
     }
 
+    // object_dataのデータを読み込んで上書きする
+    // force == falseなら、データベースへの保存処理を始めた後でもオブジェクトに変更があったら上書きしない
+    // force == trueなら、必ず上書きする
     void load_data(db::object_data const &obj_data, bool const force) override {
         if (this->_status != db::object_status::changed || force) {
             this->clear();
