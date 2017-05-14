@@ -4,7 +4,6 @@
 
 #include "yas_db_additional_utils.h"
 #include "yas_result.h"
-#include "yas_db_utils.h"
 #include "yas_db_sql_utils.h"
 #include "yas_stl_utils.h"
 #include "yas_db_model.h"
@@ -58,6 +57,115 @@ namespace db {
         return db::value_vector_map_result_t{std::move(relations)};
     }
 }
+}
+
+db::select_result_t db::select_last(db::database const &db, db::select_option option, db::value const &save_id,
+                                    bool const include_removed) {
+    std::vector<std::string> components;
+
+    if (save_id) {
+        components.emplace_back(db::expr(db::save_id_field, "<=", to_string(save_id)));
+    }
+
+    if (option.where_exprs.size() > 0) {
+        components.emplace_back(option.where_exprs);
+    }
+
+    std::string sub_where = components.size() > 0 ? " WHERE " + joined(components, " AND ") : "";
+
+    std::string where_exprs =
+        "rowid IN (SELECT MAX(rowid) FROM " + option.table + sub_where + " GROUP BY " + db::object_id_field + ")";
+    if (!include_removed) {
+        static std::string const exc_removed_expr = db::action_field + " != '" + db::remove_action + "'";
+        where_exprs = joined({where_exprs, exc_removed_expr}, " AND ");
+    }
+    option.where_exprs = where_exprs;
+
+    return db::select(db, option);
+}
+
+db::select_result_t db::select_undo(db::database const &db, std::string const &table_name,
+                                    db::integer::type const revert_save_id, db::integer::type const current_save_id) {
+    if (current_save_id <= revert_save_id) {
+        throw "revert_save_id greater than or equal to current_save_id";
+    }
+
+    std::vector<std::string> components;
+    components.emplace_back(db::object_id_field + " IN (SELECT DISTINCT " + db::object_id_field + " FROM " +
+                            table_name + " WHERE " +
+                            joined({db::expr(db::save_id_field, "<=", std::to_string(current_save_id)),
+                                    db::expr(db::save_id_field, ">", std::to_string(revert_save_id))},
+                                   " AND ") +
+                            ")");
+    components.emplace_back(db::expr(db::save_id_field, "<=", std::to_string(revert_save_id)));
+
+    db::select_option option{.table = table_name,
+                             .where_exprs = "rowid IN (SELECT MAX(rowid) FROM " + table_name + " WHERE " +
+                                            joined(components, " AND ") + " GROUP BY " + db::object_id_field + ")",
+                             .field_orders = {{db::object_id_field, db::order::ascending}}};
+
+    auto result = db::select(db, option);
+    if (!result) {
+        return db::select_result_t{std::move(result.error())};
+    }
+
+    db::select_option empty_option{
+        .table = table_name,
+        .fields = {db::object_id_field},
+        .where_exprs = joined(
+            {db::expr(db::save_id_field, "<=", std::to_string(current_save_id)),
+             db::expr(db::save_id_field, ">", std::to_string(revert_save_id)), db::equal_field_expr(db::action_field)},
+            " AND "),
+        .arguments = {{db::action_field, db::value{db::insert_action}}},
+        .field_orders = {{db::object_id_field, db::order::ascending}}};
+    auto empty_result = db::select(db, empty_option);
+    if (!empty_result) {
+        return db::select_result_t{std::move(empty_result.error())};
+    }
+
+    return db::select_result_t{connect(std::move(result.value()), std::move(empty_result.value()))};
+}
+
+db::select_result_t db::select_redo(db::database const &db, std::string const &table_name,
+                                    db::integer::type const revert_save_id, db::integer::type const current_save_id) {
+    if (revert_save_id <= current_save_id) {
+        throw "current_save_id greater than or equal to revert_save_id";
+    }
+
+    std::vector<std::string> components;
+    components.emplace_back(db::expr(db::save_id_field, ">", std::to_string(current_save_id)));
+
+    db::select_option option{.table = table_name,
+                             .where_exprs = joined(components, " AND "),
+                             .field_orders = {{db::object_id_field, db::order::ascending}}};
+
+    return db::select_last(db, std::move(option), db::value{revert_save_id}, true);
+}
+
+db::select_result_t db::select_revert(db::database const &db, std::string const &table_name,
+                                      db::integer::type const revert_save_id, db::integer::type const current_save_id) {
+    if (revert_save_id < current_save_id) {
+        return db::select_undo(db, table_name, revert_save_id, current_save_id);
+    } else if (current_save_id < revert_save_id) {
+        return db::select_redo(db, table_name, revert_save_id, current_save_id);
+    }
+
+    return db::select_result_t{db::value_map_vector_t{}};
+}
+
+db::select_single_result_t db::select_db_info(db::database const &db) {
+    return db::select_single(db, db::select_option{.table = db::info_table});
+}
+
+db::update_result_t db::purge(db::database &db, std::string const &table_name) {
+    std::string where_exprs =
+        "NOT rowid IN (SELECT MAX(rowid) FROM " + table_name + " GROUP BY " + db::object_id_field + ")";
+    return db.execute_update(db::delete_sql(table_name, where_exprs));
+}
+
+db::update_result_t db::purge_relation(database &db, std::string const &table_name, std::string const &src_table_name) {
+    std::string where_exprs = "NOT " + db::src_id_field + " IN (SELECT rowid FROM " + src_table_name + ")";
+    return db.execute_update(db::delete_sql(table_name, where_exprs));
 }
 
 db::manager::result_t db::make_error_result(db::manager::error_type const &error_type, db::error db_error) {

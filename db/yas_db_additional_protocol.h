@@ -6,16 +6,55 @@
 
 #include "yas_db_value.h"
 #include "yas_protocol.h"
+#include "yas_result.h"
+#include <set>
+#include <unordered_set>
+#include <deque>
 
 namespace yas {
 namespace db {
     class object;
+    class const_object;
+    class attribute;
+    class relation;
+    class object_data;
+    class error;
+
+    // for object
+    using integer_set_t = std::set<db::integer::type>;
+    using integer_set_map_t = std::unordered_map<std::string, db::integer_set_t>;
+
+    using object_map_t = std::unordered_map<db::integer::type, object>;
+    using object_map_map_t = std::unordered_map<std::string, db::object_map_t>;
+    using object_vector_t = std::vector<db::object>;
+    using object_vector_map_t = std::unordered_map<std::string, db::object_vector_t>;
+    using object_deque_t = std::deque<db::object>;
+    using object_deque_map_t = std::unordered_map<std::string, db::object_deque_t>;
+    using const_object_map_t = std::unordered_map<db::integer::type, db::const_object>;
+    using const_object_map_map_t = std::unordered_map<std::string, db::const_object_map_t>;
+    using const_object_vector_t = std::vector<db::const_object>;
+    using const_object_vector_map_t = std::unordered_map<std::string, db::const_object_vector_t>;
+    using weak_object_map_t = std::unordered_map<db::integer::type, weak<db::object>>;
+    using weak_object_map_map_t = std::unordered_map<std::string, db::weak_object_map_t>;
+    using object_data_vector_t = std::vector<db::object_data>;
+    using object_data_vector_map_t = std::unordered_map<std::string, db::object_data_vector_t>;
 
     // for manager
     static std::string const info_table = "db_info";
     static std::string const version_field = "version";
     static std::string const current_save_id_field = "cur_save_id";
     static std::string const last_save_id_field = "last_save_id";
+
+    using object_data_result_t = result<db::object_data, db::error>;
+    using object_data_vector_result_t = result<db::object_data_vector_t, db::error>;
+    using value_vector_result_t = result<std::vector<db::value>, db::error>;
+    using value_vector_map_result_t = result<db::value_vector_map_t, db::error>;
+
+    // for entity
+    using attribute_map_t = std::unordered_map<std::string, attribute>;
+    using relation_map_t = std::unordered_map<std::string, relation>;
+    using string_set_t = std::unordered_set<std::string>;
+    using string_set_map_t = std::unordered_map<std::string, string_set_t>;
 
     // for attribute
     static std::string const id_field = "id";

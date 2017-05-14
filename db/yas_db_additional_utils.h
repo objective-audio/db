@@ -5,16 +5,27 @@
 #pragma once
 
 #include "yas_db_manager.h"
+#include "yas_db_utils.h"
 
 namespace yas {
 namespace db {
     class relation;
     using relation_map_t = std::unordered_map<std::string, relation>;
-    
-    using object_data_result_t = result<db::object_data, db::error>;
-    using object_data_vector_result_t = result<db::object_data_vector_t, db::error>;
-    using value_vector_result_t = result<std::vector<db::value>, db::error>;
-    using value_vector_map_result_t = result<db::value_vector_map_t, db::error>;
+
+    db::select_result_t select_last(db::database const &db, db::select_option option, value const &save_id = nullptr,
+                                    bool const include_removed = false);
+    db::select_result_t select_undo(db::database const &db, std::string const &table_name,
+                                    db::integer::type const revert_save_id, db::integer::type const current_save_id);
+    db::select_result_t select_redo(db::database const &db, std::string const &table_name,
+                                    db::integer::type const revert_save_id, db::integer::type const current_save_id);
+    db::select_result_t select_revert(db::database const &db, std::string const &table_name,
+                                      db::integer::type const revert_save_id, db::integer::type const current_save_id);
+
+    db::select_single_result_t select_db_info(db::database const &db);
+
+    db::update_result_t purge(db::database &db, std::string const &table_name);
+    db::update_result_t purge_relation(db::database &db, std::string const &table_name,
+                                       std::string const &src_table_name);
 
     // managerから返すエラーを簡易的に生成する
     db::manager::result_t make_error_result(db::manager::error_type const &error_type, db::error db_error = nullptr);
@@ -29,8 +40,7 @@ namespace db {
     db::manager::value_result_t select_current_save_id(db::database &db);
 
     // 全てのエンティティの指定したidより大きいsave_idのデータを削除する
-    db::manager::result_t delete_next_to_last(db::database &db, db::model const &model,
-                                              db::value const &save_id);
+    db::manager::result_t delete_next_to_last(db::database &db, db::model const &model, db::value const &save_id);
 
     // object_dataの配列からconst_objectの配列を生成する
     // 全てのエンティティを含む

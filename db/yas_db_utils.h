@@ -42,21 +42,8 @@ namespace db {
     bool column_exists(db::database const &db, std::string column_name, std::string table_name);
 
     db::select_result_t select(db::database const &db, db::select_option const &option);
-    db::select_result_t select_last(db::database const &db, db::select_option option, value const &save_id = nullptr,
-                                    bool const include_removed = false);
-    db::select_result_t select_undo(db::database const &db, std::string const &table_name,
-                                    db::integer::type const revert_save_id, db::integer::type const current_save_id);
-    db::select_result_t select_redo(db::database const &db, std::string const &table_name,
-                                    db::integer::type const revert_save_id, db::integer::type const current_save_id);
-    db::select_result_t select_revert(db::database const &db, std::string const &table_name,
-                                      db::integer::type const revert_save_id, db::integer::type const current_save_id);
 
     db::select_single_result_t select_single(db::database const &db, db::select_option option);
-    db::select_single_result_t select_db_info(db::database const &db);
-
-    db::update_result_t purge(db::database &db, std::string const &table_name);
-    db::update_result_t purge_relation(db::database &db, std::string const &table_name,
-                                       std::string const &src_table_name);
 
     db::value max(db::database const &db, std::string const &table_name, std::string const &field);
 }

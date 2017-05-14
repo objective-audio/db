@@ -6,18 +6,10 @@
 
 #include <string>
 #include <unordered_map>
-#include <unordered_set>
+#include "yas_db_additional_protocol.h"
 
 namespace yas {
 namespace db {
-    class attribute;
-    class relation;
-
-    using attribute_map_t = std::unordered_map<std::string, attribute>;
-    using relation_map_t = std::unordered_map<std::string, relation>;
-    using string_set_t = std::unordered_set<std::string>;
-    using string_set_map_t = std::unordered_map<std::string, string_set_t>;
-
     struct entity {
         std::string const name;
         db::attribute_map_t const all_attributes;
