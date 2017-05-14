@@ -18,12 +18,6 @@ namespace db {
 
     db::manager::result_t make_error_result(db::manager::error_type const &error_type, db::error db_error = nullptr);
 
-    db::value_vector_result_t select_relation_target_ids(db::database &db, std::string const &rel_table_name,
-                                                         db::value const &save_id, db::value const &src_id);
-
-    db::value_vector_map_result_t select_relation_data(db::database &db, db::relation_map_t const &rel_models,
-                                                       db::value const &save_id, db::value const &src_id);
-
     db::object_data_vector_result_t make_entity_object_datas(db::database &db, std::string const &entity_name,
                                                              db::relation_map_t const &rel_models,
                                                              db::value_map_vector_t const &entity_attrs);
