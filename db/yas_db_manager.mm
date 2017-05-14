@@ -2,10 +2,9 @@
 //  yas_db_manager.cpp
 //
 
-#include <dispatch/dispatch.h>
+#include "yas_db_manager_utils.h"
 #include "yas_db_attribute.h"
 #include "yas_db_entity.h"
-#include "yas_db_manager.h"
 #include "yas_db_model.h"
 #include "yas_db_object_utils.h"
 #include "yas_db_relation.h"
@@ -50,157 +49,6 @@ db::manager::change_info::change_info(std::nullptr_t) : object(nullptr) {
 }
 
 db::manager::change_info::change_info(db::object const &object) : object(object) {
-}
-
-#pragma mark - utils
-
-namespace yas {
-namespace db {
-    using object_data_result_t = result<db::object_data, db::error>;
-    using object_data_vector_result_t = result<db::object_data_vector_t, db::error>;
-    using value_result_t = result<db::value, db::manager::error>;
-
-    db::manager::result_t make_error_result(db::manager::error_type const &error_type, db::error db_error = nullptr) {
-        return db::manager::result_t{db::manager::error{error_type, std::move(db_error)}};
-    }
-
-    db::object_data_result_t fetch_object_data(db::database &db, db::relation_map_t const &rel_models,
-                                               db::value_map_t &attrs) {
-        db::value_vector_map_t relations;
-
-        if (attrs.count(db::save_id_field) > 0) {
-            for (auto const &rel_model_pair : rel_models) {
-                auto const &rel_name = rel_model_pair.first;
-                auto const &table_name = rel_model_pair.second.table_name;
-                std::string where_exprs =
-                    joined({equal_field_expr(db::save_id_field), equal_field_expr(db::src_obj_id_field)}, " and ");
-                db::select_option option{.table = table_name,
-                                         .where_exprs = std::move(where_exprs),
-                                         .arguments = {{db::save_id_field, attrs.at(db::save_id_field)},
-                                                       {db::src_obj_id_field, attrs.at(db::object_id_field)}}};
-
-                if (auto select_result = db::select(db, option)) {
-                    auto const &result_rels = select_result.value();
-                    db::value_vector_t rel_tgts;
-                    rel_tgts.reserve(result_rels.size());
-                    for (auto const &result_rel : result_rels) {
-                        rel_tgts.push_back(result_rel.at(db::tgt_obj_id_field));
-                    }
-                    relations.emplace(std::make_pair(rel_name, std::move(rel_tgts)));
-                } else {
-                    return db::object_data_result_t{std::move(select_result.error())};
-                }
-            }
-        }
-
-        return db::object_data_result_t{object_data{.attributes = std::move(attrs), .relations = std::move(relations)}};
-    }
-
-    db::object_data_vector_result_t fetch_entity_object_datas(db::database &db, std::string const &entity_name,
-                                                              db::relation_map_t const &rel_models,
-                                                              db::value_map_vector_t const &entity_attrs) {
-        db::object_data_vector_t entity_datas;
-        entity_datas.reserve(entity_attrs.size());
-
-        for (db::value_map_t attrs : entity_attrs) {
-            if (auto obj_data_result = db::fetch_object_data(db, rel_models, attrs)) {
-                entity_datas.emplace_back(std::move(obj_data_result.value()));
-            } else {
-                return db::object_data_vector_result_t{std::move(obj_data_result.error())};
-            }
-        }
-
-        return db::object_data_vector_result_t{std::move(entity_datas)};
-    }
-
-    db::value_result_t select_current_save_id(db::database &db) {
-        db::manager::result_t state{nullptr};
-
-        auto current_save_id = db::value::null_value();
-        if (auto db_info_result = db::select_db_info(db)) {
-            auto &db_info = db_info_result.value();
-            if (db_info.count(db::current_save_id_field) > 0) {
-                current_save_id = db_info.at(db::current_save_id_field);
-            } else {
-                state = db::make_error_result(manager::error_type::save_id_not_found);
-            }
-        } else {
-            state = db::make_error_result(manager::error_type::select_info_failed, std::move(db_info_result.error()));
-        }
-
-        if (state) {
-            return db::value_result_t{std::move(current_save_id)};
-        } else {
-            return db::value_result_t{state.error()};
-        }
-    }
-
-    db::manager::result_t delete_next_to_last(db::database &db, db::model const &model,
-                                              db::value const &current_save_id) {
-        auto const &entity_models = model.entities();
-        auto const delete_exprs = expr(db::save_id_field, ">", to_string(current_save_id));
-
-        for (auto const &entity_pair : entity_models) {
-            auto const &entity_name = entity_pair.first;
-
-            if (auto delete_result = db.execute_update(db::delete_sql(entity_name, delete_exprs))) {
-                for (auto const &rel_pair : entity_pair.second.relations) {
-                    auto const table_name = rel_pair.second.table_name;
-
-                    if (auto ul = unless(db.execute_update(db::delete_sql(table_name, delete_exprs)))) {
-                        return db::make_error_result(db::manager::error_type::delete_failed,
-                                                     std::move(ul.value.error()));
-                    }
-                }
-            } else {
-                return db::make_error_result(db::manager::error_type::delete_failed, std::move(delete_result.error()));
-            }
-        }
-
-        return db::manager::result_t{nullptr};
-    }
-
-    db::const_object_vector_map_t to_const_vector_objects(db::model const &model,
-                                                          db::object_data_vector_map_t const &datas) {
-        db::const_object_vector_map_t objects;
-        for (auto const &entity_pair : datas) {
-            auto const &entity_name = entity_pair.first;
-            auto const &entity_datas = entity_pair.second;
-
-            db::const_object_vector_t entity_objects;
-            entity_objects.reserve(entity_datas.size());
-
-            for (auto const &data : entity_datas) {
-                if (db::const_object obj{model.entity(entity_name), data}) {
-                    entity_objects.emplace_back(std::move(obj));
-                }
-            }
-
-            objects.emplace(std::make_pair(entity_name, std::move(entity_objects)));
-        }
-        return objects;
-    }
-
-    db::const_object_map_map_t to_const_map_objects(db::model const &model, db::object_data_vector_map_t const &datas) {
-        db::const_object_map_map_t objects;
-        for (auto const &entity_pair : datas) {
-            auto const &entity_name = entity_pair.first;
-            auto const &entity_datas = entity_pair.second;
-
-            db::const_object_map_t entity_objects;
-            entity_objects.reserve(entity_datas.size());
-
-            for (auto const &data : entity_datas) {
-                if (db::const_object obj{model.entity(entity_name), data}) {
-                    entity_objects.emplace(std::make_pair(obj.object_id().get<db::integer>(), std::move(obj)));
-                }
-            }
-
-            objects.emplace(std::make_pair(entity_name, std::move(entity_objects)));
-        }
-        return objects;
-    }
-}
 }
 
 #pragma mark - impl
@@ -289,8 +137,8 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
         return false;
     }
 
-    db::object_vector_map_t load_object_datas(db::object_data_vector_map_t const &datas, bool const force,
-                                              bool const is_save) {
+    db::object_vector_map_t load_vector_object_datas(db::object_data_vector_map_t const &datas, bool const force,
+                                                     bool const is_save) {
         db::object_vector_map_t loaded_objects;
         for (auto const &entity_pair : datas) {
             auto const &entity_name = entity_pair.first;
@@ -344,7 +192,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
         return loaded_objects;
     }
 
-    void clear_objects() {
+    void clear_cached_objects() {
         for (auto &entity_pair : this->_cached_objects) {
             for (auto &object_pair : entity_pair.second) {
                 if (auto object = object_pair.second.lock()) {
@@ -355,7 +203,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
         this->_cached_objects.clear();
     }
 
-    void purge_objects() {
+    void purge_cached_objects() {
         db::value const one_value{db::integer::type{1}};
 
         for (auto &entity_pair : this->_cached_objects) {
@@ -1046,7 +894,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                         if (auto select_result = db::select_last(db, std::move(option), current_save_id)) {
                             auto &entity_attrs = select_result.value();
                             if (auto obj_datas_result =
-                                    db::fetch_entity_object_datas(db, entity_name, rel_models, entity_attrs)) {
+                                    db::make_entity_object_datas(db, entity_name, rel_models, entity_attrs)) {
                                 auto &entity_obj_datas = obj_datas_result.value();
                                 if (entity_obj_datas.size() > 0) {
                                     fetched_datas.emplace(std::make_pair(entity_name, std::move(entity_obj_datas)));
@@ -1119,7 +967,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                             if (auto select_result = db::select_last(db, std::move(option), current_save_id)) {
                                 auto &entity_attrs = select_result.value();
                                 if (auto obj_datas_result =
-                                        db::fetch_entity_object_datas(db, entity_name, rel_models, entity_attrs)) {
+                                        db::make_entity_object_datas(db, entity_name, rel_models, entity_attrs)) {
                                     fetched_datas.emplace(
                                         std::make_pair(entity_name, std::move(obj_datas_result.value())));
                                 } else {
@@ -1366,7 +1214,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                             auto const &rel_models = manager.model().relations(entity_name);
 
                             if (auto obj_datas_result =
-                                    db::fetch_entity_object_datas(db, entity_name, rel_models, entity_attrs)) {
+                                    db::make_entity_object_datas(db, entity_name, rel_models, entity_attrs)) {
                                 reverted_datas.emplace(
                                     std::make_pair(entity_name, std::move(obj_datas_result.value())));
                             } else {
@@ -1520,7 +1368,7 @@ void db::manager::clear(db::manager::completion_f completion, operation_option_t
         ]() mutable {
             if (state) {
                 manager.impl_ptr<impl>()->set_db_info(std::move(db_info));
-                manager.impl_ptr<impl>()->clear_objects();
+                manager.impl_ptr<impl>()->clear_cached_objects();
             }
             completion(std::move(state));
         };
@@ -1539,7 +1387,7 @@ void db::manager::purge(db::manager::completion_f completion, operation_option_t
         ]() mutable {
             if (state) {
                 manager.impl_ptr<impl>()->set_db_info(std::move(db_info));
-                manager.impl_ptr<impl>()->purge_objects();
+                manager.impl_ptr<impl>()->purge_cached_objects();
             }
 
             completion(std::move(state));
@@ -1608,7 +1456,7 @@ void db::manager::insert_objects(db::manager::insert_preparation_values_f prepar
         ]() mutable {
             if (state) {
                 manager.impl_ptr<impl>()->set_db_info(std::move(db_info));
-                auto loaded_objects = manager.impl_ptr<impl>()->load_object_datas(inserted_datas, false, false);
+                auto loaded_objects = manager.impl_ptr<impl>()->load_vector_object_datas(inserted_datas, false, false);
                 completion(db::manager::vector_result_t{std::move(loaded_objects)});
             } else {
                 completion(db::manager::vector_result_t{std::move(state.error())});
@@ -1630,7 +1478,7 @@ void db::manager::fetch_objects(db::manager::fetch_preparation_option_f preparat
             manager
         ]() mutable {
             if (state) {
-                auto loaded_objects = manager.impl_ptr<impl>()->load_object_datas(fetched_datas, false, false);
+                auto loaded_objects = manager.impl_ptr<impl>()->load_vector_object_datas(fetched_datas, false, false);
                 completion(db::manager::vector_result_t{std::move(loaded_objects)});
             } else {
                 completion(db::manager::vector_result_t{std::move(state.error())});
@@ -1652,7 +1500,8 @@ void db::manager::fetch_const_objects(db::manager::fetch_preparation_option_f pr
             manager
         ]() mutable {
             if (state) {
-                completion(db::manager::const_vector_result_t{db::to_const_vector_objects(manager.model(), fetched_datas)});
+                completion(
+                    db::manager::const_vector_result_t{db::to_const_vector_objects(manager.model(), fetched_datas)});
             } else {
                 completion(db::manager::const_vector_result_t{std::move(state.error())});
             }
@@ -1716,7 +1565,7 @@ void db::manager::save(db::manager::vector_completion_f completion, operation_op
         ]() mutable {
             if (state) {
                 manager.impl_ptr<impl>()->set_db_info(std::move(db_info));
-                auto loaded_objects = manager.impl_ptr<impl>()->load_object_datas(saved_datas, false, true);
+                auto loaded_objects = manager.impl_ptr<impl>()->load_vector_object_datas(saved_datas, false, true);
                 manager.impl_ptr<impl>()->erase_changed_objects(saved_datas);
                 completion(db::manager::vector_result_t{std::move(loaded_objects)});
             } else {
@@ -1740,7 +1589,7 @@ void db::manager::revert(db::manager::revert_preparation_f preparation, db::mana
         ]() mutable {
             if (state) {
                 manager.impl_ptr<impl>()->set_db_info(std::move(db_info));
-                auto loaded_objects = manager.impl_ptr<impl>()->load_object_datas(reverted_datas, false, false);
+                auto loaded_objects = manager.impl_ptr<impl>()->load_vector_object_datas(reverted_datas, false, false);
                 completion(db::manager::vector_result_t{std::move(loaded_objects)});
             } else {
                 completion(db::manager::vector_result_t{std::move(state.error())});
