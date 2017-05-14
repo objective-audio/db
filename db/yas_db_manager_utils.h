@@ -31,7 +31,7 @@ namespace db {
     db::manager::value_result_t select_current_save_id(db::database &db);
 
     db::manager::result_t delete_next_to_last(db::database &db, db::model const &model,
-                                              db::value const &current_save_id);
+                                              db::value const &save_id);
 
     db::const_object_vector_map_t to_const_vector_objects(db::model const &model,
                                                           db::object_data_vector_map_t const &datas);
