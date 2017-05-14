@@ -49,6 +49,7 @@
 		B68217D71C75F7C000689F27 /* yas_db_value.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B68217C61C75F7C000689F27 /* yas_db_value.cpp */; };
 		B68218051C75F90C00689F27 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = B68218041C75F90C00689F27 /* libsqlite3.tbd */; };
 		B68218101C76015A00689F27 /* DBSampleTopViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = B682180F1C76015A00689F27 /* DBSampleTopViewController.mm */; };
+		B69BF63A1EC5FAC800A90E79 /* yas_db_manager_utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B69BF6381EC5FAC800A90E79 /* yas_db_manager_utils.cpp */; };
 		B6B4EEF71EBAC8D4002CD9BE /* DBSampleRelationViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = B6B4EEF61EBAC8D4002CD9BE /* DBSampleRelationViewController.mm */; };
 		B6D0DDE91C81DAA90086AA8E /* yas_sample_db_controller.mm in Sources */ = {isa = PBXBuildFile; fileRef = B6D0DDE71C81DAA90086AA8E /* yas_sample_db_controller.mm */; };
 /* End PBXBuildFile section */
@@ -164,6 +165,8 @@
 		B68218041C75F90C00689F27 /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
 		B682180E1C76015A00689F27 /* DBSampleTopViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DBSampleTopViewController.h; sourceTree = "<group>"; };
 		B682180F1C76015A00689F27 /* DBSampleTopViewController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = DBSampleTopViewController.mm; sourceTree = "<group>"; };
+		B69BF6381EC5FAC800A90E79 /* yas_db_manager_utils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = yas_db_manager_utils.cpp; sourceTree = "<group>"; };
+		B69BF6391EC5FAC800A90E79 /* yas_db_manager_utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_db_manager_utils.h; sourceTree = "<group>"; };
 		B6B4EEEF1EB8E293002CD9BE /* yas_to_floating_point.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_to_floating_point.h; sourceTree = "<group>"; };
 		B6B4EEF01EB8E293002CD9BE /* yas_to_integer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_to_integer.h; sourceTree = "<group>"; };
 		B6B4EEF11EB8E293002CD9BE /* yas_to_string.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_to_string.h; sourceTree = "<group>"; };
@@ -334,6 +337,8 @@
 				B68217B01C75F7C000689F27 /* yas_db_index.h */,
 				B68217B11C75F7C000689F27 /* yas_db_manager.h */,
 				B68217B21C75F7C000689F27 /* yas_db_manager.mm */,
+				B69BF6381EC5FAC800A90E79 /* yas_db_manager_utils.cpp */,
+				B69BF6391EC5FAC800A90E79 /* yas_db_manager_utils.h */,
 				B68217B31C75F7C000689F27 /* yas_db_model.cpp */,
 				B68217B41C75F7C000689F27 /* yas_db_model.h */,
 				B627DF231C8A7F0500E8BAE5 /* yas_db_object_utils.cpp */,
@@ -433,6 +438,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B69BF63A1EC5FAC800A90E79 /* yas_db_manager_utils.cpp in Sources */,
 				B627DF251C8A7F0500E8BAE5 /* yas_db_object_utils.cpp in Sources */,
 				B68218101C76015A00689F27 /* DBSampleTopViewController.mm in Sources */,
 				B66ACF0D1DB797480031CB88 /* yas_version.cpp in Sources */,
