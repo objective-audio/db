@@ -2,7 +2,7 @@
 //  yas_db_manager.cpp
 //
 
-#include "yas_db_manager_utils.h"
+#include "yas_db_additional_utils.h"
 #include "yas_db_attribute.h"
 #include "yas_db_entity.h"
 #include "yas_db_model.h"
