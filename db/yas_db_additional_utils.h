@@ -1,5 +1,5 @@
 //
-//  yas_db_manager_utils.h
+//  yas_db_additional_utils.h
 //
 
 #pragma once
