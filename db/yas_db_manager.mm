@@ -11,6 +11,7 @@
 #include "yas_db_select_option.h"
 #include "yas_db_sql_utils.h"
 #include "yas_db_utils.h"
+#include "yas_db_index.h"
 #include "yas_each_index.h"
 #include "yas_objc_macros.h"
 #include "yas_observing.h"

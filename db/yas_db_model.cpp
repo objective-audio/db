@@ -9,6 +9,10 @@
 #include "yas_db_model.h"
 #include "yas_each_dictionary.h"
 #include "yas_version.h"
+#include "yas_db_entity.h"
+#include "yas_db_index.h"
+#include "yas_db_attribute.h"
+#include "yas_db_relation.h"
 
 using namespace yas;
 

@@ -19,6 +19,8 @@ namespace db {
     class relation;
     class object_data;
     class error;
+    class entity;
+    class index;
 
     // for object
     using integer_set_t = std::set<db::integer::type>;
@@ -38,6 +40,10 @@ namespace db {
     using weak_object_map_map_t = std::unordered_map<std::string, db::weak_object_map_t>;
     using object_data_vector_t = std::vector<db::object_data>;
     using object_data_vector_map_t = std::unordered_map<std::string, db::object_data_vector_t>;
+    
+    // for model
+    using entity_map_t = std::unordered_map<std::string, db::entity>;
+    using index_map_t = std::unordered_map<std::string, db::index>;
 
     // for manager
     static std::string const info_table = "db_info";

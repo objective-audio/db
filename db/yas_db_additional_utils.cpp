@@ -11,6 +11,7 @@
 #include "yas_db_value.h"
 #include "yas_db_object.h"
 #include "yas_db_entity.h"
+#include "yas_db_relation.h"
 
 using namespace yas;
 

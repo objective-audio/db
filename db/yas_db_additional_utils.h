@@ -9,9 +9,6 @@
 
 namespace yas {
 namespace db {
-    class relation;
-    using relation_map_t = std::unordered_map<std::string, relation>;
-
     db::select_result_t select_last(db::database const &db, db::select_option option, value const &save_id = nullptr,
                                     bool const include_removed = false);
     db::select_result_t select_undo(db::database const &db, std::string const &table_name,
