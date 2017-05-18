@@ -46,7 +46,7 @@ struct db::const_object::impl : public base::impl {
             if (obj_data.attributes.count(attr_name) > 0) {
                 this->validate_attribute_name(attr_name);
 
-                this->_data.attributes.emplace(std::make_pair(attr_name, obj_data.attributes.at(attr_name)));
+                this->_data.attributes.emplace(attr_name, obj_data.attributes.at(attr_name));
             }
         }
 
@@ -55,7 +55,7 @@ struct db::const_object::impl : public base::impl {
             if (obj_data.relations.count(rel_name) > 0) {
                 this->validate_relation_name(rel_name);
 
-                this->_data.relations.emplace(std::make_pair(rel_name, obj_data.relations.at(rel_name)));
+                this->_data.relations.emplace(rel_name, obj_data.relations.at(rel_name));
             }
         }
     }
@@ -108,7 +108,7 @@ struct db::const_object::impl : public base::impl {
             if (this->_data.relations.count(rel_name) > 0) {
                 auto const &tgt_entity_name = pair.second.target_entity_name;
                 if (relation_ids.count(tgt_entity_name) == 0) {
-                    relation_ids.emplace(std::make_pair(tgt_entity_name, db::integer_set_t{}));
+                    relation_ids.emplace(tgt_entity_name, db::integer_set_t{});
                 }
 
                 auto &rel_id_set = relation_ids.at(tgt_entity_name);
@@ -346,7 +346,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
         this->validate_relation_id(relation_id);
 
         if (this->_data.relations.count(rel_name) == 0) {
-            this->_data.relations.emplace(std::make_pair(rel_name, db::value_vector_t{}));
+            this->_data.relations.emplace(rel_name, db::value_vector_t{});
         }
 
         auto &vector = _data.relations.at(rel_name);
@@ -473,18 +473,18 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
             }
 
             if (this->_data.attributes.count(attr_name) > 0) {
-                attributes.emplace(std::make_pair(attr_name, this->_data.attributes.at(attr_name)));
+                attributes.emplace(attr_name, this->_data.attributes.at(attr_name));
             } else if (pair.second.not_null) {
-                attributes.emplace(std::make_pair(attr_name, pair.second.default_value));
+                attributes.emplace(attr_name, pair.second.default_value);
             } else {
-                attributes.emplace(std::make_pair(attr_name, db::value::null_value()));
+                attributes.emplace(attr_name, db::value::null_value());
             }
         }
 
         for (auto const &pair : this->_entity.relations) {
             auto const &rel_name = pair.first;
             if (this->_data.relations.count(rel_name) > 0) {
-                relations.emplace(std::make_pair(rel_name, this->_data.relations.at(rel_name)));
+                relations.emplace(rel_name, this->_data.relations.at(rel_name));
             }
         }
 

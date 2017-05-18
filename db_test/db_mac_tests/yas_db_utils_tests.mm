@@ -458,11 +458,11 @@ using namespace yas;
     db::object_vector_t object_as;
     object_as.emplace_back(std::move(obj_a0));
     object_as.emplace_back(std::move(obj_a1));
-    src_map.emplace(std::make_pair("sample_a", std::move(object_as)));
+    src_map.emplace("sample_a", std::move(object_as));
     db::object_vector_t object_bs;
     object_bs.emplace_back(std::move(obj_b0));
     object_bs.emplace_back(std::move(obj_b1));
-    src_map.emplace(std::make_pair("sample_b", std::move(object_bs)));
+    src_map.emplace("sample_b", std::move(object_bs));
 
     XCTAssertEqual(src_map.size(), 2);
     XCTAssertEqual(src_map.count("sample_a"), 1);

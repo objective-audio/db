@@ -69,16 +69,16 @@ struct db::model::impl : public base::impl {
             db::attribute_map_t attributes;
 
             auto const &id_attr = db::attribute::id_attribute();
-            attributes.emplace(std::make_pair(id_attr.name, id_attr));
+            attributes.emplace(id_attr.name, id_attr);
 
             auto const &obj_id_attr = db::attribute::object_id_attribute();
-            attributes.emplace(std::make_pair(obj_id_attr.name, obj_id_attr));
+            attributes.emplace(obj_id_attr.name, obj_id_attr);
 
             auto const &save_id_attr = db::attribute::save_id_attribute();
-            attributes.emplace(std::make_pair(save_id_attr.name, save_id_attr));
+            attributes.emplace(save_id_attr.name, save_id_attr);
 
             auto const &action_attr = db::attribute::action_attribute();
-            attributes.emplace(std::make_pair(action_attr.name, action_attr));
+            attributes.emplace(action_attr.name, action_attr);
 
             CFDictionaryRef cf_attributes = get<CFDictionaryRef>(cf_entity_dict, db::attributes_key);
             if (cf_attributes) {
@@ -86,7 +86,7 @@ struct db::model::impl : public base::impl {
                     std::string attr_name = to_string((CFStringRef)cf_attribute_pair.first);
                     if (attr_name.size() > 0) {
                         CFDictionaryRef cf_attr_dict = get<CFDictionaryRef>(cf_attributes, attr_name);
-                        attributes.emplace(std::make_pair(attr_name, db::attribute{attr_name, cf_attr_dict}));
+                        attributes.emplace(attr_name, db::attribute{attr_name, cf_attr_dict});
                     }
                 }
             }
@@ -111,7 +111,7 @@ struct db::model::impl : public base::impl {
                         }
                         inv_rel_names.at(entity_name).insert(relation_name);
 
-                        relations.emplace(std::make_pair(std::move(relation_name), std::move(relation)));
+                        relations.emplace(std::move(relation_name), std::move(relation));
                     }
                 }
             }
@@ -127,7 +127,7 @@ struct db::model::impl : public base::impl {
             }
             db::entity entity{entity_name, std::move(entity_pair.second.first), std::move(entity_pair.second.second),
                               std::move(inv_rel_names)};
-            this->_entities.emplace(std::make_pair(entity_name, std::move(entity)));
+            this->_entities.emplace(entity_name, std::move(entity));
         }
 
         CFDictionaryRef cf_indices_dict = get<CFDictionaryRef>(cf_dict, db::indices_key);
@@ -145,7 +145,7 @@ struct db::model::impl : public base::impl {
                     return;
                 }
 
-                this->_indices.emplace(std::make_pair(index_name, db::index{index_name, cf_index_dict}));
+                this->_indices.emplace(index_name, db::index{index_name, cf_index_dict});
             }
         }
     }

@@ -24,7 +24,7 @@ namespace db {
                 for (auto &obj_rel_pair : obj_rel_ids) {
                     auto const &entity_name = obj_rel_pair.first;
                     if (rel_ids.count(entity_name) == 0) {
-                        rel_ids.emplace(std::make_pair(entity_name, db::integer_set_t{}));
+                        rel_ids.emplace(entity_name, db::integer_set_t{});
                     }
 
                     for (auto &tgt_id : obj_rel_pair.second) {
