@@ -96,7 +96,7 @@ namespace db {
         query_result_t execute_query(std::string const &sql, value_vector_t const &arguments) const;
         query_result_t execute_query(std::string const &sql, value_map_t const &arguments) const;
 
-        row_result_t last_insert_row_id() const;
+        row_result_t last_insert_rowid() const;
         count_result_t changes() const;
 
         void clear_cached_statements();

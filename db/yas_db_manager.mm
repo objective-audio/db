@@ -1162,7 +1162,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                             db::object_data_vector_t entity_saved_datas;
 
                             for (auto data : changed_entity_datas) {
-                                // 保存するデータのアトリビュートのidは削除する（row_idなのでいらない）
+                                // 保存するデータのアトリビュートのidは削除する（rowidなのでいらない）
                                 erase_if_exists(data.attributes, id_field);
                                 // 保存するデータのセーブIDを今セーブするIDに置き換える
                                 replace(data.attributes, db::save_id_field, next_save_id);
@@ -1183,8 +1183,8 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                                 }
 
                                 if (state) {
-                                    // 挿入したデータのrow_idを取得
-                                    if (auto row_result = db.last_insert_row_id()) {
+                                    // 挿入したデータのrowidを取得
+                                    if (auto row_result = db.last_insert_rowid()) {
                                         auto const src_rowid_pair =
                                             std::make_pair(db::src_id_field, db::value{row_result.value()});
                                         auto const src_obj_id_pair =
