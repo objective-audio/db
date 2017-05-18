@@ -49,7 +49,7 @@ namespace db {
             auto const &rel_table_name = rel_model_pair.second.table_name;
 
             if (auto select_result = db::select_relation_target_ids(db, rel_table_name, save_id, src_id)) {
-                relations.emplace(std::make_pair(rel_name, std::move(select_result.value())));
+                relations.emplace(rel_name, std::move(select_result.value()));
             } else {
                 return db::value_vector_map_result_t{std::move(select_result.error())};
             }
@@ -264,7 +264,7 @@ db::const_object_vector_map_t db::to_const_vector_objects(db::model const &model
             }
         }
 
-        objects.emplace(std::make_pair(entity_name, std::move(entity_objects)));
+        objects.emplace(entity_name, std::move(entity_objects));
     }
     return objects;
 }
@@ -281,11 +281,11 @@ db::const_object_map_map_t db::to_const_map_objects(db::model const &model, db::
 
         for (auto const &data : entity_datas) {
             if (db::const_object obj{model.entity(entity_name), data}) {
-                entity_objects.emplace(std::make_pair(obj.object_id().get<db::integer>(), std::move(obj)));
+                entity_objects.emplace(obj.object_id().get<db::integer>(), std::move(obj));
             }
         }
 
-        objects.emplace(std::make_pair(entity_name, std::move(entity_objects)));
+        objects.emplace(entity_name, std::move(entity_objects));
     }
     return objects;
 }

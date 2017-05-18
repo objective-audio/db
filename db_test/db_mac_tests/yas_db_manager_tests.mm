@@ -1522,7 +1522,7 @@ using namespace yas;
 
                 auto sample_bs =
                     to_vector<db::object>(rel_objects.at("sample_b"), [](auto &pair) { return pair.second; });
-                objects.emplace(std::make_pair("sample_b", std::move(sample_bs)));
+                objects.emplace("sample_b", std::move(sample_bs));
 
                 XCTAssertEqual(objects.at("sample_a").at(0).relation_object_at("child", 0).attribute_value("name"),
                                db::value{"name_value_5"});
