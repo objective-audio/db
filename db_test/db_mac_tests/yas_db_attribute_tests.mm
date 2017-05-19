@@ -88,7 +88,7 @@ using namespace yas;
 - (void)test_create_id_attribute {
     auto const &attr = db::attribute::id_attribute();
 
-    XCTAssertEqual(attr.name, "id");
+    XCTAssertEqual(attr.name, "pk_id");
     XCTAssertEqual(attr.type, "INTEGER");
     XCTAssertTrue(attr.default_value.type() == typeid(db::null));
     XCTAssertEqual(attr.not_null, false);
@@ -144,7 +144,7 @@ using namespace yas;
 - (void)test_id_sql {
     auto const &attr = db::attribute::id_attribute();
 
-    XCTAssertEqual(attr.sql(), "id INTEGER PRIMARY KEY AUTOINCREMENT");
+    XCTAssertEqual(attr.sql(), "pk_id INTEGER PRIMARY KEY AUTOINCREMENT");
 }
 
 - (void)test_full_sql {

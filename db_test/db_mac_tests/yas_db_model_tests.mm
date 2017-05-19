@@ -35,7 +35,7 @@ using namespace yas;
     XCTAssertEqual(attributes.size(), 8);
 
     auto &id_attr = attributes.at(db::id_field);
-    XCTAssertEqual(id_attr.name, "id");
+    XCTAssertEqual(id_attr.name, "pk_id");
     XCTAssertEqual(id_attr.type, "INTEGER");
     XCTAssertTrue(id_attr.default_value.type() == typeid(db::null));
     XCTAssertEqual(id_attr.not_null, false);
@@ -120,7 +120,7 @@ using namespace yas;
     XCTAssertEqual(attributes_b.size(), 5);
 
     auto &id_attr_b = attributes_b.at(db::id_field);
-    XCTAssertEqual(id_attr_b.name, "id");
+    XCTAssertEqual(id_attr_b.name, "pk_id");
     XCTAssertEqual(id_attr_b.type, "INTEGER");
     XCTAssertTrue(id_attr_b.default_value.type() == typeid(db::null));
     XCTAssertEqual(id_attr_b.not_null, false);
@@ -202,7 +202,7 @@ using namespace yas;
     db::model model((__bridge CFDictionaryRef)model_dict);
 
     XCTAssertEqual(model.attributes("sample_a").size(), 8);
-    XCTAssertEqual(model.attributes("sample_a").count("id"), 1);
+    XCTAssertEqual(model.attributes("sample_a").count("pk_id"), 1);
     XCTAssertEqual(model.attributes("sample_a").count("obj_id"), 1);
     XCTAssertEqual(model.attributes("sample_a").count("save_id"), 1);
     XCTAssertEqual(model.attributes("sample_a").count("action"), 1);
