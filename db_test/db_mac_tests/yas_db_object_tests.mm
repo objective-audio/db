@@ -293,7 +293,7 @@ using namespace yas;
 
     XCTAssertFalse(obj.is_removed());
 
-    obj.set_attribute_value(db::id_field, db::value{11});
+    obj.set_attribute_value(db::pk_id_field, db::value{11});
     obj.set_attribute_value(db::object_id_field, db::value{45});
     obj.set_attribute_value("name", db::value{"tanaka"});
     obj.set_relation_ids("child", {db::value{111}});
@@ -306,7 +306,7 @@ using namespace yas;
 
     XCTAssertTrue(obj.is_removed());
     XCTAssertFalse(obj.attribute_value("name"));
-    XCTAssertEqual(obj.attribute_value(db::id_field), db::value{11});
+    XCTAssertEqual(obj.attribute_value(db::pk_id_field), db::value{11});
     XCTAssertEqual(obj.attribute_value(db::object_id_field), db::value{45});
     XCTAssertEqual(obj.relation_ids("child").size(), 0);
 }
@@ -370,7 +370,7 @@ using namespace yas;
     db::model model((__bridge CFDictionaryRef)model_dict);
     db::object obj{nullptr, model.entity("sample_a")};
 
-    obj.set_attribute_value(db::id_field, db::value{22});
+    obj.set_attribute_value(db::pk_id_field, db::value{22});
     obj.set_attribute_value(db::object_id_field, db::value{55});
     obj.set_attribute_value("name", db::value{"suzuki"});
     obj.set_attribute_value("age", db::value{32});
@@ -383,8 +383,8 @@ using namespace yas;
     auto data = obj.data_for_save();
 
     XCTAssertGreaterThan(data.attributes.size(), 6);
-    XCTAssertEqual(data.attributes.count(db::id_field), 1);
-    XCTAssertEqual(data.attributes.at(db::id_field), db::value{22});
+    XCTAssertEqual(data.attributes.count(db::pk_id_field), 1);
+    XCTAssertEqual(data.attributes.at(db::pk_id_field), db::value{22});
     XCTAssertEqual(data.attributes.count(db::object_id_field), 1);
     XCTAssertEqual(data.attributes.at(db::object_id_field), db::value{55});
     XCTAssertEqual(data.attributes.count(db::action_field), 1);

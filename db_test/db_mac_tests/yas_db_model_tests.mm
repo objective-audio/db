@@ -34,7 +34,7 @@ using namespace yas;
     auto &attributes = entity_a.all_attributes;
     XCTAssertEqual(attributes.size(), 8);
 
-    auto &id_attr = attributes.at(db::id_field);
+    auto &id_attr = attributes.at(db::pk_id_field);
     XCTAssertEqual(id_attr.name, "pk_id");
     XCTAssertEqual(id_attr.type, "INTEGER");
     XCTAssertTrue(id_attr.default_value.type() == typeid(db::null));
@@ -106,7 +106,7 @@ using namespace yas;
 
     auto const &custom_attributes_a = entity_a.custom_attributes;
     XCTAssertEqual(custom_attributes_a.size(), 4);
-    XCTAssertEqual(custom_attributes_a.count(db::id_field), 0);
+    XCTAssertEqual(custom_attributes_a.count(db::pk_id_field), 0);
     XCTAssertEqual(custom_attributes_a.count(db::object_id_field), 0);
     XCTAssertEqual(custom_attributes_a.count(db::save_id_field), 0);
     XCTAssertEqual(custom_attributes_a.count(db::action_field), 0);
@@ -119,7 +119,7 @@ using namespace yas;
     auto &attributes_b = entity_b.all_attributes;
     XCTAssertEqual(attributes_b.size(), 5);
 
-    auto &id_attr_b = attributes_b.at(db::id_field);
+    auto &id_attr_b = attributes_b.at(db::pk_id_field);
     XCTAssertEqual(id_attr_b.name, "pk_id");
     XCTAssertEqual(id_attr_b.type, "INTEGER");
     XCTAssertTrue(id_attr_b.default_value.type() == typeid(db::null));
@@ -164,7 +164,7 @@ using namespace yas;
 
     auto const &custom_attributes_b = entity_b.custom_attributes;
     XCTAssertEqual(custom_attributes_b.size(), 1);
-    XCTAssertEqual(custom_attributes_b.count(db::id_field), 0);
+    XCTAssertEqual(custom_attributes_b.count(db::pk_id_field), 0);
     XCTAssertEqual(custom_attributes_b.count(db::object_id_field), 0);
     XCTAssertEqual(custom_attributes_b.count(db::save_id_field), 0);
     XCTAssertEqual(custom_attributes_b.count(db::action_field), 0);

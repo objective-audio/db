@@ -1163,7 +1163,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
 
                             for (auto data : changed_entity_datas) {
                                 // 保存するデータのアトリビュートのidは削除する（rowidなのでいらない）
-                                erase_if_exists(data.attributes, id_field);
+                                erase_if_exists(data.attributes, db::pk_id_field);
                                 // 保存するデータのセーブIDを今セーブするIDに置き換える
                                 replace(data.attributes, db::save_id_field, next_save_id);
 

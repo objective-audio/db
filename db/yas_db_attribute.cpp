@@ -69,7 +69,7 @@ std::string db::attribute::sql() const {
 }
 
 db::attribute const &db::attribute::id_attribute() {
-    static db::attribute const attr{db::id_field, db::integer::name, nullptr, false, true};
+    static db::attribute const attr{db::pk_id_field, db::integer::name, nullptr, false, true};
     return attr;
 }
 

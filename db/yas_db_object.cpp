@@ -446,7 +446,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
 
         erase_if(this->_data.attributes, [](auto const &pair) {
             auto const &column_name = pair.first;
-            if (column_name == db::id_field || column_name == db::object_id_field || column_name == db::action_field) {
+            if (column_name == db::pk_id_field || column_name == db::object_id_field || column_name == db::action_field) {
                 return false;
             }
             return true;
