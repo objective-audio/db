@@ -1185,8 +1185,8 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                                 if (state) {
                                     // 挿入したデータのrowidを取得
                                     if (auto row_result = db.last_insert_rowid()) {
-                                        auto const src_rowid_pair =
-                                            std::make_pair(db::src_id_field, db::value{std::move(row_result.value())});
+                                        auto const src_rowid_pair = std::make_pair(
+                                            db::src_pk_id_field, db::value{std::move(row_result.value())});
                                         auto const src_obj_id_pair =
                                             std::make_pair(db::src_obj_id_field, data.attributes.at(object_id_field));
 

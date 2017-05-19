@@ -73,7 +73,7 @@ namespace db {
     static std::string const remove_action = "remove";
 
     // for relation
-    static std::string const src_id_field = "src_id";
+    static std::string const src_pk_id_field = "src_pk_id";
     static std::string const src_obj_id_field = "src_obj_id";
     static std::string const tgt_obj_id_field = "tgt_obj_id";
 

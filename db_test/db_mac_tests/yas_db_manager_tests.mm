@@ -1774,11 +1774,11 @@ using namespace yas;
         auto &rel_objects = select_rel_result.value();
         XCTAssertEqual(rel_objects.size(), 2);
 
-        XCTAssertEqual(rel_objects.at(0).at(db::src_id_field), db::value{3});
+        XCTAssertEqual(rel_objects.at(0).at(db::src_pk_id_field), db::value{3});
         XCTAssertEqual(rel_objects.at(0).at(db::src_obj_id_field), db::value{1});
         XCTAssertEqual(rel_objects.at(0).at(db::tgt_obj_id_field), db::value{1});
         XCTAssertEqual(rel_objects.at(0).at(db::save_id_field), db::value{1});
-        XCTAssertEqual(rel_objects.at(1).at(db::src_id_field), db::value{3});
+        XCTAssertEqual(rel_objects.at(1).at(db::src_pk_id_field), db::value{3});
         XCTAssertEqual(rel_objects.at(1).at(db::src_obj_id_field), db::value{1});
         XCTAssertEqual(rel_objects.at(1).at(db::tgt_obj_id_field), db::value{2});
         XCTAssertEqual(rel_objects.at(1).at(db::save_id_field), db::value{1});

@@ -165,7 +165,7 @@ db::update_result_t db::purge(db::database &db, std::string const &table_name) {
 }
 
 db::update_result_t db::purge_relation(database &db, std::string const &table_name, std::string const &src_table_name) {
-    std::string where_exprs = "NOT " + db::src_id_field + " IN (SELECT rowid FROM " + src_table_name + ")";
+    std::string where_exprs = "NOT " + db::src_pk_id_field + " IN (SELECT rowid FROM " + src_table_name + ")";
     return db.execute_update(db::delete_sql(table_name, where_exprs));
 }
 
