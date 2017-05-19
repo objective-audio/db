@@ -27,8 +27,8 @@ namespace db {
                         rel_ids.emplace(entity_name, db::integer_set_t{});
                     }
 
-                    for (auto &tgt_id : obj_rel_pair.second) {
-                        rel_ids.at(entity_name).emplace(tgt_id);
+                    for (auto &tgt_obj_id : obj_rel_pair.second) {
+                        rel_ids.at(entity_name).emplace(tgt_obj_id);
                     }
                 }
             }

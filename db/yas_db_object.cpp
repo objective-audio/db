@@ -113,8 +113,8 @@ struct db::const_object::impl : public base::impl {
 
                 auto &rel_id_set = relation_ids.at(tgt_entity_name);
                 auto const &rel = this->_data.relations.at(rel_name);
-                for (auto const &tgt_id : rel) {
-                    rel_id_set.emplace(tgt_id.get<db::integer>());
+                for (auto const &tgt_obj_id : rel) {
+                    rel_id_set.emplace(tgt_obj_id.get<db::integer>());
                 }
             }
         }
@@ -446,7 +446,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
 
         erase_if(this->_data.attributes, [](auto const &pair) {
             auto const &column_name = pair.first;
-            if (column_name == db::id_field || column_name == db::object_id_field || column_name == db::action_field) {
+            if (column_name == db::pk_id_field || column_name == db::object_id_field || column_name == db::action_field) {
                 return false;
             }
             return true;

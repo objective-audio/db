@@ -1163,7 +1163,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
 
                             for (auto data : changed_entity_datas) {
                                 // 保存するデータのアトリビュートのidは削除する（rowidなのでいらない）
-                                erase_if_exists(data.attributes, id_field);
+                                erase_if_exists(data.attributes, db::pk_id_field);
                                 // 保存するデータのセーブIDを今セーブするIDに置き換える
                                 replace(data.attributes, db::save_id_field, next_save_id);
 
@@ -1185,19 +1185,19 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                                 if (state) {
                                     // 挿入したデータのrowidを取得
                                     if (auto row_result = db.last_insert_rowid()) {
-                                        auto const src_rowid_pair =
-                                            std::make_pair(db::src_id_field, db::value{std::move(row_result.value())});
+                                        auto const src_rowid_pair = std::make_pair(
+                                            db::src_pk_id_field, db::value{std::move(row_result.value())});
                                         auto const src_obj_id_pair =
                                             std::make_pair(db::src_obj_id_field, data.attributes.at(object_id_field));
 
                                         for (auto const &rel_pair : data.relations) {
                                             // データベースに関連のデータを挿入する
                                             auto const &rel_name = rel_pair.first;
-                                            auto const &rel_tgt_ids = rel_pair.second;
+                                            auto const &rel_tgt_obj_ids = rel_pair.second;
                                             auto const &rel_model = rel_models.at(rel_name);
                                             auto const &rel_insert_sql = rel_model.sql_for_insert();
 
-                                            for (auto const &rel_tgt_obj_id : rel_tgt_ids) {
+                                            for (auto const &rel_tgt_obj_id : rel_tgt_obj_ids) {
                                                 auto tgt_obj_id_pair =
                                                     std::make_pair(db::tgt_obj_id_field, rel_tgt_obj_id);
                                                 db::value_map_t args{src_rowid_pair, src_obj_id_pair,

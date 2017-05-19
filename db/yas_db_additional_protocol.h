@@ -63,7 +63,7 @@ namespace db {
     using string_set_map_t = std::unordered_map<std::string, string_set_t>;
 
     // for attribute
-    static std::string const id_field = "id";
+    static std::string const pk_id_field = "pk_id";
     static std::string const object_id_field = "obj_id";
     static std::string const save_id_field = "save_id";
     static std::string const action_field = "action";
@@ -73,7 +73,7 @@ namespace db {
     static std::string const remove_action = "remove";
 
     // for relation
-    static std::string const src_id_field = "src_id";
+    static std::string const src_pk_id_field = "src_pk_id";
     static std::string const src_obj_id_field = "src_obj_id";
     static std::string const tgt_obj_id_field = "tgt_obj_id";
 

@@ -18,7 +18,7 @@ db::entity::entity(std::string const &name, db::attribute_map_t &&attributes, db
       custom_attributes(filter(this->all_attributes,
                                [](auto const &pair) {
                                    auto const &attr_name = pair.first;
-                                   if (attr_name == db::id_field || attr_name == db::object_id_field ||
+                                   if (attr_name == db::pk_id_field || attr_name == db::object_id_field ||
                                        attr_name == db::save_id_field || attr_name == db::action_field) {
                                        return false;
                                    }
@@ -36,14 +36,14 @@ std::string db::entity::sql_for_create() const {
 
 std::string db::entity::sql_for_update() const {
     auto mapped_fields = to_vector<std::string>(this->all_attributes, [](auto const &pair) { return pair.first; });
-    return db::update_sql(this->name, mapped_fields, db::equal_field_expr(id_field));
+    return db::update_sql(this->name, mapped_fields, db::equal_field_expr(db::pk_id_field));
 }
 
 std::string db::entity::sql_for_insert() const {
     std::vector<std::string> mapped_fields;
     for (auto const &pair : this->all_attributes) {
         auto const &field_name = pair.first;
-        if (field_name != db::id_field) {
+        if (field_name != db::pk_id_field) {
             mapped_fields.push_back(field_name);
         }
     }

@@ -19,12 +19,12 @@ namespace yas {
 namespace db {
     // 単独の関連の関連先のidの配列をDBから取得する
     db::value_vector_result_t select_relation_target_ids(db::database &db, std::string const &rel_table_name,
-                                                         db::value const &save_id, db::value const &src_id) {
+                                                         db::value const &save_id, db::value const &src_obj_id) {
         std::string where_exprs =
             joined({db::equal_field_expr(db::save_id_field), db::equal_field_expr(db::src_obj_id_field)}, " and ");
         db::select_option option{.table = rel_table_name,
                                  .where_exprs = std::move(where_exprs),
-                                 .arguments = {{db::save_id_field, save_id}, {db::src_obj_id_field, src_id}}};
+                                 .arguments = {{db::save_id_field, save_id}, {db::src_obj_id_field, src_obj_id}}};
 
         if (auto select_result = db::select(db, option)) {
             auto const &result_rels = select_result.value();
@@ -41,14 +41,14 @@ namespace db {
 
     // 単独のオブジェクトの全ての関連の関連先のidの配列をDBから取得する
     db::value_vector_map_result_t select_relation_data(db::database &db, db::relation_map_t const &rel_models,
-                                                       db::value const &save_id, db::value const &src_id) {
+                                                       db::value const &save_id, db::value const &src_obj_id) {
         db::value_vector_map_t relations;
 
         for (auto const &rel_model_pair : rel_models) {
             auto const &rel_name = rel_model_pair.first;
             auto const &rel_table_name = rel_model_pair.second.table_name;
 
-            if (auto select_result = db::select_relation_target_ids(db, rel_table_name, save_id, src_id)) {
+            if (auto select_result = db::select_relation_target_ids(db, rel_table_name, save_id, src_obj_id)) {
                 relations.emplace(rel_name, std::move(select_result.value()));
             } else {
                 return db::value_vector_map_result_t{std::move(select_result.error())};
@@ -165,7 +165,7 @@ db::update_result_t db::purge(db::database &db, std::string const &table_name) {
 }
 
 db::update_result_t db::purge_relation(database &db, std::string const &table_name, std::string const &src_table_name) {
-    std::string where_exprs = "NOT " + db::src_id_field + " IN (SELECT rowid FROM " + src_table_name + ")";
+    std::string where_exprs = "NOT " + db::src_pk_id_field + " IN (SELECT rowid FROM " + src_table_name + ")";
     return db.execute_update(db::delete_sql(table_name, where_exprs));
 }
 
@@ -185,9 +185,9 @@ db::object_data_vector_result_t db::make_entity_object_datas(db::database &db, s
 
         if (attrs.count(db::save_id_field) > 0) {
             auto const &save_id = attrs.at(db::save_id_field);
-            auto const &src_id = attrs.at(db::object_id_field);
+            auto const &src_obj_id = attrs.at(db::object_id_field);
 
-            if (auto rel_data_result = db::select_relation_data(db, rel_models, save_id, src_id)) {
+            if (auto rel_data_result = db::select_relation_data(db, rel_models, save_id, src_obj_id)) {
                 rels = std::move(rel_data_result.value());
             } else {
                 return db::object_data_vector_result_t{std::move(rel_data_result.error())};

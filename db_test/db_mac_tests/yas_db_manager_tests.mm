@@ -130,7 +130,7 @@ using namespace yas;
             XCTAssertEqual(object.attribute_value("age"), db::value{10});
             XCTAssertEqual(object.attribute_value("weight"), db::value{65.4});
 
-            XCTAssertFalse(object.attribute_value(db::id_field));
+            XCTAssertFalse(object.attribute_value(db::pk_id_field));
             XCTAssertEqual(object.attribute_value(db::object_id_field), db::value{0});
             XCTAssertEqual(object.attribute_value(db::save_id_field), db::value{0});
         }
@@ -359,16 +359,16 @@ using namespace yas;
             rollback = true;
         }
 
-        db::select_option option_a{.table = "sample_a", .fields = {db::id_field}};
+        db::select_option option_a{.table = "sample_a", .fields = {db::object_id_field}};
         auto select_result_a = db::select(db, option_a);
-        auto &src_id = select_result_a.value().at(0).at(db::id_field);
+        auto &src_obj_id = select_result_a.value().at(0).at(db::object_id_field);
 
-        db::select_option option_b{.table = "sample_b", .fields = {db::id_field}};
+        db::select_option option_b{.table = "sample_b", .fields = {db::object_id_field}};
         auto select_result_b = db::select(db, option_b);
-        auto &tgt_id = select_result_b.value().at(0).at(db::id_field);
+        auto &tgt_obj_id = select_result_b.value().at(0).at(db::object_id_field);
 
         auto sql = db::insert_sql("rel_sample_a_child", {db::src_obj_id_field, db::tgt_obj_id_field});
-        if (!db.execute_update(sql, db::value_vector_t{src_id, tgt_id})) {
+        if (!db.execute_update(sql, db::value_vector_t{src_obj_id, tgt_obj_id})) {
             rollback = true;
         }
 
@@ -436,12 +436,12 @@ using namespace yas;
         auto select_rels_result = db::select(db, db::select_option{.table = "rel_sample_a_child"});
         XCTAssertEqual(select_rels_result.value().size(), 1);
 
-        auto &src_id = sample_a.at(db::id_field);
-        auto &tgt_id = sample_b.at(db::id_field);
+        auto &src_obj_id = sample_a.at(db::object_id_field);
+        auto &tgt_obj_id = sample_b.at(db::object_id_field);
 
         auto &rel = select_rels_result.value().at(0);
-        XCTAssertEqual(rel.at(db::src_obj_id_field), src_id);
-        XCTAssertEqual(rel.at(db::tgt_obj_id_field), tgt_id);
+        XCTAssertEqual(rel.at(db::src_obj_id_field), src_obj_id);
+        XCTAssertEqual(rel.at(db::tgt_obj_id_field), tgt_obj_id);
 
         XCTAssertTrue(db::index_exists(db, "sample_a_name"));
         XCTAssertTrue(db::index_exists(db, "sample_a_others"));
@@ -1774,11 +1774,11 @@ using namespace yas;
         auto &rel_objects = select_rel_result.value();
         XCTAssertEqual(rel_objects.size(), 2);
 
-        XCTAssertEqual(rel_objects.at(0).at(db::src_id_field), db::value{3});
+        XCTAssertEqual(rel_objects.at(0).at(db::src_pk_id_field), db::value{3});
         XCTAssertEqual(rel_objects.at(0).at(db::src_obj_id_field), db::value{1});
         XCTAssertEqual(rel_objects.at(0).at(db::tgt_obj_id_field), db::value{1});
         XCTAssertEqual(rel_objects.at(0).at(db::save_id_field), db::value{1});
-        XCTAssertEqual(rel_objects.at(1).at(db::src_id_field), db::value{3});
+        XCTAssertEqual(rel_objects.at(1).at(db::src_pk_id_field), db::value{3});
         XCTAssertEqual(rel_objects.at(1).at(db::src_obj_id_field), db::value{1});
         XCTAssertEqual(rel_objects.at(1).at(db::tgt_obj_id_field), db::value{2});
         XCTAssertEqual(rel_objects.at(1).at(db::save_id_field), db::value{1});
