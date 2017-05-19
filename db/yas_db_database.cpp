@@ -477,18 +477,18 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
         return query_result_t{std::move(row_set)};
     }
 
-    row_result_t last_insert_row_id() {
+    row_result_t last_insert_rowid() {
         if (this->_is_executing_statement) {
             return row_result_t{error{error_type::in_use}};
         }
 
         this->_is_executing_statement = true;
 
-        sqlite_int64 row_id = sqlite3_last_insert_rowid(this->_sqlite_handle);
+        sqlite_int64 rowid = sqlite3_last_insert_rowid(this->_sqlite_handle);
 
         this->_is_executing_statement = false;
 
-        return row_result_t{row_id};
+        return row_result_t{rowid};
     }
 
     count_result_t changes() {
@@ -650,8 +650,8 @@ db::query_result_t db::database::execute_query(std::string const &sql, value_map
     return impl_ptr<impl>()->execute_query(sql, {}, arguments);
 }
 
-db::row_result_t db::database::last_insert_row_id() const {
-    return impl_ptr<impl>()->last_insert_row_id();
+db::row_result_t db::database::last_insert_rowid() const {
+    return impl_ptr<impl>()->last_insert_rowid();
 }
 
 db::count_result_t db::database::changes() const {
