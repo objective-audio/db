@@ -113,8 +113,8 @@ struct db::const_object::impl : public base::impl {
 
                 auto &rel_id_set = relation_ids.at(tgt_entity_name);
                 auto const &rel = this->_data.relations.at(rel_name);
-                for (auto const &tgt_id : rel) {
-                    rel_id_set.emplace(tgt_id.get<db::integer>());
+                for (auto const &tgt_obj_id : rel) {
+                    rel_id_set.emplace(tgt_obj_id.get<db::integer>());
                 }
             }
         }

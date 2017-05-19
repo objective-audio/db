@@ -1193,11 +1193,11 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                                         for (auto const &rel_pair : data.relations) {
                                             // データベースに関連のデータを挿入する
                                             auto const &rel_name = rel_pair.first;
-                                            auto const &rel_tgt_ids = rel_pair.second;
+                                            auto const &rel_tgt_obj_ids = rel_pair.second;
                                             auto const &rel_model = rel_models.at(rel_name);
                                             auto const &rel_insert_sql = rel_model.sql_for_insert();
 
-                                            for (auto const &rel_tgt_obj_id : rel_tgt_ids) {
+                                            for (auto const &rel_tgt_obj_id : rel_tgt_obj_ids) {
                                                 auto tgt_obj_id_pair =
                                                     std::make_pair(db::tgt_obj_id_field, rel_tgt_obj_id);
                                                 db::value_map_t args{src_rowid_pair, src_obj_id_pair,
