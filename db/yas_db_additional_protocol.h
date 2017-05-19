@@ -63,7 +63,7 @@ namespace db {
     using string_set_map_t = std::unordered_map<std::string, string_set_t>;
 
     // for attribute
-    static std::string const id_field = "id";
+    static std::string const id_field = "pk_id";
     static std::string const object_id_field = "obj_id";
     static std::string const save_id_field = "save_id";
     static std::string const action_field = "action";
