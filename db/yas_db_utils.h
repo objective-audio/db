@@ -9,7 +9,7 @@ namespace db {
     class database;
     class select_option;
 
-    using select_result_t = result<db::value_map_vector_t, error>;
+    using select_result_t = result<db::value_map_vector_t, db::error>;
     using select_single_result_t = result<db::value_map_t, std::nullptr_t>;
 
     db::update_result_t create_table(db::database &db, std::string const &table_name,

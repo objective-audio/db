@@ -2,6 +2,7 @@
 //  yas_db_additional_utils.cpp
 //
 
+#include "yas_db_additional_protocol.h"
 #include "yas_db_additional_utils.h"
 #include "yas_result.h"
 #include "yas_db_sql_utils.h"
@@ -12,6 +13,8 @@
 #include "yas_db_object.h"
 #include "yas_db_entity.h"
 #include "yas_db_relation.h"
+#include "yas_db_info.h"
+#include "yas_db_database.h"
 
 using namespace yas;
 
@@ -154,10 +157,6 @@ db::select_result_t db::select_revert(db::database const &db, std::string const 
     return db::select_result_t{db::value_map_vector_t{}};
 }
 
-db::select_single_result_t db::select_db_info(db::database const &db) {
-    return db::select_single(db, db::select_option{.table = db::info_table});
-}
-
 db::update_result_t db::purge(db::database &db, std::string const &table_name) {
     std::string where_exprs =
         "NOT rowid IN (SELECT MAX(rowid) FROM " + table_name + " GROUP BY " + db::object_id_field + ")";
@@ -200,26 +199,26 @@ db::object_data_vector_result_t db::make_entity_object_datas(db::database &db, s
     return db::object_data_vector_result_t{std::move(entity_datas)};
 }
 
-// データベース情報からcurrent_save_idを取得する
-db::manager::value_result_t db::select_current_save_id(db::database &db) {
-    db::manager::result_t state{nullptr};
+// データベース情報を取得する
+db::manager::info_result_t db::select_db_info(db::database const &db) {
+    if (auto select_result = db::select_single(db, db::select_option{.table = db::info_table})) {
+        return db::manager::info_result_t{db::info{std::move(select_result.value())}};
+    } else {
+        return db::manager::info_result_t{db::manager::error{db::manager::error_type::select_info_failed}};
+    }
+}
 
-    auto current_save_id = db::value::null_value();
-    if (auto db_info_result = db::select_db_info(db)) {
-        auto &db_info = db_info_result.value();
-        if (db_info.count(db::current_save_id_field) > 0) {
-            current_save_id = db_info.at(db::current_save_id_field);
+// データベース情報からcurrent_save_idを取得する
+db::manager::value_result_t db::select_current_save_id(db::database const &db) {
+    if (auto select_result = db::select_db_info(db)) {
+        auto const &info = select_result.value();
+        if (info.current_save_id_value()) {
+            return db::manager::value_result_t{info.current_save_id_value()};
         } else {
-            state = db::make_error_result(manager::error_type::save_id_not_found);
+            return db::manager::value_result_t{db::manager::error{manager::error_type::save_id_not_found}};
         }
     } else {
-        state = db::make_error_result(manager::error_type::select_info_failed, std::move(db_info_result.error()));
-    }
-
-    if (state) {
-        return db::manager::value_result_t{std::move(current_save_id)};
-    } else {
-        return db::manager::value_result_t{state.error()};
+        return db::manager::value_result_t{std::move(select_result.error())};
     }
 }
 

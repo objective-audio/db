@@ -9,6 +9,8 @@
 
 namespace yas {
 namespace db {
+    class info;
+    
     db::select_result_t select_last(db::database const &db, db::select_option option, value const &save_id = nullptr,
                                     bool const include_removed = false);
     db::select_result_t select_undo(db::database const &db, std::string const &table_name,
@@ -17,8 +19,6 @@ namespace db {
                                     db::integer::type const revert_save_id, db::integer::type const current_save_id);
     db::select_result_t select_revert(db::database const &db, std::string const &table_name,
                                       db::integer::type const revert_save_id, db::integer::type const current_save_id);
-
-    db::select_single_result_t select_db_info(db::database const &db);
 
     db::update_result_t purge(db::database &db, std::string const &table_name);
     db::update_result_t purge_relation(db::database &db, std::string const &table_name,
@@ -33,8 +33,11 @@ namespace db {
                                                              db::relation_map_t const &rel_models,
                                                              db::value_map_vector_t const &entity_attrs);
 
+    // infoをDBから取得する
+    db::manager::info_result_t select_db_info(db::database const &db);
+    
     // カレントセーブIDをDBから取得する
-    db::manager::value_result_t select_current_save_id(db::database &db);
+    db::manager::value_result_t select_current_save_id(db::database const &db);
 
     // 全てのエンティティの指定したidより大きいsave_idのデータを削除する
     db::manager::result_t delete_next_to_last(db::database &db, db::model const &model, db::value const &save_id);
