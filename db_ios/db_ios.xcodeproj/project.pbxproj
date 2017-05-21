@@ -52,6 +52,7 @@
 		B69BF63A1EC5FAC800A90E79 /* yas_db_additional_utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B69BF6381EC5FAC800A90E79 /* yas_db_additional_utils.cpp */; };
 		B6B4EEF71EBAC8D4002CD9BE /* DBSampleRelationViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = B6B4EEF61EBAC8D4002CD9BE /* DBSampleRelationViewController.mm */; };
 		B6D0DDE91C81DAA90086AA8E /* yas_sample_db_controller.mm in Sources */ = {isa = PBXBuildFile; fileRef = B6D0DDE71C81DAA90086AA8E /* yas_sample_db_controller.mm */; };
+		B6EDCB3A1ED16E7800D18E6D /* yas_db_info.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6EDCB381ED16E7800D18E6D /* yas_db_info.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -176,6 +177,8 @@
 		B6D0DDE81C81DAA90086AA8E /* yas_sample_db_controller.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_sample_db_controller.h; sourceTree = "<group>"; };
 		B6E92FB31EA102E200060D0D /* yas_fast_each_private.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = yas_fast_each_private.h; sourceTree = "<group>"; };
 		B6E92FB41EA102E200060D0D /* yas_fast_each.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = yas_fast_each.h; sourceTree = "<group>"; };
+		B6EDCB381ED16E7800D18E6D /* yas_db_info.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = yas_db_info.cpp; sourceTree = "<group>"; };
+		B6EDCB391ED16E7800D18E6D /* yas_db_info.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_db_info.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -337,6 +340,8 @@
 				B68217AE1C75F7C000689F27 /* yas_db_entity.h */,
 				B68217AF1C75F7C000689F27 /* yas_db_index.cpp */,
 				B68217B01C75F7C000689F27 /* yas_db_index.h */,
+				B6EDCB381ED16E7800D18E6D /* yas_db_info.cpp */,
+				B6EDCB391ED16E7800D18E6D /* yas_db_info.h */,
 				B68217B11C75F7C000689F27 /* yas_db_manager.h */,
 				B68217B21C75F7C000689F27 /* yas_db_manager.mm */,
 				B68217B31C75F7C000689F27 /* yas_db_model.cpp */,
@@ -457,6 +462,7 @@
 				B68217CD1C75F7C000689F27 /* yas_db_manager.mm in Sources */,
 				B68217CB1C75F7C000689F27 /* yas_db_entity.cpp in Sources */,
 				B68217D51C75F7C000689F27 /* yas_db_statement.cpp in Sources */,
+				B6EDCB3A1ED16E7800D18E6D /* yas_db_info.cpp in Sources */,
 				B68217D41C75F7C000689F27 /* yas_db_sql_utils.cpp in Sources */,
 				B66ACF081DB797480031CB88 /* yas_flex_ptr.cpp in Sources */,
 				B68217CF1C75F7C000689F27 /* yas_db_object.cpp in Sources */,

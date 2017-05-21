@@ -40,17 +40,18 @@ namespace db {
     using weak_object_map_map_t = std::unordered_map<std::string, db::weak_object_map_t>;
     using object_data_vector_t = std::vector<db::object_data>;
     using object_data_vector_map_t = std::unordered_map<std::string, db::object_data_vector_t>;
-    
+
     // for model
     using entity_map_t = std::unordered_map<std::string, db::entity>;
     using index_map_t = std::unordered_map<std::string, db::index>;
 
-    // for manager
+    // for info
     static std::string const info_table = "db_info";
     static std::string const version_field = "version";
     static std::string const current_save_id_field = "cur_save_id";
     static std::string const last_save_id_field = "last_save_id";
 
+    // for manager
     using object_data_result_t = result<db::object_data, db::error>;
     using object_data_vector_result_t = result<db::object_data_vector_t, db::error>;
     using value_vector_result_t = result<std::vector<db::value>, db::error>;

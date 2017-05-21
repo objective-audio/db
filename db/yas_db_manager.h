@@ -23,6 +23,7 @@ namespace db {
     class select_option;
     class model;
     class error;
+    class info;
 
     using entity_count_map_t = std::unordered_map<std::string, std::size_t>;
 
@@ -96,6 +97,8 @@ namespace db {
         using map_result_t = result<object_map_map_t, error>;
         using const_vector_result_t = result<const_object_vector_map_t, error>;
         using const_map_result_t = result<const_object_map_map_t, error>;
+        
+        using info_result_t = result<db::info, db::manager::error>;
 
         using execution_f = std::function<void(operation const &)>;
 
