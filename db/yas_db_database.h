@@ -4,12 +4,9 @@
 
 #pragma once
 
-#include <sqlite3.h>
 #include <functional>
 #include "yas_base.h"
 #include "yas_db_protocol.h"
-#include "yas_db_result_code.h"
-#include "yas_db_row_set.h"
 #include "yas_db_value.h"
 
 namespace yas {
@@ -17,6 +14,8 @@ template <typename T, typename U>
 class result;
 
 namespace db {
+    class error;
+
     union callback_id {
         void *v;
         struct {
@@ -24,47 +23,11 @@ namespace db {
         };
     };
 
-    struct sqlite_result_code : public result_code {
-        sqlite_result_code(int const &code = SQLITE_OK);
-
-        explicit operator bool() const;
-    };
-
-    enum class error_type {
-        none,
-        closed,
-        in_use,
-        invalid_query_count,
-        invalid_argument,
-        sqlite,
-    };
-
-    struct error {
-        error(std::nullptr_t);
-        explicit error(error_type const type, sqlite_result_code const &code = 0, std::string message = "");
-
-        explicit operator bool() const;
-
-        error_type const &type() const;
-        sqlite_result_code const &code() const;
-        std::string const &message() const;
-
-       private:
-        error_type _type;
-        sqlite_result_code _code;
-        std::string _message;
-    };
-
-    using update_result_t = result<std::nullptr_t, error>;
-    using query_result_t = result<row_set, error>;
-    using row_result_t = result<sqlite3_int64, error>;
-    using count_result_t = result<int, error>;
-
     class database : public base {
        public:
         class impl;
 
-        using callback_f = std::function<int(value_map_t const &)>;
+        using callback_f = std::function<int(db::value_map_t const &)>;
 
         static std::string sqlite_lib_version();
         static bool sqlite_thread_safe();
@@ -84,20 +47,20 @@ namespace db {
         void close();
         bool good_connection();
 
-        update_result_t execute_update(std::string const &sql);
-        update_result_t execute_update(std::string const &sql, value_vector_t const &arguments);
-        update_result_t execute_update(std::string const &sql, value_map_t const &arguments);
+        db::update_result_t execute_update(std::string const &sql);
+        db::update_result_t execute_update(std::string const &sql, db::value_vector_t const &arguments);
+        db::update_result_t execute_update(std::string const &sql, db::value_map_t const &arguments);
 
-        update_result_t execute_statements(std::string const &sql);
-        update_result_t execute_statements(std::string const &sql, callback_f const &callback);
+        db::update_result_t execute_statements(std::string const &sql);
+        db::update_result_t execute_statements(std::string const &sql, callback_f const &callback);
         callback_f const &callback_for_execute_statements() const;
 
-        query_result_t execute_query(std::string const &sql) const;
-        query_result_t execute_query(std::string const &sql, value_vector_t const &arguments) const;
-        query_result_t execute_query(std::string const &sql, value_map_t const &arguments) const;
+        db::query_result_t execute_query(std::string const &sql) const;
+        db::query_result_t execute_query(std::string const &sql, db::value_vector_t const &arguments) const;
+        db::query_result_t execute_query(std::string const &sql, db::value_map_t const &arguments) const;
 
-        row_result_t last_insert_rowid() const;
-        count_result_t changes() const;
+        db::row_result_t last_insert_rowid() const;
+        db::count_result_t changes() const;
 
         void clear_cached_statements();
         void close_open_row_sets();
@@ -119,5 +82,4 @@ namespace db {
         db::row_set_observable _row_set_observable = nullptr;
     };
 }
-std::string to_string(db::error_type const &);
 }

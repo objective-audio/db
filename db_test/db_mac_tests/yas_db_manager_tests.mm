@@ -880,7 +880,7 @@ using namespace yas;
     manager.save([self](auto save_result) { XCTAssertTrue(save_result); });
 
     manager.fetch_const_objects([]() { return db::select_option{.table = "sample_a"}; },
-                                [self](db::manager::const_vector_result_t fetch_result) mutable {
+                                [self](db::manager_const_vector_result_t fetch_result) mutable {
                                     XCTAssertTrue(fetch_result);
 
                                     auto const &objects = fetch_result.value();
@@ -2089,44 +2089,44 @@ using namespace yas;
 }
 
 - (void)test_make_error {
-    auto error = db::manager::error{db::manager::error_type::version_not_found};
+    auto error = db::manager_error{db::manager_error_type::version_not_found};
     XCTAssertTrue(error);
-    XCTAssertEqual(error.type(), db::manager::error_type::version_not_found);
+    XCTAssertEqual(error.type(), db::manager_error_type::version_not_found);
 }
 
 - (void)test_error_none {
-    db::manager::error error{nullptr};
+    db::manager_error error{nullptr};
     XCTAssertFalse(error);
-    XCTAssertEqual(error.type(), db::manager::error_type::none);
+    XCTAssertEqual(error.type(), db::manager_error_type::none);
 }
 
 - (void)test_to_string_from_error {
-    XCTAssertEqual(to_string(db::manager::error_type::begin_transaction_failed), "begin_transaction_failed");
-    XCTAssertEqual(to_string(db::manager::error_type::vacuum_failed), "vacuum_failed");
-    XCTAssertEqual(to_string(db::manager::error_type::select_info_failed), "select_info_failed");
-    XCTAssertEqual(to_string(db::manager::error_type::update_info_failed), "update_info_failed");
-    XCTAssertEqual(to_string(db::manager::error_type::version_not_found), "version_not_found");
-    XCTAssertEqual(to_string(db::manager::error_type::invalid_version_text), "invalid_version_text");
-    XCTAssertEqual(to_string(db::manager::error_type::alter_entity_table_failed), "alter_entity_table_failed");
-    XCTAssertEqual(to_string(db::manager::error_type::create_info_table_failed), "create_info_table_failed");
-    XCTAssertEqual(to_string(db::manager::error_type::insert_info_failed), "insert_info_failed");
-    XCTAssertEqual(to_string(db::manager::error_type::create_entity_table_failed), "create_entity_table_failed");
-    XCTAssertEqual(to_string(db::manager::error_type::create_relation_table_failed), "create_relation_table_failed");
-    XCTAssertEqual(to_string(db::manager::error_type::create_index_failed), "create_index_failed");
-    XCTAssertEqual(to_string(db::manager::error_type::insert_attributes_failed), "insert_attributes_failed");
-    XCTAssertEqual(to_string(db::manager::error_type::insert_relation_failed), "insert_relation_failed");
-    XCTAssertEqual(to_string(db::manager::error_type::save_id_not_found), "save_id_not_found");
-    XCTAssertEqual(to_string(db::manager::error_type::update_save_id_failed), "update_save_id_failed");
-    XCTAssertEqual(to_string(db::manager::error_type::delete_failed), "delete_failed");
-    XCTAssertEqual(to_string(db::manager::error_type::purge_failed), "purge_failed");
-    XCTAssertEqual(to_string(db::manager::error_type::purge_relation_failed), "purge_relation_failed");
-    XCTAssertEqual(to_string(db::manager::error_type::select_last_failed), "select_last_failed");
-    XCTAssertEqual(to_string(db::manager::error_type::select_revert_failed), "select_revert_failed");
-    XCTAssertEqual(to_string(db::manager::error_type::fetch_object_datas_failed), "fetch_object_datas_failed");
-    XCTAssertEqual(to_string(db::manager::error_type::out_of_range_save_id), "out_of_range_save_id");
-    XCTAssertEqual(to_string(db::manager::error_type::select_failed), "select_failed");
-    XCTAssertEqual(to_string(db::manager::error_type::last_insert_rowid_failed), "last_insert_rowid_failed");
-    XCTAssertEqual(to_string(db::manager::error_type::none), "none");
+    XCTAssertEqual(to_string(db::manager_error_type::begin_transaction_failed), "begin_transaction_failed");
+    XCTAssertEqual(to_string(db::manager_error_type::vacuum_failed), "vacuum_failed");
+    XCTAssertEqual(to_string(db::manager_error_type::select_info_failed), "select_info_failed");
+    XCTAssertEqual(to_string(db::manager_error_type::update_info_failed), "update_info_failed");
+    XCTAssertEqual(to_string(db::manager_error_type::version_not_found), "version_not_found");
+    XCTAssertEqual(to_string(db::manager_error_type::invalid_version_text), "invalid_version_text");
+    XCTAssertEqual(to_string(db::manager_error_type::alter_entity_table_failed), "alter_entity_table_failed");
+    XCTAssertEqual(to_string(db::manager_error_type::create_info_table_failed), "create_info_table_failed");
+    XCTAssertEqual(to_string(db::manager_error_type::insert_info_failed), "insert_info_failed");
+    XCTAssertEqual(to_string(db::manager_error_type::create_entity_table_failed), "create_entity_table_failed");
+    XCTAssertEqual(to_string(db::manager_error_type::create_relation_table_failed), "create_relation_table_failed");
+    XCTAssertEqual(to_string(db::manager_error_type::create_index_failed), "create_index_failed");
+    XCTAssertEqual(to_string(db::manager_error_type::insert_attributes_failed), "insert_attributes_failed");
+    XCTAssertEqual(to_string(db::manager_error_type::insert_relation_failed), "insert_relation_failed");
+    XCTAssertEqual(to_string(db::manager_error_type::save_id_not_found), "save_id_not_found");
+    XCTAssertEqual(to_string(db::manager_error_type::update_save_id_failed), "update_save_id_failed");
+    XCTAssertEqual(to_string(db::manager_error_type::delete_failed), "delete_failed");
+    XCTAssertEqual(to_string(db::manager_error_type::purge_failed), "purge_failed");
+    XCTAssertEqual(to_string(db::manager_error_type::purge_relation_failed), "purge_relation_failed");
+    XCTAssertEqual(to_string(db::manager_error_type::select_last_failed), "select_last_failed");
+    XCTAssertEqual(to_string(db::manager_error_type::select_revert_failed), "select_revert_failed");
+    XCTAssertEqual(to_string(db::manager_error_type::fetch_object_datas_failed), "fetch_object_datas_failed");
+    XCTAssertEqual(to_string(db::manager_error_type::out_of_range_save_id), "out_of_range_save_id");
+    XCTAssertEqual(to_string(db::manager_error_type::select_failed), "select_failed");
+    XCTAssertEqual(to_string(db::manager_error_type::last_insert_rowid_failed), "last_insert_rowid_failed");
+    XCTAssertEqual(to_string(db::manager_error_type::none), "none");
 }
 
 @end

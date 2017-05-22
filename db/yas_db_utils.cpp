@@ -10,6 +10,7 @@
 #include "yas_db_select_option.h"
 #include "yas_db_sql_utils.h"
 #include "yas_db_utils.h"
+#include "yas_db_error.h"
 #include "yas_result.h"
 #include "yas_stl_utils.h"
 #include "yas_unless.h"

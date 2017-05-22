@@ -2,7 +2,6 @@
 //  yas_db_additional_utils.cpp
 //
 
-#include "yas_db_additional_protocol.h"
 #include "yas_db_additional_utils.h"
 #include "yas_result.h"
 #include "yas_db_sql_utils.h"
@@ -13,7 +12,6 @@
 #include "yas_db_object.h"
 #include "yas_db_entity.h"
 #include "yas_db_relation.h"
-#include "yas_db_info.h"
 #include "yas_db_database.h"
 
 using namespace yas;
@@ -157,6 +155,10 @@ db::select_result_t db::select_revert(db::database const &db, std::string const 
     return db::select_result_t{db::value_map_vector_t{}};
 }
 
+db::select_single_result_t db::select_db_info(db::database const &db) {
+    return db::select_single(db, db::select_option{.table = db::info_table});
+}
+
 db::update_result_t db::purge(db::database &db, std::string const &table_name) {
     std::string where_exprs =
         "NOT rowid IN (SELECT MAX(rowid) FROM " + table_name + " GROUP BY " + db::object_id_field + ")";
@@ -168,8 +170,8 @@ db::update_result_t db::purge_relation(database &db, std::string const &table_na
     return db.execute_update(db::delete_sql(table_name, where_exprs));
 }
 
-db::manager::result_t db::make_error_result(db::manager::error_type const &error_type, db::error db_error) {
-    return db::manager::result_t{db::manager::error{error_type, std::move(db_error)}};
+db::manager_result_t db::make_error_result(db::manager_error_type const &error_type, db::error db_error) {
+    return db::manager_result_t{db::manager_error{error_type, std::move(db_error)}};
 }
 
 // 単独のエンティティでオブジェクトのアトリビュートの値を元に関連の値をデータベースから取得してobject_dataのvectorを生成する
@@ -199,31 +201,31 @@ db::object_data_vector_result_t db::make_entity_object_datas(db::database &db, s
     return db::object_data_vector_result_t{std::move(entity_datas)};
 }
 
-// データベース情報を取得する
-db::manager::info_result_t db::select_db_info(db::database const &db) {
-    if (auto select_result = db::select_single(db, db::select_option{.table = db::info_table})) {
-        return db::manager::info_result_t{db::info{std::move(select_result.value())}};
-    } else {
-        return db::manager::info_result_t{db::manager::error{db::manager::error_type::select_info_failed}};
-    }
-}
-
 // データベース情報からcurrent_save_idを取得する
-db::manager::value_result_t db::select_current_save_id(db::database const &db) {
-    if (auto select_result = db::select_db_info(db)) {
-        auto const &info = select_result.value();
-        if (info.current_save_id_value()) {
-            return db::manager::value_result_t{info.current_save_id_value()};
+db::manager_value_result_t db::select_current_save_id(db::database &db) {
+    db::manager_result_t state{nullptr};
+
+    auto current_save_id = db::value::null_value();
+    if (auto db_info_result = db::select_db_info(db)) {
+        auto &db_info = db_info_result.value();
+        if (db_info.count(db::current_save_id_field) > 0) {
+            current_save_id = db_info.at(db::current_save_id_field);
         } else {
-            return db::manager::value_result_t{db::manager::error{manager::error_type::save_id_not_found}};
+            state = db::make_error_result(db::manager_error_type::save_id_not_found);
         }
     } else {
-        return db::manager::value_result_t{std::move(select_result.error())};
+        state = db::make_error_result(db::manager_error_type::select_info_failed, std::move(db_info_result.error()));
+    }
+
+    if (state) {
+        return db::manager_value_result_t{std::move(current_save_id)};
+    } else {
+        return db::manager_value_result_t{state.error()};
     }
 }
 
 // 指定したsave_idより大きいsave_idのデータを、全てのエンティティに対してデータベース上から削除する
-db::manager::result_t db::delete_next_to_last(db::database &db, db::model const &model, db::value const &save_id) {
+db::manager_result_t db::delete_next_to_last(db::database &db, db::model const &model, db::value const &save_id) {
     auto const &entity_models = model.entities();
     auto const delete_exprs = expr(db::save_id_field, ">", to_string(save_id));
 
@@ -235,15 +237,15 @@ db::manager::result_t db::delete_next_to_last(db::database &db, db::model const 
                 auto const table_name = rel_pair.second.table_name;
 
                 if (auto ul = unless(db.execute_update(db::delete_sql(table_name, delete_exprs)))) {
-                    return db::make_error_result(db::manager::error_type::delete_failed, std::move(ul.value.error()));
+                    return db::make_error_result(db::manager_error_type::delete_failed, std::move(ul.value.error()));
                 }
             }
         } else {
-            return db::make_error_result(db::manager::error_type::delete_failed, std::move(delete_result.error()));
+            return db::make_error_result(db::manager_error_type::delete_failed, std::move(delete_result.error()));
         }
     }
 
-    return db::manager::result_t{nullptr};
+    return db::manager_result_t{nullptr};
 }
 
 // 複数のエンティティのobject_dataのvectorから、const_objectのvectorを生成する

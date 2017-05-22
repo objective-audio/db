@@ -7,6 +7,7 @@
 #include "yas_db_row_set.h"
 #include "yas_db_statement.h"
 #include "yas_db_value.h"
+#include "yas_db_error.h"
 #include "yas_fast_each.h"
 #include "yas_result.h"
 #include "yas_stl_utils.h"
@@ -17,41 +18,6 @@ namespace yas {
 namespace db {
     static std::map<uint8_t, weak<database>> _databases;
 }
-}
-
-#pragma mark - code
-
-db::sqlite_result_code::sqlite_result_code(int const &value) : result_code(value) {
-}
-
-db::sqlite_result_code::operator bool() const {
-    auto value = this->raw_value();
-    return value == SQLITE_OK || value == SQLITE_DONE;
-}
-
-#pragma mark - error
-
-db::error::error(std::nullptr_t) : _type(error_type::none), _code(0), _message() {
-}
-
-db::error::error(error_type const type, sqlite_result_code const &code, std::string message)
-    : _type(type), _code(code), _message(std::move(message)) {
-}
-
-db::error::operator bool() const {
-    return this->_type != error_type::none;
-}
-
-db::error_type const &db::error::type() const {
-    return this->_type;
-}
-
-db::sqlite_result_code const &db::error::code() const {
-    return this->_code;
-}
-
-std::string const &db::error::message() const {
-    return this->_message;
 }
 
 #pragma mark - impl
@@ -70,7 +36,7 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
     std::unordered_map<std::string, std::unordered_map<uintptr_t, db::statement>> _cached_statements;
     std::unordered_map<uintptr_t, weak<row_set>> _open_row_sets;
 
-    callback_f _callback_for_execute_statements;
+    db::database::callback_f _callback_for_execute_statements;
 
     impl(std::string const &path) : _database_path(path) {
     }
@@ -238,19 +204,19 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
         }
     }
 
-    update_result_t execute_update(std::string const &sql, std::vector<db::value> const &vec,
-                                   std::unordered_map<std::string, db::value> const &map) {
+    db::update_result_t execute_update(std::string const &sql, std::vector<db::value> const &vec,
+                                       std::unordered_map<std::string, db::value> const &map) {
         if (!this->database_exists()) {
-            return update_result_t{error{error_type::closed}};
+            return db::update_result_t{db::error{db::error_type::closed}};
         }
 
         if (this->_is_executing_statement) {
-            return update_result_t{error{error_type::in_use}};
+            return db::update_result_t{db::error{db::error_type::in_use}};
         }
 
         this->_is_executing_statement = true;
 
-        sqlite_result_code result_code{SQLITE_OK};
+        db::sqlite_result_code result_code{SQLITE_OK};
         std::string error_message;
         sqlite3_stmt *stmt = nullptr;
         db::statement statement{nullptr};
@@ -267,7 +233,7 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
             result_code = sqlite3_prepare_v2(this->_sqlite_handle, sql.c_str(), -1, &stmt, 0);
 
             if (!result_code) {
-                auto result = update_result_t{error{error_type::sqlite, result_code, last_error_message()}};
+                auto result = db::update_result_t{db::error{db::error_type::sqlite, result_code, last_error_message()}};
                 sqlite3_finalize(stmt);
                 this->_is_executing_statement = false;
                 return result;
@@ -301,7 +267,7 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
         if (idx != query_count) {
             sqlite3_finalize(stmt);
             this->_is_executing_statement = false;
-            return update_result_t{error{error_type::invalid_query_count}};
+            return db::update_result_t{db::error{db::error_type::invalid_query_count}};
         }
 
         result_code = sqlite3_step(stmt);
@@ -321,7 +287,7 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
             this->set_cached_statement(statement, sql);
         }
 
-        sqlite_result_code close_result_code;
+        db::sqlite_result_code close_result_code;
 
         if (statement) {
             close_result_code = sqlite3_reset(stmt);
@@ -337,13 +303,13 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
         this->_is_executing_statement = false;
 
         if (result_code) {
-            return update_result_t{nullptr};
+            return db::update_result_t{nullptr};
         } else {
-            return update_result_t{error{error_type::sqlite, result_code, error_message}};
+            return db::update_result_t{db::error{db::error_type::sqlite, result_code, error_message}};
         }
     }
 
-    update_result_t execute_statements(std::string const &sql, callback_f const &function) {
+    db::update_result_t execute_statements(std::string const &sql, callback_f const &function) {
         db::callback_id callback_id{.database = _db_key};
         this->_callback_for_execute_statements = function;
 
@@ -377,7 +343,7 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
 
         char *errmsg = nullptr;
 
-        sqlite_result_code result_code = sqlite3_exec(
+        db::sqlite_result_code result_code = sqlite3_exec(
             this->_sqlite_handle, sql.c_str(), function ? execute_bulk_sql_callback : nullptr, callback_id.v, &errmsg);
 
         this->_callback_for_execute_statements = nullptr;
@@ -389,24 +355,24 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
         }
 
         if (result_code) {
-            return update_result_t{nullptr};
+            return db::update_result_t{nullptr};
         } else {
-            return update_result_t{error{error_type::sqlite, result_code, error_message}};
+            return db::update_result_t{db::error{db::error_type::sqlite, result_code, error_message}};
         }
     }
 
     db::query_result_t execute_query(std::string const &sql, value_vector_t const &vec, value_map_t const &map) {
         if (!this->database_exists()) {
-            return query_result_t{error{error_type::closed}};
+            return db::query_result_t{db::error{db::error_type::closed}};
         }
 
         if (this->_is_executing_statement) {
-            return query_result_t{error{error_type::in_use}};
+            return db::query_result_t{db::error{db::error_type::in_use}};
         }
 
         this->_is_executing_statement = true;
 
-        sqlite_result_code result_code = 0;
+        db::sqlite_result_code result_code = 0;
         std::string error_message;
         sqlite3_stmt *stmt{nullptr};
         statement statement{nullptr};
@@ -424,7 +390,7 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
             result_code = sqlite3_prepare_v2(this->_sqlite_handle, sql.c_str(), -1, &stmt, 0);
 
             if (!result_code) {
-                auto result = query_result_t{error{error_type::sqlite, result_code, last_error_message()}};
+                auto result = db::query_result_t{db::error{db::error_type::sqlite, result_code, last_error_message()}};
                 sqlite3_finalize(stmt);
                 this->_is_executing_statement = false;
                 return result;
@@ -456,7 +422,7 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
         if (idx != query_count) {
             sqlite3_finalize(stmt);
             this->_is_executing_statement = false;
-            return query_result_t{error{error_type::invalid_query_count, 0, error_message}};
+            return db::query_result_t{db::error{db::error_type::invalid_query_count, 0, error_message}};
         }
 
         if (!statement) {
@@ -474,12 +440,12 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
 
         this->_is_executing_statement = false;
 
-        return query_result_t{std::move(row_set)};
+        return db::query_result_t{std::move(row_set)};
     }
 
-    row_result_t last_insert_rowid() {
+    db::row_result_t last_insert_rowid() {
         if (this->_is_executing_statement) {
-            return row_result_t{error{error_type::in_use}};
+            return db::row_result_t{db::error{db::error_type::in_use}};
         }
 
         this->_is_executing_statement = true;
@@ -488,12 +454,12 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
 
         this->_is_executing_statement = false;
 
-        return row_result_t{rowid};
+        return db::row_result_t{rowid};
     }
 
-    count_result_t changes() {
+    db::count_result_t changes() {
         if (this->_is_executing_statement) {
-            return count_result_t{error{error_type::in_use}};
+            return db::count_result_t{db::error{db::error_type::in_use}};
         }
 
         this->_is_executing_statement = true;
@@ -502,7 +468,7 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
 
         this->_is_executing_statement = false;
 
-        return count_result_t{changes};
+        return db::count_result_t{changes};
     }
 
     void set_max_busy_retry_time_interval(double const timeout) {
@@ -715,24 +681,4 @@ db::row_set_observable &db::database::row_set_observable() {
         this->_row_set_observable = db::row_set_observable{impl_ptr<row_set_observable::impl>()};
     }
     return this->_row_set_observable;
-}
-
-#pragma mark -
-
-std::string yas::to_string(db::error_type const &error_type) {
-    switch (error_type) {
-        case db::error_type::closed:
-            return "closed";
-        case db::error_type::in_use:
-            return "in_use";
-        case db::error_type::invalid_query_count:
-            return "invalid_query_count";
-        case db::error_type::invalid_argument:
-            return "invalid_argument";
-        case db::error_type::sqlite:
-            return "sqlite";
-        case db::error_type::none:
-            return "none";
-    }
-    return std::string();
 }

@@ -65,8 +65,8 @@ namespace sample {
         bool _processing;
 
         db::object_vector_t &_objects_at(entity const &);
-        void _update_objects(std::function<void(db::manager::result_t)> &&);
-        void _update_objects(entity const &entity, std::function<void(db::manager::result_t)> &&);
+        void _update_objects(std::function<void(db::manager_result_t)> &&);
+        void _update_objects(entity const &entity, std::function<void(db::manager_result_t)> &&);
         void _begin_processing();
         void _end_processing();
     };

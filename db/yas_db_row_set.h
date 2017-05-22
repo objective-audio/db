@@ -8,7 +8,6 @@
 #include "yas_base.h"
 #include "yas_db_protocol.h"
 #include "yas_db_result_code.h"
-#include "yas_db_value.h"
 
 namespace yas {
 template <typename T, typename U>
