@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include "yas_db_protocol.h"
+
 namespace yas {
 namespace db {
     class database;

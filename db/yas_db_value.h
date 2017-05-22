@@ -4,13 +4,12 @@
 
 #pragma once
 
-#include <sqlite3.h>
-#include <chrono>
 #include <memory>
 #include <string>
-#include <unordered_map>
 #include <vector>
 #include "yas_base.h"
+#include "yas_db_types.h"
+#include "yas_db_protocol.h"
 
 namespace yas {
 namespace db {
@@ -112,13 +111,6 @@ namespace db {
        private:
         static std::shared_ptr<db::value::impl<null>> const &null_value_impl_ptr();
     };
-
-    using value_vector_t = std::vector<value>;
-    using value_map_t = std::unordered_map<std::string, value>;
-    using value_vector_map_t = std::unordered_map<std::string, value_vector_t>;
-    using value_map_vector_t = std::vector<db::value_map_t>;
-    using value_map_vector_map_t = std::unordered_map<std::string, value_map_vector_t>;
-    using time_point_t = std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>;
 }
 
 std::string to_string(db::value const &);
