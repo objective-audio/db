@@ -49,7 +49,7 @@ namespace db {
         db::value column_value(int const column_idx) const;
         db::value column_value(std::string column_name) const;
 
-        db::value_map_t value_map_t() const;
+        db::value_map_t values() const;
 
         db::closable &closable();
         db_settable &db_settable();

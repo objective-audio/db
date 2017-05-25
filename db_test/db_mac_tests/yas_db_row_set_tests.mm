@@ -168,7 +168,7 @@ using namespace yas;
 
     XCTAssertTrue(row_set.next());
 
-    auto map = row_set.value_map_t();
+    auto map = row_set.values();
 
     auto &int_value = map.at("int_field");
     auto &float_value = map.at("float_field");

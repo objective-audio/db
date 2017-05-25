@@ -236,7 +236,7 @@ using namespace yas;
     XCTAssertTrue(row_set);
     XCTAssertTrue(row_set.next());
 
-    auto map = row_set.value_map_t();
+    auto map = row_set.values();
 
     XCTAssertGreaterThan(map.count("sql"), 0);
     auto &sql_column_value = map.at("sql");
@@ -276,7 +276,7 @@ using namespace yas;
     XCTAssertTrue(row_set);
     XCTAssertTrue(row_set.next());
 
-    auto map = row_set.value_map_t();
+    auto map = row_set.values();
 
     XCTAssertGreaterThan(map.count("pk"), 0);
     XCTAssertGreaterThan(map.count("dflt_value"), 0);
@@ -289,7 +289,7 @@ using namespace yas;
 
     XCTAssertTrue(row_set.next());
 
-    map = row_set.value_map_t();
+    map = row_set.values();
 
     XCTAssertEqual(map.at("name").get<db::text>(), "field_b");
 
@@ -307,7 +307,7 @@ using namespace yas;
     XCTAssertTrue(row_set);
     XCTAssertTrue(row_set.next());
 
-    auto map = row_set.value_map_t();
+    auto map = row_set.values();
 
     XCTAssertEqual(map.at("type"), db::value{"index"});
     XCTAssertEqual(map.at("name"), db::value{"test_index"});

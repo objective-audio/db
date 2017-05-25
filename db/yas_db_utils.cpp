@@ -170,18 +170,18 @@ db::select_result_t db::select(db::database const &db, db::select_option const &
     auto const sql =
         db::select_sql(option.table, option.fields, option.where_exprs, option.field_orders, option.limit_range);
 
-    db::value_map_vector_t value_map_vector_t;
+    db::value_map_vector_t value_map_vector;
 
     if (auto query_result = db.execute_query(sql, option.arguments)) {
         auto row_set = query_result.value();
         while (row_set.next()) {
-            value_map_vector_t.emplace_back(row_set.value_map_t());
+            value_map_vector.emplace_back(row_set.values());
         }
     } else {
         return db::select_result_t{std::move(query_result.error())};
     }
 
-    return db::select_result_t{value_map_vector_t};
+    return db::select_result_t{value_map_vector};
 }
 
 db::select_single_result_t db::select_single(db::database const &db, db::select_option option) {
