@@ -234,6 +234,6 @@ db::time_point_t yas::to_time_point(db::value const &value) {
     return {};
 }
 
-db::value yas::to_value(db::time_point_t const &time_point_t) {
-    return db::value{time_point_t.time_since_epoch().count()};
+db::value yas::to_value(db::time_point_t const &time_point) {
+    return db::value{time_point.time_since_epoch().count()};
 }

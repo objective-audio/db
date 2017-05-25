@@ -171,7 +171,7 @@ db::value db::row_set::column_value(std::string column_name) const {
     return db::value::null_value();
 }
 
-db::value_map_t db::row_set::value_map_t() const {
+db::value_map_t db::row_set::values() const {
     auto *const stmt = impl_ptr<impl>()->statement().stmt();
     int const column_count = sqlite3_data_count(stmt);
 
