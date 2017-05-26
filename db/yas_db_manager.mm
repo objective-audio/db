@@ -1189,30 +1189,18 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                                 if (state) {
                                     // 挿入したデータのrowidを取得
                                     if (auto row_result = db.last_insert_rowid()) {
-                                        auto const src_rowid_pair = std::make_pair(
-                                            db::src_pk_id_field, db::value{std::move(row_result.value())});
-                                        auto const src_obj_id_pair =
-                                            std::make_pair(db::src_obj_id_field, data.attributes.at(object_id_field));
+                                        auto const src_pk_id = db::value{std::move(row_result.value())};
+                                        auto const src_obj_id = data.attributes.at(object_id_field);
 
                                         for (auto const &rel_pair : data.relations) {
                                             // データベースに関連のデータを挿入する
-                                            auto const &rel_name = rel_pair.first;
+                                            auto const &rel_model = rel_models.at(rel_pair.first);
                                             auto const &rel_tgt_obj_ids = rel_pair.second;
-                                            auto const &rel_model = rel_models.at(rel_name);
-                                            auto const &rel_insert_sql = rel_model.sql_for_insert();
-
-                                            for (auto const &rel_tgt_obj_id : rel_tgt_obj_ids) {
-                                                auto tgt_obj_id_pair =
-                                                    std::make_pair(db::tgt_obj_id_field, rel_tgt_obj_id);
-                                                db::value_map_t args{src_rowid_pair, src_obj_id_pair,
-                                                                     std::move(tgt_obj_id_pair), save_id_pair};
-                                                if (auto ul =
-                                                        unless(db.execute_update(rel_insert_sql, std::move(args)))) {
-                                                    state = db::make_error_result(
-                                                        db::manager_error_type::insert_relation_failed,
-                                                        std::move(ul.value.error()));
-                                                    break;
-                                                }
+                                            if (auto ul =
+                                                    unless(db::insert_relations(db, rel_model, src_pk_id, src_obj_id,
+                                                                                rel_tgt_obj_ids, next_save_id))) {
+                                                state = std::move(ul.value);
+                                                break;
                                             }
                                         }
                                     } else {

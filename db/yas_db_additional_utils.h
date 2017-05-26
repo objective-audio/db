@@ -11,7 +11,7 @@
 namespace yas {
 namespace db {
     class model;
-    
+
     db::select_result_t select_last(db::database const &db, db::select_option option, value const &save_id = nullptr,
                                     bool const include_removed = false);
     db::select_result_t select_undo(db::database const &db, std::string const &table_name,
@@ -41,6 +41,10 @@ namespace db {
 
     // 全てのエンティティの指定したidより大きいsave_idのデータを削除する
     db::manager_result_t delete_next_to_last(db::database &db, db::model const &model, db::value const &save_id);
+
+    db::manager_result_t insert_relations(db::database &db, db::relation const &rel_model, db::value const &src_pk_id,
+                                          db::value const &src_obj_id, db::value_vector_t const &rel_tgt_obj_ids,
+                                          db::value const &save_id);
 
     // object_dataの配列からconst_objectの配列を生成する
     // 全てのエンティティを含む
