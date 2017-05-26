@@ -248,6 +248,25 @@ db::manager_result_t db::delete_next_to_last(db::database &db, db::model const &
     return db::manager_result_t{nullptr};
 }
 
+db::manager_result_t db::insert_relations(db::database &db, db::relation const &rel_model, db::value const &src_pk_id,
+                                          db::value const &src_obj_id, db::value_vector_t const &rel_tgt_obj_ids,
+                                          db::value const &save_id) {
+    auto const &rel_insert_sql = rel_model.sql_for_insert();
+    auto src_pk_id_pair = std::make_pair(db::src_pk_id_field, src_pk_id);
+    auto src_obj_id_pair = std::make_pair(db::src_obj_id_field, src_obj_id);
+    auto save_id_pair = std::make_pair(db::save_id_field, save_id);
+
+    for (auto const &rel_tgt_obj_id : rel_tgt_obj_ids) {
+        auto tgt_obj_id_pair = std::make_pair(db::tgt_obj_id_field, rel_tgt_obj_id);
+
+        db::value_map_t args{src_pk_id_pair, src_obj_id_pair, std::move(tgt_obj_id_pair), save_id_pair};
+        if (auto ul = unless(db.execute_update(rel_insert_sql, std::move(args)))) {
+            return db::make_error_result(db::manager_error_type::insert_relation_failed, std::move(ul.value.error()));
+        }
+    }
+    return db::manager_result_t{nullptr};
+}
+
 // 複数のエンティティのobject_dataのvectorから、const_objectのvectorを生成する
 db::const_object_vector_map_t db::to_const_vector_objects(db::model const &model,
                                                           db::object_data_vector_map_t const &datas) {
