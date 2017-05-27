@@ -15,7 +15,7 @@ namespace db {
 }
 
 std::string yas::db::create_table_sql(std::string const &table, std::vector<std::string> const &fields) {
-    std::string const joined_fields = joined(fields, field_separator);
+    std::string const joined_fields = joined(fields, db::field_separator);
     return "CREATE TABLE IF NOT EXISTS " + table + " (" + joined_fields + ");";
 }
 
@@ -40,9 +40,9 @@ std::string yas::db::insert_sql(std::string const &table, std::vector<std::strin
     std::ostringstream stream;
     stream << "INSERT INTO " + table;
     if (fields.size() > 0) {
-        std::string const joined_fields = joined(fields, field_separator);
+        std::string const joined_fields = joined(fields, db::field_separator);
         std::string const joined_values = joined(
-            to_vector<std::string>(fields, [](std::string const &field) { return ":" + field; }), field_separator);
+            to_vector<std::string>(fields, [](std::string const &field) { return ":" + field; }), db::field_separator);
         stream << "(" + joined_fields + ") VALUES(" + joined_values + ");";
     } else {
         stream << " DEFAULT VALUES;";
@@ -55,7 +55,7 @@ std::string yas::db::update_sql(std::string const &table, std::vector<std::strin
     std::ostringstream stream;
     stream << "UPDATE " << table << " SET "
            << joined(to_vector<std::string>(fields, [](std::string const &field) { return equal_field(field); }),
-                     field_separator);
+                     db::field_separator);
     if (where_exprs.size() > 0) {
         stream << " WHERE " << where_exprs;
     }
@@ -85,13 +85,22 @@ std::string yas::db::equal_field_expr(std::string const &field) {
     return field_expr(field, "=");
 }
 
+std::string yas::db::in_expr(std::string const &field, std::string const &select_sql) {
+    return field + " IN (" + select_sql + ")";
+}
+
+std::string yas::db::in_expr(std::string const &field, std::vector<db::value> const &values) {
+    auto joined_values = joined(values, db::field_separator, [](db::value const &value) { return value.sql(); });
+    return field + " IN (" + joined_values + ")";
+}
+
 std::string yas::db::equal_field(std::string const &field) {
     return field + " = :" + field;
 }
 
-std::string yas::db::joined_orders(std::vector<field_order> const &orders) {
+std::string yas::db::joined_orders(std::vector<db::field_order> const &orders) {
     auto mapped = to_vector<std::string>(orders, [](auto const &order) { return order.sql(); });
-    return joined(mapped, field_separator);
+    return joined(mapped, db::field_separator);
 }
 
 std::string yas::db::select_sql(std::string const &table_name, std::vector<std::string> const &fields,
@@ -103,7 +112,7 @@ std::string yas::db::select_sql(std::string const &table_name, std::vector<std::
 
     std::ostringstream stream;
 
-    std::string const joined_fields = joined(fields, field_separator);
+    std::string const joined_fields = joined(fields, db::field_separator);
 
     stream << "SELECT " << joined_fields << " FROM " << table_name;
 
