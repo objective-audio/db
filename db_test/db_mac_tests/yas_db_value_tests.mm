@@ -322,4 +322,8 @@ using namespace yas;
     XCTAssertEqual(dst_time_point.time_since_epoch().count(), 1234);
 }
 
+- (void)test_null_value {
+    XCTAssertFalse(db::null_value());
+}
+
 @end
