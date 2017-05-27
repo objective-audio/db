@@ -12,6 +12,10 @@ namespace yas {
 namespace db {
     class model;
 
+    db::value const &insert_action_value();
+    db::value const &update_action_value();
+    db::value const &remove_action_value();
+
     db::select_result_t select_last(db::database const &db, db::select_option option, value const &save_id = nullptr,
                                     bool const include_removed = false);
     db::select_result_t select_undo(db::database const &db, std::string const &table_name,

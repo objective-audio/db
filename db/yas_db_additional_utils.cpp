@@ -61,6 +61,21 @@ namespace db {
 }
 }
 
+db::value const &db::insert_action_value() {
+    static db::value _value{db::insert_action};
+    return _value;
+}
+
+db::value const &db::update_action_value() {
+    static db::value _value{db::update_action};
+    return _value;
+}
+
+db::value const &db::remove_action_value() {
+    static db::value _value{db::remove_action};
+    return _value;
+}
+
 db::select_result_t db::select_last(db::database const &db, db::select_option option, db::value const &save_id,
                                     bool const include_removed) {
     std::vector<std::string> components;
