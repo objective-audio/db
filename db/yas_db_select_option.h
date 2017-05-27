@@ -16,7 +16,7 @@ namespace db {
 
     struct field_order {
         std::string field = "";
-        db::order order = order::ascending;
+        db::order order = db::order::ascending;
 
         std::string sql() const;
     };
@@ -38,7 +38,7 @@ namespace db {
         std::string where_exprs = "";
         db::value_map_t arguments = {};
         std::vector<db::field_order> field_orders = {};
-        db::range limit_range = range::empty();
+        db::range limit_range = db::range::empty();
     };
 }
 }
