@@ -7,6 +7,7 @@
 #include "yas_db_additional_protocol.h"
 #include "yas_db_attribute.h"
 #include "yas_db_cf_utils.h"
+#include "yas_db_object.h"
 
 using namespace yas;
 
@@ -84,6 +85,6 @@ db::attribute const &db::attribute::save_id_attribute() {
 }
 
 db::attribute const &db::attribute::action_attribute() {
-    static db::attribute const attr{db::action_field, db::text::name, db::value{db::insert_action}, true};
+    static db::attribute const attr{db::action_field, db::text::name, db::insert_action_value(), true};
     return attr;
 }

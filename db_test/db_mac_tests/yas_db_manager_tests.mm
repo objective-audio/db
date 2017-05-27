@@ -125,7 +125,7 @@ using namespace yas;
             auto const &object = objects[idx];
 
             XCTAssertEqual(object.status(), db::object_status::inserted);
-            XCTAssertEqual(object.attribute_value(db::action_field), db::value{db::insert_action});
+            XCTAssertEqual(object.attribute_value(db::action_field), db::insert_action_value());
             XCTAssertEqual(object.attribute_value("name"), db::value{"default_value"});
             XCTAssertEqual(object.attribute_value("age"), db::value{10});
             XCTAssertEqual(object.attribute_value("weight"), db::value{65.4});
@@ -159,7 +159,7 @@ using namespace yas;
             XCTAssertEqual(saved_object, object);
 
             XCTAssertEqual(saved_object.status(), db::object_status::saved);
-            XCTAssertEqual(saved_object.attribute_value(db::action_field), db::value{db::insert_action});
+            XCTAssertEqual(saved_object.attribute_value(db::action_field), db::insert_action_value());
             XCTAssertEqual(saved_object.attribute_value("age"), db::value{10});
             XCTAssertEqual(saved_object.attribute_value("weight"), db::value{65.4});
 
@@ -488,9 +488,9 @@ using namespace yas;
             XCTAssertEqual(objects.at(1).save_id(), db::value{1});
             XCTAssertEqual(objects.at(2).save_id(), db::value{1});
 
-            XCTAssertEqual(objects.at(0).action(), db::value{db::insert_action});
-            XCTAssertEqual(objects.at(1).action(), db::value{db::insert_action});
-            XCTAssertEqual(objects.at(2).action(), db::value{db::insert_action});
+            XCTAssertEqual(objects.at(0).action(), db::insert_action_value());
+            XCTAssertEqual(objects.at(1).action(), db::insert_action_value());
+            XCTAssertEqual(objects.at(2).action(), db::insert_action_value());
 
             XCTAssertEqual(objects.at(0).manager(), manager);
             XCTAssertEqual(objects.at(1).manager(), manager);
@@ -526,7 +526,7 @@ using namespace yas;
 
             XCTAssertEqual(objects.at(0).object_id(), db::value{4});
             XCTAssertEqual(objects.at(0).save_id(), db::value{2});
-            XCTAssertEqual(objects.at(0).action(), db::value{db::insert_action});
+            XCTAssertEqual(objects.at(0).action(), db::insert_action_value());
             XCTAssertEqual(objects.at(0).manager(), manager);
 
             [exp2 fulfill];
@@ -1109,7 +1109,7 @@ using namespace yas;
             XCTAssertEqual(obj.save_id(), db::value{1});
             XCTAssertEqual(obj.attribute_value("name"), db::value{"default_value"});
             XCTAssertEqual(obj.status(), db::object_status::saved);
-            XCTAssertEqual(obj.action(), db::value{db::insert_action});
+            XCTAssertEqual(obj.action(), db::insert_action_value());
 
             [exp1 fulfill];
         });
@@ -1154,7 +1154,7 @@ using namespace yas;
         XCTAssertEqual(obj.attribute_value("name"), db::value{"new_value"});
         XCTAssertEqual(obj.attribute_value("age"), db::value{77});
         XCTAssertEqual(obj.status(), db::object_status::saved);
-        XCTAssertEqual(obj.action(), db::value{db::update_action});
+        XCTAssertEqual(obj.action(), db::update_action_value());
         XCTAssertEqual(obj.relation_size("child"), 2);
         XCTAssertEqual(obj.relation_ids("child").size(), 2);
         XCTAssertEqual(obj.relation_id("child", 0), db::value{100});
@@ -1171,11 +1171,11 @@ using namespace yas;
         XCTAssertEqual(selected_values.at(0).at("name"), db::value{"default_value"});
         XCTAssertEqual(selected_values.at(0).at("age"), db::value{10});
         XCTAssertEqual(selected_values.at(0).at(db::save_id_field), db::value{1});
-        XCTAssertEqual(selected_values.at(0).at(db::action_field), db::value{db::insert_action});
+        XCTAssertEqual(selected_values.at(0).at(db::action_field), db::insert_action_value());
         XCTAssertEqual(selected_values.at(1).at("name"), db::value{"new_value"});
         XCTAssertEqual(selected_values.at(1).at("age"), db::value{77});
         XCTAssertEqual(selected_values.at(1).at(db::save_id_field), db::value{2});
-        XCTAssertEqual(selected_values.at(1).at(db::action_field), db::value{db::update_action});
+        XCTAssertEqual(selected_values.at(1).at(db::action_field), db::update_action_value());
 
         auto relation_result =
             db::select(db, db::select_option{.table = manager.model().relation("sample_a", "child").table_name});
@@ -1224,7 +1224,7 @@ using namespace yas;
         XCTAssertEqual(obj.relation_ids("child").size(), 0);
         XCTAssertTrue(obj.is_removed());
         XCTAssertEqual(obj.status(), db::object_status::saved);
-        XCTAssertEqual(obj.action(), db::value{db::remove_action});
+        XCTAssertEqual(obj.action(), db::remove_action_value());
 
         [exp4 fulfill];
     });

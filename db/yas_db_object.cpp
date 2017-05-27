@@ -276,7 +276,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
 
     void load_insertion_data() override {
         this->_status = db::object_status::inserted;
-        set_attribute_value(db::action_field, db::value{db::insert_action}, true);
+        set_attribute_value(db::action_field, db::insert_action_value(), true);
 
         for (auto const &pair : this->_entity.all_attributes) {
             auto const &attr = pair.second;
@@ -450,7 +450,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
 
         this->_data.relations.clear();
 
-        this->set_attribute_value(db::action_field, db::value{db::remove_action});
+        this->set_attribute_value(db::action_field, db::remove_action_value());
     }
 
     db::object_data data_for_save() {
@@ -490,7 +490,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
     void set_update_action() {
         if (this->_status != db::object_status::inserted && !this->is_equal_to_action(db::remove_action) &&
             !this->is_equal_to_action(db::update_action)) {
-            this->set_attribute_value(db::action_field, db::value{db::update_action}, true);
+            this->set_attribute_value(db::action_field, db::update_action_value(), true);
         }
     }
 
@@ -648,6 +648,21 @@ db::const_object const &db::null_const_object() {
 db::object const &db::null_object() {
     static db::object const _null_object{nullptr};
     return _null_object;
+}
+
+db::value const &db::insert_action_value() {
+    static db::value _value{db::insert_action};
+    return _value;
+}
+
+db::value const &db::update_action_value() {
+    static db::value _value{db::update_action};
+    return _value;
+}
+
+db::value const &db::remove_action_value() {
+    static db::value _value{db::remove_action};
+    return _value;
 }
 
 std::string yas::to_string(db::object_status const &status) {

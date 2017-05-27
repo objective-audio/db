@@ -118,7 +118,7 @@ db::select_result_t db::select_undo(db::database const &db, std::string const &t
             {db::expr(db::save_id_field, "<=", std::to_string(current_save_id)),
              db::expr(db::save_id_field, ">", std::to_string(revert_save_id)), db::equal_field_expr(db::action_field)},
             " AND "),
-        .arguments = {{db::action_field, db::value{db::insert_action}}},
+        .arguments = {{db::action_field, db::insert_action_value()}},
         .field_orders = {{db::object_id_field, db::order::ascending}}};
     auto empty_result = db::select(db, empty_option);
     if (!empty_result) {

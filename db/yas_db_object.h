@@ -120,6 +120,10 @@ namespace db {
 
     db::const_object const &null_const_object();
     db::object const &null_object();
+
+    db::value const &insert_action_value();
+    db::value const &update_action_value();
+    db::value const &remove_action_value();
 }
 
 std::string to_string(db::object_status const &);
