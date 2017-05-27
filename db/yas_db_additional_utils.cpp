@@ -61,21 +61,6 @@ namespace db {
 }
 }
 
-db::value const &db::insert_action_value() {
-    static db::value _value{db::insert_action};
-    return _value;
-}
-
-db::value const &db::update_action_value() {
-    static db::value _value{db::update_action};
-    return _value;
-}
-
-db::value const &db::remove_action_value() {
-    static db::value _value{db::remove_action};
-    return _value;
-}
-
 db::select_result_t db::select_last(db::database const &db, db::select_option option, db::value const &save_id,
                                     bool const include_removed) {
     std::vector<std::string> components;
@@ -133,7 +118,7 @@ db::select_result_t db::select_undo(db::database const &db, std::string const &t
             {db::expr(db::save_id_field, "<=", std::to_string(current_save_id)),
              db::expr(db::save_id_field, ">", std::to_string(revert_save_id)), db::equal_field_expr(db::action_field)},
             " AND "),
-        .arguments = {{db::action_field, db::value{db::insert_action}}},
+        .arguments = {{db::action_field, db::insert_action_value()}},
         .field_orders = {{db::object_id_field, db::order::ascending}}};
     auto empty_result = db::select(db, empty_option);
     if (!empty_result) {
