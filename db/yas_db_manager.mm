@@ -138,7 +138,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
             objects.reserve(entity_datas.size());
 
             for (auto const &data : entity_datas) {
-                auto object = db::object::null_object();
+                auto object = db::null_object();
                 if (is_save && this->_inserted_objects.count(entity_name) > 0) {
                     // セーブ時で仮に挿入されたオブジェクトがある場合にオブジェクトを取得
                     auto &entity_objects = this->_inserted_objects.at(entity_name);
@@ -179,7 +179,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
             objects.reserve(entity_datas.size());
 
             for (auto const &data : entity_datas) {
-                auto object = db::object::null_object();
+                auto object = db::null_object();
                 if (this->load_and_cache_object_from_data(object, entity_name, data, force)) {
                     objects.emplace(object.object_id().get<db::integer>(), std::move(object));
                 }
@@ -344,7 +344,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                 }
             }
         }
-        return db::object::null_object();
+        return db::null_object();
     }
 
     // オブジェクトに変更があった時の処理

@@ -133,7 +133,7 @@ void db_controller::add(entity const &entity) {
 
     _manager.save([](auto result) {});
 
-    auto inserted_object = std::make_shared<db::object>(db::object::null_object());
+    auto inserted_object = std::make_shared<db::object>(db::null_object());
 
     _manager.insert_objects(
         [entity]() {
