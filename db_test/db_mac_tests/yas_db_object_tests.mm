@@ -320,45 +320,45 @@ using namespace yas;
     XCTAssertEqual(obj.action(), db::null_value());
 
     db::object_data obj_data{
-        .attributes = db::value_map_t{std::make_pair(db::action_field, db::value{db::insert_action})},
+        .attributes = db::value_map_t{std::make_pair(db::action_field, db::insert_action_value())},
         .relations = db::value_vector_map_t{std::make_pair("child", db::value_vector_t{db::value{12}, db::value{34}})}};
     obj.manageable().load_data(obj_data);
-    XCTAssertEqual(obj.action(), db::value{db::insert_action});
+    XCTAssertEqual(obj.action(), db::insert_action_value());
 
     obj.set_attribute_value("name", db::value{"test_name"});
     XCTAssertEqual(obj.action(), db::value{db::update_action});
 
     manageable_obj.set_status(db::object_status::updating);
     obj.manageable().load_data(obj_data);
-    XCTAssertEqual(obj.action(), db::value{db::insert_action});
+    XCTAssertEqual(obj.action(), db::insert_action_value());
 
     obj.add_relation_id("child", db::value{2});
     XCTAssertEqual(obj.action(), db::value{db::update_action});
 
     manageable_obj.set_status(db::object_status::updating);
     obj.manageable().load_data(obj_data);
-    XCTAssertEqual(obj.action(), db::value{db::insert_action});
+    XCTAssertEqual(obj.action(), db::insert_action_value());
 
     obj.set_relation_ids("child", {db::value{1}});
     XCTAssertEqual(obj.action(), db::value{db::update_action});
 
     manageable_obj.set_status(db::object_status::updating);
     obj.manageable().load_data(obj_data);
-    XCTAssertEqual(obj.action(), db::value{db::insert_action});
+    XCTAssertEqual(obj.action(), db::insert_action_value());
 
     obj.remove_relation_at("child", 0);
     XCTAssertEqual(obj.action(), db::value{db::update_action});
 
     manageable_obj.set_status(db::object_status::updating);
     obj.manageable().load_data(obj_data);
-    XCTAssertEqual(obj.action(), db::value{db::insert_action});
+    XCTAssertEqual(obj.action(), db::insert_action_value());
 
     obj.remove_all_relations("child");
     XCTAssertEqual(obj.action(), db::value{db::update_action});
 
     manageable_obj.set_status(db::object_status::updating);
     obj.manageable().load_data(obj_data);
-    XCTAssertEqual(obj.action(), db::value{db::insert_action});
+    XCTAssertEqual(obj.action(), db::insert_action_value());
 
     obj.remove();
     XCTAssertEqual(obj.action(), db::value{db::remove_action});
@@ -725,7 +725,7 @@ using namespace yas;
     db::model model((__bridge CFDictionaryRef)model_dict);
     db::object obj{nullptr, model.entity("sample_a")};
 
-    obj.set_attribute_value(db::action_field, db::value{db::insert_action});
+    obj.set_attribute_value(db::action_field, db::insert_action_value());
 
     XCTAssertTrue(obj.is_inserted());
 
@@ -747,7 +747,7 @@ using namespace yas;
 
     XCTAssertTrue(obj.is_updated());
 
-    obj.set_attribute_value(db::action_field, db::value{db::insert_action});
+    obj.set_attribute_value(db::action_field, db::insert_action_value());
 
     XCTAssertFalse(obj.is_updated());
 
@@ -765,7 +765,7 @@ using namespace yas;
 
     XCTAssertTrue(obj.is_removed());
 
-    obj.set_attribute_value(db::action_field, db::value{db::insert_action});
+    obj.set_attribute_value(db::action_field, db::insert_action_value());
 
     XCTAssertFalse(obj.is_removed());
 

@@ -34,11 +34,11 @@ using namespace yas;
 
     db::value_vector_t args;
 
-    args = {db::value{1}, db::value{"value_1"}, db::value{db::insert_action}};
+    args = {db::value{1}, db::value{"value_1"}, db::insert_action_value()};
 
     auto result = db.execute_update(db::insert_sql(table_name, fields), args);
     XCTAssertTrue(result);
-    args = {db::value{2}, db::value{"value_2"}, db::value{db::insert_action}};
+    args = {db::value{2}, db::value{"value_2"}, db::insert_action_value()};
     XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
 
     auto select_result = db::select_last(db, db::select_option{.table = table_name});
@@ -71,7 +71,7 @@ using namespace yas;
 
     auto const table_name = "table_a";
     auto const field_name = "field_a";
-    auto const insert_action_value = db::value{db::insert_action};
+    auto const insert_action_value = db::insert_action_value();
     std::vector<std::string> const fields{db::object_id_field, field_name, db::save_id_field, db::action_field};
 
     XCTAssertTrue(db::create_table(db, table_name, fields));
@@ -121,7 +121,7 @@ using namespace yas;
 
     auto const table_name = "table_a";
     auto const field_name = "field_a";
-    auto const insert_action_value = db::value{db::insert_action};
+    auto const insert_action_value = db::insert_action_value();
     auto const update_action_value = db::value{db::update_action};
     std::vector<std::string> const fields{db::object_id_field, field_name, db::save_id_field, db::action_field};
 
@@ -171,9 +171,9 @@ using namespace yas;
     XCTAssertTrue(db::create_table(db, table_name, fields));
 
     db::value_vector_t args;
-    args = {db::value{1}, db::value{"value_1_a"}, db::value{1}, db::value{db::insert_action}};
+    args = {db::value{1}, db::value{"value_1_a"}, db::value{1}, db::insert_action_value()};
     XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
-    args = {db::value{2}, db::value{"value_2_a"}, db::value{1}, db::value{db::insert_action}};
+    args = {db::value{2}, db::value{"value_2_a"}, db::value{1}, db::insert_action_value()};
     XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
 
     args = {db::value{1}, db::value{"value_1_b"}, db::value{2}, db::value{db::update_action}};
@@ -297,9 +297,9 @@ using namespace yas;
     XCTAssertTrue(db::create_table(db, table_name, fields));
 
     db::value_vector_t args;
-    args = {db::value{1}, db::value{"value_1_a"}, db::value{1}, db::value{db::insert_action}};
+    args = {db::value{1}, db::value{"value_1_a"}, db::value{1}, db::insert_action_value()};
     XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
-    args = {db::value{2}, db::value{"value_2_a"}, db::value{1}, db::value{db::insert_action}};
+    args = {db::value{2}, db::value{"value_2_a"}, db::value{1}, db::insert_action_value()};
     XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
 
     args = {db::value{1}, db::value{"value_1_b"}, db::value{2}, db::value{db::update_action}};
