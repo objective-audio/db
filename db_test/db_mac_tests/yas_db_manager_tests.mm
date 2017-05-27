@@ -1154,7 +1154,7 @@ using namespace yas;
         XCTAssertEqual(obj.attribute_value("name"), db::value{"new_value"});
         XCTAssertEqual(obj.attribute_value("age"), db::value{77});
         XCTAssertEqual(obj.status(), db::object_status::saved);
-        XCTAssertEqual(obj.action(), db::value{db::update_action});
+        XCTAssertEqual(obj.action(), db::update_action_value());
         XCTAssertEqual(obj.relation_size("child"), 2);
         XCTAssertEqual(obj.relation_ids("child").size(), 2);
         XCTAssertEqual(obj.relation_id("child", 0), db::value{100});
@@ -1175,7 +1175,7 @@ using namespace yas;
         XCTAssertEqual(selected_values.at(1).at("name"), db::value{"new_value"});
         XCTAssertEqual(selected_values.at(1).at("age"), db::value{77});
         XCTAssertEqual(selected_values.at(1).at(db::save_id_field), db::value{2});
-        XCTAssertEqual(selected_values.at(1).at(db::action_field), db::value{db::update_action});
+        XCTAssertEqual(selected_values.at(1).at(db::action_field), db::update_action_value());
 
         auto relation_result =
             db::select(db, db::select_option{.table = manager.model().relation("sample_a", "child").table_name});

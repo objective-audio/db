@@ -490,7 +490,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
     void set_update_action() {
         if (this->_status != db::object_status::inserted && !this->is_equal_to_action(db::remove_action) &&
             !this->is_equal_to_action(db::update_action)) {
-            this->set_attribute_value(db::action_field, db::value{db::update_action}, true);
+            this->set_attribute_value(db::action_field, db::update_action_value(), true);
         }
     }
 
