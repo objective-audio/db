@@ -28,6 +28,8 @@ namespace db {
     std::string expr(std::string const &left, std::string const &op, std::string const &right);
     std::string field_expr(std::string const &field, std::string const &op);
     std::string equal_field_expr(std::string const &field);
+    std::string in_expr(std::string const &field, std::string const &select_sql);
+    std::string in_expr(std::string const &field, std::vector<db::value> const &values);
 
     std::string equal_field(std::string const &field);
 

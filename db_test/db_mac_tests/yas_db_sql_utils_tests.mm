@@ -104,4 +104,19 @@ using namespace yas;
         "SELECT field_a, field_b FROM test_table WHERE abc = :def ORDER BY field_c ASC, field_d DESC LIMIT 10, 20;");
 }
 
+- (void)test_in_expr_with_text_values {
+    auto in_expr = db::in_expr("test_field", db::value_vector_t{db::value{"value_a"}, db::value{"value_b"}});
+    XCTAssertEqual(in_expr, "test_field IN ('value_a', 'value_b')");
+}
+
+- (void)test_in_expr_with_integer_values {
+    auto in_expr = db::in_expr("test_field", db::value_vector_t{db::value{1}, db::value{2}});
+    XCTAssertEqual(in_expr, "test_field IN (1, 2)");
+}
+
+- (void)test_in_expr_with_select_sql {
+    auto in_expr = db::in_expr("test_field", "SELECT field_a FROM test_table");
+    XCTAssertEqual(in_expr, "test_field IN (SELECT field_a FROM test_table)");
+}
+
 @end
