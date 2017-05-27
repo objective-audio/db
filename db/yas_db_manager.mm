@@ -681,8 +681,8 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
 
             if (auto begin_result = db::begin_transaction(db)) {
                 // トランザクション開始
-                auto current_save_id = db::value::null_value();
-                auto last_save_id = db::value::null_value();
+                auto current_save_id = db::null_value();
+                auto last_save_id = db::null_value();
 
                 // カレントとラストのセーブIDをデータベースから取得
                 if (auto select_result = db::select_db_info(db)) {
@@ -820,9 +820,9 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
 
             if (auto begin_result = db::begin_transaction(db)) {
                 // トランザクション開始
-                auto current_save_id = db::value::null_value();
-                auto last_save_id = db::value::null_value();
-                auto next_save_id = db::value::null_value();
+                auto current_save_id = db::null_value();
+                auto last_save_id = db::null_value();
+                auto next_save_id = db::null_value();
 
                 // infoをデータベースから取得してセーブIDを取得する
                 if (auto select_result = db::select_db_info(db)) {
@@ -1121,9 +1121,9 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
             if (changed_datas.size() > 0) {
                 if (auto begin_result = db::begin_transaction(db)) {
                     // トランザクション開始
-                    auto current_save_id = db::value::null_value();
-                    auto next_save_id = db::value::null_value();
-                    auto last_save_id = db::value::null_value();
+                    auto current_save_id = db::null_value();
+                    auto next_save_id = db::null_value();
+                    auto last_save_id = db::null_value();
 
                     // データベースからセーブIDを取得する
                     if (auto select_result = db::select_db_info(db)) {
@@ -1448,7 +1448,7 @@ db::value const &db::manager::current_save_id() const {
     if (db_info.count(db::current_save_id_field) > 0) {
         return db_info.at(db::current_save_id_field);
     }
-    return db::value::null_value();
+    return db::null_value();
 }
 
 db::value const &db::manager::last_save_id() const {
@@ -1456,7 +1456,7 @@ db::value const &db::manager::last_save_id() const {
     if (db_info.count(db::last_save_id_field) > 0) {
         return db_info.at(db::last_save_id_field);
     }
-    return db::value::null_value();
+    return db::null_value();
 }
 
 dispatch_queue_t db::manager::dispatch_queue() const {

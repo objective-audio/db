@@ -35,7 +35,7 @@ using namespace yas;
 
     XCTAssertTrue(db.execute_update("create table test_table (field_a, field_b);"));
 
-    db::value_map_t args{std::make_pair("field_a", db::value{"value_a"}), std::make_pair("field_b", db::value::null_value())};
+    db::value_map_t args{std::make_pair("field_a", db::value{"value_a"}), std::make_pair("field_b", db::null_value())};
     XCTAssertTrue(db.execute_update("insert into test_table(field_a, field_b) values(:field_a, :field_b)", args));
 
     auto query_result = db.execute_query("select field_a, field_b from test_table");
@@ -66,7 +66,7 @@ using namespace yas;
 
     XCTAssertTrue(db.execute_update("create table test_table (field_a, field_b);"));
 
-    db::value_map_t args{std::make_pair("field_a", db::value{"value_a"}), std::make_pair("field_b", db::value::null_value())};
+    db::value_map_t args{std::make_pair("field_a", db::value{"value_a"}), std::make_pair("field_b", db::null_value())};
     XCTAssertTrue(db.execute_update("insert into test_table(field_a, field_b) values(:field_a, :field_b)", args));
 
     auto query_result = db.execute_query("select * from test_table");
@@ -100,7 +100,7 @@ using namespace yas;
                        std::make_pair("float_field", db::value{double{2.0}}),
                        std::make_pair("string_field", db::value{"string_value"}),
                        std::make_pair("data_field", db::value{vec.data(), vec.size()}),
-                       std::make_pair("null_field", db::value::null_value())};
+                       std::make_pair("null_field", db::null_value())};
 
     XCTAssertTrue(
         db.execute_update("insert into test_table(int_field, float_field, string_field, data_field, null_field) "
@@ -155,7 +155,7 @@ using namespace yas;
                        std::make_pair("float_field", db::value{double{2.0}}),
                        std::make_pair("string_field", db::value{"string_value"}),
                        std::make_pair("data_field", db::value{vec.data(), vec.size()}),
-                       std::make_pair("null_field", db::value::null_value())};
+                       std::make_pair("null_field", db::null_value())};
     XCTAssertTrue(
         db.execute_update("insert into test_table(int_field, float_field, string_field, data_field, null_field) "
                           "values(:int_field, :float_field, :string_field, :data_field, :null_field)",

@@ -161,14 +161,14 @@ db::value db::row_set::column_value(int const column_idx) const {
         }
     }
 
-    return db::value::null_value();
+    return db::null_value();
 }
 
 db::value db::row_set::column_value(std::string column_name) const {
     if (auto index_result = column_index(std::move(column_name))) {
         return this->column_value(index_result.value());
     }
-    return db::value::null_value();
+    return db::null_value();
 }
 
 db::value_map_t db::row_set::values() const {

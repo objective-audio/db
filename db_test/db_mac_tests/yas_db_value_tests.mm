@@ -127,7 +127,7 @@ using namespace yas;
 }
 
 - (void)test_empty_value {
-    db::value const &empty_value = db::value::null_value();
+    db::value const &empty_value = db::null_value();
     XCTAssertFalse(empty_value);
 }
 

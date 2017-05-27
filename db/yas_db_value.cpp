@@ -4,6 +4,7 @@
 
 #include "yas_db_value.h"
 #include "yas_fast_each.h"
+#include "yas_stl_utils.h"
 
 using namespace yas;
 
@@ -196,17 +197,17 @@ std::string db::value::sql() const {
     return nullptr;
 }
 
-db::value const &db::value::null_value() {
-    static db::value _null_value{nullptr};
-    return _null_value;
-}
-
 std::shared_ptr<db::value::impl<db::null>> const &db::value::null_value_impl_ptr() {
     static auto _impl_ptr = std::make_shared<db::value::impl<db::null>>(nullptr);
     return _impl_ptr;
 }
 
 #pragma mark -
+
+db::value const &db::null_value() {
+    static db::value _null_value{nullptr};
+    return _null_value;
+}
 
 std::string yas::to_string(const db::value &value) {
     auto const &type = value.type();
@@ -224,6 +225,30 @@ std::string yas::to_string(const db::value &value) {
     }
 
     return std::string{};
+}
+
+std::string yas::to_string(db::value_map_t const &map) {
+    std::vector<std::string> components;
+    for (auto const &pair : map) {
+        components.emplace_back(pair.first + ":" + to_string(pair.second));
+    }
+    return "{" + joined(components, ",") + "}";
+}
+
+std::string yas::to_string(db::value_map_vector_t const &vector) {
+    std::vector<std::string> components;
+    for (auto const &map : vector) {
+        components.emplace_back(to_string(map));
+    }
+    return "{" + joined(components, ",") + "}";
+}
+
+std::string yas::to_string(db::value_map_vector_map_t const &map) {
+    std::vector<std::string> components;
+    for (auto const &pair : map) {
+        components.emplace_back(pair.first + ":" + to_string(pair.second));
+    }
+    return "{" + joined(components, ",") + "}";
 }
 
 db::time_point_t yas::to_time_point(db::value const &value) {

@@ -56,7 +56,7 @@ using namespace yas;
     XCTAssertEqual(select_result.value().at(0).at(field_name).get<db::text>(), "value_2");
     XCTAssertEqual(select_result.value().at(1).at(field_name).get<db::text>(), "value_1_1");
 
-    args = {db::value{1}, db::value::null_value(), db::value{db::remove_action}};
+    args = {db::value{1}, db::null_value(), db::value{db::remove_action}};
     XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
 
     select_result = db::select_last(db, db::select_option{.table = table_name});
