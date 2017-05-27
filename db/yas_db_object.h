@@ -49,8 +49,6 @@ namespace db {
 
         db::integer_set_map_t relation_ids_for_fetch() const;
 
-        static db::const_object const &null_object();
-
        protected:
         const_object(std::shared_ptr<impl> const &);
         const_object(std::shared_ptr<impl> &&);
@@ -121,6 +119,8 @@ namespace db {
        private:
         db::manageable_object _manageable = nullptr;
     };
+    
+    db::const_object const &null_const_object();
 }
 
 std::string to_string(db::object_status const &);

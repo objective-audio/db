@@ -218,11 +218,6 @@ db::integer_set_map_t db::const_object::relation_ids_for_fetch() const {
     return impl_ptr<impl>()->relation_ids_for_fetch();
 }
 
-db::const_object const &db::const_object::null_object() {
-    static db::const_object const _null_object{nullptr};
-    return _null_object;
-}
-
 #pragma mark - db::object::impl
 
 struct db::object::impl : public const_object::impl, public manageable_object::impl {
@@ -446,7 +441,8 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
 
         erase_if(this->_data.attributes, [](auto const &pair) {
             auto const &column_name = pair.first;
-            if (column_name == db::pk_id_field || column_name == db::object_id_field || column_name == db::action_field) {
+            if (column_name == db::pk_id_field || column_name == db::object_id_field ||
+                column_name == db::action_field) {
                 return false;
             }
             return true;
@@ -645,6 +641,13 @@ db::manageable_object &db::object::manageable() {
         _manageable = manageable_object{impl_ptr<manageable_object::impl>()};
     }
     return _manageable;
+}
+
+#pragma mark -
+
+db::const_object const &db::null_const_object() {
+    static db::const_object const _null_object{nullptr};
+    return _null_object;
 }
 
 std::string yas::to_string(db::object_status const &status) {
