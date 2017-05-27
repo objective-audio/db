@@ -112,15 +112,14 @@ namespace db {
 
         db::object_data data_for_save() const;
 
-        static db::object const &null_object();
-
         db::manageable_object &manageable();
 
        private:
         db::manageable_object _manageable = nullptr;
     };
-    
+
     db::const_object const &null_const_object();
+    db::object const &null_object();
 }
 
 std::string to_string(db::object_status const &);

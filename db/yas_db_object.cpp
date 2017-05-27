@@ -631,11 +631,6 @@ db::object_data db::object::data_for_save() const {
     return impl_ptr<impl>()->data_for_save();
 }
 
-db::object const &db::object::null_object() {
-    static db::object const _null_object{nullptr};
-    return _null_object;
-}
-
 db::manageable_object &db::object::manageable() {
     if (!_manageable) {
         _manageable = manageable_object{impl_ptr<manageable_object::impl>()};
@@ -647,6 +642,11 @@ db::manageable_object &db::object::manageable() {
 
 db::const_object const &db::null_const_object() {
     static db::const_object const _null_object{nullptr};
+    return _null_object;
+}
+
+db::object const &db::null_object() {
+    static db::object const _null_object{nullptr};
     return _null_object;
 }
 
