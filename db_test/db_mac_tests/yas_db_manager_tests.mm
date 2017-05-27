@@ -1224,7 +1224,7 @@ using namespace yas;
         XCTAssertEqual(obj.relation_ids("child").size(), 0);
         XCTAssertTrue(obj.is_removed());
         XCTAssertEqual(obj.status(), db::object_status::saved);
-        XCTAssertEqual(obj.action(), db::value{db::remove_action});
+        XCTAssertEqual(obj.action(), db::remove_action_value());
 
         [exp4 fulfill];
     });

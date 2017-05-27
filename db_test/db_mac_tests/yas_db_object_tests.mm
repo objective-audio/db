@@ -361,7 +361,7 @@ using namespace yas;
     XCTAssertEqual(obj.action(), db::insert_action_value());
 
     obj.remove();
-    XCTAssertEqual(obj.action(), db::value{db::remove_action});
+    XCTAssertEqual(obj.action(), db::remove_action_value());
     XCTAssertTrue(obj.is_removed());
 }
 
@@ -733,7 +733,7 @@ using namespace yas;
 
     XCTAssertFalse(obj.is_inserted());
 
-    obj.set_attribute_value(db::action_field, db::value{db::remove_action});
+    obj.set_attribute_value(db::action_field, db::remove_action_value());
 
     XCTAssertFalse(obj.is_inserted());
 }
@@ -751,7 +751,7 @@ using namespace yas;
 
     XCTAssertFalse(obj.is_updated());
 
-    obj.set_attribute_value(db::action_field, db::value{db::remove_action});
+    obj.set_attribute_value(db::action_field, db::remove_action_value());
 
     XCTAssertFalse(obj.is_updated());
 }
@@ -761,7 +761,7 @@ using namespace yas;
     db::model model((__bridge CFDictionaryRef)model_dict);
     db::object obj{nullptr, model.entity("sample_a")};
 
-    obj.set_attribute_value(db::action_field, db::value{db::remove_action});
+    obj.set_attribute_value(db::action_field, db::remove_action_value());
 
     XCTAssertTrue(obj.is_removed());
 

@@ -450,7 +450,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
 
         this->_data.relations.clear();
 
-        this->set_attribute_value(db::action_field, db::value{db::remove_action});
+        this->set_attribute_value(db::action_field, db::remove_action_value());
     }
 
     db::object_data data_for_save() {
