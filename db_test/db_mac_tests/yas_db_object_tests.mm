@@ -774,4 +774,14 @@ using namespace yas;
     XCTAssertFalse(obj.is_removed());
 }
 
+- (void)test_null_object {
+    XCTAssertFalse(db::null_object());
+}
+
+- (void)test_action_values {
+    XCTAssertEqual(db::insert_action_value().get<db::text>(), db::insert_action);
+    XCTAssertEqual(db::update_action_value().get<db::text>(), db::update_action);
+    XCTAssertEqual(db::remove_action_value().get<db::text>(), db::remove_action);
+}
+
 @end
