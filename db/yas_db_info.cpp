@@ -52,7 +52,7 @@ db::value const &db::info::last_save_id_value() const {
     return impl_ptr<impl>()->_last_save_id;
 }
 
-db::info const &db::info::null_info() {
+db::info const &db::null_info() {
     static db::info const _null_info{nullptr};
     return _null_info;
 }

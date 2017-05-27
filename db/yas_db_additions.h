@@ -15,3 +15,4 @@
 #include "yas_db_sql_utils.h"
 #include "yas_db_utils.h"
 #include "yas_db_index.h"
+#include "yas_db_info.h"
