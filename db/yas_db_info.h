@@ -27,8 +27,8 @@ namespace db {
         db::value const &version_value() const;
         db::value const &current_save_id_value() const;
         db::value const &last_save_id_value() const;
-        
-        static db::info const &null_info();
     };
+
+    db::info const &null_info();
 }
 }
