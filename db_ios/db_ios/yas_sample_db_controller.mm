@@ -154,7 +154,7 @@ void db_controller::add(entity const &entity) {
 
     this->_update_objects([weak = to_weak(shared_from_this()), inserted_object, entity](auto update_result) {
         if (auto shared = weak.lock()) {
-            auto idx_value = db::value::null_value();
+            auto idx_value = db::null_value();
             auto object = *inserted_object;
 
             if (object) {

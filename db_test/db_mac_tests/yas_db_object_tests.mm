@@ -317,7 +317,7 @@ using namespace yas;
     db::object obj{nullptr, model.entity("sample_a")};
     auto manageable_obj = obj.manageable();
 
-    XCTAssertEqual(obj.action(), db::value::null_value());
+    XCTAssertEqual(obj.action(), db::null_value());
 
     db::object_data obj_data{
         .attributes = db::value_map_t{std::make_pair(db::action_field, db::value{db::insert_action})},
@@ -375,7 +375,7 @@ using namespace yas;
     obj.set_attribute_value("name", db::value{"suzuki"});
     obj.set_attribute_value("age", db::value{32});
     obj.set_attribute_value("weight", db::value{90.1});
-    obj.set_attribute_value("data", db::value::null_value());
+    obj.set_attribute_value("data", db::null_value());
     obj.set_attribute_value(db::save_id_field, db::value{100});
 
     obj.set_relation_ids("child", db::value_vector_t{db::value{33}, db::value{44}});
@@ -396,7 +396,7 @@ using namespace yas;
     XCTAssertEqual(data.attributes.count("weight"), 1);
     XCTAssertEqual(data.attributes.at("weight"), db::value{90.1});
     XCTAssertEqual(data.attributes.count("data"), 1);
-    XCTAssertEqual(data.attributes.at("data"), db::value::null_value());
+    XCTAssertEqual(data.attributes.at("data"), db::null_value());
 
     XCTAssertEqual(data.relations.size(), 1);
     XCTAssertEqual(data.relations.count("child"), 1);

@@ -1218,7 +1218,7 @@ using namespace yas;
 
         auto const &obj = a_objects.at(0);
         XCTAssertEqual(obj.save_id(), db::value{3});
-        XCTAssertEqual(obj.attribute_value("name"), db::value::null_value());
+        XCTAssertEqual(obj.attribute_value("name"), db::null_value());
         XCTAssertEqual(obj.attribute_value("age"), db::value{10});
         XCTAssertEqual(obj.relation_size("child"), 0);
         XCTAssertEqual(obj.relation_ids("child").size(), 0);

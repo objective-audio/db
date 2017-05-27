@@ -106,11 +106,11 @@ namespace db {
 
         std::string sql() const;
 
-        static value const &null_value();
-
        private:
         static std::shared_ptr<db::value::impl<null>> const &null_value_impl_ptr();
     };
+
+    db::value const &null_value();
 }
 
 std::string to_string(db::value const &);

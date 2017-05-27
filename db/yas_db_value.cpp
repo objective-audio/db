@@ -197,17 +197,17 @@ std::string db::value::sql() const {
     return nullptr;
 }
 
-db::value const &db::value::null_value() {
-    static db::value _null_value{nullptr};
-    return _null_value;
-}
-
 std::shared_ptr<db::value::impl<db::null>> const &db::value::null_value_impl_ptr() {
     static auto _impl_ptr = std::make_shared<db::value::impl<db::null>>(nullptr);
     return _impl_ptr;
 }
 
 #pragma mark -
+
+db::value const &db::null_value() {
+    static db::value _null_value{nullptr};
+    return _null_value;
+}
 
 std::string yas::to_string(const db::value &value) {
     auto const &type = value.type();

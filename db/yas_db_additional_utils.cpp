@@ -205,7 +205,7 @@ db::object_data_vector_result_t db::make_entity_object_datas(db::database &db, s
 db::manager_value_result_t db::select_current_save_id(db::database &db) {
     db::manager_result_t state{nullptr};
 
-    auto current_save_id = db::value::null_value();
+    auto current_save_id = db::null_value();
     if (auto db_info_result = db::select_db_info(db)) {
         auto &db_info = db_info_result.value();
         if (db_info.count(db::current_save_id_field) > 0) {
