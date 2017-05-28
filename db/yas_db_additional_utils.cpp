@@ -18,6 +18,30 @@ using namespace yas;
 
 namespace yas {
 namespace db {
+    // 指定したsave_id以前で、object_idが同じなら最後のものをselectする条件
+    std::string last_where_exprs(std::string const &table, std::string const &where_exprs,
+                                 db::value const &last_save_id, bool const include_removed) {
+        std::vector<std::string> components;
+
+        if (last_save_id) {
+            components.emplace_back(db::expr(db::save_id_field, "<=", last_save_id.sql()));
+        }
+
+        if (where_exprs.size() > 0) {
+            components.push_back(where_exprs);
+        }
+
+        std::string sub_where = components.size() > 0 ? " WHERE " + joined(components, " AND ") : "";
+
+        std::string result_exprs =
+            "rowid IN (SELECT MAX(rowid) FROM " + table + sub_where + " GROUP BY " + db::object_id_field + ")";
+        if (!include_removed) {
+            static std::string const exc_removed_expr = db::action_field + " != '" + db::remove_action + "'";
+            result_exprs = joined({result_exprs, exc_removed_expr}, " AND ");
+        }
+        return result_exprs;
+    }
+
     // 単独の関連の関連先のidの配列をDBから取得する
     db::value_vector_result_t select_relation_target_ids(db::database &db, std::string const &rel_table_name,
                                                          db::value const &save_id, db::value const &src_obj_id) {
@@ -63,26 +87,7 @@ namespace db {
 
 db::select_result_t db::select_last(db::database const &db, db::select_option option, db::value const &save_id,
                                     bool const include_removed) {
-    std::vector<std::string> components;
-
-    if (save_id) {
-        components.emplace_back(db::expr(db::save_id_field, "<=", to_string(save_id)));
-    }
-
-    if (option.where_exprs.size() > 0) {
-        components.emplace_back(option.where_exprs);
-    }
-
-    std::string sub_where = components.size() > 0 ? " WHERE " + joined(components, " AND ") : "";
-
-    std::string where_exprs =
-        "rowid IN (SELECT MAX(rowid) FROM " + option.table + sub_where + " GROUP BY " + db::object_id_field + ")";
-    if (!include_removed) {
-        static std::string const exc_removed_expr = db::action_field + " != '" + db::remove_action + "'";
-        where_exprs = joined({where_exprs, exc_removed_expr}, " AND ");
-    }
-    option.where_exprs = where_exprs;
-
+    option.where_exprs = db::last_where_exprs(option.table, option.where_exprs, save_id, include_removed);
     return db::select(db, option);
 }
 
@@ -153,6 +158,30 @@ db::select_result_t db::select_revert(db::database const &db, std::string const 
     }
 
     return db::select_result_t{db::value_map_vector_t{}};
+}
+
+db::select_result_t db::select_relation_removed(db::database const &db, std::string const &entity_table,
+                                                std::string const &rel_table_name,
+                                                db::value_vector_t const &tgt_obj_ids) {
+    // 最後のオブジェクトのpk_idを取得するsql
+    auto const last_exprs = db::last_where_exprs(entity_table, "", nullptr, false);
+    db::select_option last_option{.table = entity_table, .fields = {db::pk_id_field}, .where_exprs = last_exprs};
+    auto const last_select_sql = db::select_sql(last_option, false);
+
+    // 最後のオブジェクトの中でtgt_obj_idsに一致する関連のsrc_pk_idを取得するsql
+    std::string const tgt_where_exprs = joined(
+        {db::in_expr(db::src_pk_id_field, last_select_sql), db::in_expr(db::tgt_obj_id_field, tgt_obj_ids)}, " AND ");
+    db::select_option src_pk_option{
+        .table = rel_table_name, .fields = {db::src_pk_id_field}, .where_exprs = tgt_where_exprs};
+    auto const src_pk_select_sql = db::select_sql(src_pk_option, false);
+
+    // これまでの条件に一致しつつ、アクションがremoveでないアトリビュートを取得する
+    std::string const where_exprs =
+        joined({db::field_expr(db::action_field, "!="), db::in_expr(db::pk_id_field, src_pk_select_sql)}, " AND ");
+    db::select_option option{.table = entity_table,
+                             .where_exprs = where_exprs,
+                             .arguments = {{db::action_field, db::remove_action_value()}}};
+    return db::select(db, option);
 }
 
 db::select_single_result_t db::select_db_info(db::database const &db) {

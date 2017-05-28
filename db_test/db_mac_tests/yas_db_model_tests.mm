@@ -219,6 +219,18 @@ using namespace yas;
     XCTAssertEqual(model.attribute("sample_a", "age").name, "age");
 }
 
+- (void)test_get_custom_attributes {
+    NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
+    db::model model((__bridge CFDictionaryRef)model_dict);
+    
+    auto const &attributes = model.custom_attributes("sample_a");
+    XCTAssertEqual(attributes.size(), 4);
+    XCTAssertEqual(attributes.count("name"), 1);
+    XCTAssertEqual(attributes.count("age"), 1);
+    XCTAssertEqual(attributes.count("weight"), 1);
+    XCTAssertEqual(attributes.count("data"), 1);
+}
+
 - (void)test_get_relations_by_entity_name {
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);

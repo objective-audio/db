@@ -20,6 +20,9 @@ namespace db {
                                     db::integer::type const revert_save_id, db::integer::type const current_save_id);
     db::select_result_t select_revert(db::database const &db, std::string const &table_name,
                                       db::integer::type const revert_save_id, db::integer::type const current_save_id);
+    db::select_result_t select_relation_removed(db::database const &db, std::string const &entity_table_name,
+                                                std::string const &rel_table_name,
+                                                db::value_vector_t const &tgt_obj_ids);
 
     db::select_single_result_t select_db_info(db::database const &db);
 

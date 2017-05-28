@@ -22,7 +22,7 @@ std::string db::range::sql() const {
     return std::to_string(this->location) + ", " + std::to_string(this->length);
 }
 
-const db::range &db::range::empty() {
+db::range const &db::empty_range() {
     static db::range const _empty_range = db::range{0, 0};
     return _empty_range;
 }

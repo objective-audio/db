@@ -1999,6 +1999,469 @@ using namespace yas;
     [self waitForExpectationsWithTimeout:1.0 handler:nil];
 }
 
+- (void)test_invert_relatin_removed_in_cache {
+    // フェッチされていないオブジェクトに逆関連があった場合に、キャッシュ上のオブジェクトから削除されているかテスト
+
+    db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
+    auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
+
+    {
+        XCTestExpectation *exp = [self expectationWithDescription:@"setup"];
+
+        manager.setup([self, &manager, exp](auto result) { [exp fulfill]; });
+
+        [self waitForExpectations:@[exp] timeout:10.0];
+    }
+
+    db::object_vector_map_t objects;
+
+    {
+        // sample_aとsample_bのオブジェクトを1つずつ挿入する
+
+        XCTestExpectation *exp = [self expectationWithDescription:@"insert"];
+
+        manager.insert_objects(
+            []() {
+                return db::entity_count_map_t{{"sample_a", 1}, {"sample_b", 1}};
+            },
+            [&objects, exp](auto result) {
+                if (result) {
+                    objects = std::move(result.value());
+                }
+
+                [exp fulfill];
+            });
+
+        [self waitForExpectations:@[exp] timeout:10.0];
+    }
+
+    {
+        db::object &obj_a = objects.at("sample_a").at(0);
+        db::object &obj_b = objects.at("sample_b").at(0);
+
+        // 関連をセット
+        obj_a.set_relation_objects("child", {obj_b});
+    }
+
+    {
+        XCTestExpectation *exp = [self expectationWithDescription:@"save"];
+
+        manager.save([exp](auto result) { [exp fulfill]; });
+
+        [self waitForExpectations:@[exp] timeout:10.0];
+    }
+
+    {
+        db::object &obj_a = objects.at("sample_a").at(0);
+        db::object &obj_b = objects.at("sample_b").at(0);
+
+        // obj_bを削除
+        obj_b.remove();
+
+        // キャッシュ上のobj_aから関連が取り除かれている
+        XCTAssertEqual(obj_a.relation_objects("child").size(), 0);
+    }
+
+    {
+        XCTestExpectation *exp = [self expectationWithDescription:@"save"];
+
+        manager.save([exp](auto result) { [exp fulfill]; });
+
+        [self waitForExpectations:@[exp] timeout:10.0];
+    }
+
+    {
+        // キャッシュをクリア
+        objects.clear();
+    }
+
+    {
+        XCTestExpectation *exp = [self expectationWithDescription:@"fetch"];
+
+        db::object_vector_map_t fetched_objects;
+
+        manager.fetch_objects(
+            []() {
+                return db::select_option{.table = "sample_a",
+                                         .field_orders = {{db::object_id_field, db::order::ascending}}};
+            },
+            [exp, &fetched_objects](db::manager_vector_result_t result) {
+                fetched_objects = std::move(result.value());
+                [exp fulfill];
+            });
+
+        [self waitForExpectations:@[exp] timeout:10.0];
+
+        auto const &a_objects = fetched_objects.at("sample_a");
+        XCTAssertEqual(a_objects.size(), 1);
+
+        // 関連が取り除かれた状態でDBに保存されていることを確認
+        auto const &obj_a = a_objects.at(0);
+        XCTAssertEqual(obj_a.relation_objects("child").size(), 0);
+    }
+}
+
+- (void)test_invert_relation_removed_in_db {
+    // フェッチされていないオブジェクトに逆関連があった場合に、DB上で関連を削除されているかテスト
+
+    db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
+    auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
+
+    {
+        XCTestExpectation *exp = [self expectationWithDescription:@"setup"];
+
+        manager.setup([self, &manager, exp](auto result) { [exp fulfill]; });
+
+        [self waitForExpectations:@[exp] timeout:10.0];
+    }
+
+    db::object_vector_map_t objects;
+
+    {
+        // sample_aとsample_bのオブジェクトを3つずつ挿入する
+
+        XCTestExpectation *exp = [self expectationWithDescription:@"insert"];
+
+        manager.insert_objects(
+            []() {
+                return db::entity_count_map_t{{"sample_a", 3}, {"sample_b", 3}};
+            },
+            [&objects, exp](auto result) {
+                if (result) {
+                    objects = std::move(result.value());
+                }
+
+                [exp fulfill];
+            });
+
+        [self waitForExpectations:@[exp] timeout:10.0];
+    }
+
+    XCTAssertEqual(manager.current_save_id(), db::value{1});
+
+    db::value obj_a0_id = db::null_value();
+    db::value obj_a1_id = db::null_value();
+    db::value obj_a2_id = db::null_value();
+    db::value obj_b0_id = db::null_value();
+    db::value obj_b1_id = db::null_value();
+    db::value obj_b2_id = db::null_value();
+
+    {
+        db::object &obj_a0 = objects.at("sample_a").at(0);
+        db::object &obj_a1 = objects.at("sample_a").at(1);
+        db::object &obj_a2 = objects.at("sample_a").at(2);
+        db::object &obj_b0 = objects.at("sample_b").at(0);
+        db::object &obj_b1 = objects.at("sample_b").at(1);
+        db::object &obj_b2 = objects.at("sample_b").at(2);
+
+        obj_a0_id = obj_a0.object_id();
+        obj_a1_id = obj_a1.object_id();
+        obj_a2_id = obj_a2.object_id();
+        obj_b0_id = obj_b0.object_id();
+        obj_b1_id = obj_b1.object_id();
+        obj_b2_id = obj_b2.object_id();
+
+        // 関連のセット
+        obj_a0.set_relation_objects("child", {obj_b0});
+        obj_a1.set_relation_objects("child", {obj_b2});
+        obj_a2.set_relation_objects("child", {obj_b2});
+    }
+
+    {
+        XCTestExpectation *exp = [self expectationWithDescription:@"save1"];
+
+        manager.save([exp](auto result) { [exp fulfill]; });
+
+        [self waitForExpectations:@[exp] timeout:10.0];
+
+        XCTAssertEqual(manager.current_save_id(), db::value{2});
+    }
+
+    {
+        db::object &obj_a0 = objects.at("sample_a").at(0);
+        db::object &obj_b0 = objects.at("sample_b").at(0);
+        db::object &obj_b1 = objects.at("sample_b").at(1);
+
+        // obj_a0の関連にobj_b1、obj_b0をセットする
+        obj_a0.set_relation_objects("child", {obj_b1, obj_b0});
+    }
+
+    {
+        XCTestExpectation *exp = [self expectationWithDescription:@"save2"];
+
+        manager.save([exp](auto result) { [exp fulfill]; });
+
+        [self waitForExpectations:@[exp] timeout:10.0];
+
+        XCTAssertEqual(manager.current_save_id(), db::value{3});
+    }
+
+    {
+        // obj_a1を変更
+        db::object &obj_a1 = objects.at("sample_a").at(1);
+        obj_a1.set_attribute_value("name", db::value{"test_name_x"});
+
+        // obj_a2を削除
+        db::object &obj_a2 = objects.at("sample_a").at(2);
+        obj_a2.remove();
+    }
+
+    {
+        XCTestExpectation *exp = [self expectationWithDescription:@"save3"];
+
+        manager.save([exp](auto result) { [exp fulfill]; });
+
+        [self waitForExpectations:@[exp] timeout:10.0];
+
+        XCTAssertEqual(manager.current_save_id(), db::value{4});
+    }
+
+    {
+        // sample_aのオブジェクトをキャッシュから削除してデータベースに影響ないようにする
+
+        db::object &obj_a0 = objects.at("sample_a").at(0);
+        db::object &obj_a1 = objects.at("sample_a").at(1);
+        db::object &obj_a2 = objects.at("sample_a").at(2);
+
+        XCTAssertEqual(obj_a0.save_id(), db::value{3});
+        XCTAssertEqual(obj_a1.save_id(), db::value{4});
+        XCTAssertEqual(obj_a2.save_id(), db::value{4});
+        XCTAssertTrue(obj_a2.is_removed());
+
+        objects.erase("sample_a");
+
+        XCTAssertEqual(objects.count("sample_a"), 0);
+    }
+
+    {
+        // キャッシュが残っていないことを確認
+        XCTAssertFalse(manager.cached_object("sample_a", obj_a0_id.get<db::integer>()));
+        XCTAssertFalse(manager.cached_object("sample_a", obj_a1_id.get<db::integer>()));
+        XCTAssertFalse(manager.cached_object("sample_a", obj_a2_id.get<db::integer>()));
+    }
+
+    {
+        // sample_aを全て取得
+        // obj_a0にobj_b1、obj_b0
+        // obj_a1にobj_b2
+
+        XCTestExpectation *exp = [self expectationWithDescription:@"fetch"];
+
+        db::object_vector_map_t fetched_objects;
+
+        manager.fetch_objects(
+            []() {
+                return db::select_option{.table = "sample_a",
+                                         .field_orders = {{db::object_id_field, db::order::ascending}}};
+            },
+            [exp, &fetched_objects](db::manager_vector_result_t result) {
+                fetched_objects = std::move(result.value());
+                [exp fulfill];
+            });
+
+        [self waitForExpectations:@[exp] timeout:10.0];
+
+        auto const &a_objects = fetched_objects.at("sample_a");
+        XCTAssertEqual(a_objects.size(), 2);
+
+        auto const &obj_a0 = a_objects.at(0);
+        auto const &obj_a0_rels = obj_a0.relation_objects("child");
+        XCTAssertEqual(obj_a0_rels.size(), 2);
+        XCTAssertEqual(obj_a0_rels.at(0).object_id(), obj_b1_id);
+        XCTAssertEqual(obj_a0_rels.at(1).object_id(), obj_b0_id);
+
+        auto const &obj_a1 = a_objects.at(1);
+        XCTAssertEqual(obj_a1.relation_objects("child").size(), 1);
+        auto const &obj_a1_rels = obj_a1.relation_objects("child");
+        XCTAssertEqual(obj_a1_rels.at(0).object_id(), obj_b2_id);
+    }
+
+    {
+        // キャッシュが残っていないことを確認
+        XCTAssertFalse(manager.cached_object("sample_a", obj_a0_id.get<db::integer>()));
+        XCTAssertFalse(manager.cached_object("sample_a", obj_a1_id.get<db::integer>()));
+        XCTAssertFalse(manager.cached_object("sample_a", obj_a2_id.get<db::integer>()));
+    }
+
+    {
+        // obj_b0をremove
+        db::object &obj_b0 = objects.at("sample_b").at(0);
+        obj_b0.remove();
+    }
+
+    {
+        XCTestExpectation *exp = [self expectationWithDescription:@"save4"];
+
+        manager.save([exp](auto result) { [exp fulfill]; });
+
+        [self waitForExpectations:@[exp] timeout:10.0];
+
+        XCTAssertEqual(manager.current_save_id(), db::value{5});
+    }
+
+    {
+        // sample_aを全て取得
+        // obj_a0にobj_b1
+        // obj_a1にobj_b2
+
+        XCTestExpectation *exp = [self expectationWithDescription:@"fetch"];
+
+        db::object_vector_map_t fetched_objects;
+
+        manager.fetch_objects(
+            []() {
+                return db::select_option{.table = "sample_a",
+                                         .field_orders = {{db::object_id_field, db::order::ascending}}};
+            },
+            [exp, &fetched_objects](db::manager_vector_result_t result) {
+                fetched_objects = std::move(result.value());
+                [exp fulfill];
+            });
+
+        [self waitForExpectations:@[exp] timeout:10.0];
+
+        auto const &a_objects = fetched_objects.at("sample_a");
+        XCTAssertEqual(a_objects.size(), 2);
+
+        auto const &obj_a0 = a_objects.at(0);
+        auto const &obj_a0_rels = obj_a0.relation_objects("child");
+        XCTAssertEqual(obj_a0_rels.size(), 1);
+        XCTAssertEqual(obj_a0_rels.at(0).object_id(), obj_b1_id);
+
+        auto const &obj_a1 = a_objects.at(1);
+        XCTAssertEqual(obj_a1.relation_objects("child").size(), 1);
+        auto const &obj_a1_rels = obj_a1.relation_objects("child");
+        XCTAssertEqual(obj_a1_rels.at(0).object_id(), obj_b2_id);
+    }
+
+    {
+        // キャッシュが残っていないことを確認
+        XCTAssertFalse(manager.cached_object("sample_a", obj_a0_id.get<db::integer>()));
+        XCTAssertFalse(manager.cached_object("sample_a", obj_a1_id.get<db::integer>()));
+        XCTAssertFalse(manager.cached_object("sample_a", obj_a2_id.get<db::integer>()));
+    }
+
+    {
+        // obj_b1をremove
+        db::object &obj_b1 = objects.at("sample_b").at(1);
+        obj_b1.remove();
+    }
+
+    {
+        XCTestExpectation *exp = [self expectationWithDescription:@"save5"];
+
+        manager.save([exp](auto result) { [exp fulfill]; });
+
+        [self waitForExpectations:@[exp] timeout:10.0];
+
+        XCTAssertEqual(manager.current_save_id(), db::value{6});
+    }
+
+    {
+        // sample_aを全て取得
+        // obj_a0に関連なし
+        // obj_a1にobj_b2
+
+        XCTestExpectation *exp = [self expectationWithDescription:@"fetch"];
+
+        db::object_vector_map_t fetched_objects;
+
+        manager.fetch_objects(
+            []() {
+                return db::select_option{.table = "sample_a",
+                                         .field_orders = {{db::object_id_field, db::order::ascending}}};
+            },
+            [exp, &fetched_objects](db::manager_vector_result_t result) {
+                fetched_objects = std::move(result.value());
+                [exp fulfill];
+            });
+
+        [self waitForExpectations:@[exp] timeout:10.0];
+
+        auto const &a_objects = fetched_objects.at("sample_a");
+        XCTAssertEqual(a_objects.size(), 2);
+
+        auto const &obj_a0 = a_objects.at(0);
+        auto const &obj_a0_rels = obj_a0.relation_objects("child");
+        XCTAssertEqual(obj_a0_rels.size(), 0);
+
+        auto const &obj_a1 = a_objects.at(1);
+        XCTAssertEqual(obj_a1.relation_objects("child").size(), 1);
+        auto const &obj_a1_rels = obj_a1.relation_objects("child");
+        XCTAssertEqual(obj_a1_rels.at(0).object_id(), obj_b2_id);
+    }
+
+    {
+        // キャッシュが残っていないことを確認
+        XCTAssertFalse(manager.cached_object("sample_a", obj_a0_id.get<db::integer>()));
+        XCTAssertFalse(manager.cached_object("sample_a", obj_a1_id.get<db::integer>()));
+        XCTAssertFalse(manager.cached_object("sample_a", obj_a2_id.get<db::integer>()));
+    }
+
+    {
+        // obj_b2をremove
+        db::object &obj_b2 = objects.at("sample_b").at(2);
+        obj_b2.remove();
+    }
+
+    {
+        XCTestExpectation *exp = [self expectationWithDescription:@"save6"];
+
+        manager.save([exp](auto result) { [exp fulfill]; });
+
+        [self waitForExpectations:@[exp] timeout:10.0];
+
+        XCTAssertEqual(manager.current_save_id(), db::value{7});
+    }
+
+    {
+        // sample_bのオブジェクトをキャッシュから削除する
+        objects.erase("sample_b");
+
+        XCTAssertEqual(objects.count("sample_b"), 0);
+    }
+
+    {
+        // キャッシュが残っていないことを確認
+        XCTAssertFalse(manager.cached_object("sample_a", obj_a0_id.get<db::integer>()));
+        XCTAssertFalse(manager.cached_object("sample_a", obj_a1_id.get<db::integer>()));
+        XCTAssertFalse(manager.cached_object("sample_a", obj_a2_id.get<db::integer>()));
+        XCTAssertFalse(manager.cached_object("sample_b", obj_b0_id.get<db::integer>()));
+        XCTAssertFalse(manager.cached_object("sample_b", obj_b1_id.get<db::integer>()));
+        XCTAssertFalse(manager.cached_object("sample_b", obj_b2_id.get<db::integer>()));
+    }
+
+    {
+        // sample_aを全て取得
+        // 関連は全て外れている
+
+        XCTestExpectation *exp = [self expectationWithDescription:@"fetch"];
+
+        db::object_vector_map_t fetched_objects;
+
+        manager.fetch_objects(
+            []() {
+                return db::select_option{.table = "sample_a",
+                                         .field_orders = {{db::object_id_field, db::order::ascending}}};
+            },
+            [exp, &fetched_objects](db::manager_vector_result_t result) {
+                fetched_objects = std::move(result.value());
+                [exp fulfill];
+            });
+
+        [self waitForExpectations:@[exp] timeout:10.0];
+
+        auto const &a_objects = fetched_objects.at("sample_a");
+        XCTAssertEqual(a_objects.size(), 2);
+
+        auto const &obj_a0 = a_objects.at(0);
+        XCTAssertEqual(obj_a0.relation_objects("child").size(), 0);
+
+        auto const &obj_a1 = a_objects.at(1);
+        XCTAssertEqual(obj_a1.relation_objects("child").size(), 0);
+    }
+}
+
 - (void)test_observing_object_changed {
     db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
@@ -2122,7 +2585,8 @@ using namespace yas;
     XCTAssertEqual(to_string(db::manager_error_type::purge_relation_failed), "purge_relation_failed");
     XCTAssertEqual(to_string(db::manager_error_type::select_last_failed), "select_last_failed");
     XCTAssertEqual(to_string(db::manager_error_type::select_revert_failed), "select_revert_failed");
-    XCTAssertEqual(to_string(db::manager_error_type::fetch_object_datas_failed), "fetch_object_datas_failed");
+    XCTAssertEqual(to_string(db::manager_error_type::select_relation_removed_failed), "select_relation_removed_failed");
+    XCTAssertEqual(to_string(db::manager_error_type::make_object_datas_failed), "make_object_datas_failed");
     XCTAssertEqual(to_string(db::manager_error_type::out_of_range_save_id), "out_of_range_save_id");
     XCTAssertEqual(to_string(db::manager_error_type::select_failed), "select_failed");
     XCTAssertEqual(to_string(db::manager_error_type::last_insert_rowid_failed), "last_insert_rowid_failed");
