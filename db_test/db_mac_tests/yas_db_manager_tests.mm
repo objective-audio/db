@@ -1999,7 +1999,109 @@ using namespace yas;
     [self waitForExpectationsWithTimeout:1.0 handler:nil];
 }
 
-- (void)test_invert_relation_removed {
+- (void)test_invert_relatin_removed_in_cache {
+    // フェッチされていないオブジェクトに逆関連があった場合に、キャッシュ上のオブジェクトから削除されているかテスト
+
+    db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
+    auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
+
+    {
+        XCTestExpectation *exp = [self expectationWithDescription:@"setup"];
+
+        manager.setup([self, &manager, exp](auto result) { [exp fulfill]; });
+
+        [self waitForExpectations:@[exp] timeout:10.0];
+    }
+
+    db::object_vector_map_t objects;
+
+    {
+        // sample_aとsample_bのオブジェクトを1つずつ挿入する
+
+        XCTestExpectation *exp = [self expectationWithDescription:@"insert"];
+
+        manager.insert_objects(
+            []() {
+                return db::entity_count_map_t{{"sample_a", 1}, {"sample_b", 1}};
+            },
+            [&objects, exp](auto result) {
+                if (result) {
+                    objects = std::move(result.value());
+                }
+
+                [exp fulfill];
+            });
+
+        [self waitForExpectations:@[exp] timeout:10.0];
+    }
+
+    {
+        db::object &obj_a = objects.at("sample_a").at(0);
+        db::object &obj_b = objects.at("sample_b").at(0);
+
+        // 関連をセット
+        obj_a.set_relation_objects("child", {obj_b});
+    }
+
+    {
+        XCTestExpectation *exp = [self expectationWithDescription:@"save"];
+
+        manager.save([exp](auto result) { [exp fulfill]; });
+
+        [self waitForExpectations:@[exp] timeout:10.0];
+    }
+
+    {
+        db::object &obj_a = objects.at("sample_a").at(0);
+        db::object &obj_b = objects.at("sample_b").at(0);
+
+        // obj_bを削除
+        obj_b.remove();
+
+        // キャッシュ上のobj_aから関連が取り除かれている
+        XCTAssertEqual(obj_a.relation_objects("child").size(), 0);
+    }
+
+    {
+        XCTestExpectation *exp = [self expectationWithDescription:@"save"];
+
+        manager.save([exp](auto result) { [exp fulfill]; });
+
+        [self waitForExpectations:@[exp] timeout:10.0];
+    }
+
+    {
+        // キャッシュをクリア
+        objects.clear();
+    }
+
+    {
+        XCTestExpectation *exp = [self expectationWithDescription:@"fetch"];
+
+        db::object_vector_map_t fetched_objects;
+
+        manager.fetch_objects(
+            []() {
+                return db::select_option{.table = "sample_a",
+                                         .field_orders = {{db::object_id_field, db::order::ascending}}};
+            },
+            [exp, &fetched_objects](db::manager_vector_result_t result) {
+                fetched_objects = std::move(result.value());
+                [exp fulfill];
+            });
+
+        [self waitForExpectations:@[exp] timeout:10.0];
+
+        auto const &a_objects = fetched_objects.at("sample_a");
+        XCTAssertEqual(a_objects.size(), 1);
+
+        // 関連が取り除かれた状態でDBに保存されていることを確認
+        auto const &obj_a = a_objects.at(0);
+        XCTAssertEqual(obj_a.relation_objects("child").size(), 0);
+    }
+}
+
+- (void)test_invert_relation_removed_in_db {
     // フェッチされていないオブジェクトに逆関連があった場合に、DB上で関連を削除されているかテスト
 
     db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
