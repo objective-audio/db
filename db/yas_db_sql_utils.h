@@ -6,6 +6,7 @@
 
 #include <vector>
 #include "yas_db_select_option.h"
+#include "yas_db_additional_types.h"
 
 namespace yas {
 namespace db {
@@ -29,7 +30,8 @@ namespace db {
     std::string field_expr(std::string const &field, std::string const &op);
     std::string equal_field_expr(std::string const &field);
     std::string in_expr(std::string const &field, std::string const &select_sql);
-    std::string in_expr(std::string const &field, std::vector<db::value> const &values);
+    std::string in_expr(std::string const &field, db::value_vector_t const &values);
+    std::string in_expr(std::string const &field, db::integer_set_t const &ids);
 
     std::string equal_field(std::string const &field);
 

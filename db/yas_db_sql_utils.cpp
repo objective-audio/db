@@ -94,6 +94,11 @@ std::string yas::db::in_expr(std::string const &field, std::vector<db::value> co
     return field + " IN (" + joined_values + ")";
 }
 
+std::string yas::db::in_expr(std::string const &field, db::integer_set_t const &ids) {
+    auto joined_ids = joined(ids, db::field_separator, [](auto const &id) { return std::to_string(id); });
+    return field + " IN (" + joined_ids + ")";
+}
+
 std::string yas::db::equal_field(std::string const &field) {
     return field + " = :" + field;
 }

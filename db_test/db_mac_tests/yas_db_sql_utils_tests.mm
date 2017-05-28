@@ -119,4 +119,9 @@ using namespace yas;
     XCTAssertEqual(in_expr, "test_field IN (SELECT field_a FROM test_table)");
 }
 
+- (void)test_in_expr_with_integer_set {
+    auto in_expr = db::in_expr("test_field", db::integer_set_t{1, 2});
+    XCTAssertEqual(in_expr, "test_field IN (1, 2)");
+}
+
 @end
