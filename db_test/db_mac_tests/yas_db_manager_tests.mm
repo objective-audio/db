@@ -2483,6 +2483,7 @@ using namespace yas;
     XCTAssertEqual(to_string(db::manager_error_type::purge_relation_failed), "purge_relation_failed");
     XCTAssertEqual(to_string(db::manager_error_type::select_last_failed), "select_last_failed");
     XCTAssertEqual(to_string(db::manager_error_type::select_revert_failed), "select_revert_failed");
+    XCTAssertEqual(to_string(db::manager_error_type::select_relation_removed_failed), "select_relation_removed_failed");
     XCTAssertEqual(to_string(db::manager_error_type::make_object_datas_failed), "make_object_datas_failed");
     XCTAssertEqual(to_string(db::manager_error_type::out_of_range_save_id), "out_of_range_save_id");
     XCTAssertEqual(to_string(db::manager_error_type::select_failed), "select_failed");
