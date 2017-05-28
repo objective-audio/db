@@ -28,9 +28,9 @@ namespace db {
         bool is_empty() const;
 
         std::string sql() const;
-
-        static const db::range &empty();
     };
+
+    db::range const &empty_range();
 
     struct select_option {
         std::string table = "";
@@ -38,7 +38,7 @@ namespace db {
         std::string where_exprs = "";
         db::value_map_t arguments = {};
         std::vector<db::field_order> field_orders = {};
-        db::range limit_range = db::range::empty();
+        db::range limit_range = db::empty_range();
     };
 }
 }
