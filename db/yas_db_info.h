@@ -9,6 +9,7 @@
 #include <string>
 
 namespace yas {
+    class version;
 namespace db {
     class value;
 
@@ -20,11 +21,10 @@ namespace db {
         explicit info(db::value_map_t values);
         info(std::nullptr_t);
 
-        std::string const &version() const;
+        yas::version const &version() const;
         db::integer::type const &current_save_id() const;
         db::integer::type const &last_save_id() const;
 
-        db::value const &version_value() const;
         db::value const &current_save_id_value() const;
         db::value const &last_save_id_value() const;
     };
