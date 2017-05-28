@@ -23,6 +23,7 @@ namespace db {
     using value_vector_t = std::vector<db::value>;
     using value_map_t = std::unordered_map<std::string, db::value>;
     using value_vector_map_t = std::unordered_map<std::string, db::value_vector_t>;
+    using value_map_map_t = std::unordered_map<std::string, db::value_map_t>;
     using value_map_vector_t = std::vector<db::value_map_t>;
     using value_map_vector_map_t = std::unordered_map<std::string, db::value_map_vector_t>;
 
