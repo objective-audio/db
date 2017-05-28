@@ -30,8 +30,9 @@ namespace db {
         select_info_failed,
         select_last_failed,
         select_revert_failed,
+        select_relation_removed_failed,
 
-        fetch_object_datas_failed,
+        make_object_datas_failed,
 
         delete_failed,
         purge_failed,
