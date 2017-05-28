@@ -30,4 +30,14 @@ using namespace yas;
     XCTAssertEqual(order.sql(), "b DESC");
 }
 
+- (void)test_range_sql {
+    db::range range{.location = 1, .length = 2};
+    XCTAssertEqual(range.sql(), "1, 2");
+}
+
+- (void)test_range_is_empty {
+    XCTAssertTrue(db::empty_range().is_empty());
+    XCTAssertFalse((db::range{.location = 1, .length = 2}).is_empty());
+}
+
 @end
