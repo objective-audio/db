@@ -42,6 +42,8 @@ namespace db {
     // 全てのエンティティの指定したidより大きいsave_idのデータを削除する
     db::manager_result_t delete_next_to_last(db::database &db, db::model const &model, db::value const &save_id);
 
+    // 関連をDBに挿入する。1つの関連の複数のターゲットidをまとめて挿入する
+    // アトリビュートをDBに保存した後に関連ごとに呼び出される
     db::manager_result_t insert_relations(db::database &db, db::relation const &rel_model, db::value const &src_pk_id,
                                           db::value const &src_obj_id, db::value_vector_t const &rel_tgt_obj_ids,
                                           db::value const &save_id);
