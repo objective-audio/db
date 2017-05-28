@@ -189,7 +189,7 @@ using namespace yas;
 
     XCTAssertEqual(yas::to_string(integer_value), "8");
     XCTAssertEqual(yas::to_string(real_value), "0.500000");
-    XCTAssertEqual(yas::to_string(text_value), "text_value");
+    XCTAssertEqual(yas::to_string(text_value), "'text_value'");
     XCTAssertEqual(yas::to_string(blob_value), "");
     XCTAssertEqual(yas::to_string(null_value), "null");
 }

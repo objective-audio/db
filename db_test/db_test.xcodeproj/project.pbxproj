@@ -381,8 +381,6 @@
 				B629500F1C4B7E780024034B /* yas_db_select_option.h */,
 				B6C5A2CC1C30D96800E100EC /* yas_db_sql_utils.cpp */,
 				B6C5A2CD1C30D96800E100EC /* yas_db_sql_utils.h */,
-				B6F648301C40A64400265C93 /* yas_db_utils.cpp */,
-				B6F648311C40A64400265C93 /* yas_db_utils.h */,
 			);
 			name = additions;
 			sourceTree = "<group>";
@@ -404,6 +402,8 @@
 				B6A216001ED31DDD00AEEFC1 /* yas_db_types.h */,
 				B608C85C1C20F17300F594D8 /* yas_db_value.cpp */,
 				B608C85D1C20F17300F594D8 /* yas_db_value.h */,
+				B6F648301C40A64400265C93 /* yas_db_utils.cpp */,
+				B6F648311C40A64400265C93 /* yas_db_utils.h */,
 			);
 			name = core;
 			sourceTree = "<group>";

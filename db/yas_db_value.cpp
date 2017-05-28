@@ -217,7 +217,7 @@ std::string yas::to_string(const db::value &value) {
     } else if (type == typeid(db::real)) {
         return std::to_string(value.get<db::real>());
     } else if (type == typeid(db::text)) {
-        return value.get<db::text>();
+        return "'" + value.get<db::text>() + "'";
     } else if (type == typeid(db::blob)) {
         //        return "data' size='" + std::to_string(value.get<db::blob>().size());
     } else if (type == typeid(db::null)) {
@@ -235,18 +235,20 @@ std::string yas::to_string(db::value_map_t const &map) {
     return "{" + joined(components, ",") + "}";
 }
 
-std::string yas::to_string(db::value_map_vector_t const &vector) {
+std::string yas::to_string(db::value_map_vector_t const &vector, bool const formatted) {
+    std::string const new_line = formatted ? "\n" : "";
+    
     std::vector<std::string> components;
     for (auto const &map : vector) {
         components.emplace_back(to_string(map));
     }
-    return "{" + joined(components, ",") + "}";
+    return "[" + joined(components, "," + new_line) + "]";
 }
 
-std::string yas::to_string(db::value_map_vector_map_t const &map) {
+std::string yas::to_string(db::value_map_vector_map_t const &map, bool const formatted) {
     std::vector<std::string> components;
     for (auto const &pair : map) {
-        components.emplace_back(pair.first + ":" + to_string(pair.second));
+        components.emplace_back(pair.first + ":" + to_string(pair.second, formatted));
     }
     return "{" + joined(components, ",") + "}";
 }

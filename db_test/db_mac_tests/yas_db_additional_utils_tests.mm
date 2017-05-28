@@ -15,6 +15,7 @@ using namespace yas;
 
 - (void)setUp {
     [super setUp];
+    [yas_db_test_utils deleteDatabase];
 }
 
 - (void)tearDown {

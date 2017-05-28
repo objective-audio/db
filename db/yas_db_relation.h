@@ -9,9 +9,7 @@
 
 namespace yas {
 namespace db {
-    class entity;
-
-    class relation {
+    struct relation {
        public:
         std::string const entity_name;
         std::string const name;
