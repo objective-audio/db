@@ -195,8 +195,9 @@ db::update_result_t db::purge(db::database &db, std::string const &table_name) {
 }
 
 db::update_result_t db::purge_relation(database &db, std::string const &table_name, std::string const &src_table_name) {
-    std::string where_exprs = "NOT " + db::src_pk_id_field + " IN (SELECT rowid FROM " + src_table_name + ")";
-    return db.execute_update(db::delete_sql(table_name, where_exprs));
+    db::select_option const option{.table = src_table_name, .fields = {db::pk_id_field}};
+    std::string const in_expr = db::in_expr("NOT " + db::src_pk_id_field, db::select_sql(option, false));
+    return db.execute_update(db::delete_sql(table_name, in_expr));
 }
 
 db::manager_result_t db::make_error_result(db::manager_error_type const &error_type, db::error db_error) {

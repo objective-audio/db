@@ -63,7 +63,7 @@ std::string yas::db::update_sql(std::string const &table, std::vector<std::strin
     return stream.str();
 }
 
-std::string yas::db::delete_sql(const std::string &table, const std::string &where_exprs) {
+std::string yas::db::delete_sql(std::string const &table, std::string const &where_exprs) {
     std::ostringstream stream;
     stream << "DELETE FROM " << table;
     if (where_exprs.size() > 0) {
