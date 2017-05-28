@@ -189,9 +189,9 @@ db::select_single_result_t db::select_db_info(db::database const &db) {
 }
 
 db::update_result_t db::purge(db::database &db, std::string const &table_name) {
-    std::string where_exprs =
-        "NOT rowid IN (SELECT MAX(rowid) FROM " + table_name + " GROUP BY " + db::object_id_field + ")";
-    return db.execute_update(db::delete_sql(table_name, where_exprs));
+    std::string const in_expr = db::in_expr(
+        "NOT " + db::pk_id_field, "SELECT MAX(rowid) FROM " + table_name + " GROUP BY " + db::object_id_field);
+    return db.execute_update(db::delete_sql(table_name, in_expr));
 }
 
 db::update_result_t db::purge_relation(database &db, std::string const &table_name, std::string const &src_table_name) {
