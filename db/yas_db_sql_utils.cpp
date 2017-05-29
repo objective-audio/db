@@ -110,7 +110,7 @@ std::string yas::db::joined_orders(std::vector<db::field_order> const &orders) {
 
 std::string yas::db::select_sql(std::string const &table_name, std::vector<std::string> const &fields,
                                 std::string const &where_exprs, std::vector<db::field_order> const &orders,
-                                db::range const &limit_range, bool const semicolon) {
+                                db::range const &limit_range, bool const distinct, bool const semicolon) {
     if (table_name.size() == 0) {
         throw "table_name size is zero.";
     }
@@ -119,7 +119,13 @@ std::string yas::db::select_sql(std::string const &table_name, std::vector<std::
 
     std::string const joined_fields = joined(fields, db::field_separator);
 
-    stream << "SELECT " << joined_fields << " FROM " << table_name;
+    stream << "SELECT ";
+
+    if (distinct) {
+        stream << "DISTINCT ";
+    }
+
+    stream << joined_fields << " FROM " << table_name;
 
     if (where_exprs.size() > 0) {
         stream << " WHERE " << where_exprs;
@@ -141,7 +147,7 @@ std::string yas::db::select_sql(std::string const &table_name, std::vector<std::
 
 std::string yas::db::select_sql(db::select_option const &option, bool const semicolon) {
     return db::select_sql(option.table, option.fields, option.where_exprs, option.field_orders, option.limit_range,
-                          semicolon);
+                          option.distinct, semicolon);
 }
 
 std::string yas::db::foreign_key(std::string const &field, std::string const &ref_table, std::string const &ref_field,

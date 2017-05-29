@@ -39,6 +39,7 @@ namespace db {
         db::value_map_t arguments = {};
         std::vector<db::field_order> field_orders = {};
         db::range limit_range = db::empty_range();
+        bool distinct = false;
     };
 }
 }
