@@ -31,23 +31,26 @@ namespace db {
             components.push_back(where_exprs);
         }
 
-        std::string sub_where = components.size() > 0 ? " WHERE " + joined(components, " AND ") : "";
+        db::select_option option{.table = table,
+                                 .fields = {"MAX(" + db::rowid_field + ")"},
+                                 .where_exprs = joined(components, " AND "),
+                                 .group_by = db::object_id_field};
+        std::string result_exprs = db::in_expr(db::rowid_field, db::select_sql(option));
 
-        std::string result_exprs =
-            "rowid IN (SELECT MAX(rowid) FROM " + table + sub_where + " GROUP BY " + db::object_id_field + ")";
         if (!include_removed) {
-            static std::string const exc_removed_expr = db::action_field + " != '" + db::remove_action + "'";
-            result_exprs = joined({result_exprs, exc_removed_expr}, " AND ");
+            static std::string const exclude_removed_expr = db::action_field + " != '" + db::remove_action + "'";
+            result_exprs = joined({result_exprs, exclude_removed_expr}, " AND ");
         }
+
         return result_exprs;
     }
 
     // 単独の関連の関連先のidの配列をDBから取得する
-    db::value_vector_result_t select_relation_target_ids(db::database &db, std::string const &rel_table_name,
+    db::value_vector_result_t select_relation_target_ids(db::database &db, std::string const &rel_table,
                                                          db::value const &save_id, db::value const &src_obj_id) {
         std::string where_exprs =
             joined({db::equal_field_expr(db::save_id_field), db::equal_field_expr(db::src_obj_id_field)}, " and ");
-        db::select_option option{.table = rel_table_name,
+        db::select_option option{.table = rel_table,
                                  .where_exprs = std::move(where_exprs),
                                  .arguments = {{db::save_id_field, save_id}, {db::src_obj_id_field, src_obj_id}}};
 
@@ -71,9 +74,9 @@ namespace db {
 
         for (auto const &rel_model_pair : rel_models) {
             auto const &rel_name = rel_model_pair.first;
-            auto const &rel_table_name = rel_model_pair.second.table_name;
+            auto const &rel_table = rel_model_pair.second.table_name;
 
-            if (auto select_result = db::select_relation_target_ids(db, rel_table_name, save_id, src_obj_id)) {
+            if (auto select_result = db::select_relation_target_ids(db, rel_table, save_id, src_obj_id)) {
                 relations.emplace(rel_name, std::move(select_result.value()));
             } else {
                 return db::value_vector_map_result_t{std::move(select_result.error())};
@@ -91,24 +94,32 @@ db::select_result_t db::select_last(db::database const &db, db::select_option op
     return db::select(db, option);
 }
 
-db::select_result_t db::select_undo(db::database const &db, std::string const &table_name,
+db::select_result_t db::select_undo(db::database const &db, std::string const &table,
                                     db::integer::type const revert_save_id, db::integer::type const current_save_id) {
+    // リバート先のセーブIDはカレントより小さくないといけない
     if (current_save_id <= revert_save_id) {
         throw "revert_save_id greater than or equal to current_save_id";
     }
 
-    std::vector<std::string> components;
-    components.emplace_back(db::object_id_field + " IN (SELECT DISTINCT " + db::object_id_field + " FROM " +
-                            table_name + " WHERE " +
-                            joined({db::expr(db::save_id_field, "<=", std::to_string(current_save_id)),
-                                    db::expr(db::save_id_field, ">", std::to_string(revert_save_id))},
-                                   " AND ") +
-                            ")");
-    components.emplace_back(db::expr(db::save_id_field, "<=", std::to_string(revert_save_id)));
+    // アンドゥで戻そうとしているデータ（リバート先からカレントまでの間）のobject_idの集合を取得する
+    std::string const reverting_where = joined({db::expr(db::save_id_field, "<=", std::to_string(current_save_id)),
+                                                db::expr(db::save_id_field, ">", std::to_string(revert_save_id))},
+                                               " AND ");
+    db::select_option reverting_option{
+        .table = table, .fields = {db::object_id_field}, .distinct = true, .where_exprs = reverting_where};
+    std::string const reverting_obj_ids_expr = db::in_expr(db::object_id_field, db::select_sql(reverting_option));
 
-    db::select_option option{.table = table_name,
-                             .where_exprs = "rowid IN (SELECT MAX(rowid) FROM " + table_name + " WHERE " +
-                                            joined(components, " AND ") + " GROUP BY " + db::object_id_field + ")",
+    // 戻そうとしているobject_idと一致し、リバート時点より前のデータの中で最後のもののrowidの集合を取得する
+    // つまり、アンドゥ時点より前に挿入されて、アンドゥ時点より後に変更があったデータを取得する
+    std::string const reverted_last_where =
+        joined({reverting_obj_ids_expr, db::expr(db::save_id_field, "<=", std::to_string(revert_save_id))}, " AND ");
+    db::select_option reverted_last_option{.table = table,
+                                           .fields = {"MAX(" + db::rowid_field + ")"},
+                                           .where_exprs = reverted_last_where,
+                                           .group_by = db::object_id_field};
+    std::string const reverted_last_rowids_where = db::in_expr(db::rowid_field, db::select_sql(reverted_last_option));
+    db::select_option option{.table = table,
+                             .where_exprs = reverted_last_rowids_where,
                              .field_orders = {{db::object_id_field, db::order::ascending}}};
 
     auto result = db::select(db, option);
@@ -116,8 +127,10 @@ db::select_result_t db::select_undo(db::database const &db, std::string const &t
         return db::select_result_t{std::move(result.error())};
     }
 
+    // アンドゥで戻そうとしている範囲のデータの中で、insertのobject_idの集合をobject_idのみで取得
+    // つまり、アンドゥ時点より後に挿入されたデータを空にするために取得する
     db::select_option empty_option{
-        .table = table_name,
+        .table = table,
         .fields = {db::object_id_field},
         .where_exprs = joined(
             {db::expr(db::save_id_field, "<=", std::to_string(current_save_id)),
@@ -125,44 +138,45 @@ db::select_result_t db::select_undo(db::database const &db, std::string const &t
             " AND "),
         .arguments = {{db::action_field, db::insert_action_value()}},
         .field_orders = {{db::object_id_field, db::order::ascending}}};
+
     auto empty_result = db::select(db, empty_option);
     if (!empty_result) {
         return db::select_result_t{std::move(empty_result.error())};
     }
 
+    // キャッシュを上書きするためのデータを返す
     return db::select_result_t{connect(std::move(result.value()), std::move(empty_result.value()))};
 }
 
-db::select_result_t db::select_redo(db::database const &db, std::string const &table_name,
+db::select_result_t db::select_redo(db::database const &db, std::string const &table,
                                     db::integer::type const revert_save_id, db::integer::type const current_save_id) {
+    // リバート先のセーブIDはカレントより後でないといけない
     if (revert_save_id <= current_save_id) {
         throw "current_save_id greater than or equal to revert_save_id";
     }
 
-    std::vector<std::string> components;
-    components.emplace_back(db::expr(db::save_id_field, ">", std::to_string(current_save_id)));
-
-    db::select_option option{.table = table_name,
-                             .where_exprs = joined(components, " AND "),
+    // カレントからリドゥ時点の範囲で変更のあったデータを取得して返す
+    db::select_option option{.table = table,
+                             .where_exprs = db::expr(db::save_id_field, ">", std::to_string(current_save_id)),
                              .field_orders = {{db::object_id_field, db::order::ascending}}};
 
     return db::select_last(db, std::move(option), db::value{revert_save_id}, true);
 }
 
-db::select_result_t db::select_revert(db::database const &db, std::string const &table_name,
+db::select_result_t db::select_revert(db::database const &db, std::string const &table,
                                       db::integer::type const revert_save_id, db::integer::type const current_save_id) {
+    // リバート先のセーブIDによってアンドゥとリドゥに分岐する
     if (revert_save_id < current_save_id) {
-        return db::select_undo(db, table_name, revert_save_id, current_save_id);
+        return db::select_undo(db, table, revert_save_id, current_save_id);
     } else if (current_save_id < revert_save_id) {
-        return db::select_redo(db, table_name, revert_save_id, current_save_id);
+        return db::select_redo(db, table, revert_save_id, current_save_id);
     }
 
     return db::select_result_t{db::value_map_vector_t{}};
 }
 
 db::select_result_t db::select_relation_removed(db::database const &db, std::string const &entity_table,
-                                                std::string const &rel_table_name,
-                                                db::value_vector_t const &tgt_obj_ids) {
+                                                std::string const &rel_table, db::value_vector_t const &tgt_obj_ids) {
     // 最後のオブジェクトのpk_idを取得するsql
     auto const last_exprs = db::last_where_exprs(entity_table, "", nullptr, false);
     db::select_option last_option{.table = entity_table, .fields = {db::pk_id_field}, .where_exprs = last_exprs};
@@ -172,7 +186,7 @@ db::select_result_t db::select_relation_removed(db::database const &db, std::str
     std::string const tgt_where_exprs = joined(
         {db::in_expr(db::src_pk_id_field, last_select_sql), db::in_expr(db::tgt_obj_id_field, tgt_obj_ids)}, " AND ");
     db::select_option src_pk_option{
-        .table = rel_table_name, .fields = {db::src_pk_id_field}, .where_exprs = tgt_where_exprs};
+        .table = rel_table, .fields = {db::src_pk_id_field}, .where_exprs = tgt_where_exprs};
     auto const src_pk_select_sql = db::select_sql(src_pk_option);
 
     // これまでの条件に一致しつつ、アクションがremoveでないアトリビュートを取得する
@@ -188,16 +202,17 @@ db::select_single_result_t db::select_db_info(db::database const &db) {
     return db::select_single(db, db::select_option{.table = db::info_table});
 }
 
-db::update_result_t db::purge(db::database &db, std::string const &table_name) {
-    std::string const in_expr = db::in_expr(
-        "NOT " + db::pk_id_field, "SELECT MAX(rowid) FROM " + table_name + " GROUP BY " + db::object_id_field);
-    return db.execute_update(db::delete_sql(table_name, in_expr));
+db::update_result_t db::purge(db::database &db, std::string const &table) {
+    db::select_option const option{
+        .table = table, .fields = {"MAX(" + db::pk_id_field + ")"}, .group_by = db::object_id_field};
+    std::string const in_expr = db::in_expr("NOT " + db::pk_id_field, db::select_sql(option));
+    return db.execute_update(db::delete_sql(table, in_expr));
 }
 
-db::update_result_t db::purge_relation(database &db, std::string const &table_name, std::string const &src_table_name) {
-    db::select_option const option{.table = src_table_name, .fields = {db::pk_id_field}};
+db::update_result_t db::purge_relation(database &db, std::string const &table, std::string const &src_table) {
+    db::select_option const option{.table = src_table, .fields = {db::pk_id_field}};
     std::string const in_expr = db::in_expr("NOT " + db::src_pk_id_field, db::select_sql(option));
-    return db.execute_update(db::delete_sql(table_name, in_expr));
+    return db.execute_update(db::delete_sql(table, in_expr));
 }
 
 db::manager_result_t db::make_error_result(db::manager_error_type const &error_type, db::error db_error) {
@@ -264,9 +279,9 @@ db::manager_result_t db::delete_next_to_last(db::database &db, db::model const &
 
         if (auto delete_result = db.execute_update(db::delete_sql(entity_name, delete_exprs))) {
             for (auto const &rel_pair : entity_pair.second.relations) {
-                auto const table_name = rel_pair.second.table_name;
+                auto const table = rel_pair.second.table_name;
 
-                if (auto ul = unless(db.execute_update(db::delete_sql(table_name, delete_exprs)))) {
+                if (auto ul = unless(db.execute_update(db::delete_sql(table, delete_exprs)))) {
                     return db::make_error_result(db::manager_error_type::delete_failed, std::move(ul.value.error()));
                 }
             }
