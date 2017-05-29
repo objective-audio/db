@@ -15,6 +15,8 @@ namespace db {
     class row_set;
     class value;
 
+    static std::string const rowid_field = "rowid";
+
     using update_result_t = result<std::nullptr_t, db::error>;
     using query_result_t = result<db::row_set, db::error>;
     using row_result_t = result<sqlite3_int64, db::error>;
