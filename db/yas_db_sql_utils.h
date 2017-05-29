@@ -40,7 +40,8 @@ namespace db {
     std::string select_sql(std::string const &table_name, std::vector<std::string> const &fields,
                            std::string const &where_exprs = std::string(),
                            std::vector<db::field_order> const &orders = {},
-                           db::range const &limit_range = db::empty_range(), bool const distinct = false);
+                           db::range const &limit_range = db::empty_range(), std::string const &group_by = "",
+                           bool const distinct = false);
     std::string select_sql(db::select_option const &option);
 
     std::string foreign_key(std::string const &field, std::string const &ref_table, std::string const &ref_field,
