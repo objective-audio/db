@@ -110,7 +110,7 @@ std::string yas::db::joined_orders(std::vector<db::field_order> const &orders) {
 
 std::string yas::db::select_sql(std::string const &table_name, std::vector<std::string> const &fields,
                                 std::string const &where_exprs, std::vector<db::field_order> const &orders,
-                                db::range const &limit_range, bool const distinct, bool const semicolon) {
+                                db::range const &limit_range, bool const distinct) {
     if (table_name.size() == 0) {
         throw "table_name size is zero.";
     }
@@ -139,15 +139,12 @@ std::string yas::db::select_sql(std::string const &table_name, std::vector<std::
         stream << " LIMIT " << limit_range.sql();
     }
 
-    if (semicolon) {
-        stream << ";";
-    }
     return stream.str();
 }
 
-std::string yas::db::select_sql(db::select_option const &option, bool const semicolon) {
+std::string yas::db::select_sql(db::select_option const &option) {
     return db::select_sql(option.table, option.fields, option.where_exprs, option.field_orders, option.limit_range,
-                          option.distinct, semicolon);
+                          option.distinct);
 }
 
 std::string yas::db::foreign_key(std::string const &field, std::string const &ref_table, std::string const &ref_field,

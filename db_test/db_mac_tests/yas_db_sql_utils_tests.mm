@@ -73,19 +73,10 @@ using namespace yas;
     XCTAssertEqual(joined_orders, "field_a ASC, field_b DESC");
 }
 
-- (void)test_select_sql_with_semicolon {
+- (void)test_select_sql_with_params {
     auto select_sql =
         db::select_sql("test_table", {"field_a", "field_b"}, "abc = :def",
-                       {{"field_c", db::order::ascending}, {"field_d", db::order::descending}}, {10, 20}, false, true);
-    XCTAssertEqual(
-        select_sql,
-        "SELECT field_a, field_b FROM test_table WHERE abc = :def ORDER BY field_c ASC, field_d DESC LIMIT 10, 20;");
-}
-
-- (void)test_select_sql_without_semicolon {
-    auto select_sql =
-        db::select_sql("test_table", {"field_a", "field_b"}, "abc = :def",
-                       {{"field_c", db::order::ascending}, {"field_d", db::order::descending}}, {10, 20}, false, false);
+                       {{"field_c", db::order::ascending}, {"field_d", db::order::descending}}, {10, 20}, false);
     XCTAssertEqual(
         select_sql,
         "SELECT field_a, field_b FROM test_table WHERE abc = :def ORDER BY field_c ASC, field_d DESC LIMIT 10, 20");
@@ -99,10 +90,10 @@ using namespace yas;
                           .field_orders = {{"field_c", db::order::ascending}, {"field_d", db::order::descending}},
                           .limit_range = {10, 20},
                           .distinct = true};
-    auto select_sql = db::select_sql(option, true);
+    auto select_sql = db::select_sql(option);
     XCTAssertEqual(select_sql,
                    "SELECT DISTINCT field_a, field_b FROM test_table WHERE abc = :def ORDER BY field_c ASC, field_d "
-                   "DESC LIMIT 10, 20;");
+                   "DESC LIMIT 10, 20");
 }
 
 - (void)test_in_expr_with_text_values {

@@ -166,14 +166,14 @@ db::select_result_t db::select_relation_removed(db::database const &db, std::str
     // 最後のオブジェクトのpk_idを取得するsql
     auto const last_exprs = db::last_where_exprs(entity_table, "", nullptr, false);
     db::select_option last_option{.table = entity_table, .fields = {db::pk_id_field}, .where_exprs = last_exprs};
-    auto const last_select_sql = db::select_sql(last_option, false);
+    auto const last_select_sql = db::select_sql(last_option);
 
     // 最後のオブジェクトの中でtgt_obj_idsに一致する関連のsrc_pk_idを取得するsql
     std::string const tgt_where_exprs = joined(
         {db::in_expr(db::src_pk_id_field, last_select_sql), db::in_expr(db::tgt_obj_id_field, tgt_obj_ids)}, " AND ");
     db::select_option src_pk_option{
         .table = rel_table_name, .fields = {db::src_pk_id_field}, .where_exprs = tgt_where_exprs};
-    auto const src_pk_select_sql = db::select_sql(src_pk_option, false);
+    auto const src_pk_select_sql = db::select_sql(src_pk_option);
 
     // これまでの条件に一致しつつ、アクションがremoveでないアトリビュートを取得する
     std::string const where_exprs =
@@ -196,7 +196,7 @@ db::update_result_t db::purge(db::database &db, std::string const &table_name) {
 
 db::update_result_t db::purge_relation(database &db, std::string const &table_name, std::string const &src_table_name) {
     db::select_option const option{.table = src_table_name, .fields = {db::pk_id_field}};
-    std::string const in_expr = db::in_expr("NOT " + db::src_pk_id_field, db::select_sql(option, false));
+    std::string const in_expr = db::in_expr("NOT " + db::src_pk_id_field, db::select_sql(option));
     return db.execute_update(db::delete_sql(table_name, in_expr));
 }
 
