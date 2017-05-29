@@ -76,10 +76,10 @@ using namespace yas;
 - (void)test_select_sql_with_params {
     auto select_sql =
         db::select_sql("test_table", {"field_a", "field_b"}, "abc = :def",
-                       {{"field_c", db::order::ascending}, {"field_d", db::order::descending}}, {10, 20}, false);
-    XCTAssertEqual(
-        select_sql,
-        "SELECT field_a, field_b FROM test_table WHERE abc = :def ORDER BY field_c ASC, field_d DESC LIMIT 10, 20");
+                       {{"field_c", db::order::ascending}, {"field_d", db::order::descending}}, {10, 20}, "ghi", false);
+    XCTAssertEqual(select_sql,
+                   "SELECT field_a, field_b FROM test_table WHERE abc = :def ORDER BY field_c ASC, field_d DESC LIMIT "
+                   "10, 20 GROUP BY ghi");
 }
 
 - (void)test_select_sql_by_select_option {
@@ -89,11 +89,12 @@ using namespace yas;
                           .where_exprs = "abc = :def",
                           .field_orders = {{"field_c", db::order::ascending}, {"field_d", db::order::descending}},
                           .limit_range = {10, 20},
+                          .group_by = "ghi",
                           .distinct = true};
     auto select_sql = db::select_sql(option);
     XCTAssertEqual(select_sql,
                    "SELECT DISTINCT field_a, field_b FROM test_table WHERE abc = :def ORDER BY field_c ASC, field_d "
-                   "DESC LIMIT 10, 20");
+                   "DESC LIMIT 10, 20 GROUP BY ghi");
 }
 
 - (void)test_in_expr_with_text_values {
