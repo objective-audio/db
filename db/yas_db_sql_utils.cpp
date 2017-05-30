@@ -85,8 +85,8 @@ std::string yas::db::equal_field_expr(std::string const &field) {
     return field_expr(field, "=");
 }
 
-std::string yas::db::in_expr(std::string const &field, std::string const &select_sql) {
-    return field + " IN (" + select_sql + ")";
+std::string yas::db::in_expr(std::string const &field, db::select_option const &option) {
+    return field + " IN (" + db::select_sql(option) + ")";
 }
 
 std::string yas::db::in_expr(std::string const &field, std::vector<db::value> const &values) {
