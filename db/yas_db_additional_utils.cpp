@@ -35,7 +35,7 @@ namespace db {
                                  .fields = {"MAX(" + db::rowid_field + ")"},
                                  .where_exprs = joined(components, " AND "),
                                  .group_by = db::object_id_field};
-        std::string result_exprs = db::in_expr(db::rowid_field, db::select_sql(option));
+        std::string result_exprs = db::in_expr(db::rowid_field, option);
 
         if (!include_removed) {
             static std::string const exclude_removed_expr = db::action_field + " != '" + db::remove_action + "'";
@@ -107,7 +107,7 @@ db::select_result_t db::select_undo(db::database const &db, std::string const &t
                                                " AND ");
     db::select_option reverting_option{
         .table = table, .fields = {db::object_id_field}, .distinct = true, .where_exprs = reverting_where};
-    std::string const reverting_obj_ids_expr = db::in_expr(db::object_id_field, db::select_sql(reverting_option));
+    std::string const reverting_obj_ids_expr = db::in_expr(db::object_id_field, reverting_option);
 
     // 戻そうとしているobject_idと一致し、リバート時点より前のデータの中で最後のもののrowidの集合を取得する
     // つまり、アンドゥ時点より前に挿入されて、アンドゥ時点より後に変更があったデータを取得する
@@ -117,7 +117,7 @@ db::select_result_t db::select_undo(db::database const &db, std::string const &t
                                            .fields = {"MAX(" + db::rowid_field + ")"},
                                            .where_exprs = reverted_last_where,
                                            .group_by = db::object_id_field};
-    std::string const reverted_last_rowids_where = db::in_expr(db::rowid_field, db::select_sql(reverted_last_option));
+    std::string const reverted_last_rowids_where = db::in_expr(db::rowid_field, reverted_last_option);
     db::select_option option{.table = table,
                              .where_exprs = reverted_last_rowids_where,
                              .field_orders = {{db::object_id_field, db::order::ascending}}};
@@ -179,19 +179,17 @@ db::select_result_t db::select_relation_removed(db::database const &db, std::str
                                                 std::string const &rel_table, db::value_vector_t const &tgt_obj_ids) {
     // 最後のオブジェクトのpk_idを取得するsql
     auto const last_exprs = db::last_where_exprs(entity_table, "", nullptr, false);
-    db::select_option last_option{.table = entity_table, .fields = {db::pk_id_field}, .where_exprs = last_exprs};
-    auto const last_select_sql = db::select_sql(last_option);
+    db::select_option const last_option{.table = entity_table, .fields = {db::pk_id_field}, .where_exprs = last_exprs};
 
     // 最後のオブジェクトの中でtgt_obj_idsに一致する関連のsrc_pk_idを取得するsql
     std::string const tgt_where_exprs = joined(
-        {db::in_expr(db::src_pk_id_field, last_select_sql), db::in_expr(db::tgt_obj_id_field, tgt_obj_ids)}, " AND ");
+        {db::in_expr(db::src_pk_id_field, last_option), db::in_expr(db::tgt_obj_id_field, tgt_obj_ids)}, " AND ");
     db::select_option src_pk_option{
         .table = rel_table, .fields = {db::src_pk_id_field}, .where_exprs = tgt_where_exprs};
-    auto const src_pk_select_sql = db::select_sql(src_pk_option);
 
     // これまでの条件に一致しつつ、アクションがremoveでないアトリビュートを取得する
     std::string const where_exprs =
-        joined({db::field_expr(db::action_field, "!="), db::in_expr(db::pk_id_field, src_pk_select_sql)}, " AND ");
+        joined({db::field_expr(db::action_field, "!="), db::in_expr(db::pk_id_field, src_pk_option)}, " AND ");
     db::select_option option{.table = entity_table,
                              .where_exprs = where_exprs,
                              .arguments = {{db::action_field, db::remove_action_value()}}};
@@ -205,13 +203,13 @@ db::select_single_result_t db::select_db_info(db::database const &db) {
 db::update_result_t db::purge(db::database &db, std::string const &table) {
     db::select_option const option{
         .table = table, .fields = {"MAX(" + db::pk_id_field + ")"}, .group_by = db::object_id_field};
-    std::string const in_expr = db::in_expr("NOT " + db::pk_id_field, db::select_sql(option));
+    std::string const in_expr = db::in_expr("NOT " + db::pk_id_field, option);
     return db.execute_update(db::delete_sql(table, in_expr));
 }
 
 db::update_result_t db::purge_relation(database &db, std::string const &table, std::string const &src_table) {
     db::select_option const option{.table = src_table, .fields = {db::pk_id_field}};
-    std::string const in_expr = db::in_expr("NOT " + db::src_pk_id_field, db::select_sql(option));
+    std::string const in_expr = db::in_expr("NOT " + db::src_pk_id_field, option);
     return db.execute_update(db::delete_sql(table, in_expr));
 }
 

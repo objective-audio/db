@@ -29,7 +29,7 @@ namespace db {
     std::string expr(std::string const &left, std::string const &op, std::string const &right);
     std::string field_expr(std::string const &field, std::string const &op);
     std::string equal_field_expr(std::string const &field);
-    std::string in_expr(std::string const &field, std::string const &select_sql);
+    std::string in_expr(std::string const &field, db::select_option const &select_option);
     std::string in_expr(std::string const &field, db::value_vector_t const &values);
     std::string in_expr(std::string const &field, db::integer_set_t const &ids);
 

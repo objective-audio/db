@@ -107,8 +107,8 @@ using namespace yas;
     XCTAssertEqual(in_expr, "test_field IN (1, 2)");
 }
 
-- (void)test_in_expr_with_select_sql {
-    auto in_expr = db::in_expr("test_field", "SELECT field_a FROM test_table");
+- (void)test_in_expr_with_select_option {
+    auto in_expr = db::in_expr("test_field", {.table = "test_table", .fields = {"field_a"}});
     XCTAssertEqual(in_expr, "test_field IN (SELECT field_a FROM test_table)");
 }
 
