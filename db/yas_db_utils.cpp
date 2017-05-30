@@ -167,7 +167,7 @@ bool db::column_exists(db::database const &db, std::string column_name, std::str
 }
 
 db::select_result_t db::select(db::database const &db, db::select_option const &option) {
-    auto const sql = db::select_sql(option);
+    auto const sql = db::select_sql(option) + ";";
 
     db::value_map_vector_t value_map_vector;
 

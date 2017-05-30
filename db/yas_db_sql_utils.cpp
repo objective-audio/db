@@ -63,7 +63,7 @@ std::string yas::db::update_sql(std::string const &table, std::vector<std::strin
     return stream.str();
 }
 
-std::string yas::db::delete_sql(const std::string &table, const std::string &where_exprs) {
+std::string yas::db::delete_sql(std::string const &table, std::string const &where_exprs) {
     std::ostringstream stream;
     stream << "DELETE FROM " << table;
     if (where_exprs.size() > 0) {
@@ -94,6 +94,11 @@ std::string yas::db::in_expr(std::string const &field, std::vector<db::value> co
     return field + " IN (" + joined_values + ")";
 }
 
+std::string yas::db::in_expr(std::string const &field, db::integer_set_t const &ids) {
+    auto joined_ids = joined(ids, db::field_separator, [](auto const &id) { return std::to_string(id); });
+    return field + " IN (" + joined_ids + ")";
+}
+
 std::string yas::db::equal_field(std::string const &field) {
     return field + " = :" + field;
 }
@@ -105,7 +110,7 @@ std::string yas::db::joined_orders(std::vector<db::field_order> const &orders) {
 
 std::string yas::db::select_sql(std::string const &table_name, std::vector<std::string> const &fields,
                                 std::string const &where_exprs, std::vector<db::field_order> const &orders,
-                                db::range const &limit_range, bool const semicolon) {
+                                db::range const &limit_range, std::string const &group_by, bool const distinct) {
     if (table_name.size() == 0) {
         throw "table_name size is zero.";
     }
@@ -114,7 +119,13 @@ std::string yas::db::select_sql(std::string const &table_name, std::vector<std::
 
     std::string const joined_fields = joined(fields, db::field_separator);
 
-    stream << "SELECT " << joined_fields << " FROM " << table_name;
+    stream << "SELECT ";
+
+    if (distinct) {
+        stream << "DISTINCT ";
+    }
+
+    stream << joined_fields << " FROM " << table_name;
 
     if (where_exprs.size() > 0) {
         stream << " WHERE " << where_exprs;
@@ -127,16 +138,17 @@ std::string yas::db::select_sql(std::string const &table_name, std::vector<std::
     if (!limit_range.is_empty()) {
         stream << " LIMIT " << limit_range.sql();
     }
-
-    if (semicolon) {
-        stream << ";";
+    
+    if (group_by.size() > 0) {
+        stream << " GROUP BY " << group_by;
     }
+
     return stream.str();
 }
 
-std::string yas::db::select_sql(db::select_option const &option, bool const semicolon) {
+std::string yas::db::select_sql(db::select_option const &option) {
     return db::select_sql(option.table, option.fields, option.where_exprs, option.field_orders, option.limit_range,
-                          semicolon);
+                          option.group_by, option.distinct);
 }
 
 std::string yas::db::foreign_key(std::string const &field, std::string const &ref_table, std::string const &ref_field,

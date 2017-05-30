@@ -1066,12 +1066,8 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                         auto const &rel_models = manager.model().relations(entity_name);
 
                         auto const &entity_obj_ids = entity_pair.second;
-                        db::select_option option{
-                            .table = entity_name,
-                            .where_exprs =
-                                db::object_id_field + " in (" +
-                                joined(entity_obj_ids, ",", [](auto const &rel_id) { return std::to_string(rel_id); }) +
-                                ")"};
+                        db::select_option option{.table = entity_name,
+                                                 .where_exprs = db::in_expr(db::object_id_field, entity_obj_ids)};
 
                         // カレントセーブIDまでで条件にあった最後のデータをデータベースから取得する
                         if (auto select_result = db::select_last(db, std::move(option), current_save_id)) {

@@ -6,6 +6,7 @@
 
 #include <vector>
 #include "yas_db_select_option.h"
+#include "yas_db_additional_types.h"
 
 namespace yas {
 namespace db {
@@ -29,7 +30,8 @@ namespace db {
     std::string field_expr(std::string const &field, std::string const &op);
     std::string equal_field_expr(std::string const &field);
     std::string in_expr(std::string const &field, std::string const &select_sql);
-    std::string in_expr(std::string const &field, std::vector<db::value> const &values);
+    std::string in_expr(std::string const &field, db::value_vector_t const &values);
+    std::string in_expr(std::string const &field, db::integer_set_t const &ids);
 
     std::string equal_field(std::string const &field);
 
@@ -38,8 +40,9 @@ namespace db {
     std::string select_sql(std::string const &table_name, std::vector<std::string> const &fields,
                            std::string const &where_exprs = std::string(),
                            std::vector<db::field_order> const &orders = {},
-                           db::range const &limit_range = db::empty_range(), bool const semicolon = true);
-    std::string select_sql(db::select_option const &option, bool const semicolon = true);
+                           db::range const &limit_range = db::empty_range(), std::string const &group_by = "",
+                           bool const distinct = false);
+    std::string select_sql(db::select_option const &option);
 
     std::string foreign_key(std::string const &field, std::string const &ref_table, std::string const &ref_field,
                             std::string const &on_update, std::string const &on_delete);

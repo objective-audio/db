@@ -14,10 +14,13 @@ namespace db {
 
     db::select_result_t select_last(db::database const &db, db::select_option option, value const &save_id = nullptr,
                                     bool const include_removed = false);
+    // アンドゥするためにキャッシュを上書きするデータをDBから取得する
     db::select_result_t select_undo(db::database const &db, std::string const &table_name,
                                     db::integer::type const revert_save_id, db::integer::type const current_save_id);
+    // リドゥーするためにキャッシュを上書きするデータをDBから取得する
     db::select_result_t select_redo(db::database const &db, std::string const &table_name,
                                     db::integer::type const revert_save_id, db::integer::type const current_save_id);
+    // リバートするためにキャッシュを上書きするデータをDBから取得する
     db::select_result_t select_revert(db::database const &db, std::string const &table_name,
                                       db::integer::type const revert_save_id, db::integer::type const current_save_id);
     db::select_result_t select_relation_removed(db::database const &db, std::string const &entity_table_name,

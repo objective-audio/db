@@ -388,12 +388,9 @@ using namespace yas;
     args = {db::value{6}, db::value{"value_6"}};
     XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
 
-    std::set<db::integer::type> obj_ids{2, 4, 6};
-
     db::select_option option;
     option.table = table_name;
-    option.where_exprs = db::object_id_field + " in (" +
-                         joined(obj_ids, ",", [](auto const &obj_id) { return std::to_string(obj_id); }) + ")";
+    option.where_exprs = db::in_expr(db::object_id_field, db::integer_set_t{2, 4, 6});
     option.field_orders = {db::field_order{db::object_id_field, db::order::ascending}};
 
     auto select_result = db::select(db, option);
