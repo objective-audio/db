@@ -25,7 +25,7 @@ using namespace yas;
 }
 
 - (void)test_create {
-    db::info info{"1.0.0", 1, 2};
+    db::info const info{"1.0.0", 1, 2};
 
     XCTAssertEqual(info.version(), yas::version{"1.0.0"});
     XCTAssertEqual(info.current_save_id(), 1);
@@ -38,6 +38,14 @@ using namespace yas;
     db::value_map_t values{{db::version_field, db::value{"1.2.3"}},
                            {db::current_save_id_field, db::value{10}},
                            {db::last_save_id_field, db::value{20}}};
+
+    db::info const info{values};
+
+    XCTAssertEqual(info.version(), yas::version{"1.2.3"});
+    XCTAssertEqual(info.current_save_id(), 10);
+    XCTAssertEqual(info.last_save_id(), 20);
+    XCTAssertEqual(info.current_save_id_value(), db::value{10});
+    XCTAssertEqual(info.last_save_id_value(), db::value{20});
 }
 
 @end
