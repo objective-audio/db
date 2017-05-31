@@ -627,16 +627,10 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
 
             if (state) {
                 // infoをクリア。セーブIDを0にする
-                db::value_vector_t const params{db::value{db::integer::type{0}}, db::value{db::integer::type{0}}};
-                if (auto update_result = db.execute_update(db::info::sql_for_update_save_ids(), params)) {
-                    if (auto select_result = db::select_db_info(db)) {
-                        db_info = std::move(select_result.value());
-                    } else {
-                        state = db::manager_result_t{std::move(select_result.error())};
-                    }
+                if (auto update_result = db::update_db_info(db, 0, 0)) {
+                    db_info = std::move(update_result.value());
                 } else {
-                    state = db::make_error_result(db::manager_error_type::update_info_failed,
-                                                  std::move(update_result.error()));
+                    state = db::manager_result_t{std::move(update_result.error())};
                 }
             }
 
