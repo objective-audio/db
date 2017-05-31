@@ -49,26 +49,27 @@ using namespace yas;
 }
 
 - (void)test_create_sql {
-    XCTAssertEqual(db::info::create_sql(), "CREATE TABLE IF NOT EXISTS db_info (version, cur_save_id, last_save_id);");
+    XCTAssertEqual(db::info::sql_for_create(),
+                   "CREATE TABLE IF NOT EXISTS db_info (version, cur_save_id, last_save_id);");
 }
 
 - (void)test_insert_sql {
     XCTAssertEqual(
-        db::info::insert_sql(),
+        db::info::sql_for_insert(),
         "INSERT INTO db_info(version, cur_save_id, last_save_id) VALUES(:version, :cur_save_id, :last_save_id);");
 }
 
 - (void)test_update_version_sql {
-    XCTAssertEqual(db::info::update_version_sql(), "UPDATE db_info SET version = :version;");
+    XCTAssertEqual(db::info::sql_for_update_version(), "UPDATE db_info SET version = :version;");
 }
 
 - (void)test_update_save_ids_sql {
-    XCTAssertEqual(db::info::update_save_ids_sql(),
+    XCTAssertEqual(db::info::sql_for_update_save_ids(),
                    "UPDATE db_info SET cur_save_id = :cur_save_id, last_save_id = :last_save_id;");
 }
 
 - (void)test_update_current_save_id_sql {
-    XCTAssertEqual(db::info::update_current_save_id_sql(), "UPDATE db_info SET cur_save_id = :cur_save_id;");
+    XCTAssertEqual(db::info::sql_for_update_current_save_id(), "UPDATE db_info SET cur_save_id = :cur_save_id;");
 }
 
 @end

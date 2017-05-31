@@ -437,7 +437,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                     if (auto select_result = db::select_db_info(db)) {
                         // infoを現在のバージョンで上書き
                         auto const update_info_result =
-                            db.execute_update(db::info::update_version_sql(), {db::value{model.version().str()}});
+                            db.execute_update(db::info::sql_for_update_version(), {db::value{model.version().str()}});
                         if (update_info_result) {
                             db::info const &info = select_result.value();
                             if (info.version() < model.version()) {
@@ -519,11 +519,11 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                     // 新規にテーブルを作成する
 
                     // infoテーブルをデータベース上に作成
-                    if (auto create_result = db.execute_update(db::info::create_sql())) {
+                    if (auto create_result = db.execute_update(db::info::sql_for_create())) {
                         db::value_vector_t args{db::value{model.version().str()}, db::value{integer::type{0}},
                                                 db::value{integer::type{0}}};
                         // infoデータを挿入。セーブIDは0
-                        if (auto ul = unless(db.execute_update(db::info::insert_sql(), args))) {
+                        if (auto ul = unless(db.execute_update(db::info::sql_for_insert(), args))) {
                             state = db::make_error_result(db::manager_error_type::insert_info_failed,
                                                           std::move(ul.value.error()));
                         }
@@ -637,7 +637,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
             if (state) {
                 // infoをクリア。セーブIDを0にする
                 db::value_vector_t const params{db::value{db::integer::type{0}}, db::value{db::integer::type{0}}};
-                if (auto update_result = db.execute_update(db::info::update_save_ids_sql(), params)) {
+                if (auto update_result = db.execute_update(db::info::sql_for_update_save_ids(), params)) {
                     if (auto select_result = db::select_db_info(db)) {
                         db_info = std::move(select_result.value());
                     } else {
@@ -742,7 +742,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                 if (state) {
                     // infoをクリア。セーブIDを1にする
                     db::value_vector_t const args{one_value, one_value};
-                    if (auto update_result = db.execute_update(db::info::update_save_ids_sql(), args)) {
+                    if (auto update_result = db.execute_update(db::info::sql_for_update_save_ids(), args)) {
                         if (auto select_result = db::select_db_info(db)) {
                             db_info = std::move(select_result.value());
                         } else {
@@ -889,7 +889,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                 if (state) {
                     // infoを更新する
                     db::value_vector_t const args{next_save_id, next_save_id};
-                    if (auto ul = unless(db.execute_update(db::info::update_save_ids_sql(), args))) {
+                    if (auto ul = unless(db.execute_update(db::info::sql_for_update_save_ids(), args))) {
                         state = db::make_error_result(db::manager_error_type::update_info_failed,
                                                       std::move(ul.value.error()));
                     }
@@ -1315,7 +1315,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                     if (state) {
                         // infoの更新
                         db::value_vector_t const params{next_save_id, next_save_id};
-                        if (auto ul = unless(db.execute_update(db::info::update_save_ids_sql(), params))) {
+                        if (auto ul = unless(db.execute_update(db::info::sql_for_update_save_ids(), params))) {
                             state = db::make_error_result(db::manager_error_type::update_info_failed,
                                                           std::move(ul.value.error()));
                         }
@@ -1428,7 +1428,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                 if (state) {
                     // リバートしたセーブIDでinfoを更新する
                     if (auto ul = unless(
-                            db.execute_update(db::info::update_current_save_id_sql(), {db::value{rev_save_id}}))) {
+                            db.execute_update(db::info::sql_for_update_current_save_id(), {db::value{rev_save_id}}))) {
                         state = db::make_error_result(db::manager_error_type::update_save_id_failed,
                                                       std::move(ul.value.error()));
                     }
