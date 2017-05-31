@@ -28,10 +28,10 @@ namespace db {
         db::value const &current_save_id_value() const;
         db::value const &last_save_id_value() const;
 
-        static std::string insert_sql();
-        static std::string update_version_sql();
-        static std::string update_save_ids_sql();
-        static std::string update_current_save_id_sql();
+        static std::string const &insert_sql();
+        static std::string const &update_version_sql();
+        static std::string const &update_save_ids_sql();
+        static std::string const &update_current_save_id_sql();
     };
 
     db::info const &null_info();
