@@ -48,6 +48,10 @@ using namespace yas;
     XCTAssertEqual(info.last_save_id_value(), db::value{20});
 }
 
+- (void)test_create_sql {
+    XCTAssertEqual(db::info::create_sql(), "CREATE TABLE IF NOT EXISTS db_info (version, cur_save_id, last_save_id);");
+}
+
 - (void)test_insert_sql {
     XCTAssertEqual(
         db::info::insert_sql(),
