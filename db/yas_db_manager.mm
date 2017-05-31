@@ -519,17 +519,8 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                     // 新規にテーブルを作成する
 
                     // infoテーブルをデータベース上に作成
-                    if (auto create_result = db.execute_update(db::info::sql_for_create())) {
-                        db::value_vector_t args{db::value{model.version().str()}, db::value{integer::type{0}},
-                                                db::value{integer::type{0}}};
-                        // infoデータを挿入。セーブIDは0
-                        if (auto ul = unless(db.execute_update(db::info::sql_for_insert(), args))) {
-                            state = db::make_error_result(db::manager_error_type::insert_info_failed,
-                                                          std::move(ul.value.error()));
-                        }
-                    } else {
-                        state = db::make_error_result(db::manager_error_type::create_info_table_failed,
-                                                      std::move(create_result.error()));
+                    if (auto ul = unless(db::create_db_info(db, model.version()))) {
+                        state = std::move(ul.value);
                     }
 
                     // 全てのエンティティと関連のテーブルをデータベース上に作成する
