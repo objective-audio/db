@@ -13,6 +13,7 @@
 #include "yas_db_entity.h"
 #include "yas_db_relation.h"
 #include "yas_db_database.h"
+#include "yas_db_info.h"
 
 using namespace yas;
 
@@ -196,8 +197,23 @@ db::select_result_t db::select_relation_removed(db::database const &db, std::str
     return db::select(db, option);
 }
 
-db::select_single_result_t db::select_db_info(db::database const &db) {
-    return db::select_single(db, db::select_option{.table = db::info_table});
+db::manager_info_result_t db::select_db_info(db::database const &db) {
+    if (auto select_result = db::select_single(db, db::select_option{.table = db::info_table})) {
+        auto const &values = select_result.value();
+        if (values.count(db::version_field) == 0) {
+            return db::manager_info_result_t{db::manager_error{db::manager_error_type::version_not_found}};
+        }
+        if (values.count(db::current_save_id_field) == 0) {
+            return db::manager_info_result_t{db::manager_error{db::manager_error_type::save_id_not_found}};
+        }
+        if (values.count(db::last_save_id_field) == 0) {
+            return db::manager_info_result_t{db::manager_error{db::manager_error_type::save_id_not_found}};
+        }
+
+        return db::manager_info_result_t{db::info{select_result.value()}};
+    } else {
+        return db::manager_info_result_t{db::manager_error{db::manager_error_type::select_info_failed}};
+    }
 }
 
 db::update_result_t db::purge(db::database &db, std::string const &table) {
@@ -242,29 +258,6 @@ db::object_data_vector_result_t db::make_entity_object_datas(db::database &db, s
     }
 
     return db::object_data_vector_result_t{std::move(entity_datas)};
-}
-
-// データベース情報からcurrent_save_idを取得する
-db::manager_value_result_t db::select_current_save_id(db::database &db) {
-    db::manager_result_t state{nullptr};
-
-    auto current_save_id = db::null_value();
-    if (auto db_info_result = db::select_db_info(db)) {
-        auto &db_info = db_info_result.value();
-        if (db_info.count(db::current_save_id_field) > 0) {
-            current_save_id = db_info.at(db::current_save_id_field);
-        } else {
-            state = db::make_error_result(db::manager_error_type::save_id_not_found);
-        }
-    } else {
-        state = db::make_error_result(db::manager_error_type::select_info_failed, std::move(db_info_result.error()));
-    }
-
-    if (state) {
-        return db::manager_value_result_t{std::move(current_save_id)};
-    } else {
-        return db::manager_value_result_t{state.error()};
-    }
 }
 
 // 指定したsave_idより大きいsave_idのデータを、全てのエンティティに対してデータベース上から削除する

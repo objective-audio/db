@@ -27,7 +27,8 @@ namespace db {
                                                 std::string const &rel_table_name,
                                                 db::value_vector_t const &tgt_obj_ids);
 
-    db::select_single_result_t select_db_info(db::database const &db);
+    // データベースの情報を取得する
+    db::manager_info_result_t select_db_info(db::database const &db);
 
     db::update_result_t purge(db::database &db, std::string const &table_name);
     db::update_result_t purge_relation(db::database &db, std::string const &table_name,
@@ -41,9 +42,6 @@ namespace db {
     db::object_data_vector_result_t make_entity_object_datas(db::database &db, std::string const &entity_name,
                                                              db::relation_map_t const &rel_models,
                                                              db::value_map_vector_t const &entity_attrs);
-
-    // カレントセーブIDをDBから取得する
-    db::manager_value_result_t select_current_save_id(db::database &db);
 
     // 全てのエンティティの指定したidより大きいsave_idのデータを削除する
     db::manager_result_t delete_next_to_last(db::database &db, db::model const &model, db::value const &save_id);
