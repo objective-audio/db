@@ -4,6 +4,7 @@
 
 #include "yas_db_info.h"
 #include "yas_version.h"
+#include "yas_db_sql_utils.h"
 
 using namespace yas;
 
@@ -52,4 +53,20 @@ db::value const &db::info::last_save_id_value() const {
 db::info const &db::null_info() {
     static db::info const _null_info{nullptr};
     return _null_info;
+}
+
+std::string db::info::insert_sql() {
+    return db::insert_sql(info_table, {db::version_field, db::current_save_id_field, db::last_save_id_field});
+}
+
+std::string db::info::update_version_sql() {
+    return db::update_sql(db::info_table, {db::version_field});
+}
+
+std::string db::info::update_save_ids_sql() {
+    return db::update_sql(db::info_table, {db::current_save_id_field, db::last_save_id_field});
+}
+
+std::string db::info::update_current_save_id_sql() {
+    return db::update_sql(db::info_table, {db::current_save_id_field});
 }
