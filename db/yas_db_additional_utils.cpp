@@ -13,6 +13,7 @@
 #include "yas_db_entity.h"
 #include "yas_db_relation.h"
 #include "yas_db_database.h"
+#include "yas_db_info.h"
 
 using namespace yas;
 
@@ -196,8 +197,23 @@ db::select_result_t db::select_relation_removed(db::database const &db, std::str
     return db::select(db, option);
 }
 
-db::select_single_result_t db::select_db_info(db::database const &db) {
-    return db::select_single(db, db::select_option{.table = db::info_table});
+db::manager_info_result_t db::select_db_info(db::database const &db) {
+    if (auto select_result = db::select_single(db, db::select_option{.table = db::info_table})) {
+        auto const &values = select_result.value();
+        if (values.count(db::version_field) == 0) {
+            return db::manager_info_result_t{db::manager_error{db::manager_error_type::version_not_found}};
+        }
+        if (values.count(db::current_save_id_field) == 0) {
+            return db::manager_info_result_t{db::manager_error{db::manager_error_type::save_id_not_found}};
+        }
+        if (values.count(db::last_save_id_field) == 0) {
+            return db::manager_info_result_t{db::manager_error{db::manager_error_type::save_id_not_found}};
+        }
+
+        return db::manager_info_result_t{db::info{select_result.value()}};
+    } else {
+        return db::manager_info_result_t{db::manager_error{db::manager_error_type::select_info_failed}};
+    }
 }
 
 db::update_result_t db::purge(db::database &db, std::string const &table) {

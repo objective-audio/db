@@ -27,7 +27,8 @@ namespace db {
                                                 std::string const &rel_table_name,
                                                 db::value_vector_t const &tgt_obj_ids);
 
-    db::select_single_result_t select_db_info(db::database const &db);
+    // データベースの情報を取得する
+    db::manager_info_result_t select_db_info(db::database const &db);
 
     db::update_result_t purge(db::database &db, std::string const &table_name);
     db::update_result_t purge_relation(db::database &db, std::string const &table_name,
