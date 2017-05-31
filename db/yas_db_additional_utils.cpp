@@ -234,9 +234,9 @@ db::manager_result_t db::create_db_info(db::database &db, yas::version const &ve
     return db::manager_result_t{nullptr};
 }
 
-db::manager_info_result_t db::update_db_info(db::database &db, db::integer::type const &cur_save_id,
-                                             db::integer::type const &last_save_id) {
-    db::value_vector_t const params{db::value{cur_save_id}, db::value{last_save_id}};
+db::manager_info_result_t db::update_db_info(db::database &db, db::value const &cur_save_id,
+                                             db::value const &last_save_id) {
+    db::value_vector_t const params{cur_save_id, last_save_id};
     if (auto update_result = db.execute_update(db::info::sql_for_update_save_ids(), params)) {
         if (auto select_result = db::select_db_info(db)) {
             return db::manager_info_result_t{std::move(select_result.value())};
