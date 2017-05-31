@@ -434,35 +434,22 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                     bool needs_migration = false;
 
                     // infoからバージョンを取得。1つしかデータが無いこと前提
-                    if (auto select_result = db::select(
-                            db, {.table = info_table, .fields = {db::version_field}, .limit_range = db::range{0, 1}})) {
+                    if (auto select_result = db::select_db_info(db)) {
                         // infoを現在のバージョンで上書き
                         auto const update_info_result =
                             db.execute_update(db::info::update_version_sql(), {db::value{model.version().str()}});
                         if (update_info_result) {
-                            auto const &infos = select_result.value();
-                            auto const &info = *infos.rbegin();
-                            if (info.count(db::version_field) == 0) {
-                                state = db::make_error_result(db::manager_error_type::version_not_found);
-                            } else {
-                                auto const &db_version_str = info.at(db::version_field).get<db::text>();
-                                if (db_version_str.size() == 0) {
-                                    state = db::make_error_result(db::manager_error_type::invalid_version_text);
-                                } else {
-                                    yas::version const db_version{db_version_str};
-                                    if (db_version < model.version()) {
-                                        // データベースのバージョンがモデルより低ければマイグレーションを行う
-                                        needs_migration = true;
-                                    }
-                                }
+                            db::info const &info = select_result.value();
+                            if (info.version() < model.version()) {
+                                // データベースのバージョンがモデルより低ければマイグレーションを行う
+                                needs_migration = true;
                             }
                         } else {
                             state = db::make_error_result(db::manager_error_type::update_info_failed,
                                                           std::move(update_info_result.error()));
                         }
                     } else {
-                        state = db::make_error_result(db::manager_error_type::select_info_failed,
-                                                      std::move(select_result.error()));
+                        state = db::manager_result_t{std::move(select_result.error())};
                     }
 
                     if (state && needs_migration) {
