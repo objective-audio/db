@@ -627,7 +627,8 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
 
             if (state) {
                 // infoをクリア。セーブIDを0にする
-                if (auto update_result = db::update_db_info(db, 0, 0)) {
+                db::value const zero_value{db::integer::type{0}};
+                if (auto update_result = db::update_db_info(db, zero_value, zero_value)) {
                     db_info = std::move(update_result.value());
                 } else {
                     state = db::manager_result_t{std::move(update_result.error())};
@@ -726,7 +727,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
 
                 if (state) {
                     // infoをクリア。セーブIDを1にする
-                    if (auto update_result = db::update_db_info(db, 1, 1)) {
+                    if (auto update_result = db::update_db_info(db, one_value, one_value)) {
                         db_info = std::move(update_result.value());
                     } else {
                         state = db::manager_result_t{std::move(update_result.error())};
@@ -867,19 +868,10 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
 
                 if (state) {
                     // infoを更新する
-                    db::value_vector_t const args{next_save_id, next_save_id};
-                    if (auto ul = unless(db.execute_update(db::info::sql_for_update_save_ids(), args))) {
-                        state = db::make_error_result(db::manager_error_type::update_info_failed,
-                                                      std::move(ul.value.error()));
-                    }
-                }
-
-                if (state) {
-                    // infoを取得する
-                    if (auto select_result = db::select_db_info(db)) {
-                        db_info = std::move(select_result.value());
+                    if (auto update_result = db::update_db_info(db, next_save_id, next_save_id)) {
+                        db_info = std::move(update_result.value());
                     } else {
-                        state = db::manager_result_t{std::move(select_result.error())};
+                        state = db::manager_result_t{std::move(update_result.error())};
                     }
                 }
 
