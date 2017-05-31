@@ -43,9 +43,6 @@ namespace db {
                                                              db::relation_map_t const &rel_models,
                                                              db::value_map_vector_t const &entity_attrs);
 
-    // カレントセーブIDをDBから取得する
-    db::manager_value_result_t select_current_save_id(db::database &db);
-
     // 全てのエンティティの指定したidより大きいsave_idのデータを削除する
     db::manager_result_t delete_next_to_last(db::database &db, db::model const &model, db::value const &save_id);
 

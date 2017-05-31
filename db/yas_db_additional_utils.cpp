@@ -260,29 +260,6 @@ db::object_data_vector_result_t db::make_entity_object_datas(db::database &db, s
     return db::object_data_vector_result_t{std::move(entity_datas)};
 }
 
-// データベース情報からcurrent_save_idを取得する
-db::manager_value_result_t db::select_current_save_id(db::database &db) {
-    db::manager_result_t state{nullptr};
-
-    auto current_save_id = db::null_value();
-    if (auto db_info_result = db::select_db_info(db)) {
-        auto &db_info = db_info_result.value();
-        if (db_info.count(db::current_save_id_field) > 0) {
-            current_save_id = db_info.at(db::current_save_id_field);
-        } else {
-            state = db::make_error_result(db::manager_error_type::save_id_not_found);
-        }
-    } else {
-        state = db::make_error_result(db::manager_error_type::select_info_failed, std::move(db_info_result.error()));
-    }
-
-    if (state) {
-        return db::manager_value_result_t{std::move(current_save_id)};
-    } else {
-        return db::manager_value_result_t{state.error()};
-    }
-}
-
 // 指定したsave_idより大きいsave_idのデータを、全てのエンティティに対してデータベース上から削除する
 db::manager_result_t db::delete_next_to_last(db::database &db, db::model const &model, db::value const &save_id) {
     auto const &entity_models = model.entities();
