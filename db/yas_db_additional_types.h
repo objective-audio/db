@@ -19,6 +19,7 @@ namespace db {
     class entity;
     class index;
     class manager_error;
+    class info;
 
     // for object
     using integer_set_t = std::set<db::integer::type>;
@@ -60,6 +61,7 @@ namespace db {
     using manager_map_result_t = result<object_map_map_t, db::manager_error>;
     using manager_const_vector_result_t = result<const_object_vector_map_t, db::manager_error>;
     using manager_const_map_result_t = result<const_object_map_map_t, db::manager_error>;
+    using manager_info_result_t = result<db::info, db::manager_error>;
 
     // for entity
     using attribute_map_t = std::unordered_map<std::string, db::attribute>;
