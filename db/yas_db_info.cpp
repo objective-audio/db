@@ -76,3 +76,8 @@ std::string const &db::info::update_save_ids_sql() {
     static std::string const _sql = db::update_sql(db::info_table, {db::current_save_id_field, db::last_save_id_field});
     return _sql;
 }
+
+std::string const &db::info::update_current_save_id_sql() {
+    static std::string const _sql = db::update_sql(db::info_table, {db::current_save_id_field});
+    return _sql;
+}

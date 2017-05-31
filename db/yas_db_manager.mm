@@ -532,8 +532,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                     // 新規にテーブルを作成する
 
                     // infoテーブルをデータベース上に作成
-                    if (auto create_result = db.execute_update(db::create_table_sql(
-                            db::info_table, {db::version_field, db::current_save_id_field, db::last_save_id_field}))) {
+                    if (auto create_result = db.execute_update(db::info::create_sql())) {
                         db::value_vector_t args{db::value{model.version().str()}, db::value{integer::type{0}},
                                                 db::value{integer::type{0}}};
                         // infoデータを挿入。セーブIDは0
