@@ -249,6 +249,20 @@ db::manager_info_result_t db::update_db_info(db::database &db, db::value const &
     }
 }
 
+db::manager_info_result_t db::update_current_save_id(db::database &db, db::value const &cur_save_id) {
+    db::value_vector_t const params{cur_save_id};
+    if (auto update_result = db.execute_update(db::info::sql_for_update_current_save_id(), params)) {
+        if (auto select_result = db::select_db_info(db)) {
+            return db::manager_info_result_t{std::move(select_result.value())};
+        } else {
+            return db::manager_info_result_t{std::move(select_result.error())};
+        }
+    } else {
+        return db::manager_info_result_t{
+            db::manager_error{db::manager_error_type::update_info_failed, std::move(update_result.error())}};
+    }
+}
+
 db::update_result_t db::purge(db::database &db, std::string const &table) {
     db::select_option const option{
         .table = table, .fields = {"MAX(" + db::pk_id_field + ")"}, .group_by = db::object_id_field};
