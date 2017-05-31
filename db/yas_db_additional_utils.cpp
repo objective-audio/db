@@ -14,6 +14,7 @@
 #include "yas_db_relation.h"
 #include "yas_db_database.h"
 #include "yas_db_info.h"
+#include "yas_version.h"
 
 using namespace yas;
 
@@ -214,6 +215,23 @@ db::manager_info_result_t db::select_db_info(db::database const &db) {
     } else {
         return db::manager_info_result_t{db::manager_error{db::manager_error_type::select_info_failed}};
     }
+}
+
+db::manager_result_t db::create_db_info(db::database &db, yas::version const &version) {
+    // infoテーブルをデータベース上に作成
+    if (auto ul = unless(db.execute_update(db::info::sql_for_create()))) {
+        return db::make_error_result(db::manager_error_type::create_info_table_failed, std::move(ul.value.error()));
+    }
+
+    db::value const zero_value{db::integer::type{0}};
+    db::value_vector_t const args{db::value{version.str()}, zero_value, zero_value};
+
+    // infoデータを挿入。セーブIDは0
+    if (auto ul = unless(db.execute_update(db::info::sql_for_insert(), args))) {
+        return db::make_error_result(db::manager_error_type::insert_info_failed, std::move(ul.value.error()));
+    }
+
+    return db::manager_result_t{nullptr};
 }
 
 db::update_result_t db::purge(db::database &db, std::string const &table) {
