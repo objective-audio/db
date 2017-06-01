@@ -13,6 +13,11 @@ class version;
 namespace db {
     class model;
 
+    // 必要であればDBをマイグレーションする
+    db::manager_result_t migrate_db_if_needed(db::database &db, db::model const &model);
+    // 新規にテーブルをDB上に作成する
+    db::manager_result_t create_info_and_tables(db::database &db, db::model const &model);
+
     // 指定したsave_id以前で最後のデータをDBから取得する
     db::select_result_t select_last(db::database const &db, db::select_option option, value const &save_id = nullptr,
                                     bool const include_removed = false);
