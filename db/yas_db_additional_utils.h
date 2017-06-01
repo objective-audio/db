@@ -13,6 +13,7 @@ class version;
 namespace db {
     class model;
 
+    // 指定したsave_id以前で最後のデータをDBから取得する
     db::select_result_t select_last(db::database const &db, db::select_option option, value const &save_id = nullptr,
                                     bool const include_removed = false);
     // アンドゥするためにキャッシュを上書きするデータをDBから取得する
