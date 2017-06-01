@@ -41,7 +41,9 @@ namespace db {
     // DB上のversionを更新する
     db::manager_result_t update_version(db::database &db, yas::version const &version);
 
+    // DB上のアトリビュートのデータをパージする
     db::update_result_t purge(db::database &db, std::string const &table_name);
+    // DB上の関連のデータをパージする
     db::update_result_t purge_relation(db::database &db, std::string const &table_name,
                                        std::string const &src_table_name);
 
