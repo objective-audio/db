@@ -13,6 +13,7 @@ class version;
 namespace db {
     class model;
 
+    // 指定したsave_id以前で最後のデータをDBから取得する
     db::select_result_t select_last(db::database const &db, db::select_option option, value const &save_id = nullptr,
                                     bool const include_removed = false);
     // アンドゥするためにキャッシュを上書きするデータをDBから取得する
@@ -24,19 +25,26 @@ namespace db {
     // リバートするためにキャッシュを上書きするデータをDBから取得する
     db::select_result_t select_revert(db::database const &db, std::string const &table_name,
                                       db::integer::type const revert_save_id, db::integer::type const current_save_id);
+    // 関連先がremoveされたオブジェクトのアトリビュートをDBから取得する
     db::select_result_t select_relation_removed(db::database const &db, std::string const &entity_table_name,
                                                 std::string const &rel_table_name,
                                                 db::value_vector_t const &tgt_obj_ids);
 
-    // データベースの情報を取得する
+    // DB情報を取得する
     db::manager_info_result_t select_db_info(db::database const &db);
+    // DB情報のテーブルを作る
     db::manager_result_t create_db_info(db::database &db, yas::version const &version);
+    // DB上のcur_save_idとlast_save_idを更新する
     db::manager_info_result_t update_db_info(db::database &db, db::value const &cur_save_id,
                                              db::value const &last_save_id);
+    // DB上のcurrent_save_idを更新する
     db::manager_info_result_t update_current_save_id(db::database &db, db::value const &cur_save_id);
+    // DB上のversionを更新する
     db::manager_result_t update_version(db::database &db, yas::version const &version);
 
+    // DB上のアトリビュートのデータをパージする
     db::update_result_t purge(db::database &db, std::string const &table_name);
+    // DB上の関連のデータをパージする
     db::update_result_t purge_relation(db::database &db, std::string const &table_name,
                                        std::string const &src_table_name);
 
