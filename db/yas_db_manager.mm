@@ -436,17 +436,14 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                     // infoからバージョンを取得。1つしかデータが無いこと前提
                     if (auto select_result = db::select_db_info(db)) {
                         // infoを現在のバージョンで上書き
-                        auto const update_info_result =
-                            db.execute_update(db::info::sql_for_update_version(), {db::value{model.version().str()}});
-                        if (update_info_result) {
+                        if (auto update_result = db::update_version(db, model.version())) {
                             db::info const &info = select_result.value();
                             if (info.version() < model.version()) {
                                 // データベースのバージョンがモデルより低ければマイグレーションを行う
                                 needs_migration = true;
                             }
                         } else {
-                            state = db::make_error_result(db::manager_error_type::update_info_failed,
-                                                          std::move(update_info_result.error()));
+                            state = std::move(update_result);
                         }
                     } else {
                         state = db::manager_result_t{std::move(select_result.error())};
