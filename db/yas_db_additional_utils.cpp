@@ -15,6 +15,8 @@
 #include "yas_db_database.h"
 #include "yas_db_info.h"
 #include "yas_version.h"
+#include "yas_db_attribute.h"
+#include "yas_db_index.h"
 
 using namespace yas;
 
@@ -88,6 +90,105 @@ namespace db {
         return db::value_vector_map_result_t{std::move(relations)};
     }
 }
+}
+
+db::manager_result_t db::migrate_db_if_needed(db::database &db, db::model const &model) {
+    // infoからバージョンを取得。1つしかデータが無いこと前提
+    if (auto select_result = db::select_db_info(db)) {
+        // infoを現在のバージョンで上書き
+        if (auto update_result = db::update_version(db, model.version())) {
+            db::info const &info = select_result.value();
+            if (model.version() <= info.version()) {
+                // モデルのバージョンがデータベースのバージョンがより低ければマイグレーションを行わない
+                return db::manager_result_t{nullptr};
+            }
+        } else {
+            return update_result;
+        }
+    } else {
+        return db::manager_result_t{std::move(select_result.error())};
+    }
+
+    // マイグレーションが必要な場合
+    for (auto const &entity_pair : model.entities()) {
+        auto const &entity_name = entity_pair.first;
+        auto const &entity = entity_pair.second;
+
+        if (db::table_exists(db, entity_name)) {
+            // エンティティのテーブルがすでに存在している場合
+            for (auto const &attr_pair : entity.all_attributes) {
+                if (!db::column_exists(db, attr_pair.first, entity_name)) {
+                    // テーブルにカラムが存在しなければalter tableを実行する
+                    auto const &attr = attr_pair.second;
+                    if (auto ul = unless(db.execute_update(alter_table_sql(entity_name, attr.sql())))) {
+                        return db::make_error_result(db::manager_error_type::alter_entity_table_failed,
+                                                     std::move(ul.value.error()));
+                    }
+                }
+            }
+        } else {
+            // エンティティのテーブルが存在していない場合
+            // テーブルを作成する
+            if (auto ul = unless(db.execute_update(entity.sql_for_create()))) {
+                return db::make_error_result(db::manager_error_type::create_entity_table_failed,
+                                             std::move(ul.value.error()));
+            }
+        }
+
+        // 関連のテーブルを作成する
+        for (auto &rel_pair : entity.relations) {
+            if (auto ul = unless(db.execute_update(rel_pair.second.sql_for_create()))) {
+                return db::make_error_result(db::manager_error_type::create_relation_table_failed,
+                                             std::move(ul.value.error()));
+            }
+        }
+    }
+
+    // インデックスのテーブルを作成する
+    for (auto const &index_pair : model.indices()) {
+        if (!db::index_exists(db, index_pair.first)) {
+            auto &index = index_pair.second;
+            if (auto ul = unless(db.execute_update(index.sql_for_create()))) {
+                return db::make_error_result(db::manager_error_type::create_index_failed, std::move(ul.value.error()));
+            }
+        }
+    }
+
+    return db::manager_result_t{nullptr};
+}
+
+db::manager_result_t db::create_info_and_tables(db::database &db, db::model const &model) {
+    // infoテーブルをデータベース上に作成
+    if (auto ul = unless(db::create_db_info(db, model.version()))) {
+        return std::move(ul.value);
+    }
+
+    // 全てのエンティティと関連のテーブルをデータベース上に作成する
+    auto const &entities = model.entities();
+    for (auto &entity_pair : entities) {
+        auto &entity = entity_pair.second;
+        if (auto ul = unless(db.execute_update(entity.sql_for_create()))) {
+            return db::make_error_result(db::manager_error_type::create_entity_table_failed,
+                                         std::move(ul.value.error()));
+        }
+
+        for (auto &rel_pair : entity.relations) {
+            if (auto ul = unless(db.execute_update(rel_pair.second.sql_for_create()))) {
+                return db::make_error_result(db::manager_error_type::create_relation_table_failed,
+                                             std::move(ul.value.error()));
+            }
+        }
+    }
+
+    // 全てのインデックスをデータベース上に作成する
+    for (auto const &index_pair : model.indices()) {
+        auto &index = index_pair.second;
+        if (auto ul = unless(db.execute_update(index.sql_for_create()))) {
+            return db::make_error_result(db::manager_error_type::create_index_failed, std::move(ul.value.error()));
+        }
+    }
+
+    return db::manager_result_t{nullptr};
 }
 
 db::select_result_t db::select_last(db::database const &db, db::select_option option, db::value const &save_id,

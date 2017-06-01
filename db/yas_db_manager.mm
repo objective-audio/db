@@ -421,141 +421,19 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
     void execute_setup(std::function<void(db::manager_result_t &&, db::info &&)> &&completion,
                        operation_option_t &&option) {
         auto execution = [completion = std::move(completion), manager = cast<manager>()](operation const &op) mutable {
-            auto &db = manager.database();
-            auto const &model = manager.model();
+            db::database &db = manager.database();
+            db::model const &model = manager.model();
 
-            db::info info = db::null_info();
             db::manager_result_t state{nullptr};
 
             if (auto begin_result = db::begin_transaction(db)) {
                 // トランザクションを開始
                 if (db::table_exists(db, db::info_table)) {
                     // infoのテーブルが存在している場合
-                    bool needs_migration = false;
-
-                    // infoからバージョンを取得。1つしかデータが無いこと前提
-                    if (auto select_result = db::select_db_info(db)) {
-                        // infoを現在のバージョンで上書き
-                        if (auto update_result = db::update_version(db, model.version())) {
-                            db::info const &info = select_result.value();
-                            if (info.version() < model.version()) {
-                                // データベースのバージョンがモデルより低ければマイグレーションを行う
-                                needs_migration = true;
-                            }
-                        } else {
-                            state = std::move(update_result);
-                        }
-                    } else {
-                        state = db::manager_result_t{std::move(select_result.error())};
-                    }
-
-                    if (state && needs_migration) {
-                        // エラーが起きておらずマイグレーションが必要な場合
-                        for (auto const &entity_pair : model.entities()) {
-                            auto const &entity_name = entity_pair.first;
-                            auto const &entity = entity_pair.second;
-
-                            if (db::table_exists(db, entity_name)) {
-                                // エンティティのテーブルがすでに存在している場合
-                                for (auto const &attr_pair : entity.all_attributes) {
-                                    if (!db::column_exists(db, attr_pair.first, entity_name)) {
-                                        // テーブルにカラムが存在しなければalter tableを実行する
-                                        auto const &attr = attr_pair.second;
-                                        if (auto ul =
-                                                unless(db.execute_update(alter_table_sql(entity_name, attr.sql())))) {
-                                            state =
-                                                db::make_error_result(db::manager_error_type::alter_entity_table_failed,
-                                                                      std::move(ul.value.error()));
-                                            break;
-                                        }
-                                    }
-                                }
-                            } else {
-                                // エンティティのテーブルが存在していない場合
-                                // テーブルを作成する
-                                if (auto ul = unless(db.execute_update(entity.sql_for_create()))) {
-                                    state = db::make_error_result(db::manager_error_type::create_entity_table_failed,
-                                                                  std::move(ul.value.error()));
-                                    break;
-                                }
-                            }
-
-                            if (state) {
-                                // エラーが起きていなければ関連のテーブルを作成する
-                                for (auto &rel_pair : entity.relations) {
-                                    if (auto ul = unless(db.execute_update(rel_pair.second.sql_for_create()))) {
-                                        state =
-                                            db::make_error_result(db::manager_error_type::create_relation_table_failed,
-                                                                  std::move(ul.value.error()));
-                                        break;
-                                    }
-                                }
-                            }
-
-                            if (!state) {
-                                break;
-                            }
-                        }
-
-                        if (state) {
-                            // エラーが起きていなければインデックスのテーブルを作成する
-                            for (auto const &index_pair : model.indices()) {
-                                if (!db::index_exists(db, index_pair.first)) {
-                                    auto &index = index_pair.second;
-                                    if (auto ul = unless(db.execute_update(index.sql_for_create()))) {
-                                        state = db::make_error_result(db::manager_error_type::create_index_failed,
-                                                                      std::move(ul.value.error()));
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    state = db::migrate_db_if_needed(db, model);
                 } else {
-                    // infoのテーブルが存在していない場合
-                    // 新規にテーブルを作成する
-
-                    // infoテーブルをデータベース上に作成
-                    if (auto ul = unless(db::create_db_info(db, model.version()))) {
-                        state = std::move(ul.value);
-                    }
-
-                    // 全てのエンティティと関連のテーブルをデータベース上に作成する
-                    if (state) {
-                        auto const &entities = model.entities();
-                        for (auto &entity_pair : entities) {
-                            auto &entity = entity_pair.second;
-                            if (auto ul = unless(db.execute_update(entity.sql_for_create()))) {
-                                state = db::make_error_result(db::manager_error_type::create_entity_table_failed,
-                                                              std::move(ul.value.error()));
-                                break;
-                            }
-
-                            for (auto &rel_pair : entity.relations) {
-                                if (auto ul = unless(db.execute_update(rel_pair.second.sql_for_create()))) {
-                                    state = db::make_error_result(db::manager_error_type::create_relation_table_failed,
-                                                                  std::move(ul.value.error()));
-                                    break;
-                                }
-                            }
-
-                            if (!state) {
-                                break;
-                            }
-                        }
-                    }
-
-                    // 全てのインデックスをデータベース上に作成する
-                    if (state) {
-                        for (auto const &index_pair : model.indices()) {
-                            auto &index = index_pair.second;
-                            if (auto ul = unless(db.execute_update(index.sql_for_create()))) {
-                                state = db::make_error_result(db::manager_error_type::create_index_failed,
-                                                              std::move(ul.value.error()));
-                                break;
-                            }
-                        }
-                    }
+                    // infoのテーブルが存在していない場合は、新規にテーブルを作成する
+                    state = db::create_info_and_tables(db, model);
                 }
 
                 // トランザクション終了
@@ -568,6 +446,8 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                 state = db::make_error_result(db::manager_error_type::begin_transaction_failed,
                                               std::move(begin_result.error()));
             }
+
+            db::info info = db::null_info();
 
             if (state) {
                 if (auto select_result = db::select_db_info(db)) {
