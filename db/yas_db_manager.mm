@@ -1302,6 +1302,14 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                 }
             }
 
+            if (state && !db_info) {
+                if (auto select_result = db::select_db_info(db)) {
+                    db_info = std::move(select_result.value());
+                } else {
+                    state = db::manager_result_t{std::move(select_result.error())};
+                }
+            }
+
             completion(std::move(state), std::move(saved_datas), std::move(db_info));
         };
 
