@@ -34,6 +34,7 @@ namespace db {
     db::manager_info_result_t update_db_info(db::database &db, db::value const &cur_save_id,
                                              db::value const &last_save_id);
     db::manager_info_result_t update_current_save_id(db::database &db, db::value const &cur_save_id);
+    db::manager_result_t update_version(db::database &db, yas::version const &version);
 
     db::update_result_t purge(db::database &db, std::string const &table_name);
     db::update_result_t purge_relation(db::database &db, std::string const &table_name,

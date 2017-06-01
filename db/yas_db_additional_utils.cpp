@@ -263,6 +263,14 @@ db::manager_info_result_t db::update_current_save_id(db::database &db, db::value
     }
 }
 
+db::manager_result_t db::update_version(db::database &db, yas::version const &version) {
+    if (auto update_result = db.execute_update(db::info::sql_for_update_version(), {db::value{version.str()}})) {
+        return db::manager_result_t{nullptr};
+    } else {
+        return db::make_error_result(db::manager_error_type::update_info_failed, std::move(update_result.error()));
+    }
+}
+
 db::update_result_t db::purge(db::database &db, std::string const &table) {
     db::select_option const option{
         .table = table, .fields = {"MAX(" + db::pk_id_field + ")"}, .group_by = db::object_id_field};
