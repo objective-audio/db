@@ -9,7 +9,7 @@
 #include <string>
 
 namespace yas {
-    class version;
+class version;
 namespace db {
     class value;
 
@@ -27,6 +27,12 @@ namespace db {
 
         db::value const &current_save_id_value() const;
         db::value const &last_save_id_value() const;
+
+        static std::string const &sql_for_create();
+        static std::string const &sql_for_insert();
+        static std::string const &sql_for_update_version();
+        static std::string const &sql_for_update_save_ids();
+        static std::string const &sql_for_update_current_save_id();
     };
 
     db::info const &null_info();

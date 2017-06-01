@@ -9,6 +9,7 @@
 #include "yas_db_utils.h"
 
 namespace yas {
+class version;
 namespace db {
     class model;
 
@@ -29,6 +30,11 @@ namespace db {
 
     // データベースの情報を取得する
     db::manager_info_result_t select_db_info(db::database const &db);
+    db::manager_result_t create_db_info(db::database &db, yas::version const &version);
+    db::manager_info_result_t update_db_info(db::database &db, db::value const &cur_save_id,
+                                             db::value const &last_save_id);
+    db::manager_info_result_t update_current_save_id(db::database &db, db::value const &cur_save_id);
+    db::manager_result_t update_version(db::database &db, yas::version const &version);
 
     db::update_result_t purge(db::database &db, std::string const &table_name);
     db::update_result_t purge_relation(db::database &db, std::string const &table_name,

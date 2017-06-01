@@ -14,6 +14,7 @@
 #include "yas_db_relation.h"
 #include "yas_db_database.h"
 #include "yas_db_info.h"
+#include "yas_version.h"
 
 using namespace yas;
 
@@ -213,6 +214,60 @@ db::manager_info_result_t db::select_db_info(db::database const &db) {
         return db::manager_info_result_t{db::info{select_result.value()}};
     } else {
         return db::manager_info_result_t{db::manager_error{db::manager_error_type::select_info_failed}};
+    }
+}
+
+db::manager_result_t db::create_db_info(db::database &db, yas::version const &version) {
+    // infoテーブルをデータベース上に作成
+    if (auto ul = unless(db.execute_update(db::info::sql_for_create()))) {
+        return db::make_error_result(db::manager_error_type::create_info_table_failed, std::move(ul.value.error()));
+    }
+
+    db::value const zero_value{db::integer::type{0}};
+    db::value_vector_t const args{db::value{version.str()}, zero_value, zero_value};
+
+    // infoデータを挿入。セーブIDは0
+    if (auto ul = unless(db.execute_update(db::info::sql_for_insert(), args))) {
+        return db::make_error_result(db::manager_error_type::insert_info_failed, std::move(ul.value.error()));
+    }
+
+    return db::manager_result_t{nullptr};
+}
+
+db::manager_info_result_t db::update_db_info(db::database &db, db::value const &cur_save_id,
+                                             db::value const &last_save_id) {
+    db::value_vector_t const params{cur_save_id, last_save_id};
+    if (auto update_result = db.execute_update(db::info::sql_for_update_save_ids(), params)) {
+        if (auto select_result = db::select_db_info(db)) {
+            return db::manager_info_result_t{std::move(select_result.value())};
+        } else {
+            return db::manager_info_result_t{std::move(select_result.error())};
+        }
+    } else {
+        return db::manager_info_result_t{
+            db::manager_error{db::manager_error_type::update_info_failed, std::move(update_result.error())}};
+    }
+}
+
+db::manager_info_result_t db::update_current_save_id(db::database &db, db::value const &cur_save_id) {
+    db::value_vector_t const params{cur_save_id};
+    if (auto update_result = db.execute_update(db::info::sql_for_update_current_save_id(), params)) {
+        if (auto select_result = db::select_db_info(db)) {
+            return db::manager_info_result_t{std::move(select_result.value())};
+        } else {
+            return db::manager_info_result_t{std::move(select_result.error())};
+        }
+    } else {
+        return db::manager_info_result_t{
+            db::manager_error{db::manager_error_type::update_info_failed, std::move(update_result.error())}};
+    }
+}
+
+db::manager_result_t db::update_version(db::database &db, yas::version const &version) {
+    if (auto update_result = db.execute_update(db::info::sql_for_update_version(), {db::value{version.str()}})) {
+        return db::manager_result_t{nullptr};
+    } else {
+        return db::make_error_result(db::manager_error_type::update_info_failed, std::move(update_result.error()));
     }
 }
 

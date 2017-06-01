@@ -4,6 +4,7 @@
 
 #include "yas_db_info.h"
 #include "yas_version.h"
+#include "yas_db_sql_utils.h"
 
 using namespace yas;
 
@@ -52,4 +53,31 @@ db::value const &db::info::last_save_id_value() const {
 db::info const &db::null_info() {
     static db::info const _null_info{nullptr};
     return _null_info;
+}
+
+std::string const &db::info::sql_for_create() {
+    static std::string const _sql =
+        db::create_table_sql(db::info_table, {db::version_field, db::current_save_id_field, db::last_save_id_field});
+    return _sql;
+}
+
+std::string const &db::info::sql_for_insert() {
+    static std::string const _sql =
+        db::insert_sql(info_table, {db::version_field, db::current_save_id_field, db::last_save_id_field});
+    return _sql;
+}
+
+std::string const &db::info::sql_for_update_version() {
+    static std::string const _sql = db::update_sql(db::info_table, {db::version_field});
+    return _sql;
+}
+
+std::string const &db::info::sql_for_update_save_ids() {
+    static std::string const _sql = db::update_sql(db::info_table, {db::current_save_id_field, db::last_save_id_field});
+    return _sql;
+}
+
+std::string const &db::info::sql_for_update_current_save_id() {
+    static std::string const _sql = db::update_sql(db::info_table, {db::current_save_id_field});
+    return _sql;
 }

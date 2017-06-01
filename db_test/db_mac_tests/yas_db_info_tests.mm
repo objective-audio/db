@@ -48,4 +48,28 @@ using namespace yas;
     XCTAssertEqual(info.last_save_id_value(), db::value{20});
 }
 
+- (void)test_create_sql {
+    XCTAssertEqual(db::info::sql_for_create(),
+                   "CREATE TABLE IF NOT EXISTS db_info (version, cur_save_id, last_save_id);");
+}
+
+- (void)test_insert_sql {
+    XCTAssertEqual(
+        db::info::sql_for_insert(),
+        "INSERT INTO db_info(version, cur_save_id, last_save_id) VALUES(:version, :cur_save_id, :last_save_id);");
+}
+
+- (void)test_update_version_sql {
+    XCTAssertEqual(db::info::sql_for_update_version(), "UPDATE db_info SET version = :version;");
+}
+
+- (void)test_update_save_ids_sql {
+    XCTAssertEqual(db::info::sql_for_update_save_ids(),
+                   "UPDATE db_info SET cur_save_id = :cur_save_id, last_save_id = :last_save_id;");
+}
+
+- (void)test_update_current_save_id_sql {
+    XCTAssertEqual(db::info::sql_for_update_current_save_id(), "UPDATE db_info SET cur_save_id = :cur_save_id;");
+}
+
 @end
