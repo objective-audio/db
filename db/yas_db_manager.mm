@@ -507,8 +507,6 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
             auto &db = manager.database();
             auto const &model = manager.model();
 
-            db::value const one_value = db::value{db::integer::type{1}};
-
             db::info db_info = db::null_info();
             db::manager_result_t state{nullptr};
 
@@ -518,6 +516,14 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                     db_info = std::move(purge_result.value());
                 } else {
                     state = db::manager_result_t{std::move(purge_result.error())};
+                }
+
+                // infoをクリア。セーブIDを1にする
+                db::value const one_value = db::value{db::integer::type{1}};
+                if (auto update_result = db::update_db_info(db, one_value, one_value)) {
+                    db_info = std::move(update_result.value());
+                } else {
+                    state = db::manager_result_t{std::move(update_result.error())};
                 }
 
                 // トランザクション終了

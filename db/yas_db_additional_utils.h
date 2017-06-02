@@ -56,7 +56,7 @@ namespace db {
     db::update_result_t purge_relations(db::database &db, std::string const &table_name,
                                         std::string const &src_table_name);
     // DB上のデータをパージする
-    db::manager_info_result_t purge_db(db::database &db, db::model const &model);
+    db::manager_result_t purge_db(db::database &db, db::model const &model);
 
     // managerから返すエラーを簡易的に生成する
     db::manager_result_t make_error_result(db::manager_error_type const &error_type, db::error db_error = nullptr);

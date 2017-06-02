@@ -417,7 +417,7 @@ db::update_result_t db::purge_relations(database &db, std::string const &table, 
     return db.execute_update(db::delete_sql(table, in_expr));
 }
 
-db::manager_info_result_t db::purge_db(db::database &db, db::model const &model) {
+db::manager_result_t db::purge_db(db::database &db, db::model const &model) {
     // DB情報をデータベースから取得
     if (auto select_result = db::select_db_info(db)) {
         auto const &db_info = select_result.value();
@@ -425,16 +425,15 @@ db::manager_info_result_t db::purge_db(db::database &db, db::model const &model)
             // ラストよりカレントのセーブIDが小さければ、カレントより大きいセーブIDのデータを削除
             // つまり、アンドゥした分を削除
             if (auto ul = unless(db::delete_next_to_last(db, model, db_info.current_save_id_value()))) {
-                return db::manager_info_result_t{db::manager_error{std::move(ul.value.error())}};
+                return db::manager_result_t{std::move(ul.value.error())};
             }
         }
     } else {
-        return db::manager_info_result_t{db::manager_error{std::move(select_result.error())}};
+        return db::manager_result_t{std::move(select_result.error())};
     }
 
     std::vector<std::string> const save_id_fields{db::save_id_field};
-    db::value const one_value{db::integer::type{1}};
-    db::value_vector_t const one_value_args{one_value};
+    db::value_vector_t const one_value_args{db::value{db::integer::type{1}}};
 
     for (auto const &entity_pair : model.entities()) {
         auto const &entity_name = entity_pair.first;
@@ -454,30 +453,24 @@ db::manager_info_result_t db::purge_db(db::database &db, db::model const &model)
                         // 残ったデータのセーブIDを全て1にする
                         auto const update_rel_sql = db::update_sql(rel_table_name, save_id_fields);
                         if (auto ul = unless(db.execute_update(update_rel_sql, one_value_args))) {
-                            return db::manager_info_result_t{db::manager_error{
-                                db::manager_error_type::update_save_id_failed, std::move(ul.value.error())}};
+                            return db::make_error_result(db::manager_error_type::update_save_id_failed,
+                                                         std::move(ul.value.error()));
                         }
                     } else {
-                        return db::manager_info_result_t{db::manager_error{
-                            db::manager_error_type::purge_relation_failed, std::move(purge_rel_result.error())}};
+                        return db::make_error_result(db::manager_error_type::purge_relation_failed,
+                                                     std::move(purge_rel_result.error()));
                     }
                 }
             } else {
-                return db::manager_info_result_t{
-                    db::manager_error{db::manager_error_type::update_save_id_failed, std::move(update_result.error())}};
+                return db::make_error_result(db::manager_error_type::update_save_id_failed,
+                                             std::move(update_result.error()));
             }
         } else {
-            return db::manager_info_result_t{
-                db::manager_error{db::manager_error_type::purge_failed, std::move(purge_result.error())}};
+            return db::make_error_result(db::manager_error_type::purge_failed, std::move(purge_result.error()));
         }
     }
 
-    // infoをクリア。セーブIDを1にする
-    if (auto update_result = db::update_db_info(db, one_value, one_value)) {
-        return db::manager_info_result_t{std::move(update_result.value())};
-    } else {
-        return db::manager_info_result_t{db::manager_error{std::move(update_result.error())}};
-    }
+    return db::manager_result_t{nullptr};
 }
 
 db::manager_result_t db::make_error_result(db::manager_error_type const &error_type, db::error db_error) {
