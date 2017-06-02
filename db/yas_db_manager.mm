@@ -512,77 +512,12 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
             db::info db_info = db::null_info();
             db::manager_result_t state{nullptr};
 
+            // トランザクション開始
             if (auto begin_result = db::begin_transaction(db)) {
-                // トランザクション開始
-                auto current_save_id = db::null_value();
-                auto last_save_id = db::null_value();
-
-                // カレントとラストのセーブIDをデータベースから取得
-                if (auto select_result = db::select_db_info(db)) {
-                    auto const &db_info = select_result.value();
-                    current_save_id = db_info.current_save_id_value();
-                    last_save_id = db_info.last_save_id_value();
+                if (auto purge_result = db::purge_db(db, model)) {
+                    db_info = std::move(purge_result.value());
                 } else {
-                    state = db::manager_result_t{std::move(select_result.error())};
-                }
-
-                if (state) {
-                    if (current_save_id.get<db::integer>() < last_save_id.get<db::integer>()) {
-                        // ラストよりカレントのセーブIDが小さければ、カレントより大きいセーブIDのデータを削除
-                        state = db::delete_next_to_last(db, model, current_save_id);
-                    }
-                }
-
-                if (state) {
-                    for (auto const &entity_pair : model.entities()) {
-                        auto const &entity_name = entity_pair.first;
-                        auto const &entity = entity_pair.second;
-
-                        // エンティティのデータをパージする（同じオブジェクトIDのデータは最後のものだけ生かす）
-                        if (auto purge_result = db::purge(db, entity_name)) {
-                            // 残ったデータのセーブIDを全て1にする
-                            auto const update_entity_sql = db::update_sql(entity_name, {db::save_id_field});
-                            if (auto update_result = db.execute_update(update_entity_sql, {one_value})) {
-                                for (auto const &rel_pair : entity.relations) {
-                                    auto const &relation = rel_pair.second;
-                                    auto const &rel_table_name = relation.table_name;
-
-                                    // 関連のデータをパージする（同じソースIDのデータは最後のものだけ生かす）
-                                    if (auto purge_rel_result = db::purge_relation(db, rel_table_name, entity_name)) {
-                                        // 残ったデータのセーブIDを全て1にする
-                                        auto const update_rel_sql = db::update_sql(rel_table_name, {db::save_id_field});
-                                        if (auto ul = unless(db.execute_update(update_rel_sql, {one_value}))) {
-                                            state = db::make_error_result(db::manager_error_type::update_save_id_failed,
-                                                                          std::move(ul.value.error()));
-                                        }
-                                    } else {
-                                        state = db::make_error_result(db::manager_error_type::purge_relation_failed,
-                                                                      std::move(purge_rel_result.error()));
-                                    }
-                                }
-                            } else {
-                                state = db::make_error_result(db::manager_error_type::update_save_id_failed,
-                                                              std::move(update_result.error()));
-                            }
-                        } else {
-                            state = db::make_error_result(db::manager_error_type::purge_failed,
-                                                          std::move(purge_result.error()));
-                            break;
-                        }
-
-                        if (!state) {
-                            break;
-                        }
-                    }
-                }
-
-                if (state) {
-                    // infoをクリア。セーブIDを1にする
-                    if (auto update_result = db::update_db_info(db, one_value, one_value)) {
-                        db_info = std::move(update_result.value());
-                    } else {
-                        state = db::manager_result_t{std::move(update_result.error())};
-                    }
+                    state = db::manager_result_t{std::move(purge_result.error())};
                 }
 
                 // トランザクション終了
@@ -590,7 +525,6 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                     db::commit(db);
                 } else {
                     db::rollback(db);
-                    db_info = db::null_info();
                 }
             } else {
                 state = db::make_error_result(db::manager_error_type::begin_transaction_failed,
@@ -598,7 +532,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
             }
 
             if (state) {
-                // バキュームする
+                // バキュームする（バキュームはトランザクション中はできない）
                 if (auto ul = unless(db.execute_update(db::vacuum_sql()))) {
                     state = db::make_error_result(db::manager_error_type::vacuum_failed, std::move(ul.value.error()));
                 }

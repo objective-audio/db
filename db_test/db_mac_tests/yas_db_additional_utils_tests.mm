@@ -340,7 +340,7 @@ using namespace yas;
     XCTAssertEqual(select_result.value().at(1).count(field_name), 0);
 }
 
-- (void)test_purge {
+- (void)test_purge_attributes {
     db::model model_0_0_2{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_2]};
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_2)];
 
@@ -388,7 +388,7 @@ using namespace yas;
     manager.execute([self, &manager](auto const &op) {
         auto &db = manager.database();
 
-        auto update_result = db::purge(db, "sample_a");
+        auto update_result = db::purge_attributes(db, "sample_a");
         XCTAssertTrue(update_result);
 
         auto select_result = db::select(db, db::select_option{.table = "sample_a"});
@@ -477,12 +477,12 @@ using namespace yas;
     manager.execute([self, &manager](auto const &op) {
         auto &db = manager.database();
 
-        auto purge_result = db::purge(db, "sample_a");
+        auto purge_result = db::purge_attributes(db, "sample_a");
         XCTAssertTrue(purge_result);
 
         auto const &rel_table_name = manager.model().entities().at("sample_a").relations.at("child").table_name;
 
-        auto purge_relation_result = db::purge_relation(db, rel_table_name, "sample_a");
+        auto purge_relation_result = db::purge_relations(db, rel_table_name, "sample_a");
         XCTAssertTrue(purge_relation_result);
 
         auto select_result = db::select(db, db::select_option{.table = rel_table_name});
