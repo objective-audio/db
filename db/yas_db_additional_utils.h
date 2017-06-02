@@ -19,7 +19,7 @@ namespace db {
     db::manager_result_t create_info_and_tables(db::database &db, db::model const &model);
 
     // DB上のデータをクリアする
-    db::manager_info_result_t clear_db(db::database &db, db::model const &model);
+    db::manager_result_t clear_db(db::database &db, db::model const &model);
 
     // 指定したsave_id以前で最後のデータをDBから取得する
     db::select_result_t select_last(db::database const &db, db::select_option option, value const &save_id = nullptr,
