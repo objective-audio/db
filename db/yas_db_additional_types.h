@@ -57,10 +57,10 @@ namespace db {
 
     using manager_result_t = result<std::nullptr_t, db::manager_error>;
     using manager_value_result_t = result<db::value, db::manager_error>;
-    using manager_vector_result_t = result<object_vector_map_t, db::manager_error>;
-    using manager_map_result_t = result<object_map_map_t, db::manager_error>;
-    using manager_const_vector_result_t = result<const_object_vector_map_t, db::manager_error>;
-    using manager_const_map_result_t = result<const_object_map_map_t, db::manager_error>;
+    using manager_vector_result_t = result<db::object_vector_map_t, db::manager_error>;
+    using manager_map_result_t = result<db::object_map_map_t, db::manager_error>;
+    using manager_const_vector_result_t = result<db::const_object_vector_map_t, db::manager_error>;
+    using manager_const_map_result_t = result<db::const_object_map_map_t, db::manager_error>;
     using manager_info_result_t = result<db::info, db::manager_error>;
 
     // for entity
