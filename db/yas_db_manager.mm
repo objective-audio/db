@@ -473,51 +473,25 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
             db::info db_info = db::null_info();
             db::manager_result_t state{nullptr};
 
+            // トランザクション開始
             if (auto begin_result = db::begin_transaction(db)) {
-                // トランザクション開始
-                for (auto const &entity_pair : model.entities()) {
-                    auto const &entity = entity_pair.second;
-                    auto const &entity_table_name = entity.name;
+                // DBをクリアする
+                if (auto clear_result = db::clear_db(db, model)) {
+                    db_info = std::move(clear_result.value());
+                } else {
+                    state = db::manager_result_t{std::move(clear_result.error())};
+                }
 
-                    // エンティティのテーブルのデータを全てデータベースから削除
-                    if (auto delete_result = db.execute_update(db::delete_sql(entity_table_name))) {
-                        for (auto const &rel_pair : entity.relations) {
-                            auto const rel_table_name = rel_pair.second.table_name;
-
-                            // 関連のテーブルのデータを全てデータベースから削除
-                            if (auto ul = unless(db.execute_update(db::delete_sql(rel_table_name)))) {
-                                state = db::make_error_result(db::manager_error_type::delete_failed,
-                                                              std::move(ul.value.error()));
-                                break;
-                            }
-                        }
-                    } else {
-                        state = db::make_error_result(db::manager_error_type::delete_failed,
-                                                      std::move(delete_result.error()));
-                        break;
-                    }
+                // トランザクション終了
+                if (state) {
+                    db::commit(db);
+                } else {
+                    db::rollback(db);
+                    db_info = db::null_info();
                 }
             } else {
                 state = db::make_error_result(db::manager_error_type::begin_transaction_failed,
                                               std::move(begin_result.error()));
-            }
-
-            if (state) {
-                // infoをクリア。セーブIDを0にする
-                db::value const zero_value{db::integer::type{0}};
-                if (auto update_result = db::update_db_info(db, zero_value, zero_value)) {
-                    db_info = std::move(update_result.value());
-                } else {
-                    state = db::manager_result_t{std::move(update_result.error())};
-                }
-            }
-
-            // トランザクション終了
-            if (state) {
-                db::commit(db);
-            } else {
-                db::rollback(db);
-                db_info = db::null_info();
             }
 
             completion(std::move(state), std::move(db_info));

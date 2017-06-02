@@ -191,6 +191,38 @@ db::manager_result_t db::create_info_and_tables(db::database &db, db::model cons
     return db::manager_result_t{nullptr};
 }
 
+db::manager_info_result_t db::clear_db(db::database &db, db::model const &model) {
+    // トランザクション開始
+    for (auto const &entity_pair : model.entities()) {
+        auto const &entity = entity_pair.second;
+        auto const &entity_table_name = entity.name;
+
+        // エンティティのテーブルのデータを全てデータベースから削除
+        if (auto ul = unless(db.execute_update(db::delete_sql(entity_table_name)))) {
+            return db::manager_info_result_t{
+                db::manager_error{db::manager_error_type::delete_failed, std::move(ul.value.error())}};
+        }
+
+        for (auto const &rel_pair : entity.relations) {
+            auto const rel_table_name = rel_pair.second.table_name;
+
+            // 関連のテーブルのデータを全てデータベースから削除
+            if (auto ul = unless(db.execute_update(db::delete_sql(rel_table_name)))) {
+                return db::manager_info_result_t{
+                    db::manager_error{db::manager_error_type::delete_failed, std::move(ul.value.error())}};
+            }
+        }
+    }
+
+    // infoをクリア。セーブIDを0にする
+    db::value const zero_value{db::integer::type{0}};
+    if (auto update_result = db::update_db_info(db, zero_value, zero_value)) {
+        return db::manager_info_result_t{std::move(update_result.value())};
+    } else {
+        return db::manager_info_result_t{std::move(update_result.error())};
+    }
+}
+
 db::select_result_t db::select_last(db::database const &db, db::select_option option, db::value const &save_id,
                                     bool const include_removed) {
     option.where_exprs = db::last_where_exprs(option.table, option.where_exprs, save_id, include_removed);
