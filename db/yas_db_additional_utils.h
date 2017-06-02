@@ -19,7 +19,7 @@ namespace db {
     db::manager_result_t create_info_and_tables(db::database &db, db::model const &model);
 
     // DB上のデータをクリアする
-    db::manager_info_result_t clear_db(db::database &db, db::model const &model);
+    db::manager_result_t clear_db(db::database &db, db::model const &model);
 
     // 指定したsave_id以前で最後のデータをDBから取得する
     db::select_result_t select_last(db::database const &db, db::select_option option, value const &save_id = nullptr,
@@ -56,7 +56,7 @@ namespace db {
     db::update_result_t purge_relations(db::database &db, std::string const &table_name,
                                         std::string const &src_table_name);
     // DB上のデータをパージする
-    db::manager_info_result_t purge_db(db::database &db, db::model const &model);
+    db::manager_result_t purge_db(db::database &db, db::model const &model);
 
     // managerから返すエラーを簡易的に生成する
     db::manager_result_t make_error_result(db::manager_error_type const &error_type, db::error db_error = nullptr);

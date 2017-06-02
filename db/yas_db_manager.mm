@@ -477,9 +477,15 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
             if (auto begin_result = db::begin_transaction(db)) {
                 // DBをクリアする
                 if (auto clear_result = db::clear_db(db, model)) {
-                    db_info = std::move(clear_result.value());
+                    // infoをクリア。セーブIDを0にする
+                    db::value const zero_value{db::integer::type{0}};
+                    if (auto update_result = db::update_db_info(db, zero_value, zero_value)) {
+                        db_info = std::move(update_result.value());
+                    } else {
+                        state = db::manager_result_t{std::move(update_result.error())};
+                    }
                 } else {
-                    state = db::manager_result_t{std::move(clear_result.error())};
+                    state = std::move(clear_result);
                 }
 
                 // トランザクション終了
@@ -507,17 +513,21 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
             auto &db = manager.database();
             auto const &model = manager.model();
 
-            db::value const one_value = db::value{db::integer::type{1}};
-
             db::info db_info = db::null_info();
             db::manager_result_t state{nullptr};
 
             // トランザクション開始
             if (auto begin_result = db::begin_transaction(db)) {
                 if (auto purge_result = db::purge_db(db, model)) {
-                    db_info = std::move(purge_result.value());
+                    // infoをクリア。セーブIDを1にする
+                    db::value const one_value = db::value{db::integer::type{1}};
+                    if (auto update_result = db::update_db_info(db, one_value, one_value)) {
+                        db_info = std::move(update_result.value());
+                    } else {
+                        state = db::manager_result_t{std::move(update_result.error())};
+                    }
                 } else {
-                    state = db::manager_result_t{std::move(purge_result.error())};
+                    state = std::move(purge_result);
                 }
 
                 // トランザクション終了
