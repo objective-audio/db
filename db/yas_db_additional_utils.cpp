@@ -404,17 +404,80 @@ db::manager_result_t db::update_version(db::database &db, yas::version const &ve
     }
 }
 
-db::update_result_t db::purge(db::database &db, std::string const &table) {
+db::update_result_t db::purge_attributes(db::database &db, std::string const &table) {
     db::select_option const option{
         .table = table, .fields = {"MAX(" + db::pk_id_field + ")"}, .group_by = db::object_id_field};
     std::string const in_expr = db::in_expr("NOT " + db::pk_id_field, option);
     return db.execute_update(db::delete_sql(table, in_expr));
 }
 
-db::update_result_t db::purge_relation(database &db, std::string const &table, std::string const &src_table) {
+db::update_result_t db::purge_relations(database &db, std::string const &table, std::string const &src_table) {
     db::select_option const option{.table = src_table, .fields = {db::pk_id_field}};
     std::string const in_expr = db::in_expr("NOT " + db::src_pk_id_field, option);
     return db.execute_update(db::delete_sql(table, in_expr));
+}
+
+db::manager_info_result_t db::purge_db(db::database &db, db::model const &model) {
+    // DB情報をデータベースから取得
+    if (auto select_result = db::select_db_info(db)) {
+        auto const &db_info = select_result.value();
+        if (db_info.current_save_id() < db_info.last_save_id()) {
+            // ラストよりカレントのセーブIDが小さければ、カレントより大きいセーブIDのデータを削除
+            // つまり、アンドゥした分を削除
+            if (auto ul = unless(db::delete_next_to_last(db, model, db_info.current_save_id_value()))) {
+                return db::manager_info_result_t{db::manager_error{std::move(ul.value.error())}};
+            }
+        }
+    } else {
+        return db::manager_info_result_t{db::manager_error{std::move(select_result.error())}};
+    }
+
+    std::vector<std::string> const save_id_fields{db::save_id_field};
+    db::value const one_value{db::integer::type{1}};
+    db::value_vector_t const one_value_args{one_value};
+
+    for (auto const &entity_pair : model.entities()) {
+        auto const &entity_name = entity_pair.first;
+        auto const &entity = entity_pair.second;
+
+        // エンティティのデータをパージする（同じオブジェクトIDのデータは最後のものだけ生かす）
+        if (auto purge_result = db::purge_attributes(db, entity_name)) {
+            // 残ったデータのセーブIDを全て1にする
+            auto const update_entity_sql = db::update_sql(entity_name, save_id_fields);
+            if (auto update_result = db.execute_update(update_entity_sql, one_value_args)) {
+                for (auto const &rel_pair : entity.relations) {
+                    auto const &relation = rel_pair.second;
+                    auto const &rel_table_name = relation.table_name;
+
+                    // 関連のデータをパージする（同じソースIDのデータは最後のものだけ生かす）
+                    if (auto purge_rel_result = db::purge_relations(db, rel_table_name, entity_name)) {
+                        // 残ったデータのセーブIDを全て1にする
+                        auto const update_rel_sql = db::update_sql(rel_table_name, save_id_fields);
+                        if (auto ul = unless(db.execute_update(update_rel_sql, one_value_args))) {
+                            return db::manager_info_result_t{db::manager_error{
+                                db::manager_error_type::update_save_id_failed, std::move(ul.value.error())}};
+                        }
+                    } else {
+                        return db::manager_info_result_t{db::manager_error{
+                            db::manager_error_type::purge_relation_failed, std::move(purge_rel_result.error())}};
+                    }
+                }
+            } else {
+                return db::manager_info_result_t{
+                    db::manager_error{db::manager_error_type::update_save_id_failed, std::move(update_result.error())}};
+            }
+        } else {
+            return db::manager_info_result_t{
+                db::manager_error{db::manager_error_type::purge_failed, std::move(purge_result.error())}};
+        }
+    }
+
+    // infoをクリア。セーブIDを1にする
+    if (auto update_result = db::update_db_info(db, one_value, one_value)) {
+        return db::manager_info_result_t{std::move(update_result.value())};
+    } else {
+        return db::manager_info_result_t{db::manager_error{std::move(update_result.error())}};
+    }
 }
 
 db::manager_result_t db::make_error_result(db::manager_error_type const &error_type, db::error db_error) {

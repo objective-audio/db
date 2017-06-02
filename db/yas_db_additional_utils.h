@@ -17,7 +17,7 @@ namespace db {
     db::manager_result_t migrate_db_if_needed(db::database &db, db::model const &model);
     // 新規にテーブルをDB上に作成する
     db::manager_result_t create_info_and_tables(db::database &db, db::model const &model);
-    
+
     // DB上のデータをクリアする
     db::manager_info_result_t clear_db(db::database &db, db::model const &model);
 
@@ -51,10 +51,12 @@ namespace db {
     db::manager_result_t update_version(db::database &db, yas::version const &version);
 
     // DB上のアトリビュートのデータをパージする
-    db::update_result_t purge(db::database &db, std::string const &table_name);
+    db::update_result_t purge_attributes(db::database &db, std::string const &table_name);
     // DB上の関連のデータをパージする
-    db::update_result_t purge_relation(db::database &db, std::string const &table_name,
-                                       std::string const &src_table_name);
+    db::update_result_t purge_relations(db::database &db, std::string const &table_name,
+                                        std::string const &src_table_name);
+    // DB上のデータをパージする
+    db::manager_info_result_t purge_db(db::database &db, db::model const &model);
 
     // managerから返すエラーを簡易的に生成する
     db::manager_result_t make_error_result(db::manager_error_type const &error_type, db::error db_error = nullptr);
