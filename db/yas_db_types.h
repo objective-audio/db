@@ -14,6 +14,7 @@ namespace db {
     class error;
     class row_set;
     class value;
+    class select_option;
 
     static std::string const rowid_field = "rowid";
 
@@ -28,6 +29,8 @@ namespace db {
     using value_map_map_t = std::unordered_map<std::string, db::value_map_t>;
     using value_map_vector_t = std::vector<db::value_map_t>;
     using value_map_vector_map_t = std::unordered_map<std::string, db::value_map_vector_t>;
+
+    using select_option_map_t = std::unordered_map<std::string, db::select_option>;
 
     using time_point_t = std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>;
 }
