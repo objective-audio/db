@@ -570,101 +570,34 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
             auto &db = manager.database();
             auto const &model = manager.model();
 
-            db::info db_info = db::null_info();
+            db::info ret_db_info = db::null_info();
             object_data_vector_map_t inserted_datas;
-            db::integer::type start_obj_id = 1;
 
             db::manager_result_t state{nullptr};
 
             if (auto begin_result = db::begin_transaction(db)) {
                 // トランザクション開始
-                auto current_save_id = db::null_value();
-                auto last_save_id = db::null_value();
-                auto next_save_id = db::null_value();
 
-                // infoをデータベースから取得してセーブIDを取得する
-                if (auto select_result = db::select_db_info(db)) {
-                    auto const &db_info = select_result.value();
-                    current_save_id = db_info.current_save_id_value();
-                    next_save_id = db::value{current_save_id.get<db::integer>() + 1};
-                    last_save_id = db_info.last_save_id_value();
+                // DB情報を取得する
+                db::info info = db::null_info();
+                if (auto info_result = db::select_db_info(db)) {
+                    info = std::move(info_result.value());
                 } else {
-                    state = db::manager_result_t{std::move(select_result.error())};
+                    state = db::manager_result_t{std::move(info_result.error())};
+                }
+
+                // DB上に新規にデータを挿入する
+                if (auto insert_result = db::insert(db, model, info, std::move(values))) {
+                    inserted_datas = std::move(insert_result.value());
+                } else {
+                    state = db::manager_result_t{std::move(insert_result.error())};
                 }
 
                 if (state) {
-                    if (current_save_id.get<db::integer>() < last_save_id.get<db::integer>()) {
-                        // カレントがラストより前ならカレントより後を削除する
-                        state = db::delete_next_to_last(db, model, current_save_id);
-                    }
-                }
-
-                if (state) {
-                    for (auto &values_pair : values) {
-                        auto const &entity_name = values_pair.first;
-                        auto &entity_values = values_pair.second;
-
-                        // エンティティのデータ中のオブジェクトIDの最大値から次のIDを取得する
-                        // まだデータがなければ初期値の1のまま
-                        if (auto const max_value = db::max(db, entity_name, db::object_id_field)) {
-                            start_obj_id = max_value.get<db::integer>() + 1;
-                        }
-
-                        std::size_t idx = 0;
-                        for (auto &obj_values : entity_values) {
-                            // オブジェクトの値を与えてデータベースに挿入する
-                            db::value obj_id_value{start_obj_id + idx};
-
-                            std::vector<std::string> fields{db::object_id_field, db::save_id_field};
-                            db::value_vector_t args{obj_id_value, next_save_id};
-
-                            fields.reserve(obj_values.size() + 2);
-                            args.reserve(obj_values.size() + 2);
-
-                            for (auto &value : obj_values) {
-                                fields.push_back(value.first);
-                                args.emplace_back(std::move(value.second));
-                            }
-
-                            auto sql = db::insert_sql(entity_name, fields);
-                            if (auto ul = unless(db.execute_update(std::move(sql), std::move(args)))) {
-                                state = db::make_error_result(db::manager_error_type::insert_attributes_failed,
-                                                              std::move(ul.value.error()));
-                                break;
-                            }
-
-                            // 挿入したオブジェクトのattributeをデータベースから取得する
-                            db::select_option option{
-                                .table = entity_name,
-                                .where_exprs = db::equal_field_expr(db::object_id_field),
-                                .arguments = {{std::make_pair(db::object_id_field, obj_id_value)}}};
-
-                            if (auto select_result = db::select(db, std::move(option))) {
-                                // データをobject_dataにしてcompletionに返すinserted_datasに追加
-                                if (inserted_datas.count(entity_name) == 0) {
-                                    db::object_data_vector_t entity_datas{};
-                                    entity_datas.reserve(entity_values.size());
-                                    inserted_datas.emplace(entity_name, std::move(entity_datas));
-                                }
-
-                                inserted_datas.at(entity_name)
-                                    .emplace_back(
-                                        db::object_data{.attributes = std::move(select_result.value().at(0))});
-                            } else {
-                                state = db::make_error_result(db::manager_error_type::select_failed,
-                                                              std::move(select_result.error()));
-                                break;
-                            }
-
-                            ++idx;
-                        }
-                    }
-                }
-
-                if (state) {
-                    // infoを更新する
+                    // DB情報を更新する
+                    auto const next_save_id = info.next_save_id_value();
                     if (auto update_result = db::update_db_info(db, next_save_id, next_save_id)) {
-                        db_info = std::move(update_result.value());
+                        ret_db_info = std::move(update_result.value());
                     } else {
                         state = db::manager_result_t{std::move(update_result.error())};
                     }
@@ -683,7 +616,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
             }
 
             // 結果を返す
-            completion(std::move(state), std::move(inserted_datas), std::move(db_info));
+            completion(std::move(state), std::move(inserted_datas), std::move(ret_db_info));
         };
 
         this->execute(execution, std::move(option));

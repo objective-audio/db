@@ -215,6 +215,77 @@ db::manager_result_t db::clear_db(db::database &db, db::model const &model) {
     return db::manager_result_t{nullptr};
 }
 
+db::manager_fetch_result_t db::insert(db::database &db, db::model const &model, db::info const info,
+                                      db::value_map_vector_map_t &&values) {
+    if (info.current_save_id() < info.last_save_id()) {
+        // カレントがラストより前ならカレントより後を削除する
+        if (auto ul = unless(db::delete_next_to_last(db, model, info.current_save_id_value()))) {
+            return db::manager_fetch_result_t{std::move(ul.value.error())};
+        }
+    }
+
+    object_data_vector_map_t inserted_datas;
+    db::integer::type start_obj_id = 1;
+    auto next_save_id = info.next_save_id_value();
+
+    for (auto &values_pair : values) {
+        auto const &entity_name = values_pair.first;
+        auto &entity_values = values_pair.second;
+
+        // エンティティのデータ中のオブジェクトIDの最大値から次のIDを取得する
+        // まだデータがなければ初期値の1のまま
+        if (auto const max_value = db::max(db, entity_name, db::object_id_field)) {
+            start_obj_id = max_value.get<db::integer>() + 1;
+        }
+
+        std::size_t idx = 0;
+        for (auto &obj_values : entity_values) {
+            // オブジェクトの値を与えてデータベースに挿入する
+            db::value obj_id_value{start_obj_id + idx};
+
+            std::vector<std::string> fields{db::object_id_field, db::save_id_field};
+            db::value_vector_t args{obj_id_value, next_save_id};
+
+            fields.reserve(fields.size() + obj_values.size());
+            args.reserve(args.size() + obj_values.size());
+
+            for (auto &value : obj_values) {
+                fields.push_back(value.first);
+                args.emplace_back(std::move(value.second));
+            }
+
+            if (auto ul = unless(db.execute_update(db::insert_sql(entity_name, fields), std::move(args)))) {
+                return db::manager_fetch_result_t{
+                    db::manager_error{db::manager_error_type::insert_attributes_failed, std::move(ul.value.error())}};
+            }
+
+            // 挿入したオブジェクトのattributeをデータベースから取得する
+            db::select_option option{.table = entity_name,
+                                     .where_exprs = db::equal_field_expr(db::object_id_field),
+                                     .arguments = {{std::make_pair(db::object_id_field, obj_id_value)}}};
+
+            if (auto select_result = db::select(db, std::move(option))) {
+                // データをobject_dataにしてcompletionに返すinserted_datasに追加
+                if (inserted_datas.count(entity_name) == 0) {
+                    db::object_data_vector_t entity_datas{};
+                    entity_datas.reserve(entity_values.size());
+                    inserted_datas.emplace(entity_name, std::move(entity_datas));
+                }
+
+                inserted_datas.at(entity_name)
+                    .emplace_back(db::object_data{.attributes = std::move(select_result.value().at(0))});
+            } else {
+                return db::manager_fetch_result_t{
+                    db::manager_error{db::manager_error_type::select_failed, std::move(select_result.error())}};
+            }
+
+            ++idx;
+        }
+    }
+
+    return db::manager_fetch_result_t{std::move(inserted_datas)};
+}
+
 db::select_result_t db::select_last(db::database const &db, db::select_option option, db::value const &save_id,
                                     bool const include_removed) {
     option.where_exprs = db::last_where_exprs(option.table, option.where_exprs, save_id, include_removed);

@@ -24,9 +24,11 @@ namespace db {
         yas::version const &version() const;
         db::integer::type const &current_save_id() const;
         db::integer::type const &last_save_id() const;
+        db::integer::type next_save_id() const;
 
         db::value const &current_save_id_value() const;
         db::value const &last_save_id_value() const;
+        db::value next_save_id_value() const;
 
         static std::string const &sql_for_create();
         static std::string const &sql_for_insert();
