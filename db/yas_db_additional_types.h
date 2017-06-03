@@ -62,6 +62,7 @@ namespace db {
     using manager_const_vector_result_t = result<db::const_object_vector_map_t, db::manager_error>;
     using manager_const_map_result_t = result<db::const_object_map_map_t, db::manager_error>;
     using manager_info_result_t = result<db::info, db::manager_error>;
+    using manager_fetch_result_t = result<db::object_data_vector_map_t, db::manager_error>;
 
     // for entity
     using attribute_map_t = std::unordered_map<std::string, db::attribute>;

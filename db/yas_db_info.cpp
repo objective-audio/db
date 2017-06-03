@@ -42,12 +42,20 @@ db::integer::type const &db::info::last_save_id() const {
     return impl_ptr<impl>()->_last_save_id.get<db::integer>();
 }
 
+db::integer::type db::info::next_save_id() const {
+    return this->current_save_id() + 1;
+}
+
 db::value const &db::info::current_save_id_value() const {
     return impl_ptr<impl>()->_current_save_id;
 }
 
 db::value const &db::info::last_save_id_value() const {
     return impl_ptr<impl>()->_last_save_id;
+}
+
+db::value db::info::next_save_id_value() const {
+    return db::value{this->next_save_id()};
 }
 
 db::info const &db::null_info() {

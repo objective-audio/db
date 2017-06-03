@@ -20,6 +20,9 @@ namespace db {
 
     // DB上のデータをクリアする
     db::manager_result_t clear_db(db::database &db, db::model const &model);
+    
+    // DB上に新規のデータを挿入する
+    db::manager_fetch_result_t insert(db::database &db, db::model const &model, db::info const info, db::value_map_vector_map_t &&values);
 
     // 指定したsave_id以前で最後のデータをDBから取得する
     db::select_result_t select_last(db::database const &db, db::select_option option, value const &save_id = nullptr,
