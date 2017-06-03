@@ -626,49 +626,26 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
     void execute_fetch_object_datas(
         fetch_preparation_option_f &&preparation,
         std::function<void(db::manager_result_t &&state, db::object_data_vector_map_t &&fetched_datas)> &&completion,
-        operation_option_t &&option) {
+        operation_option_t &&op_option) {
         auto execution =
             [preparation = std::move(preparation), completion = std::move(completion),
              manager = cast<db::manager>()](operation const &) mutable {
             // データベースからデータを取得する条件をメインスレッドで準備する
-            db::select_option option;
-            auto preparation_on_main = [&option, &preparation]() { option = preparation(); };
+            db::select_option sel_option;
+            auto preparation_on_main = [&sel_option, &preparation]() { sel_option = preparation(); };
             dispatch_sync(manager.dispatch_queue(), std::move(preparation_on_main));
 
-            std::string const entity_name = option.table;
-
             auto &db = manager.database();
-
-            auto const &rel_models = manager.model().relations(entity_name);
+            auto const &model = manager.model();
             db::manager_result_t state{nullptr};
-
             db::object_data_vector_map_t fetched_datas;
 
             if (auto begin_result = db::begin_transaction(db)) {
                 // トランザクション開始
-                // カレントセーブIDを取得する
-                if (auto info_select_result = db::select_db_info(db)) {
-                    auto const &current_save_id = info_select_result.value().current_save_id_value();
-                    // カレントセーブIDまでで条件にあった最後のデータをデータベースから取得する
-                    if (auto select_result = db::select_last(db, option, current_save_id)) {
-                        // アトリビュートのみのデータから関連のデータを加えてobject_dataを生成する
-                        auto &entity_attrs = select_result.value();
-                        if (auto obj_datas_result =
-                                db::make_entity_object_datas(db, entity_name, rel_models, entity_attrs)) {
-                            auto &entity_obj_datas = obj_datas_result.value();
-                            if (entity_obj_datas.size() > 0) {
-                                fetched_datas.emplace(entity_name, std::move(entity_obj_datas));
-                            }
-                        } else {
-                            state = db::make_error_result(db::manager_error_type::make_object_datas_failed,
-                                                          std::move(obj_datas_result.error()));
-                        }
-                    } else {
-                        state = db::make_error_result(db::manager_error_type::select_last_failed,
-                                                      std::move(select_result.error()));
-                    }
+                if (auto fetch_result = db::fetch(db, model, db::select_option_map_t{{sel_option.table, sel_option}})) {
+                    fetched_datas = std::move(fetch_result.value());
                 } else {
-                    state = db::manager_result_t{std::move(info_select_result.error())};
+                    state = db::manager_result_t{std::move(fetch_result.error())};
                 }
 
                 // トランザクション終了
@@ -687,61 +664,34 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
             completion(std::move(state), std::move(fetched_datas));
         };
 
-        this->execute(execution, std::move(option));
+        this->execute(execution, std::move(op_option));
     }
 
     // バックグラウンドでデータベースからオブジェクトデータを取得する。条件はobject_idで指定。単独のエンティティのみ
     void execute_fetch_object_datas(
         fetch_preparation_ids_f &&preparation,
         std::function<void(db::manager_result_t &&state, db::object_data_vector_map_t &&fetched_datas)> &&completion,
-        operation_option_t &&option) {
+        operation_option_t &&op_option) {
         auto execution =
             [completion = std::move(completion), preparation = std::move(preparation),
              manager = cast<manager>()](operation const &) mutable {
-            // 取得したいデータのオブジェクトIDのセットをメインスレッドで準備する
+            // 取得したいデータのオブジェクトIDの集合をメインスレッドで準備する
             db::integer_set_map_t obj_ids;
             auto preparation_on_main = [&obj_ids, &preparation]() { obj_ids = preparation(); };
             dispatch_sync(manager.dispatch_queue(), std::move(preparation_on_main));
 
             auto &db = manager.database();
-
+            auto const &model = manager.model();
             db::manager_result_t state{nullptr};
-
             object_data_vector_map_t fetched_datas;
 
+            // トランザクション開始
             if (auto begin_result = db::begin_transaction(db)) {
-                // トランザクション開始
-                // カレントセーブIDをデータベースから取得
-                if (auto info_select_result = db::select_db_info(db)) {
-                    auto const &current_save_id = info_select_result.value().current_save_id_value();
-
-                    for (auto const &entity_pair : obj_ids) {
-                        auto const &entity_name = entity_pair.first;
-                        auto const &rel_models = manager.model().relations(entity_name);
-
-                        auto const &entity_obj_ids = entity_pair.second;
-                        db::select_option option{.table = entity_name,
-                                                 .where_exprs = db::in_expr(db::object_id_field, entity_obj_ids)};
-
-                        // カレントセーブIDまでで条件にあった最後のデータをデータベースから取得する
-                        if (auto select_result = db::select_last(db, std::move(option), current_save_id)) {
-                            auto const &entity_attrs = select_result.value();
-                            if (auto obj_datas_result =
-                                    db::make_entity_object_datas(db, entity_name, rel_models, entity_attrs)) {
-                                fetched_datas.emplace(entity_name, std::move(obj_datas_result.value()));
-                            } else {
-                                state = db::make_error_result(db::manager_error_type::make_object_datas_failed,
-                                                              std::move(obj_datas_result.error()));
-                                break;
-                            }
-                        } else {
-                            state = db::make_error_result(db::manager_error_type::select_last_failed,
-                                                          std::move(select_result.error()));
-                            break;
-                        }
-                    }
+                // DBからデータを取得する
+                if (auto fetch_result = db::fetch(db, model, obj_ids)) {
+                    fetched_datas = std::move(fetch_result.value());
                 } else {
-                    state = db::manager_result_t{std::move(info_select_result.error())};
+                    state = db::manager_result_t{std::move(fetch_result.error())};
                 }
 
                 // トランザクション終了
@@ -759,7 +709,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
             completion(std::move(state), std::move(fetched_datas));
         };
 
-        this->execute(execution, std::move(option));
+        this->execute(execution, std::move(op_option));
     }
 
     // バックグラウンドでデータベースにオブジェクトの変更を保存する
