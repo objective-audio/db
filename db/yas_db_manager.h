@@ -42,11 +42,11 @@ namespace db {
 
         using execution_f = std::function<void(operation const &)>;
 
-        using insert_preparation_count_f = std::function<entity_count_map_t(void)>;
-        using insert_preparation_values_f = std::function<value_map_vector_map_t(void)>;
-        using fetch_preparation_option_f = std::function<select_option(void)>;
-        using fetch_preparation_ids_f = std::function<integer_set_map_t(void)>;
-        using revert_preparation_f = std::function<integer::type(void)>;
+        using insert_preparation_count_f = std::function<db::entity_count_map_t(void)>;
+        using insert_preparation_values_f = std::function<db::value_map_vector_map_t(void)>;
+        using fetch_preparation_option_f = std::function<db::select_option(void)>;
+        using fetch_preparation_ids_f = std::function<db::integer_set_map_t(void)>;
+        using revert_preparation_f = std::function<db::integer::type(void)>;
 
         using completion_f = std::function<void(db::manager_result_t)>;
         using vector_completion_f = std::function<void(db::manager_vector_result_t)>;
