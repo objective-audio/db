@@ -519,9 +519,9 @@ using namespace yas;
 
     manager.fetch_const_objects(
         []() {
-            return db::fetch_option{db::select_option{.table = "sample_a",
-                                                      .where_exprs = db::equal_field_expr(db::object_id_field),
-                                                      .arguments = {{db::object_id_field, db::value{1}}}}};
+            return db::fetch_option{{.table = "sample_a",
+                                     .where_exprs = db::equal_field_expr(db::object_id_field),
+                                     .arguments = {{db::object_id_field, db::value{1}}}}};
         },
         [self, &pair](auto result) mutable {
             XCTAssertTrue(result);
