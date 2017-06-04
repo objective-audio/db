@@ -14,11 +14,7 @@ db::fetch_option::fetch_option(std::size_t const reserve) {
 }
 
 db::fetch_option::fetch_option(db::select_option sel_option)
-    : fetch_option(db::select_option_map_t{{sel_option.table, std::move(sel_option)}}) {
-}
-
-db::fetch_option::fetch_option(select_option_map_t sel_options) {
-    _sel_options = std::move(sel_options);
+    : _sel_options(db::select_option_map_t{{sel_option.table, std::move(sel_option)}}) {
 }
 
 void db::fetch_option::add_select_option(db::select_option option) {
