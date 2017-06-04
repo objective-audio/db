@@ -399,7 +399,7 @@ db_controller::entity db_controller::entity_for_name(std::string const &entity_n
     } else if (entity_name == entity_name_b) {
         return entity::b;
     }
-    
+
     throw std::invalid_argument("invalid entity_name (" + entity_name + ").");
 }
 
@@ -409,17 +409,15 @@ db::object_vector_t &db_controller::_objects_at(db_controller::entity const &ent
 
 void db_controller::_update_objects(std::function<void(db::manager_result_t)> &&completion) {
     _manager.suspend();
-    
+
     auto results = std::make_shared<std::vector<db::manager_result_t>>();
-    
+
     for (auto const &entity_pair : _manager.model().entities()) {
         auto const entity = this->entity_for_name(entity_pair.second.name);
-        this->_update_objects(entity, [results](auto result) {
-            results->emplace_back(std::move(result));
-        });
+        this->_update_objects(entity, [results](auto result) { results->emplace_back(std::move(result)); });
     }
-    
-    _manager.execute([completion = std::move(completion), results](operation const &){
+
+    _manager.execute([completion = std::move(completion), results](operation const &) {
         for (auto const &result : *results) {
             if (!result) {
                 completion(result);
@@ -428,7 +426,7 @@ void db_controller::_update_objects(std::function<void(db::manager_result_t)> &&
         }
         completion(db::manager_result_t{nullptr});
     });
-    
+
     _manager.resume();
 }
 
@@ -439,8 +437,8 @@ void db_controller::_update_objects(entity const &entity, std::function<void(db:
 
     _manager.fetch_objects(
         [entity_name]() {
-            return db::select_option{.table = entity_name,
-                                     .field_orders = {{db::object_id_field, db::order::ascending}}};
+            return db::fetch_option{
+                db::select_option{.table = entity_name, .field_orders = {{db::object_id_field, db::order::ascending}}}};
         },
         [&controller = *this, completion = std::move(completion),
          entity_name](db::manager_vector_result_t fetch_result) {
