@@ -9,6 +9,7 @@
 #include "yas_db_object.h"
 #include "yas_operation_protocol.h"
 #include "yas_db_manager_error.h"
+#include "yas_db_fetch_option.h"
 #include <dispatch/dispatch.h>
 
 namespace yas {

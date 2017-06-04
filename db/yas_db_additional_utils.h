@@ -12,6 +12,7 @@ namespace yas {
 class version;
 namespace db {
     class model;
+    class fetch_option;
 
     // 必要であればDBをマイグレーションする
     db::manager_result_t migrate_db_if_needed(db::database &db, db::model const &model);
@@ -26,8 +27,7 @@ namespace db {
                                       db::value_map_vector_map_t &&values);
 
     // select_optionでの条件に一致したデータをDBから取得する
-    db::manager_fetch_result_t fetch(db::database &db, db::model const &model,
-                                     db::select_option_map_t const &sel_options);
+    db::manager_fetch_result_t fetch(db::database &db, db::model const &model, db::fetch_option const &fetch_option);
     // オブジェクトIDに一致するデータをDBから取得する
     db::manager_fetch_result_t fetch(db::database &db, db::model const &model, db::integer_set_map_t const &obj_ids);
 

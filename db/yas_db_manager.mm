@@ -23,6 +23,7 @@
 #include "yas_unless.h"
 #include "yas_version.h"
 #include "yas_db_info.h"
+#include "yas_db_fetch_option.h"
 
 using namespace yas;
 
@@ -642,7 +643,11 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
 
             if (auto begin_result = db::begin_transaction(db)) {
                 // トランザクション開始
-                if (auto fetch_result = db::fetch(db, model, db::select_option_map_t{{sel_option.table, sel_option}})) {
+
+                db::fetch_option fetch_option;
+                fetch_option.add_select_option(std::move(sel_option));
+
+                if (auto fetch_result = db::fetch(db, model, fetch_option)) {
                     fetched_datas = std::move(fetch_result.value());
                 } else {
                     state = db::manager_result_t{std::move(fetch_result.error())};
