@@ -249,9 +249,9 @@ using namespace yas;
 
     manager.fetch_const_objects(
         []() {
-            return db::select_option{
+            return db::fetch_option{db::select_option{
                 .table = "sample_a",
-                .field_orders = {db::field_order{.field = db::object_id_field, .order = db::order::ascending}}};
+                .field_orders = {db::field_order{.field = db::object_id_field, .order = db::order::ascending}}}};
         },
         [self, &manager](auto result) {
             XCTAssertTrue(result);
@@ -772,7 +772,7 @@ using namespace yas;
 
     XCTestExpectation *exp3 = [self expectationWithDescription:@"3"];
 
-    manager.fetch_objects([]() { return db::select_option{.table = "sample_a"}; },
+    manager.fetch_objects([]() { return db::fetch_option{db::select_option{.table = "sample_a"}}; },
                           [self, exp3](auto fetch_result) {
                               XCTAssertTrue(fetch_result);
 
@@ -815,11 +815,12 @@ using namespace yas;
 
     manager.fetch_objects(
         []() {
-            return db::select_option{.table = "sample_a",
-                                     .where_exprs = db::field_expr("name", "like"),
-                                     .arguments = {{"name", db::value{"value_%"}}},
-                                     .field_orders = {{db::object_id_field, db::order::descending}},
-                                     .limit_range = db::range{0, 3}};
+            return db::fetch_option{
+                db::select_option{.table = "sample_a",
+                                  .where_exprs = db::field_expr("name", "like"),
+                                  .arguments = {{"name", db::value{"value_%"}}},
+                                  .field_orders = {{db::object_id_field, db::order::descending}},
+                                  .limit_range = db::range{0, 3}}};
         },
         [self, &objects](auto fetch_result) {
             XCTAssertTrue(fetch_result);
@@ -879,7 +880,7 @@ using namespace yas;
 
     manager.save([self](auto save_result) { XCTAssertTrue(save_result); });
 
-    manager.fetch_const_objects([]() { return db::select_option{.table = "sample_a"}; },
+    manager.fetch_const_objects([]() { return db::fetch_option{db::select_option{.table = "sample_a"}}; },
                                 [self](db::manager_const_vector_result_t fetch_result) mutable {
                                     XCTAssertTrue(fetch_result);
 
@@ -984,7 +985,7 @@ using namespace yas;
 
     auto object_a = db::null_object();
 
-    manager.fetch_objects([]() { return db::select_option{.table = "sample_a"}; },
+    manager.fetch_objects([]() { return db::fetch_option{db::select_option{.table = "sample_a"}}; },
                           [self, exp3, &object_a](auto const &fetch_result) {
                               XCTAssertTrue(fetch_result);
 
@@ -1498,7 +1499,7 @@ using namespace yas;
             XCTAssertEqual(manager.last_save_id(), db::value{4});
         });
 
-        manager.fetch_objects([]() { return db::select_option{.table = "sample_a"}; },
+        manager.fetch_objects([]() { return db::fetch_option{db::select_option{.table = "sample_a"}}; },
                               [self, &objects](auto result) mutable {
                                   XCTAssertTrue(result);
 
@@ -1564,7 +1565,7 @@ using namespace yas;
         },
         {.priority = 1});
 
-    manager.fetch_objects([]() { return db::select_option{.table = "sample_a"}; },
+    manager.fetch_objects([]() { return db::fetch_option{db::select_option{.table = "sample_a"}}; },
                           [&call_count, exp2, &fetched_object_count, self](auto result) {
                               XCTAssertTrue(result);
                               XCTAssertEqual(result.value().count("sample_a"), 0);
@@ -2082,8 +2083,8 @@ using namespace yas;
 
         manager.fetch_objects(
             []() {
-                return db::select_option{.table = "sample_a",
-                                         .field_orders = {{db::object_id_field, db::order::ascending}}};
+                return db::fetch_option{db::select_option{
+                    .table = "sample_a", .field_orders = {{db::object_id_field, db::order::ascending}}}};
             },
             [exp, &fetched_objects](db::manager_vector_result_t result) {
                 fetched_objects = std::move(result.value());
@@ -2251,8 +2252,8 @@ using namespace yas;
 
         manager.fetch_objects(
             []() {
-                return db::select_option{.table = "sample_a",
-                                         .field_orders = {{db::object_id_field, db::order::ascending}}};
+                return db::fetch_option{db::select_option{
+                    .table = "sample_a", .field_orders = {{db::object_id_field, db::order::ascending}}}};
             },
             [exp, &fetched_objects](db::manager_vector_result_t result) {
                 fetched_objects = std::move(result.value());
@@ -2310,8 +2311,8 @@ using namespace yas;
 
         manager.fetch_objects(
             []() {
-                return db::select_option{.table = "sample_a",
-                                         .field_orders = {{db::object_id_field, db::order::ascending}}};
+                return db::fetch_option{db::select_option{
+                    .table = "sample_a", .field_orders = {{db::object_id_field, db::order::ascending}}}};
             },
             [exp, &fetched_objects](db::manager_vector_result_t result) {
                 fetched_objects = std::move(result.value());
@@ -2368,8 +2369,8 @@ using namespace yas;
 
         manager.fetch_objects(
             []() {
-                return db::select_option{.table = "sample_a",
-                                         .field_orders = {{db::object_id_field, db::order::ascending}}};
+                return db::fetch_option{db::select_option{
+                    .table = "sample_a", .field_orders = {{db::object_id_field, db::order::ascending}}}};
             },
             [exp, &fetched_objects](db::manager_vector_result_t result) {
                 fetched_objects = std::move(result.value());
@@ -2441,8 +2442,8 @@ using namespace yas;
 
         manager.fetch_objects(
             []() {
-                return db::select_option{.table = "sample_a",
-                                         .field_orders = {{db::object_id_field, db::order::ascending}}};
+                return db::fetch_option{db::select_option{
+                    .table = "sample_a", .field_orders = {{db::object_id_field, db::order::ascending}}}};
             },
             [exp, &fetched_objects](db::manager_vector_result_t result) {
                 fetched_objects = std::move(result.value());

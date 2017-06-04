@@ -632,8 +632,8 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
             [preparation = std::move(preparation), completion = std::move(completion),
              manager = cast<db::manager>()](operation const &) mutable {
             // データベースからデータを取得する条件をメインスレッドで準備する
-            db::select_option sel_option;
-            auto preparation_on_main = [&sel_option, &preparation]() { sel_option = preparation(); };
+            db::fetch_option fetch_option;
+            auto preparation_on_main = [&fetch_option, &preparation]() { fetch_option = preparation(); };
             dispatch_sync(manager.dispatch_queue(), std::move(preparation_on_main));
 
             auto &db = manager.database();
@@ -643,10 +643,6 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
 
             if (auto begin_result = db::begin_transaction(db)) {
                 // トランザクション開始
-
-                db::fetch_option fetch_option;
-                fetch_option.add_select_option(std::move(sel_option));
-
                 if (auto fetch_result = db::fetch(db, model, fetch_option)) {
                     fetched_datas = std::move(fetch_result.value());
                 } else {

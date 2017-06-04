@@ -45,7 +45,7 @@ namespace db {
 
         using insert_preparation_count_f = std::function<db::entity_count_map_t(void)>;
         using insert_preparation_values_f = std::function<db::value_map_vector_map_t(void)>;
-        using fetch_preparation_option_f = std::function<db::select_option(void)>;
+        using fetch_preparation_option_f = std::function<db::fetch_option(void)>;
         using fetch_preparation_ids_f = std::function<db::integer_set_map_t(void)>;
         using revert_preparation_f = std::function<db::integer::type(void)>;
 
