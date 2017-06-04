@@ -815,11 +815,11 @@ using namespace yas;
 
     manager.fetch_objects(
         []() {
-            return db::fetch_option{db::select_option{.table = "sample_a",
-                                                      .where_exprs = db::field_expr("name", "like"),
-                                                      .arguments = {{"name", db::value{"value_%"}}},
-                                                      .field_orders = {{db::object_id_field, db::order::descending}},
-                                                      .limit_range = db::range{0, 3}}};
+            return db::fetch_option{{.table = "sample_a",
+                                     .where_exprs = db::field_expr("name", "like"),
+                                     .arguments = {{"name", db::value{"value_%"}}},
+                                     .field_orders = {{db::object_id_field, db::order::descending}},
+                                     .limit_range = db::range{0, 3}}};
         },
         [self, &objects](auto fetch_result) {
             XCTAssertTrue(fetch_result);
