@@ -17,6 +17,7 @@
 #include "yas_version.h"
 #include "yas_db_attribute.h"
 #include "yas_db_index.h"
+#include "yas_db_fetch_option.h"
 
 using namespace yas;
 
@@ -286,8 +287,7 @@ db::manager_fetch_result_t db::insert(db::database &db, db::model const &model, 
     return db::manager_fetch_result_t{std::move(inserted_datas)};
 }
 
-db::manager_fetch_result_t db::fetch(db::database &db, db::model const &model,
-                                     db::select_option_map_t const &sel_options) {
+db::manager_fetch_result_t db::fetch(db::database &db, db::model const &model, db::fetch_option const &fetch_option) {
     // カレントセーブIDをデータベースから取得
     db::value current_save_id = db::null_value();
     if (auto info_select_result = db::select_db_info(db)) {
@@ -298,18 +298,13 @@ db::manager_fetch_result_t db::fetch(db::database &db, db::model const &model,
 
     db::object_data_vector_map_t fetched_datas;
 
-    for (auto const &pair : sel_options) {
+    for (auto const &pair : fetch_option.select_options()) {
         std::string const entity_name = pair.first;
         auto const &sel_option = pair.second;
-
-        if (entity_name != sel_option.table) {
-            throw std::invalid_argument("invalid sel_options entity_name");
-        }
-
         auto const &rel_models = model.relations(entity_name);
 
         // カレントセーブIDまでで条件にあった最後のデータをデータベースから取得する
-        if (auto select_result = db::select_last(db, pair.second, current_save_id)) {
+        if (auto select_result = db::select_last(db, sel_option, current_save_id)) {
             // アトリビュートのみのデータから関連のデータを加えてobject_dataを生成する
             auto &entity_attrs = select_result.value();
             if (auto obj_datas_result = db::make_entity_object_datas(db, entity_name, rel_models, entity_attrs)) {
@@ -331,16 +326,14 @@ db::manager_fetch_result_t db::fetch(db::database &db, db::model const &model,
 }
 
 db::manager_fetch_result_t db::fetch(db::database &db, db::model const &model, db::integer_set_map_t const &obj_ids) {
-    db::select_option_map_t sel_options;
-    sel_options.reserve(obj_ids.size());
+    db::fetch_option fetch_option{obj_ids.size()};
 
     for (auto const &pair : obj_ids) {
-        sel_options.emplace(
-            pair.first,
+        fetch_option.add_select_option(
             db::select_option{.table = pair.first, .where_exprs = db::in_expr(db::object_id_field, pair.second)});
     }
 
-    return fetch(db, model, sel_options);
+    return fetch(db, model, fetch_option);
 }
 
 db::select_result_t db::select_last(db::database const &db, db::select_option option, db::value const &save_id,
