@@ -66,6 +66,14 @@ namespace db {
     // DB上のデータをパージする
     db::manager_result_t purge_db(db::database &db, db::model const &model);
 
+    // 変更のあったデータをDB上に保存する
+    db::manager_fetch_result_t save_to_db(db::database &db, db::model const &model, db::info const &info,
+                                          db::object_data_vector_map_t const &changed_datas);
+    // 変更のあったデータのうち削除されたオブジェクトを関連から外す
+    db::manager_result_t remove_relations_removed_from_db(db::database &db, db::model const &model,
+                                                          db::info const &info,
+                                                          db::object_data_vector_map_t const &changed_datas);
+
     // managerから返すエラーを簡易的に生成する
     db::manager_result_t make_error_result(db::manager_error_type const &error_type, db::error db_error = nullptr);
 
@@ -93,7 +101,9 @@ namespace db {
     // 全てのエンティティを含む
     db::const_object_map_map_t to_const_map_objects(db::model const &model, db::object_data_vector_map_t const &datas);
     
+    // select_optionをfetch_optionにして取得
     db::fetch_option to_fetch_option(db::select_option);
+    // オブジェクトIDに一致するデータを取得するfetch_optionを取得
     db::fetch_option to_fetch_option(db::integer_set_map_t const &obj_ids);
 }
 }
