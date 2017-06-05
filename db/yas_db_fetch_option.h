@@ -14,7 +14,6 @@ namespace db {
     struct fetch_option {
         fetch_option();
         explicit fetch_option(std::size_t const reserve);
-        explicit fetch_option(db::select_option);
 
         void add_select_option(db::select_option);
         select_option_map_t const &select_options() const;

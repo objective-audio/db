@@ -670,47 +670,14 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
 
     // バックグラウンドでデータベースからオブジェクトデータを取得する。条件はobject_idで指定。単独のエンティティのみ
     void execute_fetch_object_datas(
-        fetch_preparation_ids_f &&preparation,
+        fetch_preparation_ids_f &&ids_preparation,
         std::function<void(db::manager_result_t &&state, db::object_data_vector_map_t &&fetched_datas)> &&completion,
         operation_option_t &&op_option) {
-        auto execution =
-            [completion = std::move(completion), preparation = std::move(preparation),
-             manager = cast<manager>()](operation const &) mutable {
-            // 取得したいデータのオブジェクトIDの集合をメインスレッドで準備する
-            db::integer_set_map_t obj_ids;
-            auto preparation_on_main = [&obj_ids, &preparation]() { obj_ids = preparation(); };
-            dispatch_sync(manager.dispatch_queue(), std::move(preparation_on_main));
-
-            auto &db = manager.database();
-            auto const &model = manager.model();
-            db::manager_result_t state{nullptr};
-            object_data_vector_map_t fetched_datas;
-
-            // トランザクション開始
-            if (auto begin_result = db::begin_transaction(db)) {
-                // DBからデータを取得する
-                if (auto fetch_result = db::fetch(db, model, obj_ids)) {
-                    fetched_datas = std::move(fetch_result.value());
-                } else {
-                    state = db::manager_result_t{std::move(fetch_result.error())};
-                }
-
-                // トランザクション終了
-                if (state) {
-                    db::commit(db);
-                } else {
-                    db::rollback(db);
-                    fetched_datas.clear();
-                }
-            } else {
-                state = db::make_error_result(db::manager_error_type::begin_transaction_failed,
-                                              std::move(begin_result.error()));
-            }
-
-            completion(std::move(state), std::move(fetched_datas));
+        fetch_preparation_option_f opt_preparation = [ids_preparation = std::move(ids_preparation)]() {
+            return db::to_fetch_option(ids_preparation());
         };
 
-        this->execute(execution, std::move(op_option));
+        this->execute_fetch_object_datas(std::move(opt_preparation), std::move(completion), std::move(op_option));
     }
 
     // バックグラウンドでデータベースにオブジェクトの変更を保存する

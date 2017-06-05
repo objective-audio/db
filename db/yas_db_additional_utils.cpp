@@ -325,17 +325,6 @@ db::manager_fetch_result_t db::fetch(db::database &db, db::model const &model, d
     return db::manager_fetch_result_t{std::move(fetched_datas)};
 }
 
-db::manager_fetch_result_t db::fetch(db::database &db, db::model const &model, db::integer_set_map_t const &obj_ids) {
-    db::fetch_option fetch_option{obj_ids.size()};
-
-    for (auto const &pair : obj_ids) {
-        fetch_option.add_select_option(
-            db::select_option{.table = pair.first, .where_exprs = db::in_expr(db::object_id_field, pair.second)});
-    }
-
-    return fetch(db, model, fetch_option);
-}
-
 db::select_result_t db::select_last(db::database const &db, db::select_option option, db::value const &save_id,
                                     bool const include_removed) {
     option.where_exprs = db::last_where_exprs(option.table, option.where_exprs, save_id, include_removed);
@@ -701,4 +690,20 @@ db::const_object_map_map_t db::to_const_map_objects(db::model const &model, db::
         objects.emplace(entity_name, std::move(entity_objects));
     }
     return objects;
+}
+
+db::fetch_option db::to_fetch_option(db::select_option sel_option) {
+    db::fetch_option fetch_option{1};
+    fetch_option.add_select_option(std::move(sel_option));
+    return fetch_option;
+}
+
+db::fetch_option db::to_fetch_option(db::integer_set_map_t const &obj_ids) {
+    db::fetch_option fetch_option{obj_ids.size()};
+    
+    for (auto const &pair : obj_ids) {
+        fetch_option.add_select_option({.table = pair.first, .where_exprs = db::in_expr(db::object_id_field, pair.second)});
+    }
+    
+    return fetch_option;
 }
