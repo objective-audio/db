@@ -188,35 +188,35 @@ using namespace yas;
     args = {db::value{2}, db::value{"value_2_d"}, db::value{4}, db::update_action_value()};
     XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
 
-    auto select_result = db::select_undo(db, table_name, 3, 4);
+    auto select_result = db::select_for_undo(db, table_name, 3, 4);
     XCTAssertTrue(select_result);
     XCTAssertEqual(select_result.value().size(), 2);
     XCTAssertEqual(select_result.value().at(0).at(field_name).get<db::text>(), "value_1_b");
     XCTAssertEqual(select_result.value().at(1).at(field_name).get<db::text>(), "value_2_c");
 
-    select_result = db::select_undo(db, table_name, 1, 3);
+    select_result = db::select_for_undo(db, table_name, 1, 3);
     XCTAssertTrue(select_result);
     XCTAssertEqual(select_result.value().size(), 2);
     XCTAssertEqual(select_result.value().at(0).at(field_name).get<db::text>(), "value_1_a");
     XCTAssertEqual(select_result.value().at(1).at(field_name).get<db::text>(), "value_2_a");
 
-    select_result = db::select_undo(db, table_name, 2, 3);
+    select_result = db::select_for_undo(db, table_name, 2, 3);
     XCTAssertTrue(select_result);
     XCTAssertEqual(select_result.value().size(), 1);
     XCTAssertEqual(select_result.value().at(0).at(field_name).get<db::text>(), "value_2_a");
 
-    select_result = db::select_undo(db, table_name, 1, 2);
+    select_result = db::select_for_undo(db, table_name, 1, 2);
     XCTAssertTrue(select_result);
     XCTAssertEqual(select_result.value().size(), 1);
     XCTAssertEqual(select_result.value().at(0).at(field_name).get<db::text>(), "value_1_a");
 
-    select_result = db::select_undo(db, table_name, 1, 4);
+    select_result = db::select_for_undo(db, table_name, 1, 4);
     XCTAssertTrue(select_result);
     XCTAssertEqual(select_result.value().size(), 2);
     XCTAssertEqual(select_result.value().at(0).at(field_name).get<db::text>(), "value_1_a");
     XCTAssertEqual(select_result.value().at(1).at(field_name).get<db::text>(), "value_2_a");
 
-    select_result = db::select_undo(db, table_name, 0, 1);
+    select_result = db::select_for_undo(db, table_name, 0, 1);
     XCTAssertTrue(select_result);
     XCTAssertEqual(select_result.value().size(), 2);
     XCTAssertEqual(select_result.value().at(0).count(db::object_id_field), 1);
@@ -258,29 +258,29 @@ using namespace yas;
     args = {db::value{2}, db::value{"value_2_d"}, db::value{4}};
     XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
 
-    auto select_result = db::select_redo(db, table_name, 4, 3);
+    auto select_result = db::select_for_redo(db, table_name, 4, 3);
     XCTAssertTrue(select_result);
     XCTAssertEqual(select_result.value().size(), 2);
     XCTAssertEqual(select_result.value().at(0).at(field_name).get<db::text>(), "value_1_d");
     XCTAssertEqual(select_result.value().at(1).at(field_name).get<db::text>(), "value_2_d");
 
-    select_result = db::select_redo(db, table_name, 3, 1);
+    select_result = db::select_for_redo(db, table_name, 3, 1);
     XCTAssertTrue(select_result);
     XCTAssertEqual(select_result.value().size(), 2);
     XCTAssertEqual(select_result.value().at(0).at(field_name).get<db::text>(), "value_1_b");
     XCTAssertEqual(select_result.value().at(1).at(field_name).get<db::text>(), "value_2_c");
 
-    select_result = db::select_redo(db, table_name, 3, 2);
+    select_result = db::select_for_redo(db, table_name, 3, 2);
     XCTAssertTrue(select_result);
     XCTAssertEqual(select_result.value().size(), 1);
     XCTAssertEqual(select_result.value().at(0).at(field_name).get<db::text>(), "value_2_c");
 
-    select_result = db::select_redo(db, table_name, 2, 1);
+    select_result = db::select_for_redo(db, table_name, 2, 1);
     XCTAssertTrue(select_result);
     XCTAssertEqual(select_result.value().size(), 1);
     XCTAssertEqual(select_result.value().at(0).at(field_name).get<db::text>(), "value_1_b");
 
-    select_result = db::select_redo(db, table_name, 4, 1);
+    select_result = db::select_for_redo(db, table_name, 4, 1);
     XCTAssertTrue(select_result);
     XCTAssertEqual(select_result.value().size(), 2);
     XCTAssertEqual(select_result.value().at(0).at(field_name).get<db::text>(), "value_1_d");
@@ -314,24 +314,24 @@ using namespace yas;
     args = {db::value{2}, db::value{"value_2_d"}, db::value{4}, db::update_action_value()};
     XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
 
-    auto select_result = db::select_revert(db, table_name, 1, 4);
+    auto select_result = db::select_for_revert(db, table_name, 1, 4);
 
     XCTAssertTrue(select_result);
     XCTAssertEqual(select_result.value().size(), 2);
     XCTAssertEqual(select_result.value().at(0).at(field_name).get<db::text>(), "value_1_a");
     XCTAssertEqual(select_result.value().at(1).at(field_name).get<db::text>(), "value_2_a");
 
-    select_result = db::select_revert(db, table_name, 4, 1);
+    select_result = db::select_for_revert(db, table_name, 4, 1);
     XCTAssertTrue(select_result);
     XCTAssertEqual(select_result.value().size(), 2);
     XCTAssertEqual(select_result.value().at(0).at(field_name).get<db::text>(), "value_1_d");
     XCTAssertEqual(select_result.value().at(1).at(field_name).get<db::text>(), "value_2_d");
 
-    select_result = db::select_revert(db, table_name, 3, 3);
+    select_result = db::select_for_revert(db, table_name, 3, 3);
     XCTAssertTrue(select_result);
     XCTAssertEqual(select_result.value().size(), 0);
 
-    select_result = db::select_revert(db, table_name, 0, 4);
+    select_result = db::select_for_revert(db, table_name, 0, 4);
     XCTAssertTrue(select_result);
     XCTAssertEqual(select_result.value().size(), 2);
     XCTAssertEqual(select_result.value().at(0).count(db::object_id_field), 1);

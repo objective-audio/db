@@ -451,7 +451,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
             db::info info = db::null_info();
 
             if (state) {
-                if (auto select_result = db::select_db_info(db)) {
+                if (auto select_result = db::fetch_info(db)) {
                     info = std::move(select_result.value());
                 } else {
                     state = db::manager_result_t{select_result.error()};
@@ -480,7 +480,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                 if (auto clear_result = db::clear_db(db, model)) {
                     // infoをクリア。セーブIDを0にする
                     db::value const zero_value{db::integer::type{0}};
-                    if (auto update_result = db::update_db_info(db, zero_value, zero_value)) {
+                    if (auto update_result = db::update_info(db, zero_value, zero_value)) {
                         db_info = std::move(update_result.value());
                     } else {
                         state = db::manager_result_t{std::move(update_result.error())};
@@ -522,7 +522,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                 if (auto purge_result = db::purge_db(db, model)) {
                     // infoをクリア。セーブIDを1にする
                     db::value const one_value = db::value{db::integer::type{1}};
-                    if (auto update_result = db::update_db_info(db, one_value, one_value)) {
+                    if (auto update_result = db::update_info(db, one_value, one_value)) {
                         db_info = std::move(update_result.value());
                     } else {
                         state = db::manager_result_t{std::move(update_result.error())};
@@ -581,7 +581,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
 
                 // DB情報を取得する
                 db::info info = db::null_info();
-                if (auto info_result = db::select_db_info(db)) {
+                if (auto info_result = db::fetch_info(db)) {
                     info = std::move(info_result.value());
                 } else {
                     state = db::manager_result_t{std::move(info_result.error())};
@@ -597,7 +597,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                 if (state) {
                     // DB情報を更新する
                     auto const next_save_id = info.next_save_id_value();
-                    if (auto update_result = db::update_db_info(db, next_save_id, next_save_id)) {
+                    if (auto update_result = db::update_info(db, next_save_id, next_save_id)) {
                         ret_db_info = std::move(update_result.value());
                     } else {
                         state = db::manager_result_t{std::move(update_result.error())};
@@ -702,7 +702,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
             db::manager_result_t state{nullptr};
 
             // データベースからセーブIDを取得する
-            if (auto select_result = db::select_db_info(db)) {
+            if (auto select_result = db::fetch_info(db)) {
                 db_info = std::move(select_result.value());
             } else {
                 state = db::manager_result_t{std::move(select_result.error())};
@@ -712,20 +712,20 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                 // トランザクション開始
                 if (auto begin_result = db::begin_transaction(db)) {
                     // 変更のあったデータをデータベースに保存する
-                    if (auto save_result = db::save_to_db(db, model, db_info, std::move(changed_datas))) {
+                    if (auto save_result = db::save(db, model, db_info, std::move(changed_datas))) {
                         saved_datas = std::move(save_result.value());
                     } else {
                         state = db::manager_result_t{std::move(save_result.error())};
                     }
-                    
-                    if (auto ul = unless(db::remove_relations_removed_from_db(db, model, db_info, changed_datas))) {
+
+                    if (auto ul = unless(db::remove_relations_at_save(db, model, db_info, changed_datas))) {
                         state = std::move(ul.value);
                     }
 
                     if (state) {
                         // infoの更新
                         auto const &next_save_id = db_info.next_save_id_value();
-                        if (auto update_result = db::update_db_info(db, next_save_id, next_save_id)) {
+                        if (auto update_result = db::update_info(db, next_save_id, next_save_id)) {
                             db_info = std::move(update_result.value());
                         } else {
                             state = db::manager_result_t{std::move(update_result.error())};
@@ -779,7 +779,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                 db::integer::type last_save_id = 0;
                 db::integer::type current_save_id = 0;
 
-                if (auto select_result = db::select_db_info(db)) {
+                if (auto select_result = db::fetch_info(db)) {
                     auto const &db_info = select_result.value();
                     current_save_id = db_info.current_save_id();
                     last_save_id = db_info.last_save_id();
@@ -797,7 +797,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                         auto const &entity_name = entity_model_pair.first;
                         // リバートするためのデータをデータベースから取得する
                         // カレントとの位置によってredoかundoが内部で呼ばれる
-                        if (auto select_result = db::select_revert(db, entity_name, rev_save_id, current_save_id)) {
+                        if (auto select_result = db::select_for_revert(db, entity_name, rev_save_id, current_save_id)) {
                             reverted_attrs.emplace(entity_name, std::move(select_result.value()));
                         } else {
                             reverted_attrs.clear();
