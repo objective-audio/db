@@ -701,236 +701,30 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
 
             db::manager_result_t state{nullptr};
 
-            if (changed_datas.size() > 0) {
+            // データベースからセーブIDを取得する
+            if (auto select_result = db::select_db_info(db)) {
+                db_info = std::move(select_result.value());
+            } else {
+                state = db::manager_result_t{std::move(select_result.error())};
+            }
+
+            if (state && changed_datas.size() > 0) {
+                // トランザクション開始
                 if (auto begin_result = db::begin_transaction(db)) {
-                    // トランザクション開始
-                    auto current_save_id = db::null_value();
-                    auto next_save_id = db::null_value();
-                    auto last_save_id = db::null_value();
-
-                    // データベースからセーブIDを取得する
-                    if (auto select_result = db::select_db_info(db)) {
-                        auto const &db_info = select_result.value();
-                        current_save_id = db_info.current_save_id_value();
-                        next_save_id = db::value{current_save_id.get<db::integer>() + 1};
-                        last_save_id = db_info.last_save_id_value();
+                    // 変更のあったデータをデータベースに保存する
+                    if (auto save_result = db::save_to_db(db, model, db_info, std::move(changed_datas))) {
+                        saved_datas = std::move(save_result.value());
                     } else {
-                        state = db::manager_result_t{std::move(select_result.error())};
+                        state = db::manager_result_t{std::move(save_result.error())};
                     }
-
-                    if (state) {
-                        // ラストのセーブIDよりカレントが前ならカレントより後のデータは削除する
-                        if (current_save_id.get<db::integer>() < last_save_id.get<db::integer>()) {
-                            state = db::delete_next_to_last(db, model, current_save_id);
-                        }
-                    } else {
-                        state = db::make_error_result(db::manager_error_type::save_id_not_found);
-                    }
-
-                    if (state) {
-                        auto const save_id_pair = std::make_pair(db::save_id_field, next_save_id);
-
-                        for (auto const &entity_pair : changed_datas) {
-                            auto const &entity_name = entity_pair.first;
-                            auto const &changed_entity_datas = entity_pair.second;
-                            auto const entity_insert_sql = manager.model().entity(entity_name).sql_for_insert();
-                            auto const &rel_models = manager.model().relations(entity_name);
-
-                            db::object_data_vector_t entity_saved_datas;
-
-                            for (auto data : changed_entity_datas) {
-                                // 保存するデータのアトリビュートのidは削除する（rowidなのでいらない）
-                                erase_if_exists(data.attributes, db::pk_id_field);
-                                // 保存するデータのセーブIDを今セーブするIDに置き換える
-                                replace(data.attributes, db::save_id_field, next_save_id);
-
-                                if (data.attributes.count(db::object_id_field) == 0) {
-                                    // 保存するデータにまだオブジェクトIDがなければデータベース上の最大値+1をセットする
-                                    db::integer::type obj_id = 0;
-                                    if (auto max_value = db::max(db, entity_name, db::object_id_field)) {
-                                        obj_id = max_value.get<db::integer>();
-                                    }
-                                    replace(data.attributes, db::object_id_field, db::value{obj_id + 1});
-                                }
-
-                                // データベースにアトリビュートのデータを挿入する
-                                if (auto ul = unless(db.execute_update(entity_insert_sql, data.attributes))) {
-                                    state = db::make_error_result(db::manager_error_type::insert_attributes_failed,
-                                                                  std::move(ul.value.error()));
-                                }
-
-                                if (state) {
-                                    // 挿入したデータのrowidを取得
-                                    if (auto row_result = db.last_insert_rowid()) {
-                                        auto const src_pk_id = db::value{std::move(row_result.value())};
-                                        auto const src_obj_id = data.attributes.at(db::object_id_field);
-
-                                        for (auto const &rel_pair : data.relations) {
-                                            // データベースに関連のデータを挿入する
-                                            auto const &rel_model = rel_models.at(rel_pair.first);
-                                            auto const &rel_tgt_obj_ids = rel_pair.second;
-                                            if (auto ul =
-                                                    unless(db::insert_relations(db, rel_model, src_pk_id, src_obj_id,
-                                                                                rel_tgt_obj_ids, next_save_id))) {
-                                                state = std::move(ul.value);
-                                                break;
-                                            }
-                                        }
-                                    } else {
-                                        state = db::make_error_result(db::manager_error_type::last_insert_rowid_failed,
-                                                                      std::move(row_result.error()));
-                                    }
-                                }
-
-                                if (state) {
-                                    entity_saved_datas.emplace_back(std::move(data));
-                                }
-                            }
-
-                            if (!state) {
-                                break;
-                            }
-
-                            saved_datas.emplace(entity_name, std::move(entity_saved_datas));
-                        }
-                    }
-
-                    if (state) {
-                        // オブジェクトが削除された場合に逆関連があったらデータベース上で関連を外す
-                        for (auto const &entity_pair : changed_datas) {
-                            // エンティティごとの処理
-                            auto const &entity_name = entity_pair.first;
-                            auto const &changed_entity_datas = entity_pair.second;
-                            auto const &inv_rel_names = manager.model().entity(entity_name).inverse_relation_names;
-
-                            if (inv_rel_names.size() == 0) {
-                                // 逆関連が無ければスキップ
-                                continue;
-                            }
-
-                            // 削除されたobject_idを取得
-                            db::value_vector_t tgt_obj_ids;
-                            tgt_obj_ids.reserve(changed_entity_datas.size());
-
-                            for (db::object_data const &data : changed_entity_datas) {
-                                auto const &action = data.attributes.at(db::action_field);
-                                if (action.get<db::text>() != db::remove_action) {
-                                    // 削除されていなければスキップ
-                                    continue;
-                                }
-
-                                tgt_obj_ids.push_back(data.attributes.at(db::object_id_field));
-                            }
-
-                            if (tgt_obj_ids.size() == 0) {
-                                // 削除されたオブジェクトがなければスキップ
-                                continue;
-                            }
-
-                            for (auto const &inv_entity_pair : inv_rel_names) {
-                                std::string const &inv_entity_name = inv_entity_pair.first;
-                                db::string_set_t const &rel_names = inv_entity_pair.second;
-
-                                db::value_map_map_t entity_attrs_map;
-
-                                // tgt_obj_idsが関連先に含まれているオブジェクトのアトリビュートを取得
-                                for (auto const &rel_name : rel_names) {
-                                    auto const &rel = model.relation(inv_entity_name, rel_name);
-                                    if (auto select_result = db::select_relation_removed(db, inv_entity_name,
-                                                                                         rel.table_name, tgt_obj_ids)) {
-                                        for (auto const &attr : select_result.value()) {
-                                            std::string obj_id_str = to_string(attr.at(db::object_id_field));
-                                            if (entity_attrs_map.count(obj_id_str) == 0) {
-                                                // object_idが被らないものだけ追加する。必ず最後のデータが来ているはず。
-                                                entity_attrs_map.emplace(std::move(obj_id_str), std::move(attr));
-                                            }
-                                        }
-                                    } else {
-                                        state = db::make_error_result(
-                                            db::manager_error_type::select_relation_removed_failed,
-                                            std::move(select_result.error()));
-                                        break;
-                                    }
-                                }
-
-                                db::object_data_vector_t inv_removed_datas;
-
-                                if (state && entity_attrs_map.size() > 0) {
-                                    // アトリビュートを元に関連を取得する
-                                    // mapからvectorへ変換
-                                    db::value_map_vector_t entity_attrs_vec = to_vector<db::value_map_t>(
-                                        entity_attrs_map, [](auto &pair) { return std::move(pair.second); });
-
-                                    auto const &rel_models = model.relations(inv_entity_name);
-                                    if (auto obj_datas_result = db::make_entity_object_datas(
-                                            db, inv_entity_name, rel_models, entity_attrs_vec)) {
-                                        // 同じidのオブジェクトは上書きかスキップする？
-                                        // すでにsaveしたものは被っていないはず
-                                        inv_removed_datas = std::move(obj_datas_result.value());
-                                    } else {
-                                        state = db::make_error_result(db::manager_error_type::make_object_datas_failed,
-                                                                      std::move(obj_datas_result.error()));
-                                        break;
-                                    }
-                                }
-
-                                if (state && inv_removed_datas.size() > 0) {
-                                    auto const &entity_insert_sql = model.entity(inv_entity_name).sql_for_insert();
-                                    auto const &rel_models = model.relations(inv_entity_name);
-
-                                    for (auto &obj_data : inv_removed_datas) {
-                                        // 保存するデータのアトリビュートのidは削除する（rowidなのでいらない）
-                                        erase_if_exists(obj_data.attributes, db::pk_id_field);
-                                        // 保存するデータのセーブIDを今セーブするIDに置き換える
-                                        replace(obj_data.attributes, db::save_id_field, next_save_id);
-                                        // データベースにアトリビュートのデータを挿入する
-                                        if (auto ul =
-                                                unless(db.execute_update(entity_insert_sql, obj_data.attributes))) {
-                                            state =
-                                                db::make_error_result(db::manager_error_type::insert_attributes_failed,
-                                                                      std::move(ul.value.error()));
-                                            break;
-                                        }
-
-                                        // pk_idを取得してセットする
-                                        if (auto row_result = db.last_insert_rowid()) {
-                                            auto const src_pk_id = db::value{std::move(row_result.value())};
-                                            auto const src_obj_id = obj_data.attributes.at(db::object_id_field);
-
-                                            for (auto const &rel_pair : obj_data.relations) {
-                                                // データベースに関連のデータを挿入する
-                                                auto const &rel_model = rel_models.at(rel_pair.first);
-                                                auto const rel_tgt_obj_ids =
-                                                    filter(rel_pair.second, [&tgt_obj_ids](auto const &obj_id) {
-                                                        return !contains(tgt_obj_ids, obj_id);
-                                                    });
-                                                if (rel_tgt_obj_ids.size() > 0) {
-                                                    if (auto ul = unless(
-                                                            db::insert_relations(db, rel_model, src_pk_id, src_obj_id,
-                                                                                 rel_tgt_obj_ids, next_save_id))) {
-                                                        state = std::move(ul.value);
-                                                        break;
-                                                    }
-                                                }
-                                            }
-                                        } else {
-                                            state =
-                                                db::make_error_result(db::manager_error_type::last_insert_rowid_failed,
-                                                                      std::move(row_result.error()));
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
-
-                            if (!state) {
-                                break;
-                            }
-                        }
+                    
+                    if (auto ul = unless(db::remove_relations_removed_from_db(db, model, db_info, changed_datas))) {
+                        state = std::move(ul.value);
                     }
 
                     if (state) {
                         // infoの更新
+                        auto const &next_save_id = db_info.next_save_id_value();
                         if (auto update_result = db::update_db_info(db, next_save_id, next_save_id)) {
                             db_info = std::move(update_result.value());
                         } else {
@@ -948,14 +742,6 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                 } else {
                     state = db::make_error_result(db::manager_error_type::begin_transaction_failed,
                                                   std::move(begin_result.error()));
-                }
-            }
-
-            if (state && !db_info) {
-                if (auto select_result = db::select_db_info(db)) {
-                    db_info = std::move(select_result.value());
-                } else {
-                    state = db::manager_result_t{std::move(select_result.error())};
                 }
             }
 

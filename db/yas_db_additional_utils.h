@@ -66,6 +66,14 @@ namespace db {
     // DB上のデータをパージする
     db::manager_result_t purge_db(db::database &db, db::model const &model);
 
+    // 変更のあったデータをDB上に保存する
+    db::manager_fetch_result_t save_to_db(db::database &db, db::model const &model, db::info const &info,
+                                          db::object_data_vector_map_t const &changed_datas);
+    // 変更のあったデータのうち削除されたオブジェクトを関連から外す
+    db::manager_result_t remove_relations_removed_from_db(db::database &db, db::model const &model,
+                                                          db::info const &info,
+                                                          db::object_data_vector_map_t const &changed_datas);
+
     // managerから返すエラーを簡易的に生成する
     db::manager_result_t make_error_result(db::manager_error_type const &error_type, db::error db_error = nullptr);
 
