@@ -93,7 +93,9 @@ namespace db {
     // 全てのエンティティを含む
     db::const_object_map_map_t to_const_map_objects(db::model const &model, db::object_data_vector_map_t const &datas);
     
+    // select_optionをfetch_optionにして取得
     db::fetch_option to_fetch_option(db::select_option);
+    // オブジェクトIDに一致するデータを取得するfetch_optionを取得
     db::fetch_option to_fetch_option(db::integer_set_map_t const &obj_ids);
 }
 }
