@@ -31,14 +31,6 @@ using namespace yas;
     XCTAssertEqual(option.select_options().size(), 0);
 }
 
-- (void)test_construct_with_select_option {
-    db::select_option sel_option{.table = "test_table"};
-    db::fetch_option option{sel_option};
-    
-    XCTAssertEqual(option.select_options().size(), 1);
-    XCTAssertEqual(option.select_options().at("test_table").table, "test_table");
-}
-
 - (void)test_add_select_option {
     db::fetch_option option;
     

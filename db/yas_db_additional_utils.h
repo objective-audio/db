@@ -28,8 +28,6 @@ namespace db {
 
     // select_optionでの条件に一致したデータをDBから取得する
     db::manager_fetch_result_t fetch(db::database &db, db::model const &model, db::fetch_option const &fetch_option);
-    // オブジェクトIDに一致するデータをDBから取得する
-    db::manager_fetch_result_t fetch(db::database &db, db::model const &model, db::integer_set_map_t const &obj_ids);
 
     // 指定したsave_id以前で最後のデータをDBから取得する
     db::select_result_t select_last(db::database const &db, db::select_option option, value const &save_id = nullptr,
@@ -94,5 +92,8 @@ namespace db {
     // object_dataの配列からobject_idをキーとしたconst_objectのmapを生成する
     // 全てのエンティティを含む
     db::const_object_map_map_t to_const_map_objects(db::model const &model, db::object_data_vector_map_t const &datas);
+    
+    db::fetch_option to_fetch_option(db::select_option);
+    db::fetch_option to_fetch_option(db::integer_set_map_t const &obj_ids);
 }
 }

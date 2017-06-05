@@ -13,10 +13,6 @@ db::fetch_option::fetch_option(std::size_t const reserve) {
     _sel_options.reserve(reserve);
 }
 
-db::fetch_option::fetch_option(db::select_option sel_option)
-    : _sel_options(db::select_option_map_t{{sel_option.table, std::move(sel_option)}}) {
-}
-
 void db::fetch_option::add_select_option(db::select_option option) {
     if (_sel_options.count(option.table) > 0) {
         throw std::invalid_argument("duplicate table.");
