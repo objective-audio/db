@@ -418,211 +418,6 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
         this->_op_queue.push_back(operation{std::move(op_lambda), std::move(option)});
     }
 
-    // バックグラウンドでマネージャのセットアップ処理をする
-    void execute_setup(std::function<void(db::manager_result_t &&, db::info &&)> &&completion,
-                       operation_option_t &&option) {
-        auto execution = [completion = std::move(completion), manager = cast<manager>()](operation const &op) mutable {
-            db::database &db = manager.database();
-            db::model const &model = manager.model();
-
-            db::manager_result_t state{nullptr};
-
-            if (auto begin_result = db::begin_transaction(db)) {
-                // トランザクションを開始
-                if (db::table_exists(db, db::info_table)) {
-                    // infoのテーブルが存在している場合
-                    state = db::migrate_db_if_needed(db, model);
-                } else {
-                    // infoのテーブルが存在していない場合は、新規にテーブルを作成する
-                    state = db::create_info_and_tables(db, model);
-                }
-
-                // トランザクション終了
-                if (state) {
-                    db::commit(db);
-                } else {
-                    db::rollback(db);
-                }
-            } else {
-                state = db::make_error_result(db::manager_error_type::begin_transaction_failed,
-                                              std::move(begin_result.error()));
-            }
-
-            db::info info = db::null_info();
-
-            if (state) {
-                if (auto select_result = db::fetch_info(db)) {
-                    info = std::move(select_result.value());
-                } else {
-                    state = db::manager_result_t{select_result.error()};
-                }
-            }
-
-            completion(std::move(state), std::move(info));
-        };
-
-        this->execute(execution, std::move(option));
-    }
-
-    // バックグラウンドでデータベース上のデータをクリアする
-    void execute_clear(std::function<void(db::manager_result_t &&, db::info &&)> &&completion,
-                       operation_option_t &&option) {
-        auto execution = [completion = std::move(completion), manager = cast<manager>()](operation const &op) mutable {
-            auto &db = manager.database();
-            auto const &model = manager.model();
-
-            db::info db_info = db::null_info();
-            db::manager_result_t state{nullptr};
-
-            // トランザクション開始
-            if (auto begin_result = db::begin_transaction(db)) {
-                // DBをクリアする
-                if (auto clear_result = db::clear_db(db, model)) {
-                    // infoをクリア。セーブIDを0にする
-                    db::value const zero_value{db::integer::type{0}};
-                    if (auto update_result = db::update_info(db, zero_value, zero_value)) {
-                        db_info = std::move(update_result.value());
-                    } else {
-                        state = db::manager_result_t{std::move(update_result.error())};
-                    }
-                } else {
-                    state = std::move(clear_result);
-                }
-
-                // トランザクション終了
-                if (state) {
-                    db::commit(db);
-                } else {
-                    db::rollback(db);
-                    db_info = db::null_info();
-                }
-            } else {
-                state = db::make_error_result(db::manager_error_type::begin_transaction_failed,
-                                              std::move(begin_result.error()));
-            }
-
-            completion(std::move(state), std::move(db_info));
-        };
-
-        this->execute(execution, std::move(option));
-    }
-
-    // バックグラウンドでデータベース上のデータをパージする
-    void execute_purge(std::function<void(db::manager_result_t &&, db::info &&)> &&completion,
-                       operation_option_t &&option) {
-        auto execution = [completion = std::move(completion), manager = cast<manager>()](operation const &op) mutable {
-            auto &db = manager.database();
-            auto const &model = manager.model();
-
-            db::info db_info = db::null_info();
-            db::manager_result_t state{nullptr};
-
-            // トランザクション開始
-            if (auto begin_result = db::begin_transaction(db)) {
-                if (auto purge_result = db::purge_db(db, model)) {
-                    // infoをクリア。セーブIDを1にする
-                    db::value const one_value = db::value{db::integer::type{1}};
-                    if (auto update_result = db::update_info(db, one_value, one_value)) {
-                        db_info = std::move(update_result.value());
-                    } else {
-                        state = db::manager_result_t{std::move(update_result.error())};
-                    }
-                } else {
-                    state = std::move(purge_result);
-                }
-
-                // トランザクション終了
-                if (state) {
-                    db::commit(db);
-                } else {
-                    db::rollback(db);
-                }
-            } else {
-                state = db::make_error_result(db::manager_error_type::begin_transaction_failed,
-                                              std::move(begin_result.error()));
-            }
-
-            if (state) {
-                // バキュームする（バキュームはトランザクション中はできない）
-                if (auto ul = unless(db.execute_update(db::vacuum_sql()))) {
-                    state = db::make_error_result(db::manager_error_type::vacuum_failed, std::move(ul.value.error()));
-                }
-            }
-
-            completion(std::move(state), std::move(db_info));
-        };
-
-        this->execute(execution, std::move(option));
-    }
-
-    // バックグラウンドでデータベース上にオブジェクトデータを挿入する
-    void execute_insert(
-        insert_preparation_values_f &&preparation,
-        std::function<void(db::manager_result_t &&, db::object_data_vector_map_t &&, db::info &&)> &&completion,
-        operation_option_t &&option) {
-        auto execution =
-            [preparation = std::move(preparation), completion = std::move(completion),
-             manager = cast<manager>()](operation const &op) mutable {
-            // 挿入するオブジェクトのデータをメインスレッドで準備する
-            db::value_map_vector_map_t values;
-            auto preparation_on_main = [&values, &preparation]() { values = preparation(); };
-            dispatch_sync(manager.dispatch_queue(), std::move(preparation_on_main));
-
-            auto &db = manager.database();
-            auto const &model = manager.model();
-
-            db::info ret_db_info = db::null_info();
-            object_data_vector_map_t inserted_datas;
-
-            db::manager_result_t state{nullptr};
-
-            if (auto begin_result = db::begin_transaction(db)) {
-                // トランザクション開始
-
-                // DB情報を取得する
-                db::info info = db::null_info();
-                if (auto info_result = db::fetch_info(db)) {
-                    info = std::move(info_result.value());
-                } else {
-                    state = db::manager_result_t{std::move(info_result.error())};
-                }
-
-                // DB上に新規にデータを挿入する
-                if (auto insert_result = db::insert(db, model, info, std::move(values))) {
-                    inserted_datas = std::move(insert_result.value());
-                } else {
-                    state = db::manager_result_t{std::move(insert_result.error())};
-                }
-
-                if (state) {
-                    // DB情報を更新する
-                    auto const next_save_id = info.next_save_id_value();
-                    if (auto update_result = db::update_info(db, next_save_id, next_save_id)) {
-                        ret_db_info = std::move(update_result.value());
-                    } else {
-                        state = db::manager_result_t{std::move(update_result.error())};
-                    }
-                }
-
-                // トランザクション終了
-                if (state) {
-                    db::commit(db);
-                } else {
-                    db::rollback(db);
-                    inserted_datas.clear();
-                }
-            } else {
-                state = db::make_error_result(db::manager_error_type::begin_transaction_failed,
-                                              std::move(begin_result.error()));
-            }
-
-            // 結果を返す
-            completion(std::move(state), std::move(inserted_datas), std::move(ret_db_info));
-        };
-
-        this->execute(execution, std::move(option));
-    }
-
     // バックグラウンドでデータベースからオブジェクトデータを取得する。条件はselect_optionで指定。単独のエンティティのみ
     void execute_fetch_object_datas(
         fetch_preparation_option_f &&preparation,
@@ -678,183 +473,6 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
         };
 
         this->execute_fetch_object_datas(std::move(opt_preparation), std::move(completion), std::move(op_option));
-    }
-
-    // バックグラウンドでデータベースにオブジェクトの変更を保存する
-    void execute_save(std::function<void(db::manager_result_t &&state, db::object_data_vector_map_t &&saved_datas,
-                                         db::info &&db_info)> &&completion,
-                      operation_option_t &&option) {
-        auto execution = [completion = std::move(completion), manager = cast<manager>()](operation const &) mutable {
-            db::object_data_vector_map_t changed_datas;
-            // 変更のあったデータをメインスレッドで取得する
-            auto manager_impl = manager.impl_ptr<impl>();
-            auto get_change_lambda = [&manager_impl, &changed_datas]() {
-                changed_datas = manager_impl->changed_datas_for_save();
-            };
-            dispatch_sync(manager.dispatch_queue(), get_change_lambda);
-
-            auto &db = manager.database();
-            auto const &model = manager.model();
-
-            db::info db_info = db::null_info();
-            db::object_data_vector_map_t saved_datas;
-
-            db::manager_result_t state{nullptr};
-
-            // データベースからセーブIDを取得する
-            if (auto select_result = db::fetch_info(db)) {
-                db_info = std::move(select_result.value());
-            } else {
-                state = db::manager_result_t{std::move(select_result.error())};
-            }
-
-            if (state && changed_datas.size() > 0) {
-                // トランザクション開始
-                if (auto begin_result = db::begin_transaction(db)) {
-                    // 変更のあったデータをデータベースに保存する
-                    if (auto save_result = db::save(db, model, db_info, std::move(changed_datas))) {
-                        saved_datas = std::move(save_result.value());
-                    } else {
-                        state = db::manager_result_t{std::move(save_result.error())};
-                    }
-
-                    if (auto ul = unless(db::remove_relations_at_save(db, model, db_info, changed_datas))) {
-                        state = std::move(ul.value);
-                    }
-
-                    if (state) {
-                        // infoの更新
-                        auto const &next_save_id = db_info.next_save_id_value();
-                        if (auto update_result = db::update_info(db, next_save_id, next_save_id)) {
-                            db_info = std::move(update_result.value());
-                        } else {
-                            state = db::manager_result_t{std::move(update_result.error())};
-                        }
-                    }
-
-                    // トランザクション終了
-                    if (state) {
-                        db::commit(db);
-                    } else {
-                        db::rollback(db);
-                        saved_datas.clear();
-                    }
-                } else {
-                    state = db::make_error_result(db::manager_error_type::begin_transaction_failed,
-                                                  std::move(begin_result.error()));
-                }
-            }
-
-            completion(std::move(state), std::move(saved_datas), std::move(db_info));
-        };
-
-        this->execute(execution, std::move(option));
-    }
-
-    // バックグラウンドでリバートする
-    void execute_revert(db::manager::revert_preparation_f preparation,
-                        std::function<void(db::manager_result_t &&state, db::object_data_vector_map_t &&reverted_datas,
-                                           db::info &&db_info)> &&completion,
-                        operation_option_t &&option) {
-        auto execution =
-            [preparation = std::move(preparation), completion = std::move(completion),
-             manager = cast<db::manager>()](operation const &) mutable {
-            // リバートする先のセーブIDをメインスレッドで準備する
-            db::integer::type rev_save_id;
-            auto preparation_on_main = [&rev_save_id, &preparation]() { rev_save_id = preparation(); };
-            dispatch_sync(manager.dispatch_queue(), std::move(preparation_on_main));
-
-            auto &db = manager.database();
-
-            db::manager_result_t state{nullptr};
-
-            db::value_map_vector_map_t reverted_attrs;
-            db::object_data_vector_map_t reverted_datas;
-            db::info ret_db_info = db::null_info();
-
-            if (auto begin_result = db::begin_transaction(db)) {
-                // トランザクション開始
-
-                // カレントとラストのセーブIDをデータベースから取得する
-                db::integer::type last_save_id = 0;
-                db::integer::type current_save_id = 0;
-
-                if (auto select_result = db::fetch_info(db)) {
-                    auto const &db_info = select_result.value();
-                    current_save_id = db_info.current_save_id();
-                    last_save_id = db_info.last_save_id();
-                } else {
-                    state = db::manager_result_t{std::move(select_result.error())};
-                }
-
-                auto const &entity_models = manager.model().entities();
-
-                if (rev_save_id == current_save_id || last_save_id < rev_save_id) {
-                    // リバートしようとするセーブIDがカレントと同じかラスト以降ならエラー
-                    state = db::make_error_result(db::manager_error_type::out_of_range_save_id);
-                } else {
-                    for (auto const &entity_model_pair : entity_models) {
-                        auto const &entity_name = entity_model_pair.first;
-                        // リバートするためのデータをデータベースから取得する
-                        // カレントとの位置によってredoかundoが内部で呼ばれる
-                        if (auto select_result = db::select_for_revert(db, entity_name, rev_save_id, current_save_id)) {
-                            reverted_attrs.emplace(entity_name, std::move(select_result.value()));
-                        } else {
-                            reverted_attrs.clear();
-                            state = db::make_error_result(db::manager_error_type::select_revert_failed,
-                                                          std::move(select_result.error()));
-                            break;
-                        }
-                    }
-                }
-
-                if (state) {
-                    for (auto const &entity_attrs_pair : reverted_attrs) {
-                        auto const &entity_name = entity_attrs_pair.first;
-                        auto const &entity_attrs = entity_attrs_pair.second;
-                        auto const &rel_models = manager.model().relations(entity_name);
-
-                        // アトリビュートのみのデータから関連のデータを加えてobject_dataを生成する
-                        if (auto obj_datas_result =
-                                db::make_entity_object_datas(db, entity_name, rel_models, entity_attrs)) {
-                            reverted_datas.emplace(entity_name, std::move(obj_datas_result.value()));
-                        } else {
-                            reverted_attrs.clear();
-                            reverted_datas.clear();
-                            state = db::make_error_result(db::manager_error_type::make_object_datas_failed,
-                                                          std::move(obj_datas_result.error()));
-                            break;
-                        }
-                    }
-                }
-
-                if (state) {
-                    // リバートしたセーブIDでinfoを更新する
-                    if (auto update_result = db::update_current_save_id(db, db::value{rev_save_id})) {
-                        ret_db_info = std::move(update_result.value());
-                    } else {
-                        state = db::manager_result_t{std::move(update_result.error())};
-                    }
-                }
-
-                // トランザクション終了
-                if (state) {
-                    db::commit(db);
-                } else {
-                    db::rollback(db);
-                    reverted_datas.clear();
-                    ret_db_info = db::null_info();
-                }
-            } else {
-                state = db::make_error_result(db::manager_error_type::begin_transaction_failed,
-                                              std::move(begin_result.error()));
-            }
-
-            // 結果を返す
-            completion(std::move(state), std::move(reverted_datas), std::move(ret_db_info));
-        };
-
-        this->execute(execution, std::move(option));
     }
 
     // バックグラウンド処理を保留するカウントをあげる
@@ -941,9 +559,44 @@ db::object db::manager::insert_object(std::string const entity_name) {
 }
 
 void db::manager::setup(db::manager::completion_f completion, operation_option_t option) {
-    auto impl_completion =
-        [completion = std::move(completion), manager = *this](db::manager_result_t && state, db::info && info) mutable {
-        auto lambda =
+    auto execution = [completion = std::move(completion), manager = *this](operation const &op) mutable {
+        db::database &db = manager.database();
+        db::model const &model = manager.model();
+
+        db::manager_result_t state{nullptr};
+
+        if (auto begin_result = db::begin_transaction(db)) {
+            // トランザクションを開始
+            if (db::table_exists(db, db::info_table)) {
+                // infoのテーブルが存在している場合
+                state = db::migrate_db_if_needed(db, model);
+            } else {
+                // infoのテーブルが存在していない場合は、新規にテーブルを作成する
+                state = db::create_info_and_tables(db, model);
+            }
+
+            // トランザクション終了
+            if (state) {
+                db::commit(db);
+            } else {
+                db::rollback(db);
+            }
+        } else {
+            state = db::make_error_result(db::manager_error_type::begin_transaction_failed,
+                                          std::move(begin_result.error()));
+        }
+
+        db::info info = db::null_info();
+
+        if (state) {
+            if (auto select_result = db::fetch_info(db)) {
+                info = std::move(select_result.value());
+            } else {
+                state = db::manager_result_t{select_result.error()};
+            }
+        }
+
+        auto completion_on_main =
             [manager, state = std::move(state), info = std::move(info), completion = std::move(completion)]() mutable {
             if (state) {
                 manager.impl_ptr<impl>()->set_db_info(std::move(info));
@@ -951,16 +604,48 @@ void db::manager::setup(db::manager::completion_f completion, operation_option_t
             completion(std::move(state));
         };
 
-        dispatch_sync(manager.dispatch_queue(), std::move(lambda));
+        dispatch_sync(manager.dispatch_queue(), completion_on_main);
     };
 
-    impl_ptr<impl>()->execute_setup(std::move(impl_completion), std::move(option));
+    this->execute(execution, std::move(option));
 }
 
 void db::manager::clear(db::manager::completion_f completion, operation_option_t option) {
-    auto impl_completion =
-        [completion = std::move(completion), manager = *this](db::manager_result_t && state, db::info && db_info) {
-        auto lambda = [
+    auto execution = [completion = std::move(completion), manager = *this](operation const &op) mutable {
+        auto &db = manager.database();
+        auto const &model = manager.model();
+
+        db::info db_info = db::null_info();
+        db::manager_result_t state{nullptr};
+
+        // トランザクション開始
+        if (auto begin_result = db::begin_transaction(db)) {
+            // DBをクリアする
+            if (auto clear_result = db::clear_db(db, model)) {
+                // infoをクリア。セーブIDを0にする
+                db::value const zero_value{db::integer::type{0}};
+                if (auto update_result = db::update_info(db, zero_value, zero_value)) {
+                    db_info = std::move(update_result.value());
+                } else {
+                    state = db::manager_result_t{std::move(update_result.error())};
+                }
+            } else {
+                state = std::move(clear_result);
+            }
+
+            // トランザクション終了
+            if (state) {
+                db::commit(db);
+            } else {
+                db::rollback(db);
+                db_info = db::null_info();
+            }
+        } else {
+            state = db::make_error_result(db::manager_error_type::begin_transaction_failed,
+                                          std::move(begin_result.error()));
+        }
+
+        auto completion_on_main = [
             completion = std::move(completion), manager, state = std::move(state), db_info = std::move(db_info)
         ]() mutable {
             if (state) {
@@ -970,16 +655,53 @@ void db::manager::clear(db::manager::completion_f completion, operation_option_t
             completion(std::move(state));
         };
 
-        dispatch_sync(manager.dispatch_queue(), std::move(lambda));
+        dispatch_sync(manager.dispatch_queue(), std::move(completion_on_main));
     };
 
-    impl_ptr<impl>()->execute_clear(std::move(impl_completion), std::move(option));
+    this->execute(execution, std::move(option));
 }
 
 void db::manager::purge(db::manager::completion_f completion, operation_option_t option) {
-    auto impl_completion =
-        [completion = std::move(completion), manager = *this](db::manager_result_t && state, db::info && db_info) {
-        auto lambda = [
+    auto execution = [completion = std::move(completion), manager = *this](operation const &op) mutable {
+        auto &db = manager.database();
+        auto const &model = manager.model();
+
+        db::info db_info = db::null_info();
+        db::manager_result_t state{nullptr};
+
+        // トランザクション開始
+        if (auto begin_result = db::begin_transaction(db)) {
+            if (auto purge_result = db::purge_db(db, model)) {
+                // infoをクリア。セーブIDを1にする
+                db::value const one_value = db::value{db::integer::type{1}};
+                if (auto update_result = db::update_info(db, one_value, one_value)) {
+                    db_info = std::move(update_result.value());
+                } else {
+                    state = db::manager_result_t{std::move(update_result.error())};
+                }
+            } else {
+                state = std::move(purge_result);
+            }
+
+            // トランザクション終了
+            if (state) {
+                db::commit(db);
+            } else {
+                db::rollback(db);
+            }
+        } else {
+            state = db::make_error_result(db::manager_error_type::begin_transaction_failed,
+                                          std::move(begin_result.error()));
+        }
+
+        if (state) {
+            // バキュームする（バキュームはトランザクション中はできない）
+            if (auto ul = unless(db.execute_update(db::vacuum_sql()))) {
+                state = db::make_error_result(db::manager_error_type::vacuum_failed, std::move(ul.value.error()));
+            }
+        }
+
+        auto completion_on_main = [
             completion = std::move(completion), manager, state = std::move(state), db_info = std::move(db_info)
         ]() mutable {
             if (state) {
@@ -990,10 +712,10 @@ void db::manager::purge(db::manager::completion_f completion, operation_option_t
             completion(std::move(state));
         };
 
-        dispatch_sync(manager.dispatch_queue(), std::move(lambda));
+        dispatch_sync(manager.dispatch_queue(), std::move(completion_on_main));
     };
 
-    impl_ptr<impl>()->execute_purge(std::move(impl_completion), std::move(option));
+    this->execute(execution, std::move(option));
 }
 
 void db::manager::reset(db::manager::completion_f completion, operation_option_t option) {
@@ -1046,11 +768,63 @@ void db::manager::insert_objects(db::manager::insert_preparation_count_f prepara
 
 void db::manager::insert_objects(db::manager::insert_preparation_values_f preparation,
                                  db::manager::vector_completion_f completion, operation_option_t option) {
-    auto impl_completion = [completion = std::move(completion), manager = *this](
-        db::manager_result_t && state, db::object_data_vector_map_t && inserted_datas, db::info && db_info) {
-        auto lambda = [
+    auto execution = [preparation = std::move(preparation), completion = std::move(completion),
+                      manager = *this](operation const &op) mutable {
+        // 挿入するオブジェクトのデータをメインスレッドで準備する
+        db::value_map_vector_map_t values;
+        dispatch_sync(manager.dispatch_queue(), [&values, &preparation]() { values = preparation(); });
+
+        auto &db = manager.database();
+        auto const &model = manager.model();
+
+        db::info ret_db_info = db::null_info();
+        object_data_vector_map_t inserted_datas;
+
+        db::manager_result_t state{nullptr};
+
+        if (auto begin_result = db::begin_transaction(db)) {
+            // トランザクション開始
+
+            // DB情報を取得する
+            db::info info = db::null_info();
+            if (auto info_result = db::fetch_info(db)) {
+                info = std::move(info_result.value());
+            } else {
+                state = db::manager_result_t{std::move(info_result.error())};
+            }
+
+            // DB上に新規にデータを挿入する
+            if (auto insert_result = db::insert(db, model, info, std::move(values))) {
+                inserted_datas = std::move(insert_result.value());
+            } else {
+                state = db::manager_result_t{std::move(insert_result.error())};
+            }
+
+            if (state) {
+                // DB情報を更新する
+                auto const next_save_id = info.next_save_id_value();
+                if (auto update_result = db::update_info(db, next_save_id, next_save_id)) {
+                    ret_db_info = std::move(update_result.value());
+                } else {
+                    state = db::manager_result_t{std::move(update_result.error())};
+                }
+            }
+
+            // トランザクション終了
+            if (state) {
+                db::commit(db);
+            } else {
+                db::rollback(db);
+                inserted_datas.clear();
+            }
+        } else {
+            state = db::make_error_result(db::manager_error_type::begin_transaction_failed,
+                                          std::move(begin_result.error()));
+        }
+
+        dispatch_sync(manager.dispatch_queue(), [
             state = std::move(state), inserted_datas = std::move(inserted_datas), manager,
-            completion = std::move(completion), db_info = std::move(db_info)
+            completion = std::move(completion), db_info = std::move(ret_db_info)
         ]() mutable {
             if (state) {
                 manager.impl_ptr<impl>()->set_db_info(std::move(db_info));
@@ -1060,12 +834,10 @@ void db::manager::insert_objects(db::manager::insert_preparation_values_f prepar
             } else {
                 completion(db::manager_vector_result_t{std::move(state.error())});
             }
-        };
-
-        dispatch_sync(manager.dispatch_queue(), std::move(lambda));
+        });
     };
 
-    impl_ptr<impl>()->execute_insert(std::move(preparation), std::move(impl_completion), std::move(option));
+    this->execute(execution, std::move(option));
 }
 
 void db::manager::fetch_objects(db::manager::fetch_preparation_option_f preparation,
@@ -1158,9 +930,66 @@ void db::manager::fetch_const_objects(db::manager::fetch_preparation_ids_f prepa
 }
 
 void db::manager::save(db::manager::vector_completion_f completion, operation_option_t option) {
-    auto impl_completion = [completion = std::move(completion), manager = *this](
-        db::manager_result_t && state, db::object_data_vector_map_t && saved_datas, db::info && db_info) {
-        auto lambda = [
+    auto execution = [completion = std::move(completion), manager = *this](operation const &) mutable {
+        db::object_data_vector_map_t changed_datas;
+        // 変更のあったデータをメインスレッドで取得する
+        auto manager_impl = manager.impl_ptr<impl>();
+        dispatch_sync(manager.dispatch_queue(),
+                      [&manager_impl, &changed_datas]() { changed_datas = manager_impl->changed_datas_for_save(); });
+
+        auto &db = manager.database();
+        auto const &model = manager.model();
+
+        db::info db_info = db::null_info();
+        db::object_data_vector_map_t saved_datas;
+
+        db::manager_result_t state{nullptr};
+
+        // データベースからセーブIDを取得する
+        if (auto select_result = db::fetch_info(db)) {
+            db_info = std::move(select_result.value());
+        } else {
+            state = db::manager_result_t{std::move(select_result.error())};
+        }
+
+        if (state && changed_datas.size() > 0) {
+            // トランザクション開始
+            if (auto begin_result = db::begin_transaction(db)) {
+                // 変更のあったデータをデータベースに保存する
+                if (auto save_result = db::save(db, model, db_info, std::move(changed_datas))) {
+                    saved_datas = std::move(save_result.value());
+                } else {
+                    state = db::manager_result_t{std::move(save_result.error())};
+                }
+
+                if (auto ul = unless(db::remove_relations_at_save(db, model, db_info, changed_datas))) {
+                    state = std::move(ul.value);
+                }
+
+                if (state) {
+                    // infoの更新
+                    auto const &next_save_id = db_info.next_save_id_value();
+                    if (auto update_result = db::update_info(db, next_save_id, next_save_id)) {
+                        db_info = std::move(update_result.value());
+                    } else {
+                        state = db::manager_result_t{std::move(update_result.error())};
+                    }
+                }
+
+                // トランザクション終了
+                if (state) {
+                    db::commit(db);
+                } else {
+                    db::rollback(db);
+                    saved_datas.clear();
+                }
+            } else {
+                state = db::make_error_result(db::manager_error_type::begin_transaction_failed,
+                                              std::move(begin_result.error()));
+            }
+        }
+
+        auto completion_on_main = [
             manager, state = std::move(state), completion = std::move(completion), saved_datas = std::move(saved_datas),
             db_info = std::move(db_info)
         ]() mutable {
@@ -1175,34 +1004,125 @@ void db::manager::save(db::manager::vector_completion_f completion, operation_op
             }
         };
 
-        dispatch_sync(manager.dispatch_queue(), std::move(lambda));
+        dispatch_sync(manager.dispatch_queue(), std::move(completion_on_main));
     };
 
-    impl_ptr<impl>()->execute_save(std::move(impl_completion), std::move(option));
+    this->execute(execution, std::move(option));
 }
 
 void db::manager::revert(db::manager::revert_preparation_f preparation, db::manager::vector_completion_f completion,
                          operation_option_t option) {
-    auto impl_completion = [completion = std::move(completion), manager = *this](
-        db::manager_result_t && state, db::object_data_vector_map_t && reverted_datas, db::info && db_info) {
-        auto lambda = [
-            manager, state = std::move(state), completion = std::move(completion),
-            reverted_datas = std::move(reverted_datas), db_info = std::move(db_info)
-        ]() mutable {
+    auto execution = [preparation = std::move(preparation), completion = std::move(completion),
+                      manager = *this](operation const &) mutable {
+        // リバートする先のセーブIDをメインスレッドで準備する
+        db::integer::type rev_save_id;
+        auto preparation_on_main = [&rev_save_id, &preparation]() { rev_save_id = preparation(); };
+        dispatch_sync(manager.dispatch_queue(), std::move(preparation_on_main));
+
+        auto &db = manager.database();
+
+        db::manager_result_t state{nullptr};
+
+        db::value_map_vector_map_t reverted_attrs;
+        db::object_data_vector_map_t reverted_datas;
+        db::info ret_db_info = db::null_info();
+
+        if (auto begin_result = db::begin_transaction(db)) {
+            // トランザクション開始
+
+            // カレントとラストのセーブIDをデータベースから取得する
+            db::integer::type last_save_id = 0;
+            db::integer::type current_save_id = 0;
+
+            if (auto select_result = db::fetch_info(db)) {
+                auto const &db_info = select_result.value();
+                current_save_id = db_info.current_save_id();
+                last_save_id = db_info.last_save_id();
+            } else {
+                state = db::manager_result_t{std::move(select_result.error())};
+            }
+
+            auto const &entity_models = manager.model().entities();
+
+            if (rev_save_id == current_save_id || last_save_id < rev_save_id) {
+                // リバートしようとするセーブIDがカレントと同じかラスト以降ならエラー
+                state = db::make_error_result(db::manager_error_type::out_of_range_save_id);
+            } else {
+                for (auto const &entity_model_pair : entity_models) {
+                    auto const &entity_name = entity_model_pair.first;
+                    // リバートするためのデータをデータベースから取得する
+                    // カレントとの位置によってredoかundoが内部で呼ばれる
+                    if (auto select_result = db::select_for_revert(db, entity_name, rev_save_id, current_save_id)) {
+                        reverted_attrs.emplace(entity_name, std::move(select_result.value()));
+                    } else {
+                        reverted_attrs.clear();
+                        state = db::make_error_result(db::manager_error_type::select_revert_failed,
+                                                      std::move(select_result.error()));
+                        break;
+                    }
+                }
+            }
+
+            if (state) {
+                for (auto const &entity_attrs_pair : reverted_attrs) {
+                    auto const &entity_name = entity_attrs_pair.first;
+                    auto const &entity_attrs = entity_attrs_pair.second;
+                    auto const &rel_models = manager.model().relations(entity_name);
+
+                    // アトリビュートのみのデータから関連のデータを加えてobject_dataを生成する
+                    if (auto obj_datas_result =
+                            db::make_entity_object_datas(db, entity_name, rel_models, entity_attrs)) {
+                        reverted_datas.emplace(entity_name, std::move(obj_datas_result.value()));
+                    } else {
+                        reverted_attrs.clear();
+                        reverted_datas.clear();
+                        state = db::make_error_result(db::manager_error_type::make_object_datas_failed,
+                                                      std::move(obj_datas_result.error()));
+                        break;
+                    }
+                }
+            }
+            
+            if (state) {
+                // リバートしたセーブIDでinfoを更新する
+                if (auto update_result = db::update_current_save_id(db, db::value{rev_save_id})) {
+                    ret_db_info = std::move(update_result.value());
+                } else {
+                    state = db::manager_result_t{std::move(update_result.error())};
+                }
+            }
+            
+            // トランザクション終了
+            if (state) {
+                db::commit(db);
+            } else {
+                db::rollback(db);
+                reverted_datas.clear();
+                ret_db_info = db::null_info();
+            }
+        } else {
+            state = db::make_error_result(db::manager_error_type::begin_transaction_failed,
+                                          std::move(begin_result.error()));
+        }
+        
+        auto completion_on_main = [manager, state = std::move(state),
+                                   completion = std::move(completion),
+                                   reverted_datas = std::move(reverted_datas),
+                                   db_info = std::move(ret_db_info)]() mutable {
             if (state) {
                 manager.impl_ptr<impl>()->set_db_info(std::move(db_info));
                 auto loaded_objects =
-                    manager.impl_ptr<impl>()->load_and_cache_vector_object_from_datas(reverted_datas, false, false);
+                manager.impl_ptr<impl>()->load_and_cache_vector_object_from_datas(reverted_datas, false, false);
                 completion(db::manager_vector_result_t{std::move(loaded_objects)});
             } else {
                 completion(db::manager_vector_result_t{std::move(state.error())});
             }
         };
-
-        dispatch_sync(manager.dispatch_queue(), std::move(lambda));
+        
+        dispatch_sync(manager.dispatch_queue(), std::move(completion_on_main));
     };
-
-    impl_ptr<impl>()->execute_revert(std::move(preparation), std::move(impl_completion), std::move(option));
+    
+    this->execute(execution, std::move(option));
 }
 
 db::object db::manager::cached_object(std::string const &entity_name, db::integer::type const object_id) const {
