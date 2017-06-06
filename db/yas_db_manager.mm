@@ -418,49 +418,6 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
         this->_op_queue.push_back(operation{std::move(op_lambda), std::move(option)});
     }
 
-    // バックグラウンドでデータベース上のデータをクリアする
-    void execute_clear(std::function<void(db::manager_result_t &&, db::info &&)> &&completion,
-                       operation_option_t &&option) {
-        auto execution = [completion = std::move(completion), manager = cast<manager>()](operation const &op) mutable {
-            auto &db = manager.database();
-            auto const &model = manager.model();
-
-            db::info db_info = db::null_info();
-            db::manager_result_t state{nullptr};
-
-            // トランザクション開始
-            if (auto begin_result = db::begin_transaction(db)) {
-                // DBをクリアする
-                if (auto clear_result = db::clear_db(db, model)) {
-                    // infoをクリア。セーブIDを0にする
-                    db::value const zero_value{db::integer::type{0}};
-                    if (auto update_result = db::update_info(db, zero_value, zero_value)) {
-                        db_info = std::move(update_result.value());
-                    } else {
-                        state = db::manager_result_t{std::move(update_result.error())};
-                    }
-                } else {
-                    state = std::move(clear_result);
-                }
-
-                // トランザクション終了
-                if (state) {
-                    db::commit(db);
-                } else {
-                    db::rollback(db);
-                    db_info = db::null_info();
-                }
-            } else {
-                state = db::make_error_result(db::manager_error_type::begin_transaction_failed,
-                                              std::move(begin_result.error()));
-            }
-
-            completion(std::move(state), std::move(db_info));
-        };
-
-        this->execute(execution, std::move(option));
-    }
-
     // バックグラウンドでデータベース上のデータをパージする
     void execute_purge(std::function<void(db::manager_result_t &&, db::info &&)> &&completion,
                        operation_option_t &&option) {
