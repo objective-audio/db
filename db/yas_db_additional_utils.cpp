@@ -93,9 +93,294 @@ namespace db {
 }
 }
 
+#pragma mark - select
+
+db::select_result_t db::select_last(db::database const &db, db::select_option option, db::value const &save_id,
+                                    bool const include_removed) {
+    option.where_exprs = db::last_where_exprs(option.table, option.where_exprs, save_id, include_removed);
+    return db::select(db, option);
+}
+
+db::select_result_t db::select_for_undo(db::database const &db, std::string const &table,
+                                        db::integer::type const revert_save_id,
+                                        db::integer::type const current_save_id) {
+    // リバート先のセーブIDはカレントより小さくないといけない
+    if (current_save_id <= revert_save_id) {
+        throw "revert_save_id greater than or equal to current_save_id";
+    }
+
+    // アンドゥで戻そうとしているデータ（リバート先からカレントまでの間）のobject_idの集合を取得する
+    std::string const reverting_where = joined({db::expr(db::save_id_field, "<=", std::to_string(current_save_id)),
+                                                db::expr(db::save_id_field, ">", std::to_string(revert_save_id))},
+                                               " AND ");
+    db::select_option reverting_option{
+        .table = table, .fields = {db::object_id_field}, .distinct = true, .where_exprs = reverting_where};
+    std::string const reverting_obj_ids_expr = db::in_expr(db::object_id_field, reverting_option);
+
+    // 戻そうとしているobject_idと一致し、リバート時点より前のデータの中で最後のもののrowidの集合を取得する
+    // つまり、アンドゥ時点より前に挿入されて、アンドゥ時点より後に変更があったデータを取得する
+    std::string const reverted_last_where =
+        joined({reverting_obj_ids_expr, db::expr(db::save_id_field, "<=", std::to_string(revert_save_id))}, " AND ");
+    db::select_option reverted_last_option{.table = table,
+                                           .fields = {"MAX(" + db::rowid_field + ")"},
+                                           .where_exprs = reverted_last_where,
+                                           .group_by = db::object_id_field};
+    std::string const reverted_last_rowids_where = db::in_expr(db::rowid_field, reverted_last_option);
+    db::select_option option{.table = table,
+                             .where_exprs = reverted_last_rowids_where,
+                             .field_orders = {{db::object_id_field, db::order::ascending}}};
+
+    auto result = db::select(db, option);
+    if (!result) {
+        return db::select_result_t{std::move(result.error())};
+    }
+
+    // アンドゥで戻そうとしている範囲のデータの中で、insertのobject_idの集合をobject_idのみで取得
+    // つまり、アンドゥ時点より後に挿入されたデータを空にするために取得する
+    db::select_option empty_option{
+        .table = table,
+        .fields = {db::object_id_field},
+        .where_exprs = joined(
+            {db::expr(db::save_id_field, "<=", std::to_string(current_save_id)),
+             db::expr(db::save_id_field, ">", std::to_string(revert_save_id)), db::equal_field_expr(db::action_field)},
+            " AND "),
+        .arguments = {{db::action_field, db::insert_action_value()}},
+        .field_orders = {{db::object_id_field, db::order::ascending}}};
+
+    auto empty_result = db::select(db, empty_option);
+    if (!empty_result) {
+        return db::select_result_t{std::move(empty_result.error())};
+    }
+
+    // キャッシュを上書きするためのデータを返す
+    return db::select_result_t{connect(std::move(result.value()), std::move(empty_result.value()))};
+}
+
+db::select_result_t db::select_for_redo(db::database const &db, std::string const &table,
+                                        db::integer::type const revert_save_id,
+                                        db::integer::type const current_save_id) {
+    // リバート先のセーブIDはカレントより後でないといけない
+    if (revert_save_id <= current_save_id) {
+        throw "current_save_id greater than or equal to revert_save_id";
+    }
+
+    // カレントからリドゥ時点の範囲で変更のあったデータを取得して返す
+    db::select_option option{.table = table,
+                             .where_exprs = db::expr(db::save_id_field, ">", std::to_string(current_save_id)),
+                             .field_orders = {{db::object_id_field, db::order::ascending}}};
+
+    return db::select_last(db, std::move(option), db::value{revert_save_id}, true);
+}
+
+db::select_result_t db::select_for_revert(db::database const &db, std::string const &table,
+                                          db::integer::type const revert_save_id,
+                                          db::integer::type const current_save_id) {
+    // リバート先のセーブIDによってアンドゥとリドゥに分岐する
+    if (revert_save_id < current_save_id) {
+        return db::select_for_undo(db, table, revert_save_id, current_save_id);
+    } else if (current_save_id < revert_save_id) {
+        return db::select_for_redo(db, table, revert_save_id, current_save_id);
+    }
+
+    return db::select_result_t{db::value_map_vector_t{}};
+}
+
+db::select_result_t db::select_for_save(db::database const &db, std::string const &entity_table,
+                                        std::string const &rel_table, db::value_vector_t const &tgt_obj_ids) {
+    // 最後のオブジェクトのpk_idを取得するsql
+    auto const last_exprs = db::last_where_exprs(entity_table, "", nullptr, false);
+    db::select_option const last_option{.table = entity_table, .fields = {db::pk_id_field}, .where_exprs = last_exprs};
+
+    // 最後のオブジェクトの中でtgt_obj_idsに一致する関連のsrc_pk_idを取得するsql
+    std::string const tgt_where_exprs = joined(
+        {db::in_expr(db::src_pk_id_field, last_option), db::in_expr(db::tgt_obj_id_field, tgt_obj_ids)}, " AND ");
+    db::select_option src_pk_option{
+        .table = rel_table, .fields = {db::src_pk_id_field}, .where_exprs = tgt_where_exprs};
+
+    // これまでの条件に一致しつつ、アクションがremoveでないアトリビュートを取得する
+    std::string const where_exprs =
+        joined({db::field_expr(db::action_field, "!="), db::in_expr(db::pk_id_field, src_pk_option)}, " AND ");
+    db::select_option option{.table = entity_table,
+                             .where_exprs = where_exprs,
+                             .arguments = {{db::action_field, db::remove_action_value()}}};
+    return db::select(db, option);
+}
+
+#pragma mark - info
+
+db::manager_info_result_t db::fetch_info(db::database const &db) {
+    if (auto select_result = db::select_single(db, db::select_option{.table = db::info_table})) {
+        auto const &values = select_result.value();
+        if (values.count(db::version_field) == 0) {
+            return db::manager_info_result_t{db::manager_error{db::manager_error_type::version_not_found}};
+        }
+        if (values.count(db::current_save_id_field) == 0) {
+            return db::manager_info_result_t{db::manager_error{db::manager_error_type::save_id_not_found}};
+        }
+        if (values.count(db::last_save_id_field) == 0) {
+            return db::manager_info_result_t{db::manager_error{db::manager_error_type::save_id_not_found}};
+        }
+
+        return db::manager_info_result_t{db::info{select_result.value()}};
+    } else {
+        return db::manager_info_result_t{db::manager_error{db::manager_error_type::select_info_failed}};
+    }
+}
+
+db::manager_result_t db::create_info(db::database &db, yas::version const &version) {
+    // infoテーブルをデータベース上に作成
+    if (auto ul = unless(db.execute_update(db::info::sql_for_create()))) {
+        return db::make_error_result(db::manager_error_type::create_info_table_failed, std::move(ul.value.error()));
+    }
+
+    db::value const zero_value{db::integer::type{0}};
+    db::value_vector_t const args{db::value{version.str()}, zero_value, zero_value};
+
+    // infoデータを挿入。セーブIDは0
+    if (auto ul = unless(db.execute_update(db::info::sql_for_insert(), args))) {
+        return db::make_error_result(db::manager_error_type::insert_info_failed, std::move(ul.value.error()));
+    }
+
+    return db::manager_result_t{nullptr};
+}
+
+db::manager_info_result_t db::update_info(db::database &db, db::value const &cur_save_id,
+                                          db::value const &last_save_id) {
+    db::value_vector_t const params{cur_save_id, last_save_id};
+    if (auto update_result = db.execute_update(db::info::sql_for_update_save_ids(), params)) {
+        if (auto select_result = db::fetch_info(db)) {
+            return db::manager_info_result_t{std::move(select_result.value())};
+        } else {
+            return db::manager_info_result_t{std::move(select_result.error())};
+        }
+    } else {
+        return db::manager_info_result_t{
+            db::manager_error{db::manager_error_type::update_info_failed, std::move(update_result.error())}};
+    }
+}
+
+db::manager_info_result_t db::update_current_save_id(db::database &db, db::value const &cur_save_id) {
+    db::value_vector_t const params{cur_save_id};
+    if (auto update_result = db.execute_update(db::info::sql_for_update_current_save_id(), params)) {
+        if (auto select_result = db::fetch_info(db)) {
+            return db::manager_info_result_t{std::move(select_result.value())};
+        } else {
+            return db::manager_info_result_t{std::move(select_result.error())};
+        }
+    } else {
+        return db::manager_info_result_t{
+            db::manager_error{db::manager_error_type::update_info_failed, std::move(update_result.error())}};
+    }
+}
+
+db::manager_result_t db::update_version(db::database &db, yas::version const &version) {
+    if (auto update_result = db.execute_update(db::info::sql_for_update_version(), {db::value{version.str()}})) {
+        return db::manager_result_t{nullptr};
+    } else {
+        return db::make_error_result(db::manager_error_type::update_info_failed, std::move(update_result.error()));
+    }
+}
+
+#pragma mark - convert
+
+// 複数のエンティティのobject_dataのvectorから、const_objectのvectorを生成する
+db::const_object_vector_map_t db::to_const_vector_objects(db::model const &model,
+                                                          db::object_data_vector_map_t const &datas) {
+    db::const_object_vector_map_t objects;
+    for (auto const &entity_pair : datas) {
+        auto const &entity_name = entity_pair.first;
+        auto const &entity_datas = entity_pair.second;
+
+        db::const_object_vector_t entity_objects;
+        entity_objects.reserve(entity_datas.size());
+
+        for (auto const &data : entity_datas) {
+            if (db::const_object obj{model.entity(entity_name), data}) {
+                entity_objects.emplace_back(std::move(obj));
+            }
+        }
+
+        objects.emplace(entity_name, std::move(entity_objects));
+    }
+    return objects;
+}
+
+// 複数のエンティティのobject_dataのvectorから、object_idをキーとしたconst_objectのmapを生成する
+db::const_object_map_map_t db::to_const_map_objects(db::model const &model, db::object_data_vector_map_t const &datas) {
+    db::const_object_map_map_t objects;
+    for (auto const &entity_pair : datas) {
+        auto const &entity_name = entity_pair.first;
+        auto const &entity_datas = entity_pair.second;
+
+        db::const_object_map_t entity_objects;
+        entity_objects.reserve(entity_datas.size());
+
+        for (auto const &data : entity_datas) {
+            if (db::const_object obj{model.entity(entity_name), data}) {
+                entity_objects.emplace(obj.object_id().get<db::integer>(), std::move(obj));
+            }
+        }
+
+        objects.emplace(entity_name, std::move(entity_objects));
+    }
+    return objects;
+}
+
+db::fetch_option db::to_fetch_option(db::select_option sel_option) {
+    db::fetch_option fetch_option{1};
+    fetch_option.add_select_option(std::move(sel_option));
+    return fetch_option;
+}
+
+db::fetch_option db::to_fetch_option(db::integer_set_map_t const &obj_ids) {
+    db::fetch_option fetch_option{obj_ids.size()};
+
+    for (auto const &pair : obj_ids) {
+        fetch_option.add_select_option(
+            {.table = pair.first, .where_exprs = db::in_expr(db::object_id_field, pair.second)});
+    }
+
+    return fetch_option;
+}
+
+#pragma mark - make
+
+db::manager_result_t db::make_error_result(db::manager_error_type const &error_type, db::error db_error) {
+    return db::manager_result_t{db::manager_error{error_type, std::move(db_error)}};
+}
+
+// 単独のエンティティでオブジェクトのアトリビュートの値を元に関連の値をデータベースから取得してobject_dataのvectorを生成する
+db::object_data_vector_result_t db::make_entity_object_datas(db::database &db, std::string const &entity_name,
+                                                             db::relation_map_t const &rel_models,
+                                                             db::value_map_vector_t const &entity_attrs) {
+    db::object_data_vector_t entity_datas;
+    entity_datas.reserve(entity_attrs.size());
+
+    for (db::value_map_t attrs : entity_attrs) {
+        db::value_vector_map_t rels;
+
+        if (attrs.count(db::save_id_field) > 0) {
+            auto const &save_id = attrs.at(db::save_id_field);
+            auto const &src_obj_id = attrs.at(db::object_id_field);
+
+            if (auto rel_data_result = db::select_relation_data(db, rel_models, save_id, src_obj_id)) {
+                rels = std::move(rel_data_result.value());
+            } else {
+                return db::object_data_vector_result_t{std::move(rel_data_result.error())};
+            }
+        }
+
+        entity_datas.emplace_back(db::object_data{std::move(attrs), std::move(rels)});
+    }
+
+    return db::object_data_vector_result_t{std::move(entity_datas)};
+}
+
+#pragma mark - setup
+
 db::manager_result_t db::migrate_db_if_needed(db::database &db, db::model const &model) {
     // infoからバージョンを取得。1つしかデータが無いこと前提
-    if (auto select_result = db::select_db_info(db)) {
+    if (auto select_result = db::fetch_info(db)) {
         // infoを現在のバージョンで上書き
         if (auto update_result = db::update_version(db, model.version())) {
             db::info const &info = select_result.value();
@@ -160,7 +445,7 @@ db::manager_result_t db::migrate_db_if_needed(db::database &db, db::model const 
 
 db::manager_result_t db::create_info_and_tables(db::database &db, db::model const &model) {
     // infoテーブルをデータベース上に作成
-    if (auto ul = unless(db::create_db_info(db, model.version()))) {
+    if (auto ul = unless(db::create_info(db, model.version()))) {
         return std::move(ul.value);
     }
 
@@ -215,6 +500,8 @@ db::manager_result_t db::clear_db(db::database &db, db::model const &model) {
 
     return db::manager_result_t{nullptr};
 }
+
+#pragma mark - editing
 
 db::manager_fetch_result_t db::insert(db::database &db, db::model const &model, db::info const info,
                                       db::value_map_vector_map_t &&values) {
@@ -290,7 +577,7 @@ db::manager_fetch_result_t db::insert(db::database &db, db::model const &model, 
 db::manager_fetch_result_t db::fetch(db::database &db, db::model const &model, db::fetch_option const &fetch_option) {
     // カレントセーブIDをデータベースから取得
     db::value current_save_id = db::null_value();
-    if (auto info_select_result = db::select_db_info(db)) {
+    if (auto info_select_result = db::fetch_info(db)) {
         current_save_id = info_select_result.value().current_save_id_value();
     } else {
         return db::manager_fetch_result_t{std::move(info_select_result.error())};
@@ -325,187 +612,6 @@ db::manager_fetch_result_t db::fetch(db::database &db, db::model const &model, d
     return db::manager_fetch_result_t{std::move(fetched_datas)};
 }
 
-db::select_result_t db::select_last(db::database const &db, db::select_option option, db::value const &save_id,
-                                    bool const include_removed) {
-    option.where_exprs = db::last_where_exprs(option.table, option.where_exprs, save_id, include_removed);
-    return db::select(db, option);
-}
-
-db::select_result_t db::select_undo(db::database const &db, std::string const &table,
-                                    db::integer::type const revert_save_id, db::integer::type const current_save_id) {
-    // リバート先のセーブIDはカレントより小さくないといけない
-    if (current_save_id <= revert_save_id) {
-        throw "revert_save_id greater than or equal to current_save_id";
-    }
-
-    // アンドゥで戻そうとしているデータ（リバート先からカレントまでの間）のobject_idの集合を取得する
-    std::string const reverting_where = joined({db::expr(db::save_id_field, "<=", std::to_string(current_save_id)),
-                                                db::expr(db::save_id_field, ">", std::to_string(revert_save_id))},
-                                               " AND ");
-    db::select_option reverting_option{
-        .table = table, .fields = {db::object_id_field}, .distinct = true, .where_exprs = reverting_where};
-    std::string const reverting_obj_ids_expr = db::in_expr(db::object_id_field, reverting_option);
-
-    // 戻そうとしているobject_idと一致し、リバート時点より前のデータの中で最後のもののrowidの集合を取得する
-    // つまり、アンドゥ時点より前に挿入されて、アンドゥ時点より後に変更があったデータを取得する
-    std::string const reverted_last_where =
-        joined({reverting_obj_ids_expr, db::expr(db::save_id_field, "<=", std::to_string(revert_save_id))}, " AND ");
-    db::select_option reverted_last_option{.table = table,
-                                           .fields = {"MAX(" + db::rowid_field + ")"},
-                                           .where_exprs = reverted_last_where,
-                                           .group_by = db::object_id_field};
-    std::string const reverted_last_rowids_where = db::in_expr(db::rowid_field, reverted_last_option);
-    db::select_option option{.table = table,
-                             .where_exprs = reverted_last_rowids_where,
-                             .field_orders = {{db::object_id_field, db::order::ascending}}};
-
-    auto result = db::select(db, option);
-    if (!result) {
-        return db::select_result_t{std::move(result.error())};
-    }
-
-    // アンドゥで戻そうとしている範囲のデータの中で、insertのobject_idの集合をobject_idのみで取得
-    // つまり、アンドゥ時点より後に挿入されたデータを空にするために取得する
-    db::select_option empty_option{
-        .table = table,
-        .fields = {db::object_id_field},
-        .where_exprs = joined(
-            {db::expr(db::save_id_field, "<=", std::to_string(current_save_id)),
-             db::expr(db::save_id_field, ">", std::to_string(revert_save_id)), db::equal_field_expr(db::action_field)},
-            " AND "),
-        .arguments = {{db::action_field, db::insert_action_value()}},
-        .field_orders = {{db::object_id_field, db::order::ascending}}};
-
-    auto empty_result = db::select(db, empty_option);
-    if (!empty_result) {
-        return db::select_result_t{std::move(empty_result.error())};
-    }
-
-    // キャッシュを上書きするためのデータを返す
-    return db::select_result_t{connect(std::move(result.value()), std::move(empty_result.value()))};
-}
-
-db::select_result_t db::select_redo(db::database const &db, std::string const &table,
-                                    db::integer::type const revert_save_id, db::integer::type const current_save_id) {
-    // リバート先のセーブIDはカレントより後でないといけない
-    if (revert_save_id <= current_save_id) {
-        throw "current_save_id greater than or equal to revert_save_id";
-    }
-
-    // カレントからリドゥ時点の範囲で変更のあったデータを取得して返す
-    db::select_option option{.table = table,
-                             .where_exprs = db::expr(db::save_id_field, ">", std::to_string(current_save_id)),
-                             .field_orders = {{db::object_id_field, db::order::ascending}}};
-
-    return db::select_last(db, std::move(option), db::value{revert_save_id}, true);
-}
-
-db::select_result_t db::select_revert(db::database const &db, std::string const &table,
-                                      db::integer::type const revert_save_id, db::integer::type const current_save_id) {
-    // リバート先のセーブIDによってアンドゥとリドゥに分岐する
-    if (revert_save_id < current_save_id) {
-        return db::select_undo(db, table, revert_save_id, current_save_id);
-    } else if (current_save_id < revert_save_id) {
-        return db::select_redo(db, table, revert_save_id, current_save_id);
-    }
-
-    return db::select_result_t{db::value_map_vector_t{}};
-}
-
-db::select_result_t db::select_relation_removed(db::database const &db, std::string const &entity_table,
-                                                std::string const &rel_table, db::value_vector_t const &tgt_obj_ids) {
-    // 最後のオブジェクトのpk_idを取得するsql
-    auto const last_exprs = db::last_where_exprs(entity_table, "", nullptr, false);
-    db::select_option const last_option{.table = entity_table, .fields = {db::pk_id_field}, .where_exprs = last_exprs};
-
-    // 最後のオブジェクトの中でtgt_obj_idsに一致する関連のsrc_pk_idを取得するsql
-    std::string const tgt_where_exprs = joined(
-        {db::in_expr(db::src_pk_id_field, last_option), db::in_expr(db::tgt_obj_id_field, tgt_obj_ids)}, " AND ");
-    db::select_option src_pk_option{
-        .table = rel_table, .fields = {db::src_pk_id_field}, .where_exprs = tgt_where_exprs};
-
-    // これまでの条件に一致しつつ、アクションがremoveでないアトリビュートを取得する
-    std::string const where_exprs =
-        joined({db::field_expr(db::action_field, "!="), db::in_expr(db::pk_id_field, src_pk_option)}, " AND ");
-    db::select_option option{.table = entity_table,
-                             .where_exprs = where_exprs,
-                             .arguments = {{db::action_field, db::remove_action_value()}}};
-    return db::select(db, option);
-}
-
-db::manager_info_result_t db::select_db_info(db::database const &db) {
-    if (auto select_result = db::select_single(db, db::select_option{.table = db::info_table})) {
-        auto const &values = select_result.value();
-        if (values.count(db::version_field) == 0) {
-            return db::manager_info_result_t{db::manager_error{db::manager_error_type::version_not_found}};
-        }
-        if (values.count(db::current_save_id_field) == 0) {
-            return db::manager_info_result_t{db::manager_error{db::manager_error_type::save_id_not_found}};
-        }
-        if (values.count(db::last_save_id_field) == 0) {
-            return db::manager_info_result_t{db::manager_error{db::manager_error_type::save_id_not_found}};
-        }
-
-        return db::manager_info_result_t{db::info{select_result.value()}};
-    } else {
-        return db::manager_info_result_t{db::manager_error{db::manager_error_type::select_info_failed}};
-    }
-}
-
-db::manager_result_t db::create_db_info(db::database &db, yas::version const &version) {
-    // infoテーブルをデータベース上に作成
-    if (auto ul = unless(db.execute_update(db::info::sql_for_create()))) {
-        return db::make_error_result(db::manager_error_type::create_info_table_failed, std::move(ul.value.error()));
-    }
-
-    db::value const zero_value{db::integer::type{0}};
-    db::value_vector_t const args{db::value{version.str()}, zero_value, zero_value};
-
-    // infoデータを挿入。セーブIDは0
-    if (auto ul = unless(db.execute_update(db::info::sql_for_insert(), args))) {
-        return db::make_error_result(db::manager_error_type::insert_info_failed, std::move(ul.value.error()));
-    }
-
-    return db::manager_result_t{nullptr};
-}
-
-db::manager_info_result_t db::update_db_info(db::database &db, db::value const &cur_save_id,
-                                             db::value const &last_save_id) {
-    db::value_vector_t const params{cur_save_id, last_save_id};
-    if (auto update_result = db.execute_update(db::info::sql_for_update_save_ids(), params)) {
-        if (auto select_result = db::select_db_info(db)) {
-            return db::manager_info_result_t{std::move(select_result.value())};
-        } else {
-            return db::manager_info_result_t{std::move(select_result.error())};
-        }
-    } else {
-        return db::manager_info_result_t{
-            db::manager_error{db::manager_error_type::update_info_failed, std::move(update_result.error())}};
-    }
-}
-
-db::manager_info_result_t db::update_current_save_id(db::database &db, db::value const &cur_save_id) {
-    db::value_vector_t const params{cur_save_id};
-    if (auto update_result = db.execute_update(db::info::sql_for_update_current_save_id(), params)) {
-        if (auto select_result = db::select_db_info(db)) {
-            return db::manager_info_result_t{std::move(select_result.value())};
-        } else {
-            return db::manager_info_result_t{std::move(select_result.error())};
-        }
-    } else {
-        return db::manager_info_result_t{
-            db::manager_error{db::manager_error_type::update_info_failed, std::move(update_result.error())}};
-    }
-}
-
-db::manager_result_t db::update_version(db::database &db, yas::version const &version) {
-    if (auto update_result = db.execute_update(db::info::sql_for_update_version(), {db::value{version.str()}})) {
-        return db::manager_result_t{nullptr};
-    } else {
-        return db::make_error_result(db::manager_error_type::update_info_failed, std::move(update_result.error()));
-    }
-}
-
 db::update_result_t db::purge_attributes(db::database &db, std::string const &table) {
     db::select_option const option{
         .table = table, .fields = {"MAX(" + db::pk_id_field + ")"}, .group_by = db::object_id_field};
@@ -521,7 +627,7 @@ db::update_result_t db::purge_relations(database &db, std::string const &table, 
 
 db::manager_result_t db::purge_db(db::database &db, db::model const &model) {
     // DB情報をデータベースから取得
-    if (auto select_result = db::select_db_info(db)) {
+    if (auto select_result = db::fetch_info(db)) {
         auto const &db_info = select_result.value();
         if (db_info.current_save_id() < db_info.last_save_id()) {
             // ラストよりカレントのセーブIDが小さければ、カレントより大きいセーブIDのデータを削除
@@ -575,8 +681,8 @@ db::manager_result_t db::purge_db(db::database &db, db::model const &model) {
     return db::manager_result_t{nullptr};
 }
 
-db::manager_fetch_result_t db::save_to_db(db::database &db, db::model const &model, db::info const &info,
-                                       db::object_data_vector_map_t const &changed_datas) {
+db::manager_fetch_result_t db::save(db::database &db, db::model const &model, db::info const &info,
+                                    db::object_data_vector_map_t const &changed_datas) {
     // ラストのセーブIDよりカレントが前ならカレントより後のデータは削除する
     if (info.current_save_id() < info.last_save_id()) {
         if (auto ul = unless(db::delete_next_to_last(db, model, info.current_save_id_value()))) {
@@ -646,7 +752,7 @@ db::manager_fetch_result_t db::save_to_db(db::database &db, db::model const &mod
     return db::manager_fetch_result_t{std::move(saved_datas)};
 }
 
-db::manager_result_t db::remove_relations_removed_from_db(db::database &db, db::model const &model, db::info const &info,
+db::manager_result_t db::remove_relations_at_save(db::database &db, db::model const &model, db::info const &info,
                                                   db::object_data_vector_map_t const &changed_datas) {
     // オブジェクトが削除された場合に逆関連があったらデータベース上で関連を外す
     db::value const next_save_id = info.next_save_id_value();
@@ -690,8 +796,7 @@ db::manager_result_t db::remove_relations_removed_from_db(db::database &db, db::
             // tgt_obj_idsが関連先に含まれているオブジェクトのアトリビュートを取得
             for (auto const &rel_name : rel_names) {
                 auto const &rel = model.relation(inv_entity_name, rel_name);
-                if (auto select_result =
-                        db::select_relation_removed(db, inv_entity_name, rel.table_name, tgt_obj_ids)) {
+                if (auto select_result = db::select_for_save(db, inv_entity_name, rel.table_name, tgt_obj_ids)) {
                     for (auto const &attr : select_result.value()) {
                         std::string obj_id_str = to_string(attr.at(db::object_id_field));
                         if (entity_attrs_map.count(obj_id_str) == 0) {
@@ -771,37 +876,6 @@ db::manager_result_t db::remove_relations_removed_from_db(db::database &db, db::
     return db::manager_result_t{nullptr};
 }
 
-db::manager_result_t db::make_error_result(db::manager_error_type const &error_type, db::error db_error) {
-    return db::manager_result_t{db::manager_error{error_type, std::move(db_error)}};
-}
-
-// 単独のエンティティでオブジェクトのアトリビュートの値を元に関連の値をデータベースから取得してobject_dataのvectorを生成する
-db::object_data_vector_result_t db::make_entity_object_datas(db::database &db, std::string const &entity_name,
-                                                             db::relation_map_t const &rel_models,
-                                                             db::value_map_vector_t const &entity_attrs) {
-    db::object_data_vector_t entity_datas;
-    entity_datas.reserve(entity_attrs.size());
-
-    for (db::value_map_t attrs : entity_attrs) {
-        db::value_vector_map_t rels;
-
-        if (attrs.count(db::save_id_field) > 0) {
-            auto const &save_id = attrs.at(db::save_id_field);
-            auto const &src_obj_id = attrs.at(db::object_id_field);
-
-            if (auto rel_data_result = db::select_relation_data(db, rel_models, save_id, src_obj_id)) {
-                rels = std::move(rel_data_result.value());
-            } else {
-                return db::object_data_vector_result_t{std::move(rel_data_result.error())};
-            }
-        }
-
-        entity_datas.emplace_back(db::object_data{std::move(attrs), std::move(rels)});
-    }
-
-    return db::object_data_vector_result_t{std::move(entity_datas)};
-}
-
 // 指定したsave_idより大きいsave_idのデータを、全てのエンティティに対してデータベース上から削除する
 db::manager_result_t db::delete_next_to_last(db::database &db, db::model const &model, db::value const &save_id) {
     auto const &entity_models = model.entities();
@@ -843,63 +917,4 @@ db::manager_result_t db::insert_relations(db::database &db, db::relation const &
         }
     }
     return db::manager_result_t{nullptr};
-}
-
-// 複数のエンティティのobject_dataのvectorから、const_objectのvectorを生成する
-db::const_object_vector_map_t db::to_const_vector_objects(db::model const &model,
-                                                          db::object_data_vector_map_t const &datas) {
-    db::const_object_vector_map_t objects;
-    for (auto const &entity_pair : datas) {
-        auto const &entity_name = entity_pair.first;
-        auto const &entity_datas = entity_pair.second;
-
-        db::const_object_vector_t entity_objects;
-        entity_objects.reserve(entity_datas.size());
-
-        for (auto const &data : entity_datas) {
-            if (db::const_object obj{model.entity(entity_name), data}) {
-                entity_objects.emplace_back(std::move(obj));
-            }
-        }
-
-        objects.emplace(entity_name, std::move(entity_objects));
-    }
-    return objects;
-}
-
-// 複数のエンティティのobject_dataのvectorから、object_idをキーとしたconst_objectのmapを生成する
-db::const_object_map_map_t db::to_const_map_objects(db::model const &model, db::object_data_vector_map_t const &datas) {
-    db::const_object_map_map_t objects;
-    for (auto const &entity_pair : datas) {
-        auto const &entity_name = entity_pair.first;
-        auto const &entity_datas = entity_pair.second;
-
-        db::const_object_map_t entity_objects;
-        entity_objects.reserve(entity_datas.size());
-
-        for (auto const &data : entity_datas) {
-            if (db::const_object obj{model.entity(entity_name), data}) {
-                entity_objects.emplace(obj.object_id().get<db::integer>(), std::move(obj));
-            }
-        }
-
-        objects.emplace(entity_name, std::move(entity_objects));
-    }
-    return objects;
-}
-
-db::fetch_option db::to_fetch_option(db::select_option sel_option) {
-    db::fetch_option fetch_option{1};
-    fetch_option.add_select_option(std::move(sel_option));
-    return fetch_option;
-}
-
-db::fetch_option db::to_fetch_option(db::integer_set_map_t const &obj_ids) {
-    db::fetch_option fetch_option{obj_ids.size()};
-    
-    for (auto const &pair : obj_ids) {
-        fetch_option.add_select_option({.table = pair.first, .where_exprs = db::in_expr(db::object_id_field, pair.second)});
-    }
-    
-    return fetch_option;
 }
