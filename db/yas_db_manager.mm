@@ -596,14 +596,15 @@ void db::manager::setup(db::manager::completion_f completion, operation_option_t
             }
         }
 
-        dispatch_sync(
-            manager.dispatch_queue(),
+        auto completion_on_main =
             [manager, state = std::move(state), info = std::move(info), completion = std::move(completion)]() mutable {
-                if (state) {
-                    manager.impl_ptr<impl>()->set_db_info(std::move(info));
-                }
-                completion(std::move(state));
-            });
+            if (state) {
+                manager.impl_ptr<impl>()->set_db_info(std::move(info));
+            }
+            completion(std::move(state));
+        };
+
+        dispatch_sync(manager.dispatch_queue(), completion_on_main);
     };
 
     this->execute(execution, std::move(option));
@@ -644,7 +645,7 @@ void db::manager::clear(db::manager::completion_f completion, operation_option_t
                                           std::move(begin_result.error()));
         }
 
-        dispatch_sync(manager.dispatch_queue(), [
+        auto completion_on_main = [
             completion = std::move(completion), manager, state = std::move(state), db_info = std::move(db_info)
         ]() mutable {
             if (state) {
@@ -652,7 +653,9 @@ void db::manager::clear(db::manager::completion_f completion, operation_option_t
                 manager.impl_ptr<impl>()->clear_cached_objects();
             }
             completion(std::move(state));
-        });
+        };
+
+        dispatch_sync(manager.dispatch_queue(), std::move(completion_on_main));
     };
 
     this->execute(execution, std::move(option));
@@ -698,7 +701,7 @@ void db::manager::purge(db::manager::completion_f completion, operation_option_t
             }
         }
 
-        dispatch_sync(manager.dispatch_queue(), [
+        auto completion_on_main = [
             completion = std::move(completion), manager, state = std::move(state), db_info = std::move(db_info)
         ]() mutable {
             if (state) {
@@ -707,7 +710,9 @@ void db::manager::purge(db::manager::completion_f completion, operation_option_t
             }
 
             completion(std::move(state));
-        });
+        };
+
+        dispatch_sync(manager.dispatch_queue(), std::move(completion_on_main));
     };
 
     this->execute(execution, std::move(option));
@@ -984,10 +989,9 @@ void db::manager::save(db::manager::vector_completion_f completion, operation_op
             }
         }
 
-        auto completion_on_main = [manager, state = std::move(state),
-                                   completion = std::move(completion),
-                                   saved_datas = std::move(saved_datas),
-                                   db_info = std::move(db_info)
+        auto completion_on_main = [
+            manager, state = std::move(state), completion = std::move(completion), saved_datas = std::move(saved_datas),
+            db_info = std::move(db_info)
         ]() mutable {
             if (state) {
                 manager.impl_ptr<impl>()->set_db_info(std::move(db_info));
@@ -999,6 +1003,7 @@ void db::manager::save(db::manager::vector_completion_f completion, operation_op
                 completion(db::manager_vector_result_t{std::move(state.error())});
             }
         };
+
         dispatch_sync(manager.dispatch_queue(), std::move(completion_on_main));
     };
 
@@ -1113,6 +1118,7 @@ void db::manager::revert(db::manager::revert_preparation_f preparation, db::mana
                 completion(db::manager_vector_result_t{std::move(state.error())});
             }
         };
+        
         dispatch_sync(manager.dispatch_queue(), std::move(completion_on_main));
     };
     
