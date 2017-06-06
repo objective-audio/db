@@ -418,54 +418,6 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
         this->_op_queue.push_back(operation{std::move(op_lambda), std::move(option)});
     }
 
-    // バックグラウンドでデータベース上のデータをパージする
-    void execute_purge(std::function<void(db::manager_result_t &&, db::info &&)> &&completion,
-                       operation_option_t &&option) {
-        auto execution = [completion = std::move(completion), manager = cast<manager>()](operation const &op) mutable {
-            auto &db = manager.database();
-            auto const &model = manager.model();
-
-            db::info db_info = db::null_info();
-            db::manager_result_t state{nullptr};
-
-            // トランザクション開始
-            if (auto begin_result = db::begin_transaction(db)) {
-                if (auto purge_result = db::purge_db(db, model)) {
-                    // infoをクリア。セーブIDを1にする
-                    db::value const one_value = db::value{db::integer::type{1}};
-                    if (auto update_result = db::update_info(db, one_value, one_value)) {
-                        db_info = std::move(update_result.value());
-                    } else {
-                        state = db::manager_result_t{std::move(update_result.error())};
-                    }
-                } else {
-                    state = std::move(purge_result);
-                }
-
-                // トランザクション終了
-                if (state) {
-                    db::commit(db);
-                } else {
-                    db::rollback(db);
-                }
-            } else {
-                state = db::make_error_result(db::manager_error_type::begin_transaction_failed,
-                                              std::move(begin_result.error()));
-            }
-
-            if (state) {
-                // バキュームする（バキュームはトランザクション中はできない）
-                if (auto ul = unless(db.execute_update(db::vacuum_sql()))) {
-                    state = db::make_error_result(db::manager_error_type::vacuum_failed, std::move(ul.value.error()));
-                }
-            }
-
-            completion(std::move(state), std::move(db_info));
-        };
-
-        this->execute(execution, std::move(option));
-    }
-
     // バックグラウンドでデータベース上にオブジェクトデータを挿入する
     void execute_insert(
         insert_preparation_values_f &&preparation,
@@ -952,9 +904,46 @@ void db::manager::clear(db::manager::completion_f completion, operation_option_t
 }
 
 void db::manager::purge(db::manager::completion_f completion, operation_option_t option) {
-    auto impl_completion =
-        [completion = std::move(completion), manager = *this](db::manager_result_t && state, db::info && db_info) {
-        auto lambda = [
+    auto execution = [completion = std::move(completion), manager = *this](operation const &op) mutable {
+        auto &db = manager.database();
+        auto const &model = manager.model();
+
+        db::info db_info = db::null_info();
+        db::manager_result_t state{nullptr};
+
+        // トランザクション開始
+        if (auto begin_result = db::begin_transaction(db)) {
+            if (auto purge_result = db::purge_db(db, model)) {
+                // infoをクリア。セーブIDを1にする
+                db::value const one_value = db::value{db::integer::type{1}};
+                if (auto update_result = db::update_info(db, one_value, one_value)) {
+                    db_info = std::move(update_result.value());
+                } else {
+                    state = db::manager_result_t{std::move(update_result.error())};
+                }
+            } else {
+                state = std::move(purge_result);
+            }
+
+            // トランザクション終了
+            if (state) {
+                db::commit(db);
+            } else {
+                db::rollback(db);
+            }
+        } else {
+            state = db::make_error_result(db::manager_error_type::begin_transaction_failed,
+                                          std::move(begin_result.error()));
+        }
+
+        if (state) {
+            // バキュームする（バキュームはトランザクション中はできない）
+            if (auto ul = unless(db.execute_update(db::vacuum_sql()))) {
+                state = db::make_error_result(db::manager_error_type::vacuum_failed, std::move(ul.value.error()));
+            }
+        }
+
+        dispatch_sync(manager.dispatch_queue(), [
             completion = std::move(completion), manager, state = std::move(state), db_info = std::move(db_info)
         ]() mutable {
             if (state) {
@@ -963,12 +952,10 @@ void db::manager::purge(db::manager::completion_f completion, operation_option_t
             }
 
             completion(std::move(state));
-        };
-
-        dispatch_sync(manager.dispatch_queue(), std::move(lambda));
+        });
     };
 
-    impl_ptr<impl>()->execute_purge(std::move(impl_completion), std::move(option));
+    this->execute(execution, std::move(option));
 }
 
 void db::manager::reset(db::manager::completion_f completion, operation_option_t option) {
