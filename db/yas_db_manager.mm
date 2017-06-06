@@ -418,52 +418,6 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
         this->_op_queue.push_back(operation{std::move(op_lambda), std::move(option)});
     }
 
-    // バックグラウンドでマネージャのセットアップ処理をする
-    void execute_setup(std::function<void(db::manager_result_t &&, db::info &&)> &&completion,
-                       operation_option_t &&option) {
-        auto execution = [completion = std::move(completion), manager = cast<manager>()](operation const &op) mutable {
-            db::database &db = manager.database();
-            db::model const &model = manager.model();
-
-            db::manager_result_t state{nullptr};
-
-            if (auto begin_result = db::begin_transaction(db)) {
-                // トランザクションを開始
-                if (db::table_exists(db, db::info_table)) {
-                    // infoのテーブルが存在している場合
-                    state = db::migrate_db_if_needed(db, model);
-                } else {
-                    // infoのテーブルが存在していない場合は、新規にテーブルを作成する
-                    state = db::create_info_and_tables(db, model);
-                }
-
-                // トランザクション終了
-                if (state) {
-                    db::commit(db);
-                } else {
-                    db::rollback(db);
-                }
-            } else {
-                state = db::make_error_result(db::manager_error_type::begin_transaction_failed,
-                                              std::move(begin_result.error()));
-            }
-
-            db::info info = db::null_info();
-
-            if (state) {
-                if (auto select_result = db::fetch_info(db)) {
-                    info = std::move(select_result.value());
-                } else {
-                    state = db::manager_result_t{select_result.error()};
-                }
-            }
-
-            completion(std::move(state), std::move(info));
-        };
-
-        this->execute(execution, std::move(option));
-    }
-
     // バックグラウンドでデータベース上のデータをクリアする
     void execute_clear(std::function<void(db::manager_result_t &&, db::info &&)> &&completion,
                        operation_option_t &&option) {
@@ -992,9 +946,41 @@ void db::manager::setup(db::manager::completion_f completion, operation_option_t
 }
 
 void db::manager::clear(db::manager::completion_f completion, operation_option_t option) {
-    auto impl_completion =
-        [completion = std::move(completion), manager = *this](db::manager_result_t && state, db::info && db_info) {
-        auto lambda = [
+    auto execution = [completion = std::move(completion), manager = *this](operation const &op) mutable {
+        auto &db = manager.database();
+        auto const &model = manager.model();
+
+        db::info db_info = db::null_info();
+        db::manager_result_t state{nullptr};
+
+        // トランザクション開始
+        if (auto begin_result = db::begin_transaction(db)) {
+            // DBをクリアする
+            if (auto clear_result = db::clear_db(db, model)) {
+                // infoをクリア。セーブIDを0にする
+                db::value const zero_value{db::integer::type{0}};
+                if (auto update_result = db::update_info(db, zero_value, zero_value)) {
+                    db_info = std::move(update_result.value());
+                } else {
+                    state = db::manager_result_t{std::move(update_result.error())};
+                }
+            } else {
+                state = std::move(clear_result);
+            }
+
+            // トランザクション終了
+            if (state) {
+                db::commit(db);
+            } else {
+                db::rollback(db);
+                db_info = db::null_info();
+            }
+        } else {
+            state = db::make_error_result(db::manager_error_type::begin_transaction_failed,
+                                          std::move(begin_result.error()));
+        }
+
+        dispatch_sync(manager.dispatch_queue(), [
             completion = std::move(completion), manager, state = std::move(state), db_info = std::move(db_info)
         ]() mutable {
             if (state) {
@@ -1002,12 +988,10 @@ void db::manager::clear(db::manager::completion_f completion, operation_option_t
                 manager.impl_ptr<impl>()->clear_cached_objects();
             }
             completion(std::move(state));
-        };
-
-        dispatch_sync(manager.dispatch_queue(), std::move(lambda));
+        });
     };
 
-    impl_ptr<impl>()->execute_clear(std::move(impl_completion), std::move(option));
+    this->execute(execution, std::move(option));
 }
 
 void db::manager::purge(db::manager::completion_f completion, operation_option_t option) {
