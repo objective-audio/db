@@ -418,74 +418,6 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
         this->_op_queue.push_back(operation{std::move(op_lambda), std::move(option)});
     }
 
-    // バックグラウンドでデータベース上にオブジェクトデータを挿入する
-    void execute_insert(
-        insert_preparation_values_f &&preparation,
-        std::function<void(db::manager_result_t &&, db::object_data_vector_map_t &&, db::info &&)> &&completion,
-        operation_option_t &&option) {
-        auto execution =
-            [preparation = std::move(preparation), completion = std::move(completion),
-             manager = cast<manager>()](operation const &op) mutable {
-            // 挿入するオブジェクトのデータをメインスレッドで準備する
-            db::value_map_vector_map_t values;
-            auto preparation_on_main = [&values, &preparation]() { values = preparation(); };
-            dispatch_sync(manager.dispatch_queue(), std::move(preparation_on_main));
-
-            auto &db = manager.database();
-            auto const &model = manager.model();
-
-            db::info ret_db_info = db::null_info();
-            object_data_vector_map_t inserted_datas;
-
-            db::manager_result_t state{nullptr};
-
-            if (auto begin_result = db::begin_transaction(db)) {
-                // トランザクション開始
-
-                // DB情報を取得する
-                db::info info = db::null_info();
-                if (auto info_result = db::fetch_info(db)) {
-                    info = std::move(info_result.value());
-                } else {
-                    state = db::manager_result_t{std::move(info_result.error())};
-                }
-
-                // DB上に新規にデータを挿入する
-                if (auto insert_result = db::insert(db, model, info, std::move(values))) {
-                    inserted_datas = std::move(insert_result.value());
-                } else {
-                    state = db::manager_result_t{std::move(insert_result.error())};
-                }
-
-                if (state) {
-                    // DB情報を更新する
-                    auto const next_save_id = info.next_save_id_value();
-                    if (auto update_result = db::update_info(db, next_save_id, next_save_id)) {
-                        ret_db_info = std::move(update_result.value());
-                    } else {
-                        state = db::manager_result_t{std::move(update_result.error())};
-                    }
-                }
-
-                // トランザクション終了
-                if (state) {
-                    db::commit(db);
-                } else {
-                    db::rollback(db);
-                    inserted_datas.clear();
-                }
-            } else {
-                state = db::make_error_result(db::manager_error_type::begin_transaction_failed,
-                                              std::move(begin_result.error()));
-            }
-
-            // 結果を返す
-            completion(std::move(state), std::move(inserted_datas), std::move(ret_db_info));
-        };
-
-        this->execute(execution, std::move(option));
-    }
-
     // バックグラウンドでデータベースからオブジェクトデータを取得する。条件はselect_optionで指定。単独のエンティティのみ
     void execute_fetch_object_datas(
         fetch_preparation_option_f &&preparation,
@@ -1008,11 +940,63 @@ void db::manager::insert_objects(db::manager::insert_preparation_count_f prepara
 
 void db::manager::insert_objects(db::manager::insert_preparation_values_f preparation,
                                  db::manager::vector_completion_f completion, operation_option_t option) {
-    auto impl_completion = [completion = std::move(completion), manager = *this](
-        db::manager_result_t && state, db::object_data_vector_map_t && inserted_datas, db::info && db_info) {
-        auto lambda = [
+    auto execution = [preparation = std::move(preparation), completion = std::move(completion),
+                      manager = *this](operation const &op) mutable {
+        // 挿入するオブジェクトのデータをメインスレッドで準備する
+        db::value_map_vector_map_t values;
+        dispatch_sync(manager.dispatch_queue(), [&values, &preparation]() { values = preparation(); });
+
+        auto &db = manager.database();
+        auto const &model = manager.model();
+
+        db::info ret_db_info = db::null_info();
+        object_data_vector_map_t inserted_datas;
+
+        db::manager_result_t state{nullptr};
+
+        if (auto begin_result = db::begin_transaction(db)) {
+            // トランザクション開始
+
+            // DB情報を取得する
+            db::info info = db::null_info();
+            if (auto info_result = db::fetch_info(db)) {
+                info = std::move(info_result.value());
+            } else {
+                state = db::manager_result_t{std::move(info_result.error())};
+            }
+
+            // DB上に新規にデータを挿入する
+            if (auto insert_result = db::insert(db, model, info, std::move(values))) {
+                inserted_datas = std::move(insert_result.value());
+            } else {
+                state = db::manager_result_t{std::move(insert_result.error())};
+            }
+
+            if (state) {
+                // DB情報を更新する
+                auto const next_save_id = info.next_save_id_value();
+                if (auto update_result = db::update_info(db, next_save_id, next_save_id)) {
+                    ret_db_info = std::move(update_result.value());
+                } else {
+                    state = db::manager_result_t{std::move(update_result.error())};
+                }
+            }
+
+            // トランザクション終了
+            if (state) {
+                db::commit(db);
+            } else {
+                db::rollback(db);
+                inserted_datas.clear();
+            }
+        } else {
+            state = db::make_error_result(db::manager_error_type::begin_transaction_failed,
+                                          std::move(begin_result.error()));
+        }
+
+        dispatch_sync(manager.dispatch_queue(), [
             state = std::move(state), inserted_datas = std::move(inserted_datas), manager,
-            completion = std::move(completion), db_info = std::move(db_info)
+            completion = std::move(completion), db_info = std::move(ret_db_info)
         ]() mutable {
             if (state) {
                 manager.impl_ptr<impl>()->set_db_info(std::move(db_info));
@@ -1022,12 +1006,10 @@ void db::manager::insert_objects(db::manager::insert_preparation_values_f prepar
             } else {
                 completion(db::manager_vector_result_t{std::move(state.error())});
             }
-        };
-
-        dispatch_sync(manager.dispatch_queue(), std::move(lambda));
+        });
     };
 
-    impl_ptr<impl>()->execute_insert(std::move(preparation), std::move(impl_completion), std::move(option));
+    this->execute(execution, std::move(option));
 }
 
 void db::manager::fetch_objects(db::manager::fetch_preparation_option_f preparation,
