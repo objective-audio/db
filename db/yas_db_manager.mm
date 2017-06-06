@@ -941,20 +941,54 @@ db::object db::manager::insert_object(std::string const entity_name) {
 }
 
 void db::manager::setup(db::manager::completion_f completion, operation_option_t option) {
-    auto impl_completion =
-        [completion = std::move(completion), manager = *this](db::manager_result_t && state, db::info && info) mutable {
-        auto lambda =
-            [manager, state = std::move(state), info = std::move(info), completion = std::move(completion)]() mutable {
-            if (state) {
-                manager.impl_ptr<impl>()->set_db_info(std::move(info));
-            }
-            completion(std::move(state));
-        };
+    auto execution = [completion = std::move(completion), manager = *this](operation const &op) mutable {
+        db::database &db = manager.database();
+        db::model const &model = manager.model();
 
-        dispatch_sync(manager.dispatch_queue(), std::move(lambda));
+        db::manager_result_t state{nullptr};
+
+        if (auto begin_result = db::begin_transaction(db)) {
+            // トランザクションを開始
+            if (db::table_exists(db, db::info_table)) {
+                // infoのテーブルが存在している場合
+                state = db::migrate_db_if_needed(db, model);
+            } else {
+                // infoのテーブルが存在していない場合は、新規にテーブルを作成する
+                state = db::create_info_and_tables(db, model);
+            }
+
+            // トランザクション終了
+            if (state) {
+                db::commit(db);
+            } else {
+                db::rollback(db);
+            }
+        } else {
+            state = db::make_error_result(db::manager_error_type::begin_transaction_failed,
+                                          std::move(begin_result.error()));
+        }
+
+        db::info info = db::null_info();
+
+        if (state) {
+            if (auto select_result = db::fetch_info(db)) {
+                info = std::move(select_result.value());
+            } else {
+                state = db::manager_result_t{select_result.error()};
+            }
+        }
+
+        dispatch_sync(
+            manager.dispatch_queue(),
+            [manager, state = std::move(state), info = std::move(info), completion = std::move(completion)]() mutable {
+                if (state) {
+                    manager.impl_ptr<impl>()->set_db_info(std::move(info));
+                }
+                completion(std::move(state));
+            });
     };
 
-    impl_ptr<impl>()->execute_setup(std::move(impl_completion), std::move(option));
+    this->execute(execution, std::move(option));
 }
 
 void db::manager::clear(db::manager::completion_f completion, operation_option_t option) {
