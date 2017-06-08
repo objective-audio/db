@@ -42,12 +42,15 @@ using namespace yas;
     db::model model((__bridge CFDictionaryRef)model_dict);
     db::object obj{nullptr, model.entity("sample_a")};
 
-    db::value_map_t attributes{std::make_pair("age", db::value{10}), std::make_pair("name", db::value{"name_val"}),
-                               std::make_pair("weight", db::value{53.4}), std::make_pair("hoge", db::value{"hage"})};
+    db::value_map_t attributes{std::make_pair(db::object_id_field, db::value{1}), std::make_pair("age", db::value{10}),
+                               std::make_pair("name", db::value{"name_val"}), std::make_pair("weight", db::value{53.4}),
+                               std::make_pair("hoge", db::value{"hage"})};
     db::value_vector_map_t relations{std::make_pair("child", db::value_vector_t{db::value{12}, db::value{34}})};
     db::object_data obj_data{.attributes = std::move(attributes), .relations = std::move(relations)};
 
     obj.manageable().load_data(obj_data);
+
+    XCTAssertEqual(obj.identifier().stable(), db::value{1});
 
     XCTAssertEqual(obj.attribute_value("age"), db::value{10});
     XCTAssertEqual(obj.attribute_value("name"), db::value{"name_val"});
@@ -63,12 +66,15 @@ using namespace yas;
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
 
-    db::value_map_t attributes{std::make_pair("age", db::value{10}), std::make_pair("name", db::value{"name_val"}),
-                               std::make_pair("weight", db::value{53.4}), std::make_pair("hoge", db::value{"hage"})};
+    db::value_map_t attributes{std::make_pair(db::object_id_field, db::value{1}), std::make_pair("age", db::value{10}),
+                               std::make_pair("name", db::value{"name_val"}), std::make_pair("weight", db::value{53.4}),
+                               std::make_pair("hoge", db::value{"hage"})};
     db::value_vector_map_t relations{std::make_pair("child", db::value_vector_t{db::value{12}, db::value{34}})};
     db::object_data obj_data{.attributes = std::move(attributes), .relations = std::move(relations)};
 
     db::const_object obj{model.entity("sample_a"), obj_data};
+
+    XCTAssertEqual(obj.identifier().stable(), db::value{1});
 
     XCTAssertEqual(obj.attribute_value("age"), db::value{10});
     XCTAssertEqual(obj.attribute_value("name"), db::value{"name_val"});
@@ -85,7 +91,8 @@ using namespace yas;
     db::model model((__bridge CFDictionaryRef)model_dict);
     db::object obj{nullptr, model.entity("sample_a")};
 
-    db::value_map_t prev_attributes{std::make_pair("age", db::value{10}), std::make_pair("name", db::value{"name_val"}),
+    db::value_map_t prev_attributes{std::make_pair(db::object_id_field, db::value{1}),
+                                    std::make_pair("age", db::value{10}), std::make_pair("name", db::value{"name_val"}),
                                     std::make_pair("weight", db::value{53.4}),
                                     std::make_pair("hoge", db::value{"hage"})};
     db::value_vector_map_t prev_relations{std::make_pair("child", db::value_vector_t{db::value{12}, db::value{34}})};
@@ -93,12 +100,15 @@ using namespace yas;
 
     obj.manageable().load_data(prev_obj_data);
 
-    db::value_map_t post_attributes{std::make_pair("age", db::value{543}), std::make_pair("hoge", db::value{"poke"})};
+    db::value_map_t post_attributes{std::make_pair(db::object_id_field, db::value{1}),
+                                    std::make_pair("age", db::value{543}), std::make_pair("hoge", db::value{"poke"})};
     db::value_vector_map_t post_relations{
         std::make_pair("child", db::value_vector_t{db::value{234}, db::value{567}, db::value{890}})};
     db::object_data post_obj_data{.attributes = std::move(post_attributes), .relations = std::move(post_relations)};
 
     obj.manageable().load_data(post_obj_data);
+
+    XCTAssertEqual(obj.identifier().stable(), db::value{1});
 
     XCTAssertEqual(obj.attribute_value("age"), db::value{543});
     XCTAssertFalse(obj.attribute_value("name"));
@@ -320,7 +330,8 @@ using namespace yas;
     XCTAssertEqual(obj.action(), db::null_value());
 
     db::object_data obj_data{
-        .attributes = db::value_map_t{std::make_pair(db::action_field, db::insert_action_value())},
+        .attributes = db::value_map_t{std::make_pair(db::object_id_field, db::value{0}),
+            std::make_pair(db::action_field, db::insert_action_value())},
         .relations = db::value_vector_map_t{std::make_pair("child", db::value_vector_t{db::value{12}, db::value{34}})}};
     obj.manageable().load_data(obj_data);
     XCTAssertEqual(obj.action(), db::insert_action_value());
@@ -585,6 +596,8 @@ using namespace yas;
 
         XCTAssertEqual(name.size(), 0);
 
+        XCTAssertEqual(obj.identifier().stable(), db::value{1});
+
         XCTAssertEqual(obj.attribute_value("age"), db::value{10});
         XCTAssertEqual(obj.attribute_value("name"), db::value{"name_val"});
         XCTAssertEqual(obj.attribute_value("weight"), db::value{53.4});
@@ -596,7 +609,8 @@ using namespace yas;
         called = true;
     });
 
-    db::value_map_t attributes{std::make_pair("age", db::value{10}), std::make_pair("name", db::value{"name_val"}),
+    db::value_map_t attributes{std::make_pair(db::object_id_field, db::value{1}), std::make_pair("age", db::value{10}),
+                               std::make_pair("name", db::value{"name_val"}),
                                std::make_pair("weight", db::value{53.4})};
     db::value_vector_map_t relations{std::make_pair("child", db::value_vector_t{db::value{55}, db::value{66}})};
     db::object_data obj_data{.attributes = std::move(attributes), .relations = std::move(relations)};
@@ -694,7 +708,7 @@ using namespace yas;
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
 
-    db::value_map_t attributes{std::make_pair("age", db::value{10})};
+    db::value_map_t attributes{std::make_pair(db::object_id_field, db::value{0}), std::make_pair("age", db::value{10})};
     db::object_data obj_data{.attributes = std::move(attributes)};
 
     db::const_object obj{model.entity("sample_a"), obj_data};
