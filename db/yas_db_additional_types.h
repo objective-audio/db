@@ -94,8 +94,8 @@ namespace db {
     };
 
     struct object_data {
-        value_map_t attributes;
-        value_vector_map_t relations;
+        db::value_map_t attributes;
+        db::value_vector_map_t relations;
     };
 }
 }
