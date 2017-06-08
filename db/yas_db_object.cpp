@@ -9,20 +9,41 @@
 #include "yas_db_object.h"
 #include "yas_db_relation.h"
 #include "yas_db_value.h"
+#include "yas_db_identifier.h"
 #include "yas_observing.h"
 #include "yas_stl_utils.h"
 #include "yas_fast_each.h"
 
 using namespace yas;
 
+namespace yas {
+namespace db {
+    static db::integer::type _last_tmp_id = 0;
+
+    static db::identifier make_identifier(db::object_data const &obj_data) {
+        if (obj_data.attributes.count(db::object_id_field)) {
+            auto const &value = obj_data.attributes.at(object_id_field);
+            return db::make_stable_id(value);
+        } else {
+            throw std::invalid_argument("object_id not found in object_data.");
+        }
+    }
+}
+}
+
 #pragma mark - db::const_object::impl
 
 struct db::const_object::impl : public base::impl {
     db::entity _entity;
     db::object_data _data;
+    db::identifier _identifier;
 
-    impl(db::entity const &entity, db::object_data const &obj_data = {}) : _entity(entity) {
+    impl(db::entity const &entity, db::object_data const &obj_data = {})
+        : _entity(entity), _identifier(db::make_identifier(obj_data)) {
         this->load_data(obj_data);
+    }
+
+    impl(db::entity const &entity, db::identifier &&identifier) : _entity(entity), _identifier(std::move(identifier)) {
     }
 
     void clear() {
@@ -186,6 +207,10 @@ std::size_t db::const_object::relation_size(std::string const &rel_name) const {
     return impl_ptr<impl>()->relation_size(rel_name);
 }
 
+db::identifier const &db::const_object::identifier() const {
+    return impl_ptr<impl>()->_identifier;
+}
+
 db::value const &db::const_object::object_id() const {
     return this->attribute_value(object_id_field);
 }
@@ -225,7 +250,9 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
     db::manager _manager;
     db::object::subject_t _subject;
 
-    impl(db::manager const &manager, db::entity const &entity) : const_object::impl(entity), _manager(manager) {
+    impl(db::manager const &manager, db::entity const &entity, bool const is_temporary)
+        : const_object::impl(entity, is_temporary ? db::make_temporary_id(db::value{++_last_tmp_id}) : nullptr),
+          _manager(manager) {
     }
 
     ~impl() {
@@ -247,6 +274,8 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
     void load_data(db::object_data const &obj_data, bool const force) override {
         if (this->_status != db::object_status::changed || force) {
             this->clear();
+
+            this->_identifier = db::make_identifier(obj_data);
 
             for (auto const &pair : this->_entity.all_attributes) {
                 auto const &attr_name = pair.first;
@@ -540,8 +569,8 @@ db::object::relation_change_info const &db::object::change_info::relation_change
 
 #pragma mark - db::object
 
-db::object::object(db::manager const &manager, db::entity const &entity)
-    : const_object(std::make_unique<impl>(manager, entity)) {
+db::object::object(db::manager const &manager, db::entity const &entity, bool const is_temporary)
+    : const_object(std::make_unique<impl>(manager, entity, is_temporary)) {
 }
 
 db::object::object(std::nullptr_t) : const_object(nullptr) {
