@@ -94,4 +94,20 @@ using namespace yas;
     XCTAssertFalse(tmp_to_stable_id == stable_id_b);
 }
 
+- (void)test_copy_temporary {
+    auto src = db::make_temporary_id(db::value{234});
+    auto dst = src.copy();
+
+    XCTAssertFalse(src.base::identifier() == dst.base::identifier());
+    XCTAssertTrue(src == dst);
+}
+
+- (void)test_copy_stable {
+    auto src = db::make_stable_id(db::value{567});
+    auto dst = src.copy();
+
+    XCTAssertFalse(src.base::identifier() == dst.base::identifier());
+    XCTAssertTrue(src == dst);
+}
+
 @end
