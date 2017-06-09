@@ -235,10 +235,6 @@ bool db::const_object::is_removed() const {
     return impl_ptr<impl>()->is_equal_to_action(db::remove_action);
 }
 
-bool db::const_object::is_temporary() const {
-    return this->save_id().get<db::integer>() <= 0;
-}
-
 db::integer_set_map_t db::const_object::relation_ids_for_fetch() const {
     return impl_ptr<impl>()->relation_ids_for_fetch();
 }
@@ -654,6 +650,10 @@ enum db::object_status db::object::status() const {
 
 void db::object::remove() {
     impl_ptr<impl>()->remove();
+}
+
+bool db::object::is_temporary() const {
+    return this->save_id().get<db::integer>() <= 0;
 }
 
 db::object_data db::object::data_for_save() const {

@@ -47,8 +47,6 @@ namespace db {
         bool is_updated() const;
         bool is_removed() const;
 
-        bool is_temporary() const;
-
         db::integer_set_map_t relation_ids_for_fetch() const;
 
        protected:
@@ -111,6 +109,8 @@ namespace db {
         db::object_status status() const;
 
         void remove();
+        
+        bool is_temporary() const;
 
         db::object_data data_for_save() const;
 
