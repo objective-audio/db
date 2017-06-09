@@ -9,7 +9,7 @@
 #include "yas_db_object.h"
 #include "yas_db_relation.h"
 #include "yas_db_value.h"
-#include "yas_db_identifier.h"
+#include "yas_db_object_identifier.h"
 #include "yas_observing.h"
 #include "yas_stl_utils.h"
 #include "yas_fast_each.h"
@@ -20,7 +20,7 @@ namespace yas {
 namespace db {
     static db::integer::type _last_tmp_id = 0;
 
-    static db::identifier make_identifier(db::object_data const &obj_data) {
+    static db::object_identifier make_identifier(db::object_data const &obj_data) {
         if (obj_data.attributes.count(db::object_id_field)) {
             auto const &value = obj_data.attributes.at(object_id_field);
             return db::make_stable_id(value);
@@ -29,7 +29,7 @@ namespace db {
         }
     }
 
-    static void assign_identifier(db::identifier &identifier, db::object_data const &obj_data) {
+    static void assign_identifier(db::object_identifier &identifier, db::object_data const &obj_data) {
         if (obj_data.attributes.count(db::object_id_field)) {
             auto const &value = obj_data.attributes.at(object_id_field);
             identifier.set_stable(value);
@@ -45,14 +45,15 @@ namespace db {
 struct db::const_object::impl : public base::impl {
     db::entity _entity;
     db::object_data _data;
-    db::identifier _identifier;
+    db::object_identifier _identifier;
 
     impl(db::entity const &entity, db::object_data const &obj_data = {})
         : _entity(entity), _identifier(db::make_identifier(obj_data)) {
         this->load_data(obj_data);
     }
 
-    impl(db::entity const &entity, db::identifier &&identifier) : _entity(entity), _identifier(std::move(identifier)) {
+    impl(db::entity const &entity, db::object_identifier &&identifier)
+        : _entity(entity), _identifier(std::move(identifier)) {
     }
 
     void clear() {
@@ -216,7 +217,7 @@ std::size_t db::const_object::relation_size(std::string const &rel_name) const {
     return impl_ptr<impl>()->relation_size(rel_name);
 }
 
-db::identifier const &db::const_object::object_identifier() const {
+db::object_identifier const &db::const_object::object_identifier() const {
     return impl_ptr<impl>()->_identifier;
 }
 

@@ -3,7 +3,7 @@
 //
 
 #import <XCTest/XCTest.h>
-#import "yas_db_identifier.h"
+#import "yas_db_object_identifier.h"
 
 using namespace yas;
 
@@ -22,7 +22,7 @@ using namespace yas;
 }
 
 - (void)test_stable_id {
-    db::identifier stable_id{db::value{1}, false};
+    db::object_identifier stable_id{db::value{1}, false};
 
     XCTAssertTrue(stable_id);
     XCTAssertTrue(stable_id.is_stable());
@@ -31,7 +31,7 @@ using namespace yas;
 }
 
 - (void)test_temporary_id {
-    db::identifier tmp_id{db::value{2}, true};
+    db::object_identifier tmp_id{db::value{2}, true};
 
     XCTAssertTrue(tmp_id);
     XCTAssertTrue(tmp_id.is_temporary());
@@ -56,7 +56,7 @@ using namespace yas;
 }
 
 - (void)test_set_stable {
-    db::identifier identifier{db::value{10}, true};
+    db::object_identifier identifier{db::value{10}, true};
 
     XCTAssertFalse(identifier.is_stable());
 
@@ -71,13 +71,13 @@ using namespace yas;
 }
 
 - (void)test_is_equal {
-    db::identifier stable_id_a1{db::value{11}, false};
-    db::identifier stable_id_a2{db::value{11}, false};
-    db::identifier stable_id_b{db::value{22}, false};
-    db::identifier tmp_id_a1{db::value{111}, true};
-    db::identifier tmp_id_a2{db::value{111}, true};
-    db::identifier tmp_id_b{db::value{222}, true};
-    db::identifier tmp_to_stable_id{db::value{111}, true};
+    db::object_identifier stable_id_a1{db::value{11}, false};
+    db::object_identifier stable_id_a2{db::value{11}, false};
+    db::object_identifier stable_id_b{db::value{22}, false};
+    db::object_identifier tmp_id_a1{db::value{111}, true};
+    db::object_identifier tmp_id_a2{db::value{111}, true};
+    db::object_identifier tmp_id_b{db::value{222}, true};
+    db::object_identifier tmp_to_stable_id{db::value{111}, true};
     tmp_to_stable_id.set_stable(11);
 
     XCTAssertTrue(stable_id_a1 == stable_id_a1);

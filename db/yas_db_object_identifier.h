@@ -1,5 +1,5 @@
 //
-//  yas_db_identifier.h
+//  yas_db_object_identifier.h
 //
 
 #pragma once
@@ -10,12 +10,12 @@ namespace yas {
 namespace db {
     class value;
 
-    class identifier : public base {
+    class object_identifier : public base {
         class impl;
 
        public:
-        identifier(db::value, bool const is_temporary);
-        identifier(std::nullptr_t);
+        object_identifier(db::value, bool const is_temporary);
+        object_identifier(std::nullptr_t);
 
         void set_stable(db::integer::type const);
         void set_stable(db::value);
@@ -26,12 +26,12 @@ namespace db {
         bool is_stable() const;
         bool is_temporary() const;
 
-        db::identifier copy() const;
+        db::object_identifier copy() const;
     };
 
-    db::identifier make_stable_id(db::value);
-    db::identifier make_temporary_id(db::value);
+    db::object_identifier make_stable_id(db::value);
+    db::object_identifier make_temporary_id(db::value);
 
-    db::identifier const &null_id();
+    db::object_identifier const &null_id();
 }
 }
