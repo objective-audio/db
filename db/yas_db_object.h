@@ -109,7 +109,7 @@ namespace db {
         db::object_status status() const;
 
         void remove();
-        
+
         bool is_temporary() const;
 
         db::object_data data_for_save() const;

@@ -28,6 +28,15 @@ namespace db {
             throw std::invalid_argument("object_id not found in object_data.");
         }
     }
+
+    static void assign_identifier(db::identifier &identifier, db::object_data const &obj_data) {
+        if (obj_data.attributes.count(db::object_id_field)) {
+            auto const &value = obj_data.attributes.at(object_id_field);
+            identifier.set_stable(value);
+        } else {
+            throw std::invalid_argument("object_id not found in object_data.");
+        }
+    }
 }
 }
 
@@ -271,7 +280,11 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
         if (this->_status != db::object_status::changed || force) {
             this->clear();
 
-            this->_identifier = db::make_identifier(obj_data);
+            if (this->_identifier) {
+                db::assign_identifier(this->_identifier, obj_data);
+            } else {
+                this->_identifier = db::make_identifier(obj_data);
+            }
 
             for (auto const &pair : this->_entity.all_attributes) {
                 auto const &attr_name = pair.first;
