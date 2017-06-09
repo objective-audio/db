@@ -20,6 +20,7 @@ class observer;
 namespace db {
     class manager;
     class entity;
+    class identifier;
 
     class const_object : public base {
        public:
@@ -37,6 +38,7 @@ namespace db {
         db::value const &relation_id(std::string const &rel_name, std::size_t const idx) const;
         std::size_t relation_size(std::string const &rel_name) const;
 
+        db::identifier const &identifier() const;
         db::value const &object_id() const;
         db::value const &save_id() const;
         db::value const &action() const;
@@ -82,7 +84,7 @@ namespace db {
         using subject_t = subject<change_info, method>;
         using observer_t = observer<change_info, method>;
 
-        object(db::manager const &manager, db::entity const &entity);
+        object(db::manager const &manager, db::entity const &entity, bool const is_temporary = false);
         object(std::nullptr_t);
 
         subject_t const &subject() const;
