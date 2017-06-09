@@ -38,7 +38,7 @@ namespace db {
         db::value const &relation_id(std::string const &rel_name, std::size_t const idx) const;
         std::size_t relation_size(std::string const &rel_name) const;
 
-        db::identifier const &identifier() const;
+        db::identifier const &object_identifier() const;
         db::value const &object_id() const;
         db::value const &save_id() const;
         db::value const &action() const;

@@ -216,7 +216,7 @@ std::size_t db::const_object::relation_size(std::string const &rel_name) const {
     return impl_ptr<impl>()->relation_size(rel_name);
 }
 
-db::identifier const &db::const_object::identifier() const {
+db::identifier const &db::const_object::object_identifier() const {
     return impl_ptr<impl>()->_identifier;
 }
 
