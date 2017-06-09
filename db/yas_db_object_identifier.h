@@ -27,6 +27,8 @@ namespace db {
         bool is_temporary() const;
 
         db::object_identifier copy() const;
+
+        std::size_t hash() const;
     };
 
     db::object_identifier make_stable_id(db::value);
@@ -35,3 +37,10 @@ namespace db {
     db::object_identifier const &null_id();
 }
 }
+
+template <>
+struct std::hash<yas::db::object_identifier> {
+    std::size_t operator()(yas::db::object_identifier const &obj_id) const {
+        return obj_id.hash();
+    }
+};

@@ -50,6 +50,14 @@ struct db::object_identifier::impl : base::impl {
         return _tmp_value;
     }
 
+    bool is_stable() {
+        return !!_stable_value;
+    }
+
+    bool is_tmp() {
+        return !this->_stable_value && this->_tmp_value;
+    }
+
     virtual bool is_equal(std::shared_ptr<base::impl> const &rhs) const override {
         if (auto casted_rhs = std::dynamic_pointer_cast<impl>(rhs)) {
             if (this->_tmp_value && casted_rhs->_tmp_value) {
@@ -62,12 +70,12 @@ struct db::object_identifier::impl : base::impl {
         return false;
     }
 
-    bool is_stable() {
-        return !!_stable_value;
-    }
-
-    bool is_tmp() {
-        return !this->_stable_value && this->_tmp_value;
+    std::size_t hash() {
+        if (_tmp_value) {
+            return std::hash<db::text::type>()(_tmp_value.get<db::text>());
+        } else {
+            return std::hash<db::integer::type>()(_stable_value.get<db::integer>());
+        }
     }
 
    private:
@@ -112,6 +120,10 @@ db::object_identifier db::object_identifier::copy() const {
     } else {
         return db::make_stable_id(this->stable());
     }
+}
+
+std::size_t db::object_identifier::hash() const {
+    return impl_ptr<impl>()->hash();
 }
 
 db::object_identifier db::make_stable_id(db::value value) {
