@@ -9,7 +9,7 @@
 #include "yas_db_object.h"
 #include "yas_db_relation.h"
 #include "yas_db_value.h"
-#include "yas_db_identifier.h"
+#include "yas_db_object_identifier.h"
 #include "yas_observing.h"
 #include "yas_stl_utils.h"
 #include "yas_fast_each.h"
@@ -18,12 +18,19 @@ using namespace yas;
 
 namespace yas {
 namespace db {
-    static db::integer::type _last_tmp_id = 0;
-
-    static db::identifier make_identifier(db::object_data const &obj_data) {
+    static db::object_identifier make_identifier(db::object_data const &obj_data) {
         if (obj_data.attributes.count(db::object_id_field)) {
             auto const &value = obj_data.attributes.at(object_id_field);
             return db::make_stable_id(value);
+        } else {
+            throw std::invalid_argument("object_id not found in object_data.");
+        }
+    }
+
+    static void assign_identifier(db::object_identifier &identifier, db::object_data const &obj_data) {
+        if (obj_data.attributes.count(db::object_id_field)) {
+            auto const &value = obj_data.attributes.at(object_id_field);
+            identifier.set_stable(value);
         } else {
             throw std::invalid_argument("object_id not found in object_data.");
         }
@@ -36,14 +43,15 @@ namespace db {
 struct db::const_object::impl : public base::impl {
     db::entity _entity;
     db::object_data _data;
-    db::identifier _identifier;
+    db::object_identifier _identifier;
 
     impl(db::entity const &entity, db::object_data const &obj_data = {})
         : _entity(entity), _identifier(db::make_identifier(obj_data)) {
         this->load_data(obj_data);
     }
 
-    impl(db::entity const &entity, db::identifier &&identifier) : _entity(entity), _identifier(std::move(identifier)) {
+    impl(db::entity const &entity, db::object_identifier &&identifier)
+        : _entity(entity), _identifier(std::move(identifier)) {
     }
 
     void clear() {
@@ -207,7 +215,7 @@ std::size_t db::const_object::relation_size(std::string const &rel_name) const {
     return impl_ptr<impl>()->relation_size(rel_name);
 }
 
-db::identifier const &db::const_object::identifier() const {
+db::object_identifier const &db::const_object::object_identifier() const {
     return impl_ptr<impl>()->_identifier;
 }
 
@@ -235,10 +243,6 @@ bool db::const_object::is_removed() const {
     return impl_ptr<impl>()->is_equal_to_action(db::remove_action);
 }
 
-bool db::const_object::is_temporary() const {
-    return this->save_id().get<db::integer>() <= 0;
-}
-
 db::integer_set_map_t db::const_object::relation_ids_for_fetch() const {
     return impl_ptr<impl>()->relation_ids_for_fetch();
 }
@@ -251,8 +255,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
     db::object::subject_t _subject;
 
     impl(db::manager const &manager, db::entity const &entity, bool const is_temporary)
-        : const_object::impl(entity, is_temporary ? db::make_temporary_id(db::value{++_last_tmp_id}) : nullptr),
-          _manager(manager) {
+        : const_object::impl(entity, is_temporary ? db::make_temporary_id() : nullptr), _manager(manager) {
     }
 
     ~impl() {
@@ -275,7 +278,11 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
         if (this->_status != db::object_status::changed || force) {
             this->clear();
 
-            this->_identifier = db::make_identifier(obj_data);
+            if (this->_identifier) {
+                db::assign_identifier(this->_identifier, obj_data);
+            } else {
+                this->_identifier = db::make_identifier(obj_data);
+            }
 
             for (auto const &pair : this->_entity.all_attributes) {
                 auto const &attr_name = pair.first;
@@ -654,6 +661,10 @@ enum db::object_status db::object::status() const {
 
 void db::object::remove() {
     impl_ptr<impl>()->remove();
+}
+
+bool db::object::is_temporary() const {
+    return this->save_id().get<db::integer>() <= 0;
 }
 
 db::object_data db::object::data_for_save() const {

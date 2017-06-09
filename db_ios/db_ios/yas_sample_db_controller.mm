@@ -437,8 +437,8 @@ void db_controller::_update_objects(entity const &entity, std::function<void(db:
 
     _manager.fetch_objects(
         [entity_name]() {
-            return db::fetch_option{
-                db::select_option{.table = entity_name, .field_orders = {{db::object_id_field, db::order::ascending}}}};
+            return db::to_fetch_option(
+                db::select_option{.table = entity_name, .field_orders = {{db::object_id_field, db::order::ascending}}});
         },
         [&controller = *this, completion = std::move(completion),
          entity_name](db::manager_vector_result_t fetch_result) {

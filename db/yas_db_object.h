@@ -38,7 +38,7 @@ namespace db {
         db::value const &relation_id(std::string const &rel_name, std::size_t const idx) const;
         std::size_t relation_size(std::string const &rel_name) const;
 
-        db::identifier const &identifier() const;
+        db::object_identifier const &object_identifier() const;
         db::value const &object_id() const;
         db::value const &save_id() const;
         db::value const &action() const;
@@ -46,8 +46,6 @@ namespace db {
         bool is_inserted() const;
         bool is_updated() const;
         bool is_removed() const;
-
-        bool is_temporary() const;
 
         db::integer_set_map_t relation_ids_for_fetch() const;
 
@@ -111,6 +109,8 @@ namespace db {
         db::object_status status() const;
 
         void remove();
+
+        bool is_temporary() const;
 
         db::object_data data_for_save() const;
 
