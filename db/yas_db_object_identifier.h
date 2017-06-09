@@ -30,7 +30,7 @@ namespace db {
     };
 
     db::object_identifier make_stable_id(db::value);
-    db::object_identifier make_temporary_id(db::value);
+    db::object_identifier make_temporary_id();
 
     db::object_identifier const &null_id();
 }

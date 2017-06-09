@@ -6,13 +6,48 @@
 
 using namespace yas;
 
-struct db::object_identifier::impl : base::impl {
-    db::value _stable_value = db::null_value();
-    db::value _tmp_value = db::null_value();
+namespace yas {
+namespace db {
+    static void validate_tmp_value(db::value const &value) {
+        if (value && value.type() != typeid(db::text)) {
+            throw std::runtime_error("temporary value is not db::text type.");
+        }
+    }
 
+    static void validate_stable_value(db::value const &value) {
+        if (value && value.type() != typeid(db::integer)) {
+            throw std::runtime_error("stable value is not db::integer type");
+        }
+    }
+}
+}
+
+struct db::object_identifier::impl : base::impl {
     impl(db::value &&value, bool const is_tmp)
         : _stable_value(is_tmp ? db::null_value() : std::move(value)),
           _tmp_value(is_tmp ? std::move(value) : db::null_value()) {
+        if (is_tmp) {
+            if (_tmp_value) {
+                db::validate_tmp_value(_tmp_value);
+            } else {
+                _tmp_value = db::value{std::to_string(this->identifier())};
+            }
+        } else {
+            db::validate_stable_value(_stable_value);
+        }
+    }
+
+    void set_stable(db::value &&value) {
+        _stable_value = std::move(value);
+        db::validate_stable_value(_stable_value);
+    }
+
+    db::value const &stable() {
+        return _stable_value;
+    }
+
+    db::value const &temporary() {
+        return _tmp_value;
     }
 
     virtual bool is_equal(std::shared_ptr<base::impl> const &rhs) const override {
@@ -27,9 +62,17 @@ struct db::object_identifier::impl : base::impl {
         return false;
     }
 
+    bool is_stable() {
+        return !!_stable_value;
+    }
+
     bool is_tmp() {
         return !this->_stable_value && this->_tmp_value;
     }
+
+   private:
+    db::value _stable_value = db::null_value();
+    db::value _tmp_value = db::null_value();
 };
 
 db::object_identifier::object_identifier(db::value value, bool const is_tmp)
@@ -44,19 +87,19 @@ void db::object_identifier::set_stable(db::integer::type const value) {
 }
 
 void db::object_identifier::set_stable(db::value value) {
-    impl_ptr<impl>()->_stable_value = std::move(value);
+    impl_ptr<impl>()->set_stable(std::move(value));
 }
 
 db::value const &db::object_identifier::stable() const {
-    return impl_ptr<impl>()->_stable_value;
+    return impl_ptr<impl>()->stable();
 }
 
 db::value const &db::object_identifier::temporary() const {
-    return impl_ptr<impl>()->_tmp_value;
+    return impl_ptr<impl>()->temporary();
 }
 
 bool db::object_identifier::is_stable() const {
-    return !!impl_ptr<impl>()->_stable_value;
+    return !!impl_ptr<impl>()->is_stable();
 }
 
 bool db::object_identifier::is_temporary() const {
@@ -65,7 +108,7 @@ bool db::object_identifier::is_temporary() const {
 
 db::object_identifier db::object_identifier::copy() const {
     if (this->is_temporary()) {
-        return db::make_temporary_id(this->temporary());
+        return db::object_identifier{this->temporary(), true};
     } else {
         return db::make_stable_id(this->stable());
     }
@@ -75,8 +118,8 @@ db::object_identifier db::make_stable_id(db::value value) {
     return db::object_identifier{std::move(value), false};
 }
 
-db::object_identifier db::make_temporary_id(db::value value) {
-    return db::object_identifier{std::move(value), true};
+db::object_identifier db::make_temporary_id() {
+    return db::object_identifier{db::value{nullptr}, true};
 }
 
 db::object_identifier const &db::null_id() {

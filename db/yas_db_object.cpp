@@ -18,8 +18,6 @@ using namespace yas;
 
 namespace yas {
 namespace db {
-    static db::integer::type _last_tmp_id = 0;
-
     static db::object_identifier make_identifier(db::object_data const &obj_data) {
         if (obj_data.attributes.count(db::object_id_field)) {
             auto const &value = obj_data.attributes.at(object_id_field);
@@ -257,8 +255,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
     db::object::subject_t _subject;
 
     impl(db::manager const &manager, db::entity const &entity, bool const is_temporary)
-        : const_object::impl(entity, is_temporary ? db::make_temporary_id(db::value{++_last_tmp_id}) : nullptr),
-          _manager(manager) {
+        : const_object::impl(entity, is_temporary ? db::make_temporary_id() : nullptr), _manager(manager) {
     }
 
     ~impl() {
