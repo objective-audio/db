@@ -63,6 +63,14 @@ bool db::identifier::is_temporary() const {
     return impl_ptr<impl>()->is_tmp();
 }
 
+db::identifier db::identifier::copy() const {
+    if (this->is_temporary()) {
+        return db::make_temporary_id(this->temporary());
+    } else {
+        return db::make_stable_id(this->stable());
+    }
+}
+
 db::identifier db::make_stable_id(db::value value) {
     return db::identifier{std::move(value), false};
 }

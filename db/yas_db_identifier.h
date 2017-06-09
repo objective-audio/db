@@ -25,6 +25,8 @@ namespace db {
 
         bool is_stable() const;
         bool is_temporary() const;
+
+        db::identifier copy() const;
     };
 
     db::identifier make_stable_id(db::value);
