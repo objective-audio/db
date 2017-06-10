@@ -72,10 +72,11 @@ struct db::object_identifier::impl : base::impl {
     }
 
     std::size_t hash() {
-        if (_tmp_value) {
-            return std::hash<db::text::type>()(_tmp_value.get<db::text>());
-        } else {
+#warning tempしかないものとstableのあるものは比べない。フェッチしてきたらまずキャッシュのidentifierにset_stableしてしまう
+        if (_stable_value) {
             return std::hash<db::integer::type>()(_stable_value.get<db::integer>());
+        } else {
+            return std::hash<db::text::type>()(_tmp_value.get<db::text>());
         }
     }
 
