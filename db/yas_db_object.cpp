@@ -42,7 +42,8 @@ namespace db {
 
 struct db::const_object::impl : public base::impl {
     db::entity _entity;
-    db::object_data _data;
+    db::value_map_t _attributes;
+    db::value_vector_map_t _relations;
     db::object_identifier _identifier;
 
     impl(db::entity const &entity, db::object_data const &obj_data = {})
@@ -55,13 +56,13 @@ struct db::const_object::impl : public base::impl {
     }
 
     void clear() {
-        this->_data.attributes.clear();
-        this->_data.relations.clear();
+        this->_attributes.clear();
+        this->_relations.clear();
     }
 
     bool is_equal_to_action(std::string const &action) {
-        if (this->_data.attributes.count(action_field) > 0) {
-            return this->_data.attributes.at(action_field).get<db::text>() == action;
+        if (this->_attributes.count(action_field) > 0) {
+            return this->_attributes.at(action_field).get<db::text>() == action;
         }
 
         return false;
@@ -75,7 +76,7 @@ struct db::const_object::impl : public base::impl {
             if (obj_data.attributes.count(attr_name) > 0) {
                 this->validate_attribute_name(attr_name);
 
-                this->_data.attributes.emplace(attr_name, obj_data.attributes.at(attr_name));
+                this->_attributes.emplace(attr_name, obj_data.attributes.at(attr_name));
             }
         }
 
@@ -84,7 +85,7 @@ struct db::const_object::impl : public base::impl {
             if (obj_data.relations.count(rel_name) > 0) {
                 this->validate_relation_name(rel_name);
 
-                this->_data.relations.emplace(rel_name, obj_data.relations.at(rel_name));
+                this->_relations.emplace(rel_name, obj_data.relations.at(rel_name));
             }
         }
     }
@@ -92,8 +93,8 @@ struct db::const_object::impl : public base::impl {
     db::value const &attribute_value(std::string const &attr_name) {
         this->validate_attribute_name(attr_name);
 
-        if (this->_data.attributes.count(attr_name) > 0) {
-            return this->_data.attributes.at(attr_name);
+        if (this->_attributes.count(attr_name) > 0) {
+            return this->_attributes.at(attr_name);
         }
 
         return db::null_value();
@@ -102,8 +103,8 @@ struct db::const_object::impl : public base::impl {
     db::value_vector_t relation_ids(std::string const &rel_name) {
         this->validate_relation_name(rel_name);
 
-        if (this->_data.relations.count(rel_name) > 0) {
-            return this->_data.relations.at(rel_name);
+        if (this->_relations.count(rel_name) > 0) {
+            return this->_relations.at(rel_name);
         }
         return {};
     }
@@ -111,8 +112,8 @@ struct db::const_object::impl : public base::impl {
     db::value const &relation_id(std::string const &rel_name, std::size_t const idx) {
         this->validate_relation_name(rel_name);
 
-        if (this->_data.relations.count(rel_name) > 0) {
-            auto const &ids = this->_data.relations.at(rel_name);
+        if (this->_relations.count(rel_name) > 0) {
+            auto const &ids = this->_relations.at(rel_name);
             if (idx < ids.size()) {
                 return ids.at(idx);
             }
@@ -123,8 +124,8 @@ struct db::const_object::impl : public base::impl {
     std::size_t relation_size(std::string const &rel_name) {
         this->validate_relation_name(rel_name);
 
-        if (this->_data.relations.count(rel_name) > 0) {
-            return this->_data.relations.at(rel_name).size();
+        if (this->_relations.count(rel_name) > 0) {
+            return this->_relations.at(rel_name).size();
         }
         return 0;
     }
@@ -134,14 +135,14 @@ struct db::const_object::impl : public base::impl {
 
         for (auto const &pair : this->_entity.relations) {
             auto const &rel_name = pair.first;
-            if (this->_data.relations.count(rel_name) > 0) {
+            if (this->_relations.count(rel_name) > 0) {
                 auto const &tgt_entity_name = pair.second.target_entity_name;
                 if (relation_ids.count(tgt_entity_name) == 0) {
                     relation_ids.emplace(tgt_entity_name, db::integer_set_t{});
                 }
 
                 auto &rel_id_set = relation_ids.at(tgt_entity_name);
-                auto const &rel = this->_data.relations.at(rel_name);
+                auto const &rel = this->_relations.at(rel_name);
                 for (auto const &tgt_obj_id : rel) {
                     rel_id_set.emplace(tgt_obj_id.get<db::integer>());
                 }
@@ -331,7 +332,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
     void set_attribute_value(std::string const &attr_name, db::value const &value, bool const loading = false) {
         this->validate_attribute_name(attr_name);
 
-        replace(this->_data.attributes, attr_name, value);
+        replace(this->_attributes, attr_name, value);
 
         if (!loading) {
             if (attr_name != db::action_field) {
@@ -350,7 +351,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
         this->validate_relation_name(rel_name);
         this->validate_relation_ids(relation_ids);
 
-        replace(this->_data.relations, rel_name, relation_ids);
+        replace(this->_relations, rel_name, relation_ids);
 
         if (!loading) {
             this->set_update_action();
@@ -365,8 +366,8 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
     }
 
     void add_relation_id(std::string const &rel_name, db::value const &rel_id) {
-        if (this->_data.relations.count(rel_name) > 0) {
-            this->insert_relation_id(rel_name, rel_id, this->_data.relations.at(rel_name).size());
+        if (this->_relations.count(rel_name) > 0) {
+            this->insert_relation_id(rel_name, rel_id, this->_relations.at(rel_name).size());
         } else {
             this->insert_relation_id(rel_name, rel_id, 0);
         }
@@ -376,11 +377,11 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
         this->validate_relation_name(rel_name);
         this->validate_relation_id(relation_id);
 
-        if (this->_data.relations.count(rel_name) == 0) {
-            this->_data.relations.emplace(rel_name, db::value_vector_t{});
+        if (this->_relations.count(rel_name) == 0) {
+            this->_relations.emplace(rel_name, db::value_vector_t{});
         }
 
-        auto &vector = _data.relations.at(rel_name);
+        auto &vector = _relations.at(rel_name);
         vector.insert(vector.begin() + idx, relation_id);
 
         this->set_update_action();
@@ -396,11 +397,11 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
         this->validate_relation_name(rel_name);
         this->validate_relation_id(relation_id);
 
-        if (this->_data.relations.count(rel_name) > 0) {
+        if (this->_relations.count(rel_name) > 0) {
             std::size_t idx = 0;
             std::vector<std::size_t> indices;
 
-            erase_if(this->_data.relations.at(rel_name), [relation_id, &idx, &indices](db::value const &object_id) {
+            erase_if(this->_relations.at(rel_name), [relation_id, &idx, &indices](db::value const &object_id) {
                 bool const result = object_id == relation_id;
                 if (result) {
                     indices.push_back(idx);
@@ -423,8 +424,8 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
     void remove_relation_at(std::string const &rel_name, std::size_t const idx) {
         this->validate_relation_name(rel_name);
 
-        if (this->_data.relations.count(rel_name) > 0) {
-            auto &ids = this->_data.relations.at(rel_name);
+        if (this->_relations.count(rel_name) > 0) {
+            auto &ids = this->_relations.at(rel_name);
             if (idx < ids.size()) {
                 ids.erase(ids.begin() + idx);
             }
@@ -447,10 +448,10 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
             throw "relation name (" + rel_name + ") not found";
         }
 
-        if (this->_data.relations.count(rel_name) > 0) {
-            auto const rel_size = this->_data.relations.at(rel_name).size();
+        if (this->_relations.count(rel_name) > 0) {
+            auto const rel_size = this->_relations.at(rel_name).size();
 
-            this->_data.relations.erase(rel_name);
+            this->_relations.erase(rel_name);
 
             this->set_update_action();
 
@@ -475,7 +476,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
             return;
         }
 
-        erase_if(this->_data.attributes, [](auto const &pair) {
+        erase_if(this->_attributes, [](auto const &pair) {
             auto const &column_name = pair.first;
             if (column_name == db::pk_id_field || column_name == db::object_id_field ||
                 column_name == db::action_field) {
@@ -484,7 +485,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
             return true;
         });
 
-        this->_data.relations.clear();
+        this->_relations.clear();
 
         this->set_attribute_value(db::action_field, db::remove_action_value());
     }
@@ -504,8 +505,8 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
                 continue;
             }
 
-            if (this->_data.attributes.count(attr_name) > 0) {
-                attributes.emplace(attr_name, this->_data.attributes.at(attr_name));
+            if (this->_attributes.count(attr_name) > 0) {
+                attributes.emplace(attr_name, this->_attributes.at(attr_name));
             } else if (pair.second.not_null) {
                 attributes.emplace(attr_name, pair.second.default_value);
             } else {
@@ -515,8 +516,8 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
 
         for (auto const &pair : this->_entity.relations) {
             auto const &rel_name = pair.first;
-            if (this->_data.relations.count(rel_name) > 0) {
-                relations.emplace(rel_name, this->_data.relations.at(rel_name));
+            if (this->_relations.count(rel_name) > 0) {
+                relations.emplace(rel_name, this->_relations.at(rel_name));
             }
         }
 
