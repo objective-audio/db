@@ -17,28 +17,6 @@
 
 using namespace yas;
 
-namespace yas {
-namespace db {
-    static db::object_identifier make_identifier(db::object_data const &obj_data) {
-        if (obj_data.attributes.count(db::object_id_field)) {
-            auto const &value = obj_data.attributes.at(object_id_field);
-            return db::make_stable_id(value);
-        } else {
-            throw std::invalid_argument("object_id not found in object_data.");
-        }
-    }
-
-    static void assign_identifier(db::object_identifier &identifier, db::object_data const &obj_data) {
-        if (obj_data.attributes.count(db::object_id_field)) {
-            auto const &value = obj_data.attributes.at(object_id_field);
-            identifier.set_stable(value);
-        } else {
-            throw std::invalid_argument("object_id not found in object_data.");
-        }
-    }
-}
-}
-
 #pragma mark - db::const_object::impl
 
 struct db::const_object::impl : public base::impl {
@@ -47,8 +25,7 @@ struct db::const_object::impl : public base::impl {
     db::id_vector_map_t _relations;
     db::object_identifier _identifier;
 
-    impl(db::entity const &entity, db::object_data const &obj_data = {})
-        : _entity(entity), _identifier(db::make_identifier(obj_data)) {
+    impl(db::entity const &entity, db::object_data const &obj_data = {}) : _entity(entity), _identifier(nullptr) {
         this->load_data(obj_data);
     }
 
@@ -72,6 +49,8 @@ struct db::const_object::impl : public base::impl {
     void load_data(db::object_data const &obj_data) {
         this->clear();
 
+        this->update_identifier(obj_data);
+
         for (auto const &pair : this->_entity.all_attributes) {
             auto const &attr_name = pair.first;
             if (obj_data.attributes.count(attr_name) > 0) {
@@ -93,6 +72,11 @@ struct db::const_object::impl : public base::impl {
 
     db::value const &attribute_value(std::string const &attr_name) {
         this->validate_attribute_name(attr_name);
+
+        if (attr_name == db::object_id_field) {
+#warning テスト用、後で消す
+            return this->_identifier ? this->_identifier.stable() : db::null_value();
+        }
 
         if (this->_attributes.count(attr_name) > 0) {
             return this->_attributes.at(attr_name);
@@ -176,6 +160,22 @@ struct db::const_object::impl : public base::impl {
             this->validate_relation_id(rel_id);
         }
     }
+
+    void update_identifier(db::value stable) {
+        if (this->_identifier) {
+            this->_identifier.set_stable(std::move(stable));
+        } else {
+            this->_identifier = db::make_stable_id(std::move(stable));
+        }
+    }
+
+    void update_identifier(db::object_data const &obj_data) {
+        if (obj_data.attributes.count(db::object_id_field)) {
+            this->update_identifier(obj_data.attributes.at(db::object_id_field));
+        } else {
+            throw std::invalid_argument("object_id not found in object_data.");
+        }
+    }
 };
 
 #pragma mark - db::const_object
@@ -222,7 +222,12 @@ db::object_identifier const &db::const_object::object_identifier() const {
 }
 
 db::value const &db::const_object::object_id() const {
-    return this->attribute_value(object_id_field);
+#warning 直接object_identifierを見るようにする
+    if (auto obj_id = this->object_identifier()) {
+        return obj_id.stable();
+    } else {
+        return db::null_value();
+    }
 }
 
 db::value const &db::const_object::save_id() const {
@@ -280,11 +285,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
         if (this->_status != db::object_status::changed || force) {
             this->clear();
 
-            if (this->_identifier) {
-                db::assign_identifier(this->_identifier, obj_data);
-            } else {
-                this->_identifier = db::make_identifier(obj_data);
-            }
+            this->update_identifier(obj_data);
 
             for (auto const &pair : this->_entity.all_attributes) {
                 auto const &attr_name = pair.first;
@@ -332,6 +333,11 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
 
     void set_attribute_value(std::string const &attr_name, db::value const &value, bool const loading = false) {
         this->validate_attribute_name(attr_name);
+
+        if (attr_name == db::object_id_field) {
+#warning テスト用、後で消す
+            this->update_identifier(value);
+        }
 
         replace(this->_attributes, attr_name, value);
 
@@ -496,14 +502,15 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
         db::value_map_t attributes;
         db::id_vector_map_t relations;
 
+#warning insertedな時にstableなことがあるのはなぜか？
+        if (this->_status != db::object_status::inserted) {
+            attributes.emplace(db::object_id_field, this->_identifier.stable());
+        }
+
         for (auto const &pair : this->_entity.all_attributes) {
             auto const &attr_name = pair.first;
 
-            if (attr_name == db::save_id_field) {
-                continue;
-            }
-
-            if (attr_name == db::object_id_field && this->_status == db::object_status::inserted) {
+            if (attr_name == db::save_id_field || attr_name == db::object_id_field) {
                 continue;
             }
 
