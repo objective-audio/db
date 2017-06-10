@@ -75,8 +75,8 @@ struct db::object_identifier::impl : base::impl {
     }
 
    private:
-    db::value _stable = db::null_value();
-    db::value _temporary = db::null_value();
+    db::value _stable;
+    db::value _temporary;
 };
 
 db::object_identifier::object_identifier(db::value stable, db::value temporary)
@@ -119,14 +119,18 @@ std::size_t db::object_identifier::hash() const {
 }
 
 db::object_identifier db::make_stable_id(db::value stable) {
-    return db::object_identifier{std::move(stable), nullptr};
+    return db::object_identifier{std::move(stable), db::null_value()};
 }
 
 db::object_identifier db::make_temporary_id() {
-    return db::object_identifier{nullptr, nullptr};
+    return db::object_identifier{db::null_value(), db::null_value()};
 }
 
 std::string yas::to_string(db::object_identifier const &obj_id) {
+    if (!obj_id) {
+        return "null";
+    }
+
     return "{" + joined({"temporary:" + to_string(obj_id.temporary()), "stable:" + to_string(obj_id.stable())}, ", ") +
            "}";
 }

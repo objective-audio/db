@@ -331,7 +331,7 @@ using namespace yas;
 
     db::object_data obj_data{
         .attributes = db::value_map_t{std::make_pair(db::object_id_field, db::value{0}),
-            std::make_pair(db::action_field, db::insert_action_value())},
+                                      std::make_pair(db::action_field, db::insert_action_value())},
         .relations = db::value_vector_map_t{std::make_pair("child", db::value_vector_t{db::value{12}, db::value{34}})}};
     obj.manageable().load_data(obj_data);
     XCTAssertEqual(obj.action(), db::insert_action_value());
@@ -379,7 +379,7 @@ using namespace yas;
 - (void)test_data_for_save {
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
-    db::object obj{nullptr, model.entity("sample_a")};
+    db::object obj{nullptr, model.entity("sample_a"), true};
 
     obj.set_attribute_value(db::pk_id_field, db::value{22});
     obj.set_attribute_value(db::object_id_field, db::value{55});
@@ -412,8 +412,8 @@ using namespace yas;
     XCTAssertEqual(data.relations.size(), 1);
     XCTAssertEqual(data.relations.count("child"), 1);
     XCTAssertEqual(data.relations.at("child").size(), 2);
-    XCTAssertEqual(data.relations.at("child").at(0), db::value{33});
-    XCTAssertEqual(data.relations.at("child").at(1), db::value{44});
+    XCTAssertEqual(data.relations.at("child").at(0).stable(), db::value{33});
+    XCTAssertEqual(data.relations.at("child").at(1).stable(), db::value{44});
 
     XCTAssertEqual(data.attributes.count(db::save_id_field), 0);
 }
