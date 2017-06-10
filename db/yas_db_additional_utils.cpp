@@ -695,7 +695,7 @@ db::manager_result_t db::purge_db(db::database &db, db::model const &model) {
 }
 
 db::manager_fetch_result_t db::save(db::database &db, db::model const &model, db::info const &info,
-                                    db::object_data_vector_map_t const &changed_datas) {
+                                    db::object_save_data_vector_map_t const &changed_datas) {
     // ラストのセーブIDよりカレントが前ならカレントより後のデータは削除する
     if (info.current_save_id() < info.last_save_id()) {
         if (auto ul = unless(db::delete_next_to_last(db, model, info.current_save_id_value()))) {
@@ -716,39 +716,46 @@ db::manager_fetch_result_t db::save(db::database &db, db::model const &model, db
 
         db::object_data_vector_t entity_saved_datas;
 
-        for (auto data : changed_entity_datas) {
-            // 保存するデータのアトリビュートのidは削除する（rowidなのでいらない）
-            erase_if_exists(data.attributes, db::pk_id_field);
-            // 保存するデータのセーブIDを今セーブするIDに置き換える
-            replace(data.attributes, db::save_id_field, next_save_id);
+        for (auto saving_data : changed_entity_datas) {
+            db::object_data saved_data;
 
-            if (data.attributes.count(db::object_id_field) == 0) {
+            // 保存するデータのアトリビュートのidは削除する（rowidなのでいらない）
+            erase_if_exists(saving_data.attributes, db::pk_id_field);
+            // 保存するデータのセーブIDを今セーブするIDに置き換える
+            replace(saving_data.attributes, db::save_id_field, next_save_id);
+
+            if (saving_data.attributes.count(db::object_id_field) == 0) {
                 // 保存するデータにまだオブジェクトIDがなければデータベース上の最大値+1をセットする
                 db::integer::type obj_id = 0;
                 if (auto max_value = db::max(db, entity_name, db::object_id_field)) {
                     obj_id = max_value.get<db::integer>();
                 }
-                replace(data.attributes, db::object_id_field, db::value{obj_id + 1});
+                replace(saving_data.attributes, db::object_id_field, db::value{obj_id + 1});
             }
 
             // データベースにアトリビュートのデータを挿入する
-            if (auto ul = unless(db.execute_update(entity_insert_sql, data.attributes))) {
-                return db::manager_fetch_result_t{
-                    db::manager_error{db::manager_error_type::insert_attributes_failed, std::move(ul.value.error())}};
+            if (auto update_result = db.execute_update(entity_insert_sql, saving_data.attributes)) {
+                saved_data.attributes = saving_data.attributes;
+            } else {
+                return db::manager_fetch_result_t{db::manager_error{db::manager_error_type::insert_attributes_failed,
+                                                                    std::move(update_result.error())}};
             }
 
+#warning relationのDBへの挿入は全てのattributeの挿入が終わってからにする。
             // 挿入したデータのrowidを取得
             if (auto row_result = db.last_insert_rowid()) {
                 auto const src_pk_id = db::value{std::move(row_result.value())};
-                auto const src_obj_id = data.attributes.at(db::object_id_field);
+                auto const src_obj_id = saving_data.attributes.at(db::object_id_field);
 
-                for (auto const &rel_pair : data.relations) {
+                for (auto const &rel_pair : saving_data.relations) {
                     // データベースに関連のデータを挿入する
                     auto const &rel_model = rel_models.at(rel_pair.first);
-                    auto const &rel_tgt_obj_ids = rel_pair.second;
-                    if (auto ul = unless(db::insert_relations(db, rel_model, src_pk_id, src_obj_id, rel_tgt_obj_ids,
-                                                              next_save_id))) {
-                        return db::manager_fetch_result_t{std::move(ul.value.error())};
+                    auto rel_tgt_obj_ids = db::to_values(rel_pair.second);
+                    if (auto insert_result =
+                            db::insert_relations(db, rel_model, src_pk_id, src_obj_id, rel_tgt_obj_ids, next_save_id)) {
+                        saved_data.relations.emplace(rel_pair.first, std::move(rel_tgt_obj_ids));
+                    } else {
+                        return db::manager_fetch_result_t{std::move(insert_result.error())};
                     }
                 }
             } else {
@@ -756,7 +763,7 @@ db::manager_fetch_result_t db::save(db::database &db, db::model const &model, db
                     db::manager_error{db::manager_error_type::last_insert_rowid_failed, std::move(row_result.error())}};
             }
 
-            entity_saved_datas.emplace_back(std::move(data));
+            entity_saved_datas.emplace_back(std::move(saved_data));
         }
 
         saved_datas.emplace(entity_name, std::move(entity_saved_datas));
@@ -766,7 +773,7 @@ db::manager_fetch_result_t db::save(db::database &db, db::model const &model, db
 }
 
 db::manager_result_t db::remove_relations_at_save(db::database &db, db::model const &model, db::info const &info,
-                                                  db::object_data_vector_map_t const &changed_datas) {
+                                                  db::object_save_data_vector_map_t const &changed_datas) {
     // オブジェクトが削除された場合に逆関連があったらデータベース上で関連を外す
     db::value const next_save_id = info.next_save_id_value();
 
@@ -785,7 +792,7 @@ db::manager_result_t db::remove_relations_at_save(db::database &db, db::model co
         db::value_vector_t tgt_obj_ids;
         tgt_obj_ids.reserve(changed_entity_datas.size());
 
-        for (db::object_data const &data : changed_entity_datas) {
+        for (db::object_save_data const &data : changed_entity_datas) {
             auto const &action = data.attributes.at(db::action_field);
             if (action.get<db::text>() != db::remove_action) {
                 // 削除されていなければスキップ
