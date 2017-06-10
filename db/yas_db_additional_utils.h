@@ -60,7 +60,11 @@ namespace db {
     // valueからstableなobject_identifierに変換する
     // relationのloadに使用
     db::id_vector_t to_stable_ids(db::value_vector_t const &);
-    
+
+    // object_identifierの配列を丸ごとコピーする
+    // relationのsaveに使用
+    db::id_vector_t copy_ids(db::id_vector_t const &);
+
     // stableなobject_identifierからvalueに変換する
     db::value_vector_t to_values(db::id_vector_t const &);
 
@@ -126,10 +130,10 @@ namespace db {
 
     // 変更のあったデータをDB上に保存する
     db::manager_fetch_result_t save(db::database &db, db::model const &model, db::info const &info,
-                                    db::object_data_vector_map_t const &changed_datas);
+                                    db::object_save_data_vector_map_t const &changed_datas);
     // 変更のあったデータのうち削除されたオブジェクトを関連から外す
     db::manager_result_t remove_relations_at_save(db::database &db, db::model const &model, db::info const &info,
-                                                  db::object_data_vector_map_t const &changed_datas);
+                                                  db::object_save_data_vector_map_t const &changed_datas);
 
     // 全てのエンティティの指定したidより大きいsave_idのデータを削除する
     db::manager_result_t delete_next_to_last(db::database &db, db::model const &model, db::value const &save_id);

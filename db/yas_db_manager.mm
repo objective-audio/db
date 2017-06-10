@@ -231,8 +231,8 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
     }
 
     // データベースに保存するために、全てのエンティティで変更のあったオブジェクトのobject_dataを取得する
-    db::object_data_vector_map_t changed_datas_for_save() {
-        db::object_data_vector_map_t changed_datas;
+    db::object_save_data_vector_map_t changed_datas_for_save() {
+        db::object_save_data_vector_map_t changed_datas;
 
         for (auto const &entity_pair : this->_model.entities()) {
             // エンティティごとの処理
@@ -252,7 +252,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                 continue;
             }
 
-            db::object_data_vector_t entity_datas;
+            db::object_save_data_vector_t entity_datas;
             entity_datas.reserve(total_count);
 
             if (inserted_count > 0) {
@@ -933,7 +933,7 @@ void db::manager::fetch_const_objects(db::manager::fetch_preparation_ids_f prepa
 
 void db::manager::save(db::manager::vector_completion_f completion, operation_option_t option) {
     auto execution = [completion = std::move(completion), manager = *this](operation const &) mutable {
-        db::object_data_vector_map_t changed_datas;
+        db::object_save_data_vector_map_t changed_datas;
         // 変更のあったデータをメインスレッドで取得する
         auto manager_impl = manager.impl_ptr<impl>();
         dispatch_sync(manager.dispatch_queue(),

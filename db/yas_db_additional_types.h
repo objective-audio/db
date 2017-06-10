@@ -5,6 +5,7 @@
 #pragma once
 
 #include "yas_db_value.h"
+#include "yas_db_object_identifier.h"
 #include <set>
 #include <unordered_set>
 #include <deque>
@@ -16,6 +17,7 @@ namespace db {
     class attribute;
     class relation;
     class object_data;
+    class object_save_data;
     class entity;
     class index;
     class manager_error;
@@ -39,6 +41,8 @@ namespace db {
     using weak_object_map_map_t = std::unordered_map<std::string, db::weak_object_map_t>;
     using object_data_vector_t = std::vector<db::object_data>;
     using object_data_vector_map_t = std::unordered_map<std::string, db::object_data_vector_t>;
+    using object_save_data_vector_t = std::vector<db::object_save_data>;
+    using object_save_data_vector_map_t = std::unordered_map<std::string, db::object_save_data_vector_t>;
 
     // for model
     using entity_map_t = std::unordered_map<std::string, db::entity>;
@@ -96,6 +100,12 @@ namespace db {
     struct object_data {
         db::value_map_t attributes;
         db::value_vector_map_t relations;
+    };
+
+    struct object_save_data {
+        db::object_identifier object_id;
+        db::value_map_t attributes;
+        db::id_vector_map_t relations;
     };
 }
 }
