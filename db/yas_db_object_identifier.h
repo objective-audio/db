@@ -14,7 +14,7 @@ namespace db {
         class impl;
 
        public:
-        object_identifier(db::value, bool const is_temporary);
+        object_identifier(db::value stable, db::value temporary);
         object_identifier(std::nullptr_t);
 
         void set_stable(db::integer::type const);
