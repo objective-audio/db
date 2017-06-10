@@ -2268,13 +2268,13 @@ using namespace yas;
         auto const &obj_a0 = a_objects.at(0);
         auto const &obj_a0_rels = obj_a0.relation_objects("child");
         XCTAssertEqual(obj_a0_rels.size(), 2);
-        XCTAssertEqual(obj_a0_rels.at(0).object_id(), obj_b1_id);
-        XCTAssertEqual(obj_a0_rels.at(1).object_id(), obj_b0_id);
+        XCTAssertEqual(obj_a0_rels.at(0).object_id(), obj_b1_id.stable());
+        XCTAssertEqual(obj_a0_rels.at(1).object_id(), obj_b0_id.stable());
 
         auto const &obj_a1 = a_objects.at(1);
         XCTAssertEqual(obj_a1.relation_objects("child").size(), 1);
         auto const &obj_a1_rels = obj_a1.relation_objects("child");
-        XCTAssertEqual(obj_a1_rels.at(0).object_id(), obj_b2_id);
+        XCTAssertEqual(obj_a1_rels.at(0).object_id(), obj_b2_id.stable());
     }
 
     {
@@ -2327,12 +2327,12 @@ using namespace yas;
         auto const &obj_a0 = a_objects.at(0);
         auto const &obj_a0_rels = obj_a0.relation_objects("child");
         XCTAssertEqual(obj_a0_rels.size(), 1);
-        XCTAssertEqual(obj_a0_rels.at(0).object_id(), obj_b1_id);
+        XCTAssertEqual(obj_a0_rels.at(0).object_id(), obj_b1_id.stable());
 
         auto const &obj_a1 = a_objects.at(1);
         XCTAssertEqual(obj_a1.relation_objects("child").size(), 1);
         auto const &obj_a1_rels = obj_a1.relation_objects("child");
-        XCTAssertEqual(obj_a1_rels.at(0).object_id(), obj_b2_id);
+        XCTAssertEqual(obj_a1_rels.at(0).object_id(), obj_b2_id.stable());
     }
 
     {
@@ -2389,7 +2389,7 @@ using namespace yas;
         auto const &obj_a1 = a_objects.at(1);
         XCTAssertEqual(obj_a1.relation_objects("child").size(), 1);
         auto const &obj_a1_rels = obj_a1.relation_objects("child");
-        XCTAssertEqual(obj_a1_rels.at(0).object_id(), obj_b2_id);
+        XCTAssertEqual(obj_a1_rels.at(0).object_id(), obj_b2_id.stable());
     }
 
     {
