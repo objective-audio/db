@@ -18,6 +18,7 @@
 #include "yas_db_attribute.h"
 #include "yas_db_index.h"
 #include "yas_db_fetch_option.h"
+#include "yas_db_object_identifier.h"
 
 using namespace yas;
 
@@ -282,6 +283,14 @@ db::manager_result_t db::update_version(db::database &db, yas::version const &ve
 }
 
 #pragma mark - convert
+
+db::id_vector_t db::to_stable_ids(db::value_vector_t const &values) {
+    return to_vector<db::object_identifier>(values, [](db::value const &value) { return db::make_stable_id(value); });
+}
+
+db::value_vector_t db::to_values(db::id_vector_t const &ids) {
+    return to_vector<db::value>(ids, [](db::object_identifier const &obj_id) { return obj_id.stable(); });
+}
 
 // 複数のエンティティのobject_dataのvectorから、const_objectのvectorを生成する
 db::const_object_vector_map_t db::to_const_vector_objects(db::model const &model,
