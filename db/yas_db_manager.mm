@@ -67,7 +67,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
     // データベースに保存せず仮にオブジェクトを生成する
     // この時点ではobject_idやsave_idは振られていない
     db::object insert_object(std::string const entity_name) {
-        db::object object{cast<db::manager>(), this->_model.entity(entity_name), true};
+        db::object object{cast<db::manager>(), this->_model.entity(entity_name)};
 
         object.manageable().load_insertion_data();
 

@@ -25,12 +25,13 @@ struct db::const_object::impl : public base::impl {
     db::id_vector_map_t _relations;
     db::object_id _identifier;
 
+    // const_objectとして作る場合
     impl(db::entity const &entity, db::object_data const &obj_data = {}) : _entity(entity), _identifier(nullptr) {
         this->load_data(obj_data);
     }
 
-    impl(db::entity const &entity, db::object_id &&identifier)
-        : _entity(entity), _identifier(std::move(identifier)) {
+    // mutableなobjectとして作る場合
+    impl(db::entity const &entity, db::object_id &&identifier) : _entity(entity), _identifier(std::move(identifier)) {
     }
 
     void clear() {
@@ -253,7 +254,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
     db::object::subject_t _subject;
 
     impl(db::manager const &manager, db::entity const &entity, bool const is_temporary)
-        : const_object::impl(entity, is_temporary ? db::make_temporary_id() : nullptr), _manager(manager) {
+        : const_object::impl(entity, db::make_temporary_id()), _manager(manager) {
     }
 
     ~impl() {
@@ -399,15 +400,14 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
             std::size_t idx = 0;
             std::vector<std::size_t> indices;
 
-            erase_if(this->_relations.at(rel_name),
-                     [relation_id, &idx, &indices](db::object_id const &object_id) {
-                         bool const result = object_id.stable() == relation_id;
-                         if (result) {
-                             indices.push_back(idx);
-                         }
-                         ++idx;
-                         return result;
-                     });
+            erase_if(this->_relations.at(rel_name), [relation_id, &idx, &indices](db::object_id const &object_id) {
+                bool const result = object_id.stable() == relation_id;
+                if (result) {
+                    indices.push_back(idx);
+                }
+                ++idx;
+                return result;
+            });
 
             this->set_update_action();
 
@@ -579,8 +579,8 @@ db::object::relation_change_info const &db::object::change_info::relation_change
 
 #pragma mark - db::object
 
-db::object::object(db::manager const &manager, db::entity const &entity, bool const is_temporary)
-    : const_object(std::make_unique<impl>(manager, entity, is_temporary)) {
+db::object::object(db::manager const &manager, db::entity const &entity)
+    : const_object(std::make_unique<impl>(manager, entity, true)) {
 }
 
 db::object::object(std::nullptr_t) : const_object(nullptr) {

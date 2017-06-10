@@ -81,7 +81,7 @@ namespace db {
         using subject_t = subject<change_info, method>;
         using observer_t = observer<change_info, method>;
 
-        object(db::manager const &manager, db::entity const &entity, bool const is_temporary = false);
+        object(db::manager const &manager, db::entity const &entity);
         object(std::nullptr_t);
 
         subject_t const &subject() const;

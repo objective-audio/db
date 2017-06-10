@@ -32,7 +32,7 @@ using namespace yas;
     XCTAssertFalse(obj.attribute_value("age"));
     XCTAssertFalse(obj.attribute_value("name"));
     XCTAssertFalse(obj.attribute_value("weight"));
-    XCTAssertFalse(obj.object_id());
+    XCTAssertTrue(obj.object_id().is_temporary());
     XCTAssertEqual(obj.relation_ids("child").size(), 0);
     XCTAssertFalse(obj.is_removed());
 }
@@ -379,7 +379,7 @@ using namespace yas;
 - (void)test_data_for_save {
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
-    db::object obj{nullptr, model.entity("sample_a"), true};
+    db::object obj{nullptr, model.entity("sample_a")};
 
     obj.set_attribute_value(db::pk_id_field, db::value{22});
     obj.set_attribute_value(db::object_id_field, db::value{55});
