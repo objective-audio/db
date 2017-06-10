@@ -492,9 +492,9 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
         this->set_attribute_value(db::action_field, db::remove_action_value());
     }
 
-    db::object_data data_for_save() {
+    db::object_save_data data_for_save() {
         db::value_map_t attributes;
-        db::value_vector_map_t relations;
+        db::id_vector_map_t relations;
 
         for (auto const &pair : this->_entity.all_attributes) {
             auto const &attr_name = pair.first;
@@ -519,11 +519,13 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
         for (auto const &pair : this->_entity.relations) {
             auto const &rel_name = pair.first;
             if (this->_relations.count(rel_name) > 0) {
-                relations.emplace(rel_name, db::to_values(this->_relations.at(rel_name)));
+                relations.emplace(rel_name, db::copy_ids(this->_relations.at(rel_name)));
             }
         }
 
-        return db::object_data{.attributes = std::move(attributes), .relations = std::move(relations)};
+        return db::object_save_data{.object_id = this->_identifier.copy(),
+                                    .attributes = std::move(attributes),
+                                    .relations = std::move(relations)};
     }
 
     void set_update_action() {
@@ -672,7 +674,7 @@ bool db::object::is_temporary() const {
     return this->save_id().get<db::integer>() <= 0;
 }
 
-db::object_data db::object::data_for_save() const {
+db::object_save_data db::object::data_for_save() const {
     return impl_ptr<impl>()->data_for_save();
 }
 
