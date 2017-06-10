@@ -284,14 +284,8 @@ db::manager_result_t db::update_version(db::database &db, yas::version const &ve
 
 #pragma mark - convert
 
-db::id_vector_map_t db::to_stable_ids(db::value_vector_map_t const &values) {
-    db::id_vector_map_t result_ids;
-    for (auto const &pair : values) {
-        result_ids.emplace(pair.first, to_vector<db::object_identifier>(pair.second, [](db::value const &value) {
-                               return db::make_stable_id(value);
-                           }));
-    }
-    return result_ids;
+db::id_vector_t db::to_stable_ids(db::value_vector_t const &values) {
+    return to_vector<db::object_identifier>(values, [](db::value const &value) { return db::make_stable_id(value); });
 }
 
 // 複数のエンティティのobject_dataのvectorから、const_objectのvectorを生成する

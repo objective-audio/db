@@ -59,7 +59,7 @@ namespace db {
 namespace db {
     // valueからstableなobject_identifierに変換する
     // relationのloadに使用
-    db::id_vector_map_t to_stable_ids(db::value_vector_map_t const &);
+    db::id_vector_t to_stable_ids(db::value_vector_t const &);
 
     // object_dataの配列からconst_objectの配列を生成する
     // 全てのエンティティを含む
