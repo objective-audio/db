@@ -217,17 +217,8 @@ std::size_t db::const_object::relation_size(std::string const &rel_name) const {
     return impl_ptr<impl>()->relation_size(rel_name);
 }
 
-db::object_identifier const &db::const_object::object_identifier() const {
+db::object_identifier const &db::const_object::object_id() const {
     return impl_ptr<impl>()->_identifier;
-}
-
-db::value const &db::const_object::object_id() const {
-#warning 直接object_identifierを見るようにする
-    if (auto obj_id = this->object_identifier()) {
-        return obj_id.stable();
-    } else {
-        return db::null_value();
-    }
 }
 
 db::value const &db::const_object::save_id() const {
@@ -640,21 +631,22 @@ void db::object::remove_relation_id(std::string const &rel_name, db::value const
 
 void db::object::set_relation_objects(std::string const &rel_name, object_vector_t const &rel_objects) {
     impl_ptr<impl>()->set_relation_ids(
-        rel_name,
-        to_vector<db::value>(rel_objects, [entity_name = entity_name()](auto const &obj) { return obj.object_id(); }));
+        rel_name, to_vector<db::value>(rel_objects, [entity_name = entity_name()](auto const &obj) {
+            return obj.object_id().stable();
+        }));
 }
 
 void db::object::add_relation_object(std::string const &rel_name, object const &rel_object) {
-    impl_ptr<impl>()->add_relation_id(rel_name, rel_object.object_id());
+    impl_ptr<impl>()->add_relation_id(rel_name, rel_object.object_id().stable());
 }
 
 void db::object::insert_relation_object(std::string const &rel_name, db::object const &rel_object,
                                         std::size_t const idx) {
-    impl_ptr<impl>()->insert_relation_id(rel_name, rel_object.object_id(), idx);
+    impl_ptr<impl>()->insert_relation_id(rel_name, rel_object.object_id().stable(), idx);
 }
 
 void db::object::remove_relation_object(std::string const &rel_name, object const &rel_object) {
-    impl_ptr<impl>()->remove_relation_id(rel_name, rel_object.object_id());
+    impl_ptr<impl>()->remove_relation_id(rel_name, rel_object.object_id().stable());
 }
 
 void db::object::remove_relation_at(std::string const &rel_name, std::size_t const idx) {

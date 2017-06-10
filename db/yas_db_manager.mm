@@ -185,7 +185,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
             for (auto const &data : entity_datas) {
                 auto object = db::null_object();
                 if (this->load_and_cache_object_from_data(object, entity_name, data, force)) {
-                    objects.emplace(object.object_id().get<db::integer>(), std::move(object));
+                    objects.emplace(object.object_id().stable().get<db::integer>(), std::move(object));
                 }
             }
 
@@ -303,7 +303,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
 
             for (auto const &object_pair : entity_objects) {
                 auto const &object = object_pair.second;
-                entity_ids.insert(object.object_id().get<db::integer>());
+                entity_ids.insert(object.object_id().stable().get<db::integer>());
             }
 
             if (entity_ids.size() > 0) {
@@ -370,7 +370,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
             }
 
             // _changed_objectsにオブジェクトを追加
-            auto const &obj_id = object.object_id().get<db::integer>();
+            auto const &obj_id = object.object_id().stable().get<db::integer>();
             if (this->_changed_objects.at(entity_name).count(obj_id) == 0) {
                 this->_changed_objects.at(entity_name).emplace(obj_id, object);
             }
@@ -384,7 +384,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                     for (auto &pair : this->_cached_objects.at(inv_entity_name)) {
                         auto inv_rel_obj = pair.second.lock();
                         for (auto const &inv_rel_name : entity_pair.second) {
-                            inv_rel_obj.remove_relation_id(inv_rel_name, object.object_id());
+                            inv_rel_obj.remove_relation_id(inv_rel_name, object.object_id().stable());
                         }
                     }
                 }

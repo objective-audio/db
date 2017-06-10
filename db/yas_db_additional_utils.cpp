@@ -330,7 +330,7 @@ db::const_object_map_map_t db::to_const_map_objects(db::model const &model, db::
 
         for (auto const &data : entity_datas) {
             if (db::const_object obj{model.entity(entity_name), data}) {
-                entity_objects.emplace(obj.object_id().get<db::integer>(), std::move(obj));
+                entity_objects.emplace(obj.object_id().stable().get<db::integer>(), std::move(obj));
             }
         }
 
