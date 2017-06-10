@@ -3,6 +3,7 @@
 //
 
 #include "yas_db_object_identifier.h"
+#include "yas_stl_utils.h"
 
 using namespace yas;
 
@@ -132,6 +133,11 @@ db::object_identifier db::make_stable_id(db::value value) {
 
 db::object_identifier db::make_temporary_id() {
     return db::object_identifier{db::value{nullptr}, true};
+}
+
+std::string yas::to_string(db::object_identifier const &obj_id) {
+    return "[" + joined({"temporary:" + to_string(obj_id.temporary()), "stable:" + to_string(obj_id.stable())}, ", ") +
+           "]";
 }
 
 db::object_identifier const &db::null_id() {

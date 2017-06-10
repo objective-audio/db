@@ -36,6 +36,7 @@ namespace db {
 
     db::object_identifier const &null_id();
 }
+std::string to_string(db::object_identifier const &);
 }
 
 template <>
