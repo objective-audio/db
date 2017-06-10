@@ -24,7 +24,7 @@
 #include "yas_version.h"
 #include "yas_db_info.h"
 #include "yas_db_fetch_option.h"
-#include "yas_db_object_identifier.h"
+#include "yas_db_object_id.h"
 
 using namespace yas;
 
@@ -185,7 +185,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
             for (auto const &data : entity_datas) {
                 auto object = db::null_object();
                 if (this->load_and_cache_object_from_data(object, entity_name, data, force)) {
-                    objects.emplace(object.object_id().get<db::integer>(), std::move(object));
+                    objects.emplace(object.object_id().stable().get<db::integer>(), std::move(object));
                 }
             }
 
@@ -303,7 +303,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
 
             for (auto const &object_pair : entity_objects) {
                 auto const &object = object_pair.second;
-                entity_ids.insert(object.object_id().get<db::integer>());
+                entity_ids.insert(object.object_id().stable().get<db::integer>());
             }
 
             if (entity_ids.size() > 0) {
@@ -337,7 +337,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
     }
 
     // キャッシュされた単独のオブジェクトをエンティティ名とオブジェクトIDを指定して取得する
-    db::object cached_object(std::string const &entity_name, db::object_identifier const &object_id) {
+    db::object cached_object(std::string const &entity_name, db::object_id const &object_id) {
         if (this->_cached_objects.count(entity_name) > 0) {
             auto const &entity_objects = this->_cached_objects.at(entity_name);
             if (entity_objects.count(object_id) > 0) {
@@ -370,7 +370,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
             }
 
             // _changed_objectsにオブジェクトを追加
-            auto const &obj_id = object.object_id().get<db::integer>();
+            auto const &obj_id = object.object_id().stable().get<db::integer>();
             if (this->_changed_objects.at(entity_name).count(obj_id) == 0) {
                 this->_changed_objects.at(entity_name).emplace(obj_id, object);
             }
@@ -384,7 +384,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                     for (auto &pair : this->_cached_objects.at(inv_entity_name)) {
                         auto inv_rel_obj = pair.second.lock();
                         for (auto const &inv_rel_name : entity_pair.second) {
-                            inv_rel_obj.remove_relation_id(inv_rel_name, object.object_id());
+                            inv_rel_obj.remove_relation_id(inv_rel_name, object.object_id().stable());
                         }
                     }
                 }
@@ -398,7 +398,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
     }
 
     // オブジェクトが解放された時の処理
-    void _object_did_erase(std::string const &entity_name, db::object_identifier const &object_id) {
+    void _object_did_erase(std::string const &entity_name, db::object_id const &object_id) {
         if (this->_cached_objects.count(entity_name) > 0) {
             // キャッシュからオブジェクトを削除する
             // キャッシュにはweakで持っている
@@ -1127,7 +1127,7 @@ void db::manager::revert(db::manager::revert_preparation_f preparation, db::mana
     this->execute(execution, std::move(option));
 }
 
-db::object db::manager::cached_object(std::string const &entity_name, db::object_identifier const &object_id) const {
+db::object db::manager::cached_object(std::string const &entity_name, db::object_id const &object_id) const {
     return impl_ptr<impl>()->cached_object(entity_name, object_id);
 }
 

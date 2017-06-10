@@ -50,7 +50,7 @@ using namespace yas;
 
     obj.manageable().load_data(obj_data);
 
-    XCTAssertEqual(obj.object_identifier().stable(), db::value{1});
+    XCTAssertEqual(obj.object_id().stable(), db::value{1});
 
     XCTAssertEqual(obj.attribute_value("age"), db::value{10});
     XCTAssertEqual(obj.attribute_value("name"), db::value{"name_val"});
@@ -74,7 +74,7 @@ using namespace yas;
 
     db::const_object obj{model.entity("sample_a"), obj_data};
 
-    XCTAssertEqual(obj.object_identifier().stable(), db::value{1});
+    XCTAssertEqual(obj.object_id().stable(), db::value{1});
 
     XCTAssertEqual(obj.attribute_value("age"), db::value{10});
     XCTAssertEqual(obj.attribute_value("name"), db::value{"name_val"});
@@ -108,7 +108,7 @@ using namespace yas;
 
     obj.manageable().load_data(post_obj_data);
 
-    XCTAssertEqual(obj.object_identifier().stable(), db::value{1});
+    XCTAssertEqual(obj.object_id().stable(), db::value{1});
 
     XCTAssertEqual(obj.attribute_value("age"), db::value{543});
     XCTAssertFalse(obj.attribute_value("name"));
@@ -236,15 +236,15 @@ using namespace yas;
     obj_b2.set_attribute_value(db::object_id_field, db::value{6});
     obj_b3.set_attribute_value(db::object_id_field, db::value{7});
 
-    obj.insert_relation_id("child", obj_b1.object_id(), 0);
+    obj.insert_relation_id("child", obj_b1.object_id().stable(), 0);
 
     XCTAssertEqual(obj.relation_ids("child").size(), 1);
 
-    obj.insert_relation_id("child", obj_b2.object_id(), 1);
+    obj.insert_relation_id("child", obj_b2.object_id().stable(), 1);
 
     XCTAssertEqual(obj.relation_ids("child").size(), 2);
 
-    obj.insert_relation_id("child", obj_b3.object_id(), 0);
+    obj.insert_relation_id("child", obj_b3.object_id().stable(), 0);
 
     XCTAssertEqual(obj.relation_ids("child").size(), 3);
 
@@ -596,7 +596,7 @@ using namespace yas;
 
         XCTAssertEqual(name.size(), 0);
 
-        XCTAssertEqual(obj.object_identifier().stable(), db::value{1});
+        XCTAssertEqual(obj.object_id().stable(), db::value{1});
 
         XCTAssertEqual(obj.attribute_value("age"), db::value{10});
         XCTAssertEqual(obj.attribute_value("name"), db::value{"name_val"});

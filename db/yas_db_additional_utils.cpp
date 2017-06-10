@@ -18,7 +18,7 @@
 #include "yas_db_attribute.h"
 #include "yas_db_index.h"
 #include "yas_db_fetch_option.h"
-#include "yas_db_object_identifier.h"
+#include "yas_db_object_id.h"
 
 using namespace yas;
 
@@ -285,15 +285,15 @@ db::manager_result_t db::update_version(db::database &db, yas::version const &ve
 #pragma mark - convert
 
 db::id_vector_t db::to_stable_ids(db::value_vector_t const &values) {
-    return to_vector<db::object_identifier>(values, [](db::value const &value) { return db::make_stable_id(value); });
+    return to_vector<db::object_id>(values, [](db::value const &value) { return db::make_stable_id(value); });
 }
 
 db::id_vector_t db::copy_ids(db::id_vector_t const &ids) {
-    return to_vector<db::object_identifier>(ids, [](db::object_identifier const &obj_id) { return obj_id.copy(); });
+    return to_vector<db::object_id>(ids, [](db::object_id const &obj_id) { return obj_id.copy(); });
 }
 
 db::value_vector_t db::to_values(db::id_vector_t const &ids) {
-    return to_vector<db::value>(ids, [](db::object_identifier const &obj_id) { return obj_id.stable(); });
+    return to_vector<db::value>(ids, [](db::object_id const &obj_id) { return obj_id.stable(); });
 }
 
 // 複数のエンティティのobject_dataのvectorから、const_objectのvectorを生成する
@@ -330,7 +330,7 @@ db::const_object_map_map_t db::to_const_map_objects(db::model const &model, db::
 
         for (auto const &data : entity_datas) {
             if (db::const_object obj{model.entity(entity_name), data}) {
-                entity_objects.emplace(obj.object_id().get<db::integer>(), std::move(obj));
+                entity_objects.emplace(obj.object_id().stable().get<db::integer>(), std::move(obj));
             }
         }
 

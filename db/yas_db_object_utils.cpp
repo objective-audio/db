@@ -66,7 +66,7 @@ db::object_map_t yas::to_object_map(db::object_vector_t vec) {
     auto end = vec.end();
     while (it != end) {
         auto &obj = *it;
-        auto obj_id = obj.object_id().get<db::integer>();
+        auto obj_id = obj.object_id().stable().get<db::integer>();
         map.emplace(std::move(obj_id), std::move(obj));
         ++it;
     }
