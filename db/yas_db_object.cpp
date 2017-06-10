@@ -13,6 +13,7 @@
 #include "yas_observing.h"
 #include "yas_stl_utils.h"
 #include "yas_fast_each.h"
+#include "yas_db_additional_utils.h"
 
 using namespace yas;
 
@@ -43,7 +44,7 @@ namespace db {
 struct db::const_object::impl : public base::impl {
     db::entity _entity;
     db::value_map_t _attributes;
-    db::value_vector_map_t _relations;
+    db::id_vector_map_t _relations;
     db::object_identifier _identifier;
 
     impl(db::entity const &entity, db::object_data const &obj_data = {})
@@ -85,7 +86,7 @@ struct db::const_object::impl : public base::impl {
             if (obj_data.relations.count(rel_name) > 0) {
                 this->validate_relation_name(rel_name);
 
-                this->_relations.emplace(rel_name, obj_data.relations.at(rel_name));
+                this->_relations.emplace(rel_name, db::to_stable_ids(obj_data.relations.at(rel_name)));
             }
         }
     }
@@ -104,7 +105,7 @@ struct db::const_object::impl : public base::impl {
         this->validate_relation_name(rel_name);
 
         if (this->_relations.count(rel_name) > 0) {
-            return this->_relations.at(rel_name);
+            return db::to_values(this->_relations.at(rel_name));
         }
         return {};
     }
@@ -115,7 +116,7 @@ struct db::const_object::impl : public base::impl {
         if (this->_relations.count(rel_name) > 0) {
             auto const &ids = this->_relations.at(rel_name);
             if (idx < ids.size()) {
-                return ids.at(idx);
+                return ids.at(idx).stable();
             }
         }
         return db::null_value();
@@ -144,7 +145,7 @@ struct db::const_object::impl : public base::impl {
                 auto &rel_id_set = relation_ids.at(tgt_entity_name);
                 auto const &rel = this->_relations.at(rel_name);
                 for (auto const &tgt_obj_id : rel) {
-                    rel_id_set.emplace(tgt_obj_id.get<db::integer>());
+                    rel_id_set.emplace(tgt_obj_id.stable().get<db::integer>());
                 }
             }
         }
@@ -351,7 +352,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
         this->validate_relation_name(rel_name);
         this->validate_relation_ids(relation_ids);
 
-        replace(this->_relations, rel_name, relation_ids);
+        replace(this->_relations, rel_name, db::to_stable_ids(relation_ids));
 
         if (!loading) {
             this->set_update_action();
@@ -378,11 +379,11 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
         this->validate_relation_id(relation_id);
 
         if (this->_relations.count(rel_name) == 0) {
-            this->_relations.emplace(rel_name, db::value_vector_t{});
+            this->_relations.emplace(rel_name, db::id_vector_t{});
         }
 
         auto &vector = _relations.at(rel_name);
-        vector.insert(vector.begin() + idx, relation_id);
+        vector.insert(vector.begin() + idx, db::make_stable_id(relation_id));
 
         this->set_update_action();
 
@@ -401,14 +402,15 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
             std::size_t idx = 0;
             std::vector<std::size_t> indices;
 
-            erase_if(this->_relations.at(rel_name), [relation_id, &idx, &indices](db::value const &object_id) {
-                bool const result = object_id == relation_id;
-                if (result) {
-                    indices.push_back(idx);
-                }
-                ++idx;
-                return result;
-            });
+            erase_if(this->_relations.at(rel_name),
+                     [relation_id, &idx, &indices](db::object_identifier const &object_id) {
+                         bool const result = object_id.stable() == relation_id;
+                         if (result) {
+                             indices.push_back(idx);
+                         }
+                         ++idx;
+                         return result;
+                     });
 
             this->set_update_action();
 
@@ -517,7 +519,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
         for (auto const &pair : this->_entity.relations) {
             auto const &rel_name = pair.first;
             if (this->_relations.count(rel_name) > 0) {
-                relations.emplace(rel_name, this->_relations.at(rel_name));
+                relations.emplace(rel_name, db::to_values(this->_relations.at(rel_name)));
             }
         }
 
