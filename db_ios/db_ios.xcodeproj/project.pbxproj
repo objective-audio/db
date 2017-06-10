@@ -12,7 +12,7 @@
 		B637C08C1EB7735E00481589 /* DBSampleObjectNormalCell.mm in Sources */ = {isa = PBXBuildFile; fileRef = B637C08B1EB7735E00481589 /* DBSampleObjectNormalCell.mm */; };
 		B637C08F1EB7737600481589 /* DBSampleObjectTextFieldCell.mm in Sources */ = {isa = PBXBuildFile; fileRef = B637C08E1EB7737600481589 /* DBSampleObjectTextFieldCell.mm */; };
 		B637C0921EB7743A00481589 /* DBSampleObjectViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = B637C0911EB7743A00481589 /* DBSampleObjectViewController.mm */; };
-		B652E0751EEAD291005508C4 /* yas_db_object_identifier.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B652E0731EEAD291005508C4 /* yas_db_object_identifier.cpp */; };
+		B652E0751EEAD291005508C4 /* yas_db_object_id.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B652E0731EEAD291005508C4 /* yas_db_object_id.cpp */; };
 		B66ACF011DB797480031CB88 /* yas_base.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B66ACED11DB797480031CB88 /* yas_base.cpp */; };
 		B66ACF021DB797480031CB88 /* yas_cf_ref.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B66ACED41DB797480031CB88 /* yas_cf_ref.cpp */; };
 		B66ACF031DB797480031CB88 /* yas_cf_utils.mm in Sources */ = {isa = PBXBuildFile; fileRef = B66ACED81DB797480031CB88 /* yas_cf_utils.mm */; };
@@ -71,8 +71,8 @@
 		B637C08E1EB7737600481589 /* DBSampleObjectTextFieldCell.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = DBSampleObjectTextFieldCell.mm; sourceTree = "<group>"; };
 		B637C0901EB7743A00481589 /* DBSampleObjectViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DBSampleObjectViewController.h; sourceTree = "<group>"; };
 		B637C0911EB7743A00481589 /* DBSampleObjectViewController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = DBSampleObjectViewController.mm; sourceTree = "<group>"; };
-		B652E0731EEAD291005508C4 /* yas_db_object_identifier.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = yas_db_object_identifier.cpp; sourceTree = "<group>"; };
-		B652E0741EEAD291005508C4 /* yas_db_object_identifier.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_db_object_identifier.h; sourceTree = "<group>"; };
+		B652E0731EEAD291005508C4 /* yas_db_object_id.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = yas_db_object_id.cpp; sourceTree = "<group>"; };
+		B652E0741EEAD291005508C4 /* yas_db_object_id.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_db_object_id.h; sourceTree = "<group>"; };
 		B66ACED01DB797480031CB88 /* yas_base_private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_base_private.h; sourceTree = "<group>"; };
 		B66ACED11DB797480031CB88 /* yas_base.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = yas_base.cpp; sourceTree = "<group>"; };
 		B66ACED21DB797480031CB88 /* yas_base.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_base.h; sourceTree = "<group>"; };
@@ -367,8 +367,8 @@
 				B68217B21C75F7C000689F27 /* yas_db_manager.mm */,
 				B68217B31C75F7C000689F27 /* yas_db_model.cpp */,
 				B68217B41C75F7C000689F27 /* yas_db_model.h */,
-				B652E0731EEAD291005508C4 /* yas_db_object_identifier.cpp */,
-				B652E0741EEAD291005508C4 /* yas_db_object_identifier.h */,
+				B652E0731EEAD291005508C4 /* yas_db_object_id.cpp */,
+				B652E0741EEAD291005508C4 /* yas_db_object_id.h */,
 				B627DF231C8A7F0500E8BAE5 /* yas_db_object_utils.cpp */,
 				B627DF241C8A7F0500E8BAE5 /* yas_db_object_utils.h */,
 				B68217B51C75F7C000689F27 /* yas_db_object.cpp */,
@@ -488,7 +488,7 @@
 				B68217D51C75F7C000689F27 /* yas_db_statement.cpp in Sources */,
 				B6EDCB3A1ED16E7800D18E6D /* yas_db_info.cpp in Sources */,
 				B68217D41C75F7C000689F27 /* yas_db_sql_utils.cpp in Sources */,
-				B652E0751EEAD291005508C4 /* yas_db_object_identifier.cpp in Sources */,
+				B652E0751EEAD291005508C4 /* yas_db_object_id.cpp in Sources */,
 				B66ACF081DB797480031CB88 /* yas_flex_ptr.cpp in Sources */,
 				B68217CF1C75F7C000689F27 /* yas_db_object.cpp in Sources */,
 				B68217CA1C75F7C000689F27 /* yas_db_database.cpp in Sources */,

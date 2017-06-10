@@ -9,7 +9,7 @@
 #include "yas_db_object.h"
 #include "yas_db_relation.h"
 #include "yas_db_value.h"
-#include "yas_db_object_identifier.h"
+#include "yas_db_object_id.h"
 #include "yas_observing.h"
 #include "yas_stl_utils.h"
 #include "yas_fast_each.h"
@@ -23,13 +23,13 @@ struct db::const_object::impl : public base::impl {
     db::entity _entity;
     db::value_map_t _attributes;
     db::id_vector_map_t _relations;
-    db::object_identifier _identifier;
+    db::object_id _identifier;
 
     impl(db::entity const &entity, db::object_data const &obj_data = {}) : _entity(entity), _identifier(nullptr) {
         this->load_data(obj_data);
     }
 
-    impl(db::entity const &entity, db::object_identifier &&identifier)
+    impl(db::entity const &entity, db::object_id &&identifier)
         : _entity(entity), _identifier(std::move(identifier)) {
     }
 
@@ -217,7 +217,7 @@ std::size_t db::const_object::relation_size(std::string const &rel_name) const {
     return impl_ptr<impl>()->relation_size(rel_name);
 }
 
-db::object_identifier const &db::const_object::object_id() const {
+db::object_id const &db::const_object::object_id() const {
     return impl_ptr<impl>()->_identifier;
 }
 
@@ -400,7 +400,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
             std::vector<std::size_t> indices;
 
             erase_if(this->_relations.at(rel_name),
-                     [relation_id, &idx, &indices](db::object_identifier const &object_id) {
+                     [relation_id, &idx, &indices](db::object_id const &object_id) {
                          bool const result = object_id.stable() == relation_id;
                          if (result) {
                              indices.push_back(idx);

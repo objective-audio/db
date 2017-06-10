@@ -2,7 +2,7 @@
 //  yas_db_identifier.cpp
 //
 
-#include "yas_db_object_identifier.h"
+#include "yas_db_object_id.h"
 #include "yas_stl_utils.h"
 
 using namespace yas;
@@ -23,7 +23,7 @@ namespace db {
 }
 }
 
-struct db::object_identifier::impl : base::impl {
+struct db::object_id::impl : base::impl {
     impl(db::value &&stable, db::value &&temporary) : _stable(std::move(stable)), _temporary(std::move(temporary)) {
         if (!_stable && !_temporary) {
             _temporary = db::value{std::to_string(this->identifier())};
@@ -79,54 +79,54 @@ struct db::object_identifier::impl : base::impl {
     db::value _temporary;
 };
 
-db::object_identifier::object_identifier(db::value stable, db::value temporary)
+db::object_id::object_id(db::value stable, db::value temporary)
     : base(std::make_shared<impl>(std::move(stable), std::move(temporary))) {
 }
 
-db::object_identifier::object_identifier(std::nullptr_t) : base(nullptr) {
+db::object_id::object_id(std::nullptr_t) : base(nullptr) {
 }
 
-void db::object_identifier::set_stable(db::integer::type const value) {
+void db::object_id::set_stable(db::integer::type const value) {
     this->set_stable(db::value{value});
 }
 
-void db::object_identifier::set_stable(db::value value) {
+void db::object_id::set_stable(db::value value) {
     impl_ptr<impl>()->set_stable(std::move(value));
 }
 
-db::value const &db::object_identifier::stable() const {
+db::value const &db::object_id::stable() const {
     return impl_ptr<impl>()->stable();
 }
 
-db::value const &db::object_identifier::temporary() const {
+db::value const &db::object_id::temporary() const {
     return impl_ptr<impl>()->temporary();
 }
 
-bool db::object_identifier::is_stable() const {
+bool db::object_id::is_stable() const {
     return !!impl_ptr<impl>()->is_stable();
 }
 
-bool db::object_identifier::is_temporary() const {
+bool db::object_id::is_temporary() const {
     return impl_ptr<impl>()->is_tmp();
 }
 
-db::object_identifier db::object_identifier::copy() const {
-    return db::object_identifier{this->stable(), this->temporary()};
+db::object_id db::object_id::copy() const {
+    return db::object_id{this->stable(), this->temporary()};
 }
 
-std::size_t db::object_identifier::hash() const {
+std::size_t db::object_id::hash() const {
     return impl_ptr<impl>()->hash();
 }
 
-db::object_identifier db::make_stable_id(db::value stable) {
-    return db::object_identifier{std::move(stable), db::null_value()};
+db::object_id db::make_stable_id(db::value stable) {
+    return db::object_id{std::move(stable), db::null_value()};
 }
 
-db::object_identifier db::make_temporary_id() {
-    return db::object_identifier{db::null_value(), db::null_value()};
+db::object_id db::make_temporary_id() {
+    return db::object_id{db::null_value(), db::null_value()};
 }
 
-std::string yas::to_string(db::object_identifier const &obj_id) {
+std::string yas::to_string(db::object_id const &obj_id) {
     if (!obj_id) {
         return "null";
     }
@@ -135,7 +135,7 @@ std::string yas::to_string(db::object_identifier const &obj_id) {
            "}";
 }
 
-db::object_identifier const &db::null_id() {
-    static db::object_identifier _null_id{nullptr};
+db::object_id const &db::null_id() {
+    static db::object_id _null_id{nullptr};
     return _null_id;
 }

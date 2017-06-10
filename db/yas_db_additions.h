@@ -12,7 +12,7 @@
 #include "yas_db_object_utils.h"
 #include "yas_db_model.h"
 #include "yas_db_object.h"
-#include "yas_db_object_identifier.h"
+#include "yas_db_object_id.h"
 #include "yas_db_relation.h"
 #include "yas_db_sql_utils.h"
 #include "yas_db_utils.h"

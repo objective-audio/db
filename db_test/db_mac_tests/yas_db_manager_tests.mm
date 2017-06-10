@@ -2140,12 +2140,12 @@ using namespace yas;
 
     XCTAssertEqual(manager.current_save_id(), db::value{1});
 
-    db::object_identifier obj_a0_id = db::null_id();
-    db::object_identifier obj_a1_id = db::null_id();
-    db::object_identifier obj_a2_id = db::null_id();
-    db::object_identifier obj_b0_id = db::null_id();
-    db::object_identifier obj_b1_id = db::null_id();
-    db::object_identifier obj_b2_id = db::null_id();
+    db::object_id obj_a0_id = db::null_id();
+    db::object_id obj_a1_id = db::null_id();
+    db::object_id obj_a2_id = db::null_id();
+    db::object_id obj_b0_id = db::null_id();
+    db::object_id obj_b1_id = db::null_id();
+    db::object_id obj_b2_id = db::null_id();
 
     {
         db::object &obj_a0 = objects.at("sample_a").at(0);
