@@ -60,7 +60,11 @@ namespace db {
     // valueからstableなobject_identifierに変換する
     // relationのloadに使用
     db::id_vector_t to_stable_ids(db::value_vector_t const &);
-    
+
+    // object_identifierの配列を丸ごとコピーする
+    // relationのsaveに使用
+    db::id_vector_t copy_ids(db::id_vector_t const &);
+
     // stableなobject_identifierからvalueに変換する
     db::value_vector_t to_values(db::id_vector_t const &);
 

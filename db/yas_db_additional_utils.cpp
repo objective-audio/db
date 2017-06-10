@@ -288,6 +288,10 @@ db::id_vector_t db::to_stable_ids(db::value_vector_t const &values) {
     return to_vector<db::object_identifier>(values, [](db::value const &value) { return db::make_stable_id(value); });
 }
 
+db::id_vector_t db::copy_ids(db::id_vector_t const &ids) {
+    return to_vector<db::object_identifier>(ids, [](db::object_identifier const &obj_id) { return obj_id.copy(); });
+}
+
 db::value_vector_t db::to_values(db::id_vector_t const &ids) {
     return to_vector<db::value>(ids, [](db::object_identifier const &obj_id) { return obj_id.stable(); });
 }
