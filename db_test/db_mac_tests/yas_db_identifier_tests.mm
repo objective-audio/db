@@ -22,7 +22,7 @@ using namespace yas;
 }
 
 - (void)test_stable_id {
-    db::object_identifier stable_id{db::value{1}, false};
+    db::object_identifier stable_id{db::value{1}, nullptr};
 
     XCTAssertTrue(stable_id);
     XCTAssertTrue(stable_id.is_stable());
@@ -31,7 +31,7 @@ using namespace yas;
 }
 
 - (void)test_temporary_id {
-    db::object_identifier tmp_id{db::value{"2"}, true};
+    db::object_identifier tmp_id{nullptr, db::value{"2"}};
 
     XCTAssertTrue(tmp_id);
     XCTAssertTrue(tmp_id.is_temporary());
@@ -56,7 +56,7 @@ using namespace yas;
 }
 
 - (void)test_set_stable {
-    db::object_identifier identifier{db::value{"10"}, true};
+    db::object_identifier identifier{nullptr, db::value{"10"}};
 
     XCTAssertFalse(identifier.is_stable());
 
@@ -71,13 +71,13 @@ using namespace yas;
 }
 
 - (void)test_is_equal {
-    db::object_identifier stable_id_a1{db::value{11}, false};
-    db::object_identifier stable_id_a2{db::value{11}, false};
-    db::object_identifier stable_id_b{db::value{22}, false};
-    db::object_identifier tmp_id_a1{db::value{"111"}, true};
-    db::object_identifier tmp_id_a2{db::value{"111"}, true};
-    db::object_identifier tmp_id_b{db::value{"222"}, true};
-    db::object_identifier tmp_to_stable_id{db::value{"111"}, true};
+    db::object_identifier stable_id_a1{db::value{11}, nullptr};
+    db::object_identifier stable_id_a2{db::value{11}, nullptr};
+    db::object_identifier stable_id_b{db::value{22}, nullptr};
+    db::object_identifier tmp_id_a1{nullptr, db::value{"111"}};
+    db::object_identifier tmp_id_a2{nullptr, db::value{"111"}};
+    db::object_identifier tmp_id_b{nullptr, db::value{"222"}};
+    db::object_identifier tmp_to_stable_id{nullptr, db::value{"111"}};
     tmp_to_stable_id.set_stable(11);
 
     XCTAssertTrue(stable_id_a1 == stable_id_a1);

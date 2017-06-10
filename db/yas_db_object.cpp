@@ -261,7 +261,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
     ~impl() {
         if (this->_manager) {
             if (auto observable = this->_manager.object_observable()) {
-                observable.object_did_erase(_entity.name, attribute_value(object_id_field).get<integer>());
+                observable.object_did_erase(_entity.name, this->_identifier);
             }
         }
     }
@@ -599,13 +599,15 @@ db::object_vector_t db::object::relation_objects(std::string const &rel_name) co
     auto const &rel_ids = impl_ptr<impl>()->relation_ids(rel_name);
     std::string const &tgt_entity_name = this->entity().relations.at(rel_name).target_entity_name;
     return to_vector<db::object>(rel_ids, [manager = manager(), &tgt_entity_name](db::value const &id) {
-        return manager.cached_object(tgt_entity_name, id.get<db::integer>());
+#warning object_idはrelationが直接持っているのを使いたい
+        return manager.cached_object(tgt_entity_name, db::make_stable_id(id));
     });
 }
 
 db::object db::object::relation_object_at(std::string const &rel_name, std::size_t const idx) const {
     std::string const &tgt_entity_name = this->entity().relations.at(rel_name).target_entity_name;
-    return this->manager().cached_object(tgt_entity_name, relation_id(rel_name, idx).get<db::integer>());
+#warning object_idはrelationが直接持っているのを使いたい
+    return this->manager().cached_object(tgt_entity_name, db::make_stable_id(relation_id(rel_name, idx)));
 }
 
 void db::object::set_relation_ids(std::string const &rel_name, value_vector_t const &relation_ids) {

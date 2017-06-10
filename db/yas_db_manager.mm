@@ -24,6 +24,7 @@
 #include "yas_version.h"
 #include "yas_db_info.h"
 #include "yas_db_fetch_option.h"
+#include "yas_db_object_identifier.h"
 
 using namespace yas;
 
@@ -91,7 +92,8 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
 
         if (data.attributes.count(db::object_id_field) > 0) {
             if (auto const &object_id_value = data.attributes.at(db::object_id_field)) {
-                auto const &object_id = object_id_value.get<db::integer>();
+#warning object_idはobject_dataに持っているものを使いたい。temporaryを元に置き換えたい。
+                auto const object_id = db::make_stable_id(object_id_value);
 
                 if (object) {
                     // オブジェクトがある場合（挿入された場合）キャッシュに追加
@@ -104,7 +106,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                         if (!object) {
                             // キャッシュ内のweakのオブジェクトの本体が解放されているのはおかしい
                             throw "cached object is released. entity_name (" + entity_name + ") object_id (" +
-                                std::to_string(object_id) + ")";
+                                to_string(object_id) + ")";
                         }
                     }
 
@@ -335,7 +337,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
     }
 
     // キャッシュされた単独のオブジェクトをエンティティ名とオブジェクトIDを指定して取得する
-    db::object cached_object(std::string const &entity_name, db::integer::type object_id) {
+    db::object cached_object(std::string const &entity_name, db::object_identifier const &object_id) {
         if (this->_cached_objects.count(entity_name) > 0) {
             auto const &entity_objects = this->_cached_objects.at(entity_name);
             if (entity_objects.count(object_id) > 0) {
@@ -396,7 +398,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
     }
 
     // オブジェクトが解放された時の処理
-    void _object_did_erase(std::string const &entity_name, db::integer::type const object_id) {
+    void _object_did_erase(std::string const &entity_name, db::object_identifier const &object_id) {
         if (this->_cached_objects.count(entity_name) > 0) {
             // キャッシュからオブジェクトを削除する
             // キャッシュにはweakで持っている
@@ -1125,7 +1127,7 @@ void db::manager::revert(db::manager::revert_preparation_f preparation, db::mana
     this->execute(execution, std::move(option));
 }
 
-db::object db::manager::cached_object(std::string const &entity_name, db::integer::type const object_id) const {
+db::object db::manager::cached_object(std::string const &entity_name, db::object_identifier const &object_id) const {
     return impl_ptr<impl>()->cached_object(entity_name, object_id);
 }
 
