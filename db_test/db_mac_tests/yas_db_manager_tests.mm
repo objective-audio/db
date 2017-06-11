@@ -169,8 +169,8 @@ using namespace yas;
 
         XCTAssertEqual(a_objects.at(0).attribute_value("name"), db::value{"test_name_0_inserted"});
         XCTAssertEqual(a_objects.at(1).attribute_value("name"), db::value{"test_name_1_inserted"});
-        XCTAssertEqual(a_objects.at(0).attribute_value(db::object_id_field), db::value{1});
-        XCTAssertEqual(a_objects.at(1).attribute_value(db::object_id_field), db::value{2});
+        XCTAssertEqual(a_objects.at(0).object_id().stable(), db::value{1});
+        XCTAssertEqual(a_objects.at(1).object_id().stable(), db::value{2});
 
         XCTAssertFalse(manager.has_inserted_objects());
         XCTAssertEqual(manager.inserted_object_count("sample_a"), 0);

@@ -308,7 +308,7 @@ using namespace yas;
     obj.set_attribute_value("name", db::value{"tanaka"});
     obj.set_relation_ids("child", {db::value{111}});
 
-    XCTAssertEqual(obj.attribute_value(db::object_id_field), db::value{45});
+    XCTAssertEqual(obj.object_id().stable(), db::value{45});
     XCTAssertEqual(obj.attribute_value("name"), db::value{"tanaka"});
     XCTAssertEqual(obj.relation_ids("child").at(0), db::value{111});
 
@@ -317,7 +317,7 @@ using namespace yas;
     XCTAssertTrue(obj.is_removed());
     XCTAssertFalse(obj.attribute_value("name"));
     XCTAssertEqual(obj.attribute_value(db::pk_id_field), db::value{11});
-    XCTAssertEqual(obj.attribute_value(db::object_id_field), db::value{45});
+    XCTAssertEqual(obj.object_id().stable(), db::value{45});
     XCTAssertEqual(obj.relation_ids("child").size(), 0);
 }
 
