@@ -126,13 +126,13 @@ using namespace yas;
             auto const &object = objects[idx];
 
             XCTAssertEqual(object.status(), db::object_status::inserted);
+            XCTAssertTrue(object.object_id().is_temporary());
             XCTAssertEqual(object.attribute_value(db::action_field), db::insert_action_value());
             XCTAssertEqual(object.attribute_value("name"), db::value{"default_value"});
             XCTAssertEqual(object.attribute_value("age"), db::value{10});
             XCTAssertEqual(object.attribute_value("weight"), db::value{65.4});
 
             XCTAssertFalse(object.attribute_value(db::pk_id_field));
-            XCTAssertEqual(object.attribute_value(db::object_id_field), db::value{0});
             XCTAssertEqual(object.attribute_value(db::save_id_field), db::value{0});
         }
 
@@ -169,8 +169,8 @@ using namespace yas;
 
         XCTAssertEqual(a_objects.at(0).attribute_value("name"), db::value{"test_name_0_inserted"});
         XCTAssertEqual(a_objects.at(1).attribute_value("name"), db::value{"test_name_1_inserted"});
-        XCTAssertEqual(a_objects.at(0).attribute_value(db::object_id_field), db::value{1});
-        XCTAssertEqual(a_objects.at(1).attribute_value(db::object_id_field), db::value{2});
+        XCTAssertEqual(a_objects.at(0).object_id().stable(), db::value{1});
+        XCTAssertEqual(a_objects.at(1).object_id().stable(), db::value{2});
 
         XCTAssertFalse(manager.has_inserted_objects());
         XCTAssertEqual(manager.inserted_object_count("sample_a"), 0);

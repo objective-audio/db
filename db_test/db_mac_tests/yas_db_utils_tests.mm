@@ -410,9 +410,10 @@ using namespace yas;
     db::object obj_a0{nullptr, model.entity("sample_a")};
     db::object obj_a1{nullptr, model.entity("sample_a")};
 
-    obj_a0.set_attribute_value(db::object_id_field, db::value{0});
+    obj_a0.manageable().load_data({.attributes = {{db::object_id_field, db::value{0}}}});
+    obj_a1.manageable().load_data({.attributes = {{db::object_id_field, db::value{1}}}});
+
     obj_a0.set_attribute_value("name", db::value{"a0"});
-    obj_a1.set_attribute_value(db::object_id_field, db::value{1});
     obj_a1.set_attribute_value("name", db::value{"a1"});
 
     db::object_vector_t src_vec;
@@ -443,13 +444,14 @@ using namespace yas;
     db::object obj_b0{nullptr, model.entity("sample_b")};
     db::object obj_b1{nullptr, model.entity("sample_b")};
 
-    obj_a0.set_attribute_value(db::object_id_field, db::value{0});
+    obj_a0.manageable().load_data({.attributes = {{db::object_id_field, db::value{0}}}});
+    obj_a1.manageable().load_data({.attributes = {{db::object_id_field, db::value{1}}}});
+    obj_b0.manageable().load_data({.attributes = {{db::object_id_field, db::value{2}}}});
+    obj_b1.manageable().load_data({.attributes = {{db::object_id_field, db::value{3}}}});
+
     obj_a0.set_attribute_value("name", db::value{"a0"});
-    obj_a1.set_attribute_value(db::object_id_field, db::value{1});
     obj_a1.set_attribute_value("name", db::value{"a1"});
-    obj_b0.set_attribute_value(db::object_id_field, db::value{2});
     obj_b0.set_attribute_value("name", db::value{"b2"});
-    obj_b1.set_attribute_value(db::object_id_field, db::value{3});
     obj_b1.set_attribute_value("name", db::value{"b3"});
 
     db::object_vector_map_t src_map;

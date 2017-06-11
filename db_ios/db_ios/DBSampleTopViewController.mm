@@ -393,7 +393,7 @@ top_info_row_type_t to_idx(sample::top_info_row const &row) {
 - (void)updateObjectCell:(UITableViewCell *)cell withObject:(db::object const &)object {
     auto entity = db_controller::entity_for_name(object.entity_name());
 
-    CFStringRef cf_id_str = to_cf_object(to_string(object.attribute_value(db::object_id_field)));
+    CFStringRef cf_id_str = to_cf_object(to_string(object.object_id()));
     CFStringRef cf_name_str = to_cf_object(to_string(object.attribute_value("name")));
 
     switch (entity) {

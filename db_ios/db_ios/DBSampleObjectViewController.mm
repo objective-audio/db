@@ -135,7 +135,7 @@ sample::object_info_row_type_t to_idx(object_info_row const &row) {
                     cell = [tableView dequeueReusableCellWithIdentifier:sample::object_normal_cell_id
                                                            forIndexPath:indexPath];
                     if (auto normalCell = objc_cast<DBSampleObjectNormalCell>(cell)) {
-                        auto title = "object_id : " + to_string(self.db_object.attribute_value(db::object_id_field));
+                        auto title = "object_id : " + to_string(self.db_object.object_id());
                         [normalCell setupWithTitle:title];
                     }
                     break;

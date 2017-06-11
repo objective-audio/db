@@ -75,8 +75,7 @@ struct db::const_object::impl : public base::impl {
         this->validate_attribute_name(attr_name);
 
         if (attr_name == db::object_id_field) {
-#warning テスト用、後で消す
-            return this->_identifier ? this->_identifier.stable() : db::null_value();
+            throw std::invalid_argument("can not get 'obj_id' from attribute_value. use 'object_id()'");
         }
 
         if (this->_attributes.count(attr_name) > 0) {
@@ -324,12 +323,11 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
     }
 
     void set_attribute_value(std::string const &attr_name, db::value const &value, bool const loading = false) {
-        this->validate_attribute_name(attr_name);
-
         if (attr_name == db::object_id_field) {
-#warning テスト用、後で消す
-            this->update_identifier(value);
+            return;
         }
+
+        this->validate_attribute_name(attr_name);
 
         replace(this->_attributes, attr_name, value);
 
