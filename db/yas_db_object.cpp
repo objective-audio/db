@@ -487,7 +487,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
         this->set_attribute_value(db::action_field, db::remove_action_value());
     }
 
-    db::object_save_data data_for_save() {
+    db::object_save_data save_data() {
         db::value_map_t attributes;
         db::id_vector_map_t relations;
 
@@ -671,8 +671,8 @@ bool db::object::is_temporary() const {
     return this->save_id().get<db::integer>() <= 0;
 }
 
-db::object_save_data db::object::data_for_save() const {
-    return impl_ptr<impl>()->data_for_save();
+db::object_save_data db::object::save_data() const {
+    return impl_ptr<impl>()->save_data();
 }
 
 db::manageable_object &db::object::manageable() {

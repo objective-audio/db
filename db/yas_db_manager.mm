@@ -260,7 +260,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                 auto const &entity_objects = this->_inserted_objects.at(entity_name);
 
                 for (auto const &object : entity_objects) {
-                    auto data = object.data_for_save();
+                    auto data = object.save_data();
                     if (data.attributes.size() > 0) {
                         entity_datas.emplace_back(std::move(data));
                     } else {
@@ -275,7 +275,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
 
                 for (auto &object_pair : entity_objects) {
                     auto &object = object_pair.second;
-                    auto data = object.data_for_save();
+                    auto data = object.save_data();
                     if (data.attributes.size() > 0) {
                         entity_datas.emplace_back(std::move(data));
                     } else {

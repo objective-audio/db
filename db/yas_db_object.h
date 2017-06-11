@@ -111,7 +111,7 @@ namespace db {
 
         bool is_temporary() const;
 
-        db::object_save_data data_for_save() const;
+        db::object_save_data save_data() const;
 
         db::manageable_object &manageable();
 
