@@ -183,9 +183,9 @@ using namespace yas;
     db::object obj_b1{nullptr, model.entity("sample_b")};
     db::object obj_b2{nullptr, model.entity("sample_b")};
     db::object obj_b3{nullptr, model.entity("sample_b")};
-    obj_b1.set_attribute_value(db::object_id_field, db::value{5});
-    obj_b2.set_attribute_value(db::object_id_field, db::value{6});
-    obj_b3.set_attribute_value(db::object_id_field, db::value{7});
+    obj_b1.manageable().load_data({.attributes = {{db::object_id_field, db::value{5}}}});
+    obj_b2.manageable().load_data({.attributes = {{db::object_id_field, db::value{6}}}});
+    obj_b3.manageable().load_data({.attributes = {{db::object_id_field, db::value{7}}}});
 
     obj.add_relation_object("child", obj_b1);
 
@@ -232,9 +232,9 @@ using namespace yas;
     db::object obj_b1{nullptr, model.entity("sample_b")};
     db::object obj_b2{nullptr, model.entity("sample_b")};
     db::object obj_b3{nullptr, model.entity("sample_b")};
-    obj_b1.set_attribute_value(db::object_id_field, db::value{5});
-    obj_b2.set_attribute_value(db::object_id_field, db::value{6});
-    obj_b3.set_attribute_value(db::object_id_field, db::value{7});
+    obj_b1.manageable().load_data({.attributes = {{db::object_id_field, db::value{5}}}});
+    obj_b2.manageable().load_data({.attributes = {{db::object_id_field, db::value{6}}}});
+    obj_b3.manageable().load_data({.attributes = {{db::object_id_field, db::value{7}}}});
 
     obj.insert_relation_id("child", obj_b1.object_id().stable(), 0);
 
@@ -261,9 +261,9 @@ using namespace yas;
     db::object obj_b1{nullptr, model.entity("sample_b")};
     db::object obj_b2{nullptr, model.entity("sample_b")};
     db::object obj_b3{nullptr, model.entity("sample_b")};
-    obj_b1.set_attribute_value(db::object_id_field, db::value{5});
-    obj_b2.set_attribute_value(db::object_id_field, db::value{6});
-    obj_b3.set_attribute_value(db::object_id_field, db::value{7});
+    obj_b1.manageable().load_data({.attributes = {{db::object_id_field, db::value{5}}}});
+    obj_b2.manageable().load_data({.attributes = {{db::object_id_field, db::value{6}}}});
+    obj_b3.manageable().load_data({.attributes = {{db::object_id_field, db::value{7}}}});
 
     obj.insert_relation_object("child", obj_b1, 0);
 
@@ -303,8 +303,8 @@ using namespace yas;
 
     XCTAssertFalse(obj.is_removed());
 
+    obj.manageable().load_data({.attributes = {{db::object_id_field, db::value{45}}}});
     obj.set_attribute_value(db::pk_id_field, db::value{11});
-    obj.set_attribute_value(db::object_id_field, db::value{45});
     obj.set_attribute_value("name", db::value{"tanaka"});
     obj.set_relation_ids("child", {db::value{111}});
 
@@ -381,8 +381,8 @@ using namespace yas;
     db::model model((__bridge CFDictionaryRef)model_dict);
     db::object obj{nullptr, model.entity("sample_a")};
 
+    obj.manageable().load_data({.attributes = {{db::object_id_field, db::value{55}}}});
     obj.set_attribute_value(db::pk_id_field, db::value{22});
-    obj.set_attribute_value(db::object_id_field, db::value{55});
     obj.set_attribute_value("name", db::value{"suzuki"});
     obj.set_attribute_value("age", db::value{32});
     obj.set_attribute_value("weight", db::value{90.1});
