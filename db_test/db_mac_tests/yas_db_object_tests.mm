@@ -376,7 +376,7 @@ using namespace yas;
     XCTAssertTrue(obj.is_removed());
 }
 
-- (void)test_data_for_save {
+- (void)test_save_data {
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
     db::object obj{nullptr, model.entity("sample_a")};
@@ -391,7 +391,7 @@ using namespace yas;
 
     obj.set_relation_ids("child", db::value_vector_t{db::value{33}, db::value{44}});
 
-    auto data = obj.data_for_save();
+    auto data = obj.save_data();
 
     XCTAssertGreaterThan(data.attributes.size(), 6);
     XCTAssertEqual(data.attributes.count(db::pk_id_field), 1);
