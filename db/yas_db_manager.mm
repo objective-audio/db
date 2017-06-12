@@ -25,6 +25,7 @@
 #include "yas_db_info.h"
 #include "yas_db_fetch_option.h"
 #include "yas_db_object_id.h"
+#include "yas_db_weak_pool.h"
 
 using namespace yas;
 
@@ -43,7 +44,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
     db::model _model;
     operation_queue _op_queue;
     std::size_t _suspend_count = 0;
-    db::weak_object_map_map_t _cached_objects;
+    db::weak_pool<db::object_id, db::object> _cached_objects;
     db::object_deque_map_t _inserted_objects;
     db::object_map_map_t _changed_objects;
     db::info _db_info = db::null_info();
@@ -52,11 +53,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
 
     impl(std::string const &path, db::model const &model, dispatch_queue_t const dispatch_queue,
          std::size_t const priority_count)
-        : _database(path),
-          _model(model),
-          _dispatch_queue(dispatch_queue),
-          _op_queue(priority_count),
-          _cached_objects() {
+        : _database(path), _model(model), _dispatch_queue(dispatch_queue), _op_queue(priority_count) {
         yas_dispatch_queue_retain(dispatch_queue);
     }
 
@@ -83,38 +80,19 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
     // 1つのオブジェクトにデータベースから読み込まれたデータをロードする
     bool load_and_cache_object_from_data(db::object &object, std::string const &entity_name,
                                          db::object_data const &data, bool const force) {
-        if (this->_cached_objects.count(entity_name) == 0) {
-            this->_cached_objects.emplace(entity_name, db::weak_object_map_t{});
-        }
-
         auto manager = cast<db::manager>();
-        auto &entity_cached_objects = this->_cached_objects.at(entity_name);
 
         if (data.attributes.count(db::object_id_field) > 0) {
             if (auto const &object_id_value = data.attributes.at(db::object_id_field)) {
-#warning object_idはobject_dataに持っているものを使いたい。temporaryを元に置き換えたい。
+#warning object_idはobject_dataに持っているものを使いたい。temporaryで一致するかを見て置き換えたい。
                 auto const object_id = db::make_stable_id(object_id_value);
 
                 if (object) {
-                    // オブジェクトがある場合（挿入された場合）キャッシュに追加
-                    entity_cached_objects.emplace(object_id, to_weak(object));
+                    this->_cached_objects.set(entity_name, object_id, object);
                 } else {
-                    // オブジェクトがない場合（挿入でない場合）
-                    if (entity_cached_objects.count(object_id) > 0) {
-                        // キャッシュにオブジェクトがあるなら取得
-                        object = entity_cached_objects.at(object_id).lock();
-                        if (!object) {
-                            // キャッシュ内のweakのオブジェクトの本体が解放されているのはおかしい
-                            throw "cached object is released. entity_name (" + entity_name + ") object_id (" +
-                                to_string(object_id) + ")";
-                        }
-                    }
-
-                    if (!object) {
-                        // キャッシュにオブジェクトがないなら、オブジェクトを生成してキャッシュに追加
-                        object = db::object{manager, this->_model.entity(entity_name)};
-                        entity_cached_objects.emplace(object_id, to_weak(object));
-                    }
+                    object = this->_cached_objects.get_or_create(entity_name, object_id, [&manager, &entity_name]() {
+                        return db::object{manager, manager.model().entity(entity_name)};
+                    });
                 }
 
                 // オブジェクトにデータをロード
@@ -196,13 +174,8 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
 
     // キャッシュされている全てのオブジェクトをクリアする
     void clear_cached_objects() {
-        for (auto &entity_pair : this->_cached_objects) {
-            for (auto &object_pair : entity_pair.second) {
-                if (auto object = object_pair.second.lock()) {
-                    object.manageable().clear_data();
-                }
-            }
-        }
+        this->_cached_objects.perform(
+            [](std::string const &, db::object_id const &, auto &object) { object.manageable().clear_data(); });
         this->_cached_objects.clear();
     }
 
@@ -210,15 +183,9 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
     // データベースのパージが成功した時に呼ばれる
     void purge_cached_objects() {
         // キャッシュされたオブジェクトのセーブIDを全て1にする
-        db::value const one_value{db::integer::type{1}};
-
-        for (auto &entity_pair : this->_cached_objects) {
-            for (auto &object_pair : entity_pair.second) {
-                if (auto object = object_pair.second.lock()) {
-                    object.manageable().load_save_id(one_value);
-                }
-            }
-        }
+        db::value one_value{db::integer::type{1}};
+        this->_cached_objects.perform([one_value = std::move(one_value)](
+            std::string const &, db::object_id const &, auto &object) { object.manageable().load_save_id(one_value); });
     }
 
     // データベース情報を置き換える
@@ -338,17 +305,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
 
     // キャッシュされた単独のオブジェクトをエンティティ名とオブジェクトIDを指定して取得する
     db::object cached_object(std::string const &entity_name, db::object_id const &object_id) {
-        if (this->_cached_objects.count(entity_name) > 0) {
-            auto const &entity_objects = this->_cached_objects.at(entity_name);
-            if (entity_objects.count(object_id) > 0) {
-                if (auto const &weak_object = entity_objects.at(object_id)) {
-                    if (auto object = weak_object.lock()) {
-                        return object;
-                    }
-                }
-            }
-        }
-        return db::null_object();
+        return this->_cached_objects.get(entity_name, object_id);
     }
 
     // オブジェクトに変更があった時の処理
@@ -380,14 +337,15 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
             // オブジェクトが削除されていたら逆関連も削除する
             for (auto const &entity_pair : this->_model.entity(entity_name).inverse_relation_names) {
                 auto const &inv_entity_name = entity_pair.first;
-                if (this->_cached_objects.count(inv_entity_name) > 0) {
-                    for (auto &pair : this->_cached_objects.at(inv_entity_name)) {
-                        auto inv_rel_obj = pair.second.lock();
-                        for (auto const &inv_rel_name : entity_pair.second) {
+                auto const &inv_rel_names = entity_pair.second;
+
+                this->_cached_objects.perform_entity(
+                    inv_entity_name,
+                    [&inv_rel_names, &object](std::string const &, db::object_id const &, db::object &inv_rel_obj) {
+                        for (auto const &inv_rel_name : inv_rel_names) {
                             inv_rel_obj.remove_relation_id(inv_rel_name, object.object_id().stable());
                         }
-                    }
-                }
+                    });
             }
         }
 
@@ -399,11 +357,9 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
 
     // オブジェクトが解放された時の処理
     void _object_did_erase(std::string const &entity_name, db::object_id const &object_id) {
-        if (this->_cached_objects.count(entity_name) > 0) {
-            // キャッシュからオブジェクトを削除する
-            // キャッシュにはweakで持っている
-            erase_if_exists(this->_cached_objects.at(entity_name), object_id);
-        }
+        // キャッシュからオブジェクトを削除する
+        // キャッシュにはweakで持っている
+        this->_cached_objects.erase(entity_name, object_id);
     }
 
     // バックグラウンドでデータベースの処理をする
