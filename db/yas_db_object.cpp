@@ -519,12 +519,13 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
         for (auto const &pair : this->_entity.relations) {
             auto const &rel_name = pair.first;
             if (this->_relations.count(rel_name) > 0) {
+                auto const &rel_entity_name = pair.second.target_entity_name;
                 auto const &rel_ids = this->_relations.at(rel_name);
                 db::id_vector_t rel_save_ids;
                 rel_save_ids.reserve(rel_ids.size());
                 for (auto const &rel_id : rel_ids) {
                     rel_save_ids.emplace_back(
-                        pool.get_or_create(entity_name, rel_id, [&rel_id = rel_id]() { return rel_id.copy(); }));
+                        pool.get_or_create(rel_entity_name, rel_id, [&rel_id = rel_id]() { return rel_id.copy(); }));
                 }
                 relations.emplace(rel_name, std::move(rel_save_ids));
             }
