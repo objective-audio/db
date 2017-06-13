@@ -198,6 +198,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
     // データベースに保存するために、全てのエンティティで変更のあったオブジェクトのobject_dataを取得する
     db::object_save_data_vector_map_t changed_datas_for_save() {
         db::object_save_data_vector_map_t changed_datas;
+        db::object_id_pool_t obj_id_pool;
 
         for (auto const &entity_pair : this->_model.entities()) {
             // エンティティごとの処理
@@ -219,7 +220,6 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
 
             db::object_save_data_vector_t entity_datas;
             entity_datas.reserve(total_count);
-            db::object_id_pool_t obj_id_pool;
 
             if (inserted_count > 0) {
                 // 挿入されたオブジェクトからデータベース用のデータを取得
