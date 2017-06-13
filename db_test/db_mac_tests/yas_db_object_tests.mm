@@ -391,7 +391,9 @@ using namespace yas;
 
     obj.set_relation_ids("child", db::value_vector_t{db::value{33}, db::value{44}});
 
-    auto data = obj.save_data();
+    db::object_id_pool_t obj_id_pool;
+
+    auto data = obj.save_data(obj_id_pool);
 
     XCTAssertGreaterThan(data.attributes.size(), 6);
     XCTAssertEqual(data.attributes.count(db::pk_id_field), 1);
