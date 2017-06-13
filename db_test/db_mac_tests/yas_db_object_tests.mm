@@ -420,6 +420,32 @@ using namespace yas;
     XCTAssertEqual(data.attributes.count(db::save_id_field), 0);
 }
 
+- (void)test_save_data_same_object_id {
+    NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
+    db::model model((__bridge CFDictionaryRef)model_dict);
+
+    db::object obj_a1{nullptr, model.entity("sample_a")};
+    obj_a1.manageable().load_data({.attributes = {{db::object_id_field, db::value{10}}}});
+    obj_a1.set_relation_ids("child", db::value_vector_t{db::value{10}});
+
+    db::object obj_a2{nullptr, model.entity("sample_a")};
+    obj_a2.manageable().load_data({.attributes = {{db::object_id_field, db::value{20}}}});
+    obj_a2.set_relation_ids("child", db::value_vector_t{db::value{10}});
+
+    db::object obj_b{nullptr, model.entity("sample_b")};
+    obj_b.manageable().load_data({.attributes = {{db::object_id_field, db::value{10}}}});
+
+    db::object_id_pool_t pool;
+
+    auto save_data_a1 = obj_a1.save_data(pool);
+    auto save_data_a2 = obj_a2.save_data(pool);
+    auto save_data_b = obj_b.save_data(pool);
+    
+    XCTAssertEqual(save_data_b.object_id.identifier(), save_data_a1.relations.at("child").at(0).identifier());
+    XCTAssertEqual(save_data_a1.relations.at("child").at(0).identifier(), save_data_a2.relations.at("child").at(0).identifier());
+    XCTAssertNotEqual(save_data_a1.object_id.identifier(), save_data_b.object_id.identifier());
+}
+
 - (void)test_change_status {
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
