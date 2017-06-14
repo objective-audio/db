@@ -6,6 +6,7 @@
 
 #include "yas_db_value.h"
 #include "yas_db_object_id.h"
+#include "yas_db_weak_pool.h"
 #include <set>
 #include <unordered_set>
 #include <deque>
@@ -107,5 +108,7 @@ namespace db {
         db::value_map_t attributes;
         db::id_vector_map_t relations;
     };
+
+    using object_id_pool_t = db::weak_pool<db::object_id, db::object_id>;
 }
 }

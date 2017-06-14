@@ -487,9 +487,13 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
         this->set_attribute_value(db::action_field, db::remove_action_value());
     }
 
-    db::object_save_data save_data() {
+    db::object_save_data save_data(db::object_id_pool_t &pool) {
         db::value_map_t attributes;
         db::id_vector_map_t relations;
+
+        std::string const &entity_name = this->_entity.name;
+        db::object_id object_id = pool.get_or_create(entity_name, this->_identifier,
+                                                     [&identifier = this->_identifier]() { return identifier.copy(); });
 
 #warning insertedな時にstableなことがあるのはなぜか？
         if (this->_status != db::object_status::inserted) {
@@ -515,13 +519,20 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
         for (auto const &pair : this->_entity.relations) {
             auto const &rel_name = pair.first;
             if (this->_relations.count(rel_name) > 0) {
-                relations.emplace(rel_name, db::copy_ids(this->_relations.at(rel_name)));
+                auto const &rel_entity_name = pair.second.target_entity_name;
+                auto const &rel_ids = this->_relations.at(rel_name);
+                db::id_vector_t rel_save_ids;
+                rel_save_ids.reserve(rel_ids.size());
+                for (auto const &rel_id : rel_ids) {
+                    rel_save_ids.emplace_back(
+                        pool.get_or_create(rel_entity_name, rel_id, [&rel_id = rel_id]() { return rel_id.copy(); }));
+                }
+                relations.emplace(rel_name, std::move(rel_save_ids));
             }
         }
 
-        return db::object_save_data{.object_id = this->_identifier.copy(),
-                                    .attributes = std::move(attributes),
-                                    .relations = std::move(relations)};
+        return db::object_save_data{
+            .object_id = std::move(object_id), .attributes = std::move(attributes), .relations = std::move(relations)};
     }
 
     void set_update_action() {
@@ -671,8 +682,8 @@ bool db::object::is_temporary() const {
     return this->save_id().get<db::integer>() <= 0;
 }
 
-db::object_save_data db::object::save_data() const {
-    return impl_ptr<impl>()->save_data();
+db::object_save_data db::object::save_data(db::object_id_pool_t &pool) const {
+    return impl_ptr<impl>()->save_data(pool);
 }
 
 db::manageable_object &db::object::manageable() {

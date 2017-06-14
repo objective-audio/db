@@ -24,8 +24,6 @@
 #include "yas_version.h"
 #include "yas_db_info.h"
 #include "yas_db_fetch_option.h"
-#include "yas_db_object_id.h"
-#include "yas_db_weak_pool.h"
 
 using namespace yas;
 
@@ -200,6 +198,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
     // データベースに保存するために、全てのエンティティで変更のあったオブジェクトのobject_dataを取得する
     db::object_save_data_vector_map_t changed_datas_for_save() {
         db::object_save_data_vector_map_t changed_datas;
+        db::object_id_pool_t obj_id_pool;
 
         for (auto const &entity_pair : this->_model.entities()) {
             // エンティティごとの処理
@@ -227,7 +226,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                 auto const &entity_objects = this->_inserted_objects.at(entity_name);
 
                 for (auto const &object : entity_objects) {
-                    auto data = object.save_data();
+                    auto data = object.save_data(obj_id_pool);
                     if (data.attributes.size() > 0) {
                         entity_datas.emplace_back(std::move(data));
                     } else {
@@ -242,7 +241,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
 
                 for (auto &object_pair : entity_objects) {
                     auto &object = object_pair.second;
-                    auto data = object.save_data();
+                    auto data = object.save_data(obj_id_pool);
                     if (data.attributes.size() > 0) {
                         entity_datas.emplace_back(std::move(data));
                     } else {
