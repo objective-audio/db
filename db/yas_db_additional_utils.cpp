@@ -19,6 +19,7 @@
 #include "yas_db_index.h"
 #include "yas_db_fetch_option.h"
 #include "yas_db_object_id.h"
+#include "yas_fast_each.h"
 
 using namespace yas;
 
@@ -712,52 +713,38 @@ db::manager_fetch_result_t db::save(db::database &db, db::model const &model, db
         auto const &entity_name = entity_pair.first;
         auto const &changed_entity_datas = entity_pair.second;
         auto const entity_insert_sql = model.entity(entity_name).sql_for_insert();
-        auto const &rel_models = model.relations(entity_name);
 
         db::object_data_vector_t entity_saved_datas;
 
-        for (auto saving_data : changed_entity_datas) {
+        for (auto changed_data : changed_entity_datas) {
             db::object_data saved_data;
 
             // 保存するデータのアトリビュートのidは削除する（rowidなのでいらない）
-            erase_if_exists(saving_data.attributes, db::pk_id_field);
+            erase_if_exists(changed_data.attributes, db::pk_id_field);
             // 保存するデータのセーブIDを今セーブするIDに置き換える
-            replace(saving_data.attributes, db::save_id_field, next_save_id);
+            replace(changed_data.attributes, db::save_id_field, next_save_id);
 
-            if (saving_data.attributes.count(db::object_id_field) == 0) {
+            if (changed_data.attributes.count(db::object_id_field) == 0) {
                 // 保存するデータにまだオブジェクトIDがなければデータベース上の最大値+1をセットする
                 db::integer::type obj_id = 0;
                 if (auto max_value = db::max(db, entity_name, db::object_id_field)) {
                     obj_id = max_value.get<db::integer>();
                 }
-                replace(saving_data.attributes, db::object_id_field, db::value{obj_id + 1});
+                replace(changed_data.attributes, db::object_id_field, db::value{obj_id + 1});
             }
 
             // データベースにアトリビュートのデータを挿入する
-            if (auto update_result = db.execute_update(entity_insert_sql, saving_data.attributes)) {
-                saved_data.attributes = saving_data.attributes;
+            if (auto update_result = db.execute_update(entity_insert_sql, changed_data.attributes)) {
+                saved_data.attributes = changed_data.attributes;
             } else {
                 return db::manager_fetch_result_t{db::manager_error{db::manager_error_type::insert_attributes_failed,
                                                                     std::move(update_result.error())}};
             }
 
-#warning relationのDBへの挿入は全てのattributeの挿入が終わってからにする。
             // 挿入したデータのrowidを取得
             if (auto row_result = db.last_insert_rowid()) {
-                auto const src_pk_id = db::value{std::move(row_result.value())};
-                auto const src_obj_id = saving_data.attributes.at(db::object_id_field);
-
-                for (auto const &rel_pair : saving_data.relations) {
-                    // データベースに関連のデータを挿入する
-                    auto const &rel_model = rel_models.at(rel_pair.first);
-                    auto rel_tgt_obj_ids = db::to_values(rel_pair.second);
-                    if (auto insert_result =
-                            db::insert_relations(db, rel_model, src_pk_id, src_obj_id, rel_tgt_obj_ids, next_save_id)) {
-                        saved_data.relations.emplace(rel_pair.first, std::move(rel_tgt_obj_ids));
-                    } else {
-                        return db::manager_fetch_result_t{std::move(insert_result.error())};
-                    }
-                }
+                auto pk_id = db::value{std::move(row_result.value())};
+                saved_data.attributes.emplace(db::pk_id_field, std::move(pk_id));
             } else {
                 return db::manager_fetch_result_t{
                     db::manager_error{db::manager_error_type::last_insert_rowid_failed, std::move(row_result.error())}};
@@ -767,6 +754,35 @@ db::manager_fetch_result_t db::save(db::database &db, db::model const &model, db
         }
 
         saved_datas.emplace(entity_name, std::move(entity_saved_datas));
+    }
+
+    for (auto const &entity_pair : changed_datas) {
+        auto const &entity_name = entity_pair.first;
+        auto const &changed_entity_datas = entity_pair.second;
+        auto const &rel_models = model.relations(entity_name);
+        auto &saved_entity_datas = saved_datas.at(entity_name);
+
+        auto each = make_fast_each(changed_entity_datas.size());
+        while (yas_each_next(each)) {
+            auto const &idx = yas_each_index(each);
+            auto const &changed_data = changed_entity_datas.at(idx);
+            auto &saved_data = saved_entity_datas.at(idx);
+
+            auto const &src_pk_id = saved_data.attributes.at(db::pk_id_field);
+            auto const &src_obj_id = saved_data.attributes.at(db::object_id_field);
+
+            for (auto const &rel_pair : changed_data.relations) {
+                // データベースに関連のデータを挿入する
+                auto const &rel_model = rel_models.at(rel_pair.first);
+                auto rel_tgt_obj_ids = db::to_values(rel_pair.second);
+                if (auto insert_result =
+                        db::insert_relations(db, rel_model, src_pk_id, src_obj_id, rel_tgt_obj_ids, next_save_id)) {
+                    saved_data.relations.emplace(rel_pair.first, std::move(rel_tgt_obj_ids));
+                } else {
+                    return db::manager_fetch_result_t{std::move(insert_result.error())};
+                }
+            }
+        }
     }
 
     return db::manager_fetch_result_t{std::move(saved_datas)};
