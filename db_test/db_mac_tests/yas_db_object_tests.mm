@@ -441,8 +441,10 @@ using namespace yas;
     auto save_data_a2 = obj_a2.save_data(pool);
     auto save_data_b = obj_b.save_data(pool);
     
+    // 同じエンティティの同じobject_idは同じもの
     XCTAssertEqual(save_data_b.object_id.identifier(), save_data_a1.relations.at("child").at(0).identifier());
     XCTAssertEqual(save_data_a1.relations.at("child").at(0).identifier(), save_data_a2.relations.at("child").at(0).identifier());
+    // 違うエンティティの同じobject_idは違うもの
     XCTAssertNotEqual(save_data_a1.object_id.identifier(), save_data_b.object_id.identifier());
 }
 
