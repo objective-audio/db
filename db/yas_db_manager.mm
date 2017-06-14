@@ -913,7 +913,7 @@ void db::manager::save(db::manager::vector_completion_f completion, operation_op
             // トランザクション開始
             if (auto begin_result = db::begin_transaction(db)) {
                 // 変更のあったデータをデータベースに保存する
-                if (auto save_result = db::save(db, model, db_info, std::move(changed_datas))) {
+                if (auto save_result = db::save(db, model, db_info, changed_datas)) {
                     saved_datas = std::move(save_result.value());
                 } else {
                     state = db::manager_result_t{std::move(save_result.error())};
