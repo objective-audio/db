@@ -19,12 +19,12 @@ namespace db {
 }
 }
 
-db::relation::relation(std::string const &entity_name, std::string const &attr_name, CFDictionaryRef const &dict)
-    : entity_name(entity_name),
+db::relation::relation(std::string const &src_entity_name, std::string const &attr_name, CFDictionaryRef const &dict)
+    : source_entity_name(src_entity_name),
       name(attr_name),
       target_entity_name(get<std::string>(dict, db::target_key)),
       many(get<bool>(dict, db::many_key)),
-      table_name("rel_" + entity_name + "_" + this->name) {
+      table_name("rel_" + src_entity_name + "_" + this->name) {
 }
 
 std::string db::relation::sql_for_create() const {

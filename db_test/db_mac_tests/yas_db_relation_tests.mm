@@ -24,7 +24,7 @@ using namespace yas;
     NSDictionary *dict = @{ @"target": @"test_target", @"many": @YES };
     db::relation relation{"test_entity", "test_name", (__bridge CFDictionaryRef)dict};
 
-    XCTAssertEqual(relation.entity_name, "test_entity");
+    XCTAssertEqual(relation.source_entity_name, "test_entity");
     XCTAssertEqual(relation.name, "test_name");
     XCTAssertEqual(relation.target_entity_name, "test_target");
     XCTAssertEqual(relation.many, true);
