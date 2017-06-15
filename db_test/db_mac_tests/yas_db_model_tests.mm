@@ -174,7 +174,7 @@ using namespace yas;
     XCTAssertEqual(relations.size(), 1);
 
     auto &child = relations.at("child");
-    XCTAssertEqual(child.entity_name, "sample_a");
+    XCTAssertEqual(child.source_entity_name, "sample_a");
     XCTAssertEqual(child.name, "child");
     XCTAssertEqual(child.target_entity_name, "sample_b");
 
