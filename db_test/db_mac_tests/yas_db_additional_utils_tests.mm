@@ -359,11 +359,11 @@ using namespace yas;
 
             auto &object = a_objects.at(0);
             object.set_attribute_value("name", db::value{"name_0_1"});
-            XCTAssertEqual(object.object_id().stable(), db::value{1});
+            XCTAssertEqual(object.object_id().stable_value(), db::value{1});
 
             object = a_objects.at(1);
             object.set_attribute_value("name", db::value{"name_1_1"});
-            XCTAssertEqual(object.object_id().stable(), db::value{2});
+            XCTAssertEqual(object.object_id().stable_value(), db::value{2});
         });
 
     manager.save([self, &manager](auto result) {
@@ -374,7 +374,7 @@ using namespace yas;
         auto &a_objects = objects.at("sample_a");
 
         for (auto &object : a_objects) {
-            if (object.object_id().stable() == db::value{1}) {
+            if (object.object_id().stable_value() == db::value{1}) {
                 object.set_attribute_value("name", db::value{"name_0_2"});
             }
         }

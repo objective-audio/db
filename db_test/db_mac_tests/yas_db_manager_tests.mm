@@ -6,6 +6,7 @@
 #import "yas_db_utils.h"
 #import "yas_objc_ptr.h"
 #import "yas_db_additional_utils.h"
+#import "yas_fast_each.h"
 
 using namespace yas;
 
@@ -17,6 +18,7 @@ using namespace yas;
 
 - (void)setUp {
     [super setUp];
+    [yas_db_test_utils deleteDatabase];
 }
 
 - (void)tearDown {
@@ -153,11 +155,22 @@ using namespace yas;
         auto &a_objects = result.value().at("sample_a");
         XCTAssertEqual(a_objects.size(), 2);
 
-        for (auto const &idx : make_each_index(2)) {
-            auto &object = objects.at(idx);
-            auto &saved_object = a_objects.at(idx);
+        for (auto const &saved_object : a_objects) {
+            auto object = db::null_object();
+            std::size_t idx = 0;
+            auto each = make_fast_each(2);
+            while (yas_each_next(each)) {
+                auto const &tmp_idx = yas_each_index(each);
+                if (objects.at(tmp_idx).object_id() == saved_object.object_id()) {
+                    XCTAssertFalse(object);
+                    object = objects.at(tmp_idx);
+                    idx = tmp_idx;
+                    break;
+                }
+            }
 
             XCTAssertEqual(saved_object, object);
+            XCTAssertTrue(saved_object.object_id().stable_value());
 
             XCTAssertEqual(saved_object.status(), db::object_status::saved);
             XCTAssertEqual(saved_object.attribute_value(db::action_field), db::insert_action_value());
@@ -165,12 +178,13 @@ using namespace yas;
             XCTAssertEqual(saved_object.attribute_value("weight"), db::value{65.4});
 
             XCTAssertEqual(saved_object.attribute_value(db::save_id_field), db::value{1});
-        }
 
-        XCTAssertEqual(a_objects.at(0).attribute_value("name"), db::value{"test_name_0_inserted"});
-        XCTAssertEqual(a_objects.at(1).attribute_value("name"), db::value{"test_name_1_inserted"});
-        XCTAssertEqual(a_objects.at(0).object_id().stable(), db::value{1});
-        XCTAssertEqual(a_objects.at(1).object_id().stable(), db::value{2});
+            if (idx == 0) {
+                XCTAssertEqual(saved_object.attribute_value("name"), db::value{"test_name_0_inserted"});
+            } else if (idx == 1) {
+                XCTAssertEqual(saved_object.attribute_value("name"), db::value{"test_name_1_inserted"});
+            }
+        }
 
         XCTAssertFalse(manager.has_inserted_objects());
         XCTAssertEqual(manager.inserted_object_count("sample_a"), 0);
@@ -206,11 +220,13 @@ using namespace yas;
 
         XCTAssertEqual(objects[0].status(), db::object_status::saved);
         XCTAssertEqual(objects[1].status(), db::object_status::saved);
-        XCTAssertTrue(manager.cached_object("sample_a", objects[0].object_id()));
-        XCTAssertTrue(manager.cached_object("sample_a", objects[1].object_id()));
+        XCTAssertTrue(manager.cached_or_inserted_object("sample_a", objects[0].object_id()));
+        XCTAssertTrue(manager.cached_or_inserted_object("sample_a", objects[1].object_id()));
 
         objects[0].set_attribute_value("name", db::value{"test_name_0_saved"});
+        objects[0].set_attribute_value("age", db::value{0});
         objects[1].set_attribute_value("name", db::value{"test_name_1_saved"});
+        objects[1].set_attribute_value("age", db::value{1});
 
         XCTAssertEqual(objects[0].status(), db::object_status::changed);
         XCTAssertEqual(objects[1].status(), db::object_status::changed);
@@ -224,7 +240,9 @@ using namespace yas;
         objects.emplace_back(manager.insert_object("sample_a"));
 
         objects[2].set_attribute_value("name", db::value{"test_name_2_inserted"});
+        objects[2].set_attribute_value("age", db::value{2});
         objects[3].set_attribute_value("name", db::value{"test_name_3_inserted"});
+        objects[3].set_attribute_value("age", db::value{3});
 
         XCTAssertTrue(manager.has_inserted_objects());
     });
@@ -242,17 +260,17 @@ using namespace yas;
         XCTAssertEqual(objects[2].status(), db::object_status::saved);
         XCTAssertEqual(objects[3].status(), db::object_status::saved);
 
-        XCTAssertEqual(objects[0].object_id().stable(), db::value{1});
-        XCTAssertEqual(objects[1].object_id().stable(), db::value{2});
-        XCTAssertEqual(objects[2].object_id().stable(), db::value{3});
-        XCTAssertEqual(objects[3].object_id().stable(), db::value{4});
+        XCTAssertTrue(objects[0].object_id().stable_value());
+        XCTAssertTrue(objects[1].object_id().stable_value());
+        XCTAssertTrue(objects[2].object_id().stable_value());
+        XCTAssertTrue(objects[3].object_id().stable_value());
     });
 
     manager.fetch_const_objects(
         []() {
             return db::to_fetch_option(db::select_option{
                 .table = "sample_a",
-                .field_orders = {db::field_order{.field = db::object_id_field, .order = db::order::ascending}}});
+                .field_orders = {db::field_order{.field = "age", .order = db::order::ascending}}});
         },
         [self, &manager](auto result) {
             XCTAssertTrue(result);
@@ -333,9 +351,9 @@ using namespace yas;
     XCTAssertTrue(rel_objects.at(1));
     XCTAssertTrue(rel_objects.at(2));
 
-    XCTAssertEqual(rel_objects.at(0).object_id().stable(), obj_b1.object_id().stable());
-    XCTAssertEqual(rel_objects.at(1).object_id().stable(), obj_b2.object_id().stable());
-    XCTAssertEqual(rel_objects.at(2).object_id().stable(), obj_b3.object_id().stable());
+    XCTAssertEqual(rel_objects.at(0).object_id().stable_value(), obj_b1.object_id().stable_value());
+    XCTAssertEqual(rel_objects.at(1).object_id().stable_value(), obj_b2.object_id().stable_value());
+    XCTAssertEqual(rel_objects.at(2).object_id().stable_value(), obj_b3.object_id().stable_value());
 }
 
 - (void)test_setup_migration {
@@ -481,9 +499,9 @@ using namespace yas;
             db::object_vector_t const &objects = inserted_objects_1.at("sample_a");
             XCTAssertEqual(objects.size(), 3);
 
-            XCTAssertEqual(objects.at(0).object_id().stable(), db::value{1});
-            XCTAssertEqual(objects.at(1).object_id().stable(), db::value{2});
-            XCTAssertEqual(objects.at(2).object_id().stable(), db::value{3});
+            XCTAssertEqual(objects.at(0).object_id().stable_value(), db::value{1});
+            XCTAssertEqual(objects.at(1).object_id().stable_value(), db::value{2});
+            XCTAssertEqual(objects.at(2).object_id().stable_value(), db::value{3});
 
             XCTAssertEqual(objects.at(0).save_id(), db::value{1});
             XCTAssertEqual(objects.at(1).save_id(), db::value{1});
@@ -525,7 +543,7 @@ using namespace yas;
 
             XCTAssertEqual(objects.size(), 1);
 
-            XCTAssertEqual(objects.at(0).object_id().stable(), db::value{4});
+            XCTAssertEqual(objects.at(0).object_id().stable_value(), db::value{4});
             XCTAssertEqual(objects.at(0).save_id(), db::value{2});
             XCTAssertEqual(objects.at(0).action(), db::insert_action_value());
             XCTAssertEqual(objects.at(0).manager(), manager);
@@ -542,11 +560,11 @@ using namespace yas;
     XCTAssertEqual(manager.current_save_id(), db::value{2});
     XCTAssertEqual(manager.last_save_id(), db::value{2});
 
-    auto const object_1 = manager.cached_object("sample_a", db::make_stable_id(db::value{1}));
+    auto const object_1 = manager.cached_or_inserted_object("sample_a", db::make_stable_id(db::value{1}));
     XCTAssertTrue(object_1);
-    XCTAssertEqual(object_1.object_id().stable(), db::value{1});
+    XCTAssertEqual(object_1.object_id().stable_value(), db::value{1});
 
-    XCTAssertFalse(manager.cached_object("sample_a", db::make_stable_id(db::value{5})));
+    XCTAssertFalse(manager.cached_or_inserted_object("sample_a", db::make_stable_id(db::value{5})));
 }
 
 - (void)test_insert_objects_by_values {
@@ -728,9 +746,9 @@ using namespace yas;
             XCTAssertGreaterThan(objects.count("sample_a"), 0);
             auto &a_objects = objects.at("sample_a");
             XCTAssertEqual(a_objects.size(), 3);
-            XCTAssertEqual(a_objects.at(0).object_id().stable().get<db::integer>(), 1);
-            XCTAssertEqual(a_objects.at(1).object_id().stable().get<db::integer>(), 2);
-            XCTAssertEqual(a_objects.at(2).object_id().stable().get<db::integer>(), 3);
+            XCTAssertEqual(a_objects.at(0).object_id().stable(), 1);
+            XCTAssertEqual(a_objects.at(1).object_id().stable(), 2);
+            XCTAssertEqual(a_objects.at(2).object_id().stable(), 3);
             XCTAssertEqual(a_objects.at(0).save_id().get<db::integer>(), 1);
             XCTAssertEqual(a_objects.at(1).save_id().get<db::integer>(), 1);
             XCTAssertEqual(a_objects.at(2).save_id().get<db::integer>(), 1);
@@ -741,8 +759,8 @@ using namespace yas;
             XCTAssertGreaterThan(objects.count("sample_b"), 0);
             auto &b_objects = objects.at("sample_b");
             XCTAssertEqual(b_objects.size(), 2);
-            XCTAssertEqual(b_objects.at(0).object_id().stable().get<db::integer>(), 1);
-            XCTAssertEqual(b_objects.at(1).object_id().stable().get<db::integer>(), 2);
+            XCTAssertEqual(b_objects.at(0).object_id().stable(), 1);
+            XCTAssertEqual(b_objects.at(1).object_id().stable(), 2);
             XCTAssertEqual(b_objects.at(0).save_id().get<db::integer>(), 1);
             XCTAssertEqual(b_objects.at(1).save_id().get<db::integer>(), 1);
             XCTAssertFalse(b_objects.at(0).attribute_value("name"));
@@ -756,7 +774,7 @@ using namespace yas;
     XCTAssertEqual(manager.current_save_id(), db::value{1});
     XCTAssertEqual(manager.last_save_id(), db::value{1});
     objects.at("sample_a").at(1).set_attribute_value("name", db::value{"value_1"});
-    objects.at("sample_a").at(1).add_relation_id("child", objects.at("sample_b").at(0).object_id().stable());
+    objects.at("sample_a").at(1).add_relation_id("child", objects.at("sample_b").at(0).object_id().stable_value());
 
     XCTestExpectation *exp2 = [self expectationWithDescription:@"2"];
 
@@ -781,9 +799,9 @@ using namespace yas;
                               XCTAssertGreaterThan(objects.count("sample_a"), 0);
                               auto &a_objects = objects.at("sample_a");
                               XCTAssertEqual(a_objects.size(), 3);
-                              XCTAssertEqual(a_objects.at(0).object_id().stable(), db::value{1});
-                              XCTAssertEqual(a_objects.at(1).object_id().stable(), db::value{3});
-                              XCTAssertEqual(a_objects.at(2).object_id().stable(), db::value{2});
+                              XCTAssertEqual(a_objects.at(0).object_id().stable_value(), db::value{1});
+                              XCTAssertEqual(a_objects.at(1).object_id().stable_value(), db::value{3});
+                              XCTAssertEqual(a_objects.at(2).object_id().stable_value(), db::value{2});
                               XCTAssertEqual(a_objects.at(0).save_id(), db::value{1});
                               XCTAssertEqual(a_objects.at(1).save_id(), db::value{1});
                               XCTAssertEqual(a_objects.at(2).save_id(), db::value{2});
@@ -802,8 +820,8 @@ using namespace yas;
 
     objects.at("sample_a").at(2).set_attribute_value("name", db::value{"value_2"});
     objects.at("sample_a").at(2).remove_all_relations("child");
-    objects.at("sample_a").at(2).add_relation_id("child", objects.at("sample_b").at(1).object_id().stable());
-    objects.at("sample_a").at(2).add_relation_id("child", objects.at("sample_b").at(0).object_id().stable());
+    objects.at("sample_a").at(2).add_relation_id("child", objects.at("sample_b").at(1).object_id().stable_value());
+    objects.at("sample_a").at(2).add_relation_id("child", objects.at("sample_b").at(0).object_id().stable_value());
 
     XCTestExpectation *exp4 = [self expectationWithDescription:@"4"];
 
@@ -830,11 +848,11 @@ using namespace yas;
             auto &a_objects = objects.at("sample_a");
             XCTAssertEqual(a_objects.size(), 2);
 
-            XCTAssertEqual(a_objects.at(0).object_id().stable(), db::value{3});
+            XCTAssertEqual(a_objects.at(0).object_id().stable_value(), db::value{3});
             XCTAssertEqual(a_objects.at(0).save_id(), db::value{3});
             XCTAssertEqual(a_objects.at(0).attribute_value("name"), db::value{"value_2"});
 
-            XCTAssertEqual(a_objects.at(1).object_id().stable(), db::value{2});
+            XCTAssertEqual(a_objects.at(1).object_id().stable_value(), db::value{2});
             XCTAssertEqual(a_objects.at(1).save_id(), db::value{2});
             XCTAssertEqual(a_objects.at(1).attribute_value("name"), db::value{"value_1"});
 
@@ -872,9 +890,9 @@ using namespace yas;
             objects.at("sample_a").at(0).set_attribute_value("name", db::value{"value_0"});
 
             auto &object_b = objects.at("sample_b").at(0);
-            objects.at("sample_a").at(0).add_relation_id("child", object_b.object_id().stable());
+            objects.at("sample_a").at(0).add_relation_id("child", object_b.object_id().stable_value());
 
-            XCTAssertEqual(object_b.object_id().stable(), db::value{1});
+            XCTAssertEqual(object_b.object_id().stable_value(), db::value{1});
 
         });
 
@@ -888,7 +906,7 @@ using namespace yas;
                                     XCTAssertGreaterThan(objects.count("sample_a"), 0);
                                     auto &a_objects = objects.at("sample_a");
                                     XCTAssertEqual(a_objects.size(), 1);
-                                    XCTAssertEqual(a_objects.at(0).object_id().stable().get<db::integer>(), 1);
+                                    XCTAssertEqual(a_objects.at(0).object_id().stable(), 1);
                                     XCTAssertEqual(a_objects.at(0).save_id().get<db::integer>(), 2);
                                     XCTAssertEqual(a_objects.at(0).attribute_value("name"), db::value{"value_0"});
 
@@ -977,9 +995,9 @@ using namespace yas;
 
     [self waitForExpectationsWithTimeout:1.0 handler:nil];
 
-    XCTAssertFalse(manager.cached_object("sample_a", db::make_stable_id(db::value{1})));
-    XCTAssertFalse(manager.cached_object("sample_b", db::make_stable_id(db::value{1})));
-    XCTAssertFalse(manager.cached_object("sample_c", db::make_stable_id(db::value{1})));
+    XCTAssertFalse(manager.cached_or_inserted_object("sample_a", db::make_stable_id(db::value{1})));
+    XCTAssertFalse(manager.cached_or_inserted_object("sample_b", db::make_stable_id(db::value{1})));
+    XCTAssertFalse(manager.cached_or_inserted_object("sample_c", db::make_stable_id(db::value{1})));
 
     XCTestExpectation *exp3 = [self expectationWithDescription:@"3"];
 
@@ -1052,9 +1070,9 @@ using namespace yas;
             objects.at("sample_a").at(1).set_attribute_value("name", db::value{"value_2"});
             objects.at("sample_a").at(2).set_attribute_value("name", db::value{"value_3"});
 
-            XCTAssertEqual(objects.at("sample_a").at(0).object_id().stable(), db::value{1});
-            XCTAssertEqual(objects.at("sample_a").at(1).object_id().stable(), db::value{2});
-            XCTAssertEqual(objects.at("sample_a").at(2).object_id().stable(), db::value{3});
+            XCTAssertEqual(objects.at("sample_a").at(0).object_id().stable_value(), db::value{1});
+            XCTAssertEqual(objects.at("sample_a").at(1).object_id().stable_value(), db::value{2});
+            XCTAssertEqual(objects.at("sample_a").at(2).object_id().stable_value(), db::value{3});
         });
 
     manager.save([self](auto save_result) { XCTAssertTrue(save_result); });
@@ -1070,7 +1088,7 @@ using namespace yas;
             XCTAssertEqual(objects.count("sample_a"), 1);
             auto &a_objects = objects.at("sample_a");
             XCTAssertEqual(a_objects.size(), 1);
-            XCTAssertEqual(a_objects.at(2).object_id().stable(), db::value{2});
+            XCTAssertEqual(a_objects.at(2).object_id().stable_value(), db::value{2});
             XCTAssertEqual(a_objects.at(2).attribute_value("name"), db::value{"value_2"});
         });
 
@@ -1101,7 +1119,7 @@ using namespace yas;
             db::object_vector_map_t const &objects = result.value();
             db::object_vector_t const &a_objects = objects.at("sample_a");
             for (auto const &obj : a_objects) {
-                main_objects.insert(std::make_pair(obj.object_id().stable().get<db::integer>(), obj));
+                main_objects.insert(std::make_pair(obj.object_id().stable(), obj));
             }
 
             XCTAssertEqual(main_objects.size(), 1);
@@ -1457,7 +1475,7 @@ using namespace yas;
             objects.at("sample_a").at(0).set_attribute_value("name", db::value{"name_value_4"});
             objects.at("sample_b").at(0).set_attribute_value("name", db::value{"name_value_5"});
             objects.at("sample_a").at(0).set_relation_objects("child", {objects.at("sample_b").at(0)});
-            XCTAssertEqual(objects.at("sample_b").at(0).object_id().stable(), db::value{1});
+            XCTAssertEqual(objects.at("sample_b").at(0).object_id().stable_value(), db::value{1});
         });
 
         manager.save([self, &manager, &objects](auto result) mutable {
@@ -1633,10 +1651,10 @@ using namespace yas;
         XCTAssertTrue(result);
 
         XCTAssertEqual(object.status(), db::object_status::saved);
-        XCTAssertEqual(object.object_id().stable(), db::value{1});
+        XCTAssertEqual(object.object_id().stable_value(), db::value{1});
         XCTAssertEqual(object.attribute_value("name"), db::value{"test_clear_value"});
 
-        XCTAssertTrue(manager.cached_object("sample_a", db::make_stable_id(db::value{1})));
+        XCTAssertTrue(manager.cached_or_inserted_object("sample_a", db::make_stable_id(db::value{1})));
     });
 
     manager.clear([self, &manager, &object](auto result) {
@@ -1645,7 +1663,7 @@ using namespace yas;
         XCTAssertEqual(object.status(), db::object_status::invalid);
         XCTAssertFalse(object.attribute_value("name"));
 
-        XCTAssertFalse(manager.cached_object("sample_a", db::make_stable_id(db::value{1})));
+        XCTAssertFalse(manager.cached_or_inserted_object("sample_a", db::make_stable_id(db::value{1})));
     });
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
@@ -2236,9 +2254,9 @@ using namespace yas;
 
     {
         // キャッシュが残っていないことを確認
-        XCTAssertFalse(manager.cached_object("sample_a", obj_a0_id));
-        XCTAssertFalse(manager.cached_object("sample_a", obj_a1_id));
-        XCTAssertFalse(manager.cached_object("sample_a", obj_a2_id));
+        XCTAssertFalse(manager.cached_or_inserted_object("sample_a", obj_a0_id));
+        XCTAssertFalse(manager.cached_or_inserted_object("sample_a", obj_a1_id));
+        XCTAssertFalse(manager.cached_or_inserted_object("sample_a", obj_a2_id));
     }
 
     {
@@ -2268,20 +2286,20 @@ using namespace yas;
         auto const &obj_a0 = a_objects.at(0);
         auto const &obj_a0_rels = obj_a0.relation_objects("child");
         XCTAssertEqual(obj_a0_rels.size(), 2);
-        XCTAssertEqual(obj_a0_rels.at(0).object_id().stable(), obj_b1_id.stable());
-        XCTAssertEqual(obj_a0_rels.at(1).object_id().stable(), obj_b0_id.stable());
+        XCTAssertEqual(obj_a0_rels.at(0).object_id().stable_value(), obj_b1_id.stable_value());
+        XCTAssertEqual(obj_a0_rels.at(1).object_id().stable_value(), obj_b0_id.stable_value());
 
         auto const &obj_a1 = a_objects.at(1);
         XCTAssertEqual(obj_a1.relation_objects("child").size(), 1);
         auto const &obj_a1_rels = obj_a1.relation_objects("child");
-        XCTAssertEqual(obj_a1_rels.at(0).object_id().stable(), obj_b2_id.stable());
+        XCTAssertEqual(obj_a1_rels.at(0).object_id().stable_value(), obj_b2_id.stable_value());
     }
 
     {
         // キャッシュが残っていないことを確認
-        XCTAssertFalse(manager.cached_object("sample_a", obj_a0_id));
-        XCTAssertFalse(manager.cached_object("sample_a", obj_a1_id));
-        XCTAssertFalse(manager.cached_object("sample_a", obj_a2_id));
+        XCTAssertFalse(manager.cached_or_inserted_object("sample_a", obj_a0_id));
+        XCTAssertFalse(manager.cached_or_inserted_object("sample_a", obj_a1_id));
+        XCTAssertFalse(manager.cached_or_inserted_object("sample_a", obj_a2_id));
     }
 
     {
@@ -2327,19 +2345,19 @@ using namespace yas;
         auto const &obj_a0 = a_objects.at(0);
         auto const &obj_a0_rels = obj_a0.relation_objects("child");
         XCTAssertEqual(obj_a0_rels.size(), 1);
-        XCTAssertEqual(obj_a0_rels.at(0).object_id().stable(), obj_b1_id.stable());
+        XCTAssertEqual(obj_a0_rels.at(0).object_id().stable_value(), obj_b1_id.stable_value());
 
         auto const &obj_a1 = a_objects.at(1);
         XCTAssertEqual(obj_a1.relation_objects("child").size(), 1);
         auto const &obj_a1_rels = obj_a1.relation_objects("child");
-        XCTAssertEqual(obj_a1_rels.at(0).object_id().stable(), obj_b2_id.stable());
+        XCTAssertEqual(obj_a1_rels.at(0).object_id().stable_value(), obj_b2_id.stable_value());
     }
 
     {
         // キャッシュが残っていないことを確認
-        XCTAssertFalse(manager.cached_object("sample_a", obj_a0_id));
-        XCTAssertFalse(manager.cached_object("sample_a", obj_a1_id));
-        XCTAssertFalse(manager.cached_object("sample_a", obj_a2_id));
+        XCTAssertFalse(manager.cached_or_inserted_object("sample_a", obj_a0_id));
+        XCTAssertFalse(manager.cached_or_inserted_object("sample_a", obj_a1_id));
+        XCTAssertFalse(manager.cached_or_inserted_object("sample_a", obj_a2_id));
     }
 
     {
@@ -2389,14 +2407,14 @@ using namespace yas;
         auto const &obj_a1 = a_objects.at(1);
         XCTAssertEqual(obj_a1.relation_objects("child").size(), 1);
         auto const &obj_a1_rels = obj_a1.relation_objects("child");
-        XCTAssertEqual(obj_a1_rels.at(0).object_id().stable(), obj_b2_id.stable());
+        XCTAssertEqual(obj_a1_rels.at(0).object_id().stable_value(), obj_b2_id.stable_value());
     }
 
     {
         // キャッシュが残っていないことを確認
-        XCTAssertFalse(manager.cached_object("sample_a", obj_a0_id));
-        XCTAssertFalse(manager.cached_object("sample_a", obj_a1_id));
-        XCTAssertFalse(manager.cached_object("sample_a", obj_a2_id));
+        XCTAssertFalse(manager.cached_or_inserted_object("sample_a", obj_a0_id));
+        XCTAssertFalse(manager.cached_or_inserted_object("sample_a", obj_a1_id));
+        XCTAssertFalse(manager.cached_or_inserted_object("sample_a", obj_a2_id));
     }
 
     {
@@ -2424,12 +2442,12 @@ using namespace yas;
 
     {
         // キャッシュが残っていないことを確認
-        XCTAssertFalse(manager.cached_object("sample_a", obj_a0_id));
-        XCTAssertFalse(manager.cached_object("sample_a", obj_a1_id));
-        XCTAssertFalse(manager.cached_object("sample_a", obj_a2_id));
-        XCTAssertFalse(manager.cached_object("sample_b", obj_b0_id));
-        XCTAssertFalse(manager.cached_object("sample_b", obj_b1_id));
-        XCTAssertFalse(manager.cached_object("sample_b", obj_b2_id));
+        XCTAssertFalse(manager.cached_or_inserted_object("sample_a", obj_a0_id));
+        XCTAssertFalse(manager.cached_or_inserted_object("sample_a", obj_a1_id));
+        XCTAssertFalse(manager.cached_or_inserted_object("sample_a", obj_a2_id));
+        XCTAssertFalse(manager.cached_or_inserted_object("sample_b", obj_b0_id));
+        XCTAssertFalse(manager.cached_or_inserted_object("sample_b", obj_b1_id));
+        XCTAssertFalse(manager.cached_or_inserted_object("sample_b", obj_b2_id));
     }
 
     {
