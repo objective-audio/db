@@ -30,6 +30,8 @@ namespace db {
 
     using object_map_t = std::unordered_map<db::integer::type, db::object>;
     using object_map_map_t = std::unordered_map<std::string, db::object_map_t>;
+    using tmp_object_map_t = std::unordered_map<std::string, db::object>;
+    using tmp_object_map_map_t = std::unordered_map<std::string, db::tmp_object_map_t>;
     using object_vector_t = std::vector<db::object>;
     using object_vector_map_t = std::unordered_map<std::string, db::object_vector_t>;
     using object_deque_t = std::deque<db::object>;
@@ -99,6 +101,7 @@ namespace db {
     };
 
     struct object_data {
+        db::object_id object_id;
         db::value_map_t attributes;
         db::value_vector_map_t relations;
     };

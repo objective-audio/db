@@ -43,7 +43,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
     operation_queue _op_queue;
     std::size_t _suspend_count = 0;
     db::weak_pool<db::object_id, db::object> _cached_objects;
-    db::object_deque_map_t _inserted_objects;
+    db::tmp_object_map_map_t _inserted_objects;
     db::object_map_map_t _changed_objects;
     db::info _db_info = db::null_info();
     db::manager::subject_t _subject;
@@ -67,10 +67,11 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
         object.manageable().load_insertion_data();
 
         if (this->_inserted_objects.count(entity_name) == 0) {
-            this->_inserted_objects.insert(std::make_pair(entity_name, db::object_deque_t{}));
+            this->_inserted_objects.insert(std::make_pair(entity_name, db::tmp_object_map_t{}));
         }
 
-        this->_inserted_objects.at(entity_name).push_back(object);
+        // この時点でobject_idはtemporary
+        this->_inserted_objects.at(entity_name).emplace(object.object_id().temporary(), object);
 
         return object;
     }
@@ -80,24 +81,22 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                                          db::object_data const &data, bool const force) {
         auto manager = cast<db::manager>();
 
-        if (data.attributes.count(db::object_id_field) > 0) {
-            if (auto const &object_id_value = data.attributes.at(db::object_id_field)) {
-#warning object_idはobject_dataに持っているものを使いたい。temporaryで一致するかを見て置き換えたい。
-                auto const object_id = db::make_stable_id(object_id_value);
-
-                if (object) {
-                    this->_cached_objects.set(entity_name, object_id, object);
-                } else {
-                    object = this->_cached_objects.get_or_create(entity_name, object_id, [&manager, &entity_name]() {
-                        return db::object{manager, manager.model().entity(entity_name)};
-                    });
-                }
-
-                // オブジェクトにデータをロード
-                object.manageable().load_data(data, force);
-
-                return true;
+        if (data.object_id) {
+            if (object) {
+                // 挿入した場合
+                db::object_id obj_id = object.object_id();
+                obj_id.set_stable(data.object_id.stable_value());
+                this->_cached_objects.set(entity_name, obj_id, object);
+            } else {
+                object = this->_cached_objects.get_or_create(entity_name, data.object_id, [&manager, &entity_name]() {
+                    return db::object{manager, manager.model().entity(entity_name)};
+                });
             }
+
+            // オブジェクトにデータをロード
+            object.manageable().load_data(data, force);
+
+            return true;
         } else {
             throw "object_id not found.";
         }
@@ -123,11 +122,13 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                     // セーブ時で仮に挿入されたオブジェクトがある場合にオブジェクトを取得
                     auto &entity_objects = this->_inserted_objects.at(entity_name);
                     if (entity_objects.size() > 0) {
-                        // 前から順に消していけば一致している？
-                        // 後から挿入されたオブジェクトが間違えて消されることはないか？
-                        // 挿入されたときのセーブ以外にも呼ばれたりしないか？
-                        object = entity_objects.front();
-                        entity_objects.pop_front();
+                        auto const &temporary_id = data.object_id.temporary();
+                        if (entity_objects.count(temporary_id) > 0) {
+                            object = entity_objects.at(temporary_id);
+                            entity_objects.erase(temporary_id);
+                        } else {
+                            throw std::runtime_error("inserted object not found.");
+                        }
 
                         if (entity_objects.size() == 0) {
                             this->_inserted_objects.erase(entity_name);
@@ -161,7 +162,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
             for (auto const &data : entity_datas) {
                 auto object = db::null_object();
                 if (this->load_and_cache_object_from_data(object, entity_name, data, force)) {
-                    objects.emplace(object.object_id().stable().get<db::integer>(), std::move(object));
+                    objects.emplace(object.object_id().stable(), std::move(object));
                 }
             }
 
@@ -225,7 +226,8 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                 // 挿入されたオブジェクトからデータベース用のデータを取得
                 auto const &entity_objects = this->_inserted_objects.at(entity_name);
 
-                for (auto const &object : entity_objects) {
+                for (auto const &pair : entity_objects) {
+                    auto const &object = pair.second;
                     auto data = object.save_data(obj_id_pool);
                     if (data.attributes.size() > 0) {
                         entity_datas.emplace_back(std::move(data));
@@ -269,7 +271,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
 
             for (auto const &object_pair : entity_objects) {
                 auto const &object = object_pair.second;
-                entity_ids.insert(object.object_id().stable().get<db::integer>());
+                entity_ids.insert(object.object_id().stable());
             }
 
             if (entity_ids.size() > 0) {
@@ -290,8 +292,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                 if (entity_objects.size() > 0) {
                     auto &changed_entity_objects = this->_changed_objects.at(entity_name);
                     for (auto const &obj_data : entity_objects) {
-                        erase_if_exists(changed_entity_objects,
-                                        obj_data.attributes.at(db::object_id_field).get<db::integer>());
+                        erase_if_exists(changed_entity_objects, obj_data.object_id.stable());
                     }
 
                     if (changed_entity_objects.size() == 0) {
@@ -302,9 +303,23 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
         }
     }
 
+    db::object _inserted_object(std::string const &entity_name, std::string const &tmp_obj_id) {
+        if (this->_inserted_objects.count(entity_name) > 0) {
+            auto const &entity_objects = this->_inserted_objects.at(entity_name);
+            if (entity_objects.count(tmp_obj_id) > 0) {
+                return entity_objects.at(tmp_obj_id);
+            }
+        }
+        return db::null_object();
+    }
+    
     // キャッシュされた単独のオブジェクトをエンティティ名とオブジェクトIDを指定して取得する
-    db::object cached_object(std::string const &entity_name, db::object_id const &object_id) {
-        return this->_cached_objects.get(entity_name, object_id);
+    db::object cached_or_inserted_object(std::string const &entity_name, db::object_id const &object_id) {
+        if (object_id.is_temporary()) {
+            return this->_inserted_object(entity_name, object_id.temporary());
+        } else {
+            return this->_cached_objects.get(entity_name, object_id);
+        }
     }
 
     // オブジェクトに変更があった時の処理
@@ -315,8 +330,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
             // 仮に挿入された状態の場合
             if (this->_inserted_objects.count(entity_name) > 0 && object.is_removed()) {
                 // オブジェクトが削除されていたら、_inserted_objectsからも削除
-                erase_if(this->_inserted_objects.at(entity_name),
-                         [&object](auto const &inserted_object) { return inserted_object == object; });
+                this->_inserted_objects.at(entity_name).erase(object.object_id().temporary());
             }
         } else {
             // 挿入されたのではない場合
@@ -326,7 +340,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
             }
 
             // _changed_objectsにオブジェクトを追加
-            auto const &obj_id = object.object_id().stable().get<db::integer>();
+            auto const &obj_id = object.object_id().stable();
             if (this->_changed_objects.at(entity_name).count(obj_id) == 0) {
                 this->_changed_objects.at(entity_name).emplace(obj_id, object);
             }
@@ -342,7 +356,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                     inv_entity_name,
                     [&inv_rel_names, &object](std::string const &, db::object_id const &, db::object &inv_rel_obj) {
                         for (auto const &inv_rel_name : inv_rel_names) {
-                            inv_rel_obj.remove_relation_id(inv_rel_name, object.object_id().stable());
+                            inv_rel_obj.remove_relation_id(inv_rel_name, object.object_id().stable_value());
                         }
                     });
             }
@@ -1039,7 +1053,7 @@ void db::manager::revert(db::manager::revert_preparation_f preparation, db::mana
                     }
                 }
             }
-            
+
             if (state) {
                 // リバートしたセーブIDでinfoを更新する
                 if (auto update_result = db::update_current_save_id(db, db::value{rev_save_id})) {
@@ -1082,8 +1096,8 @@ void db::manager::revert(db::manager::revert_preparation_f preparation, db::mana
     this->execute(execution, std::move(option));
 }
 
-db::object db::manager::cached_object(std::string const &entity_name, db::object_id const &object_id) const {
-    return impl_ptr<impl>()->cached_object(entity_name, object_id);
+db::object db::manager::cached_or_inserted_object(std::string const &entity_name, db::object_id const &object_id) const {
+    return impl_ptr<impl>()->cached_or_inserted_object(entity_name, object_id);
 }
 
 bool db::manager::has_inserted_objects() const {

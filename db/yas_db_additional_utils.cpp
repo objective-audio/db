@@ -294,7 +294,7 @@ db::id_vector_t db::copy_ids(db::id_vector_t const &ids) {
 }
 
 db::value_vector_t db::to_values(db::id_vector_t const &ids) {
-    return to_vector<db::value>(ids, [](db::object_id const &obj_id) { return obj_id.stable(); });
+    return to_vector<db::value>(ids, [](db::object_id const &obj_id) { return obj_id.stable_value(); });
 }
 
 // 複数のエンティティのobject_dataのvectorから、const_objectのvectorを生成する
@@ -331,7 +331,7 @@ db::const_object_map_map_t db::to_const_map_objects(db::model const &model, db::
 
         for (auto const &data : entity_datas) {
             if (db::const_object obj{model.entity(entity_name), data}) {
-                entity_objects.emplace(obj.object_id().stable().get<db::integer>(), std::move(obj));
+                entity_objects.emplace(obj.object_id().stable(), std::move(obj));
             }
         }
 
@@ -384,7 +384,11 @@ db::object_data_vector_result_t db::make_entity_object_datas(db::database &db, s
             }
         }
 
-        entity_datas.emplace_back(db::object_data{std::move(attrs), std::move(rels)});
+        db::object_id obj_id = db::make_stable_id(attrs.at(db::object_id_field));
+        attrs.erase(db::object_id_field);
+
+        entity_datas.emplace_back(db::object_data{
+            .object_id = std::move(obj_id), .attributes = std::move(attrs), .relations = std::move(rels)});
     }
 
     return db::object_data_vector_result_t{std::move(entity_datas)};
@@ -574,8 +578,11 @@ db::manager_fetch_result_t db::insert(db::database &db, db::model const &model, 
                     inserted_datas.emplace(entity_name, std::move(entity_datas));
                 }
 
+                auto &attributes = select_result.value().at(0);
+                db::object_id obj_id = db::make_stable_id(attributes.at(db::object_id_field));
+                attributes.erase(db::object_id_field);
                 inserted_datas.at(entity_name)
-                    .emplace_back(db::object_data{.attributes = std::move(select_result.value().at(0))});
+                    .emplace_back(db::object_data{.object_id = std::move(obj_id), .attributes = std::move(attributes)});
             } else {
                 return db::manager_fetch_result_t{
                     db::manager_error{db::manager_error_type::select_failed, std::move(select_result.error())}};
@@ -717,7 +724,7 @@ db::manager_fetch_result_t db::save(db::database &db, db::model const &model, db
         db::object_data_vector_t entity_saved_datas;
 
         for (auto changed_data : changed_entity_datas) {
-            db::object_data saved_data;
+            db::object_data saved_data{.object_id = db::null_id()};
 
             // 保存するデータのアトリビュートのidは削除する（rowidなのでいらない）
             erase_if_exists(changed_data.attributes, db::pk_id_field);
@@ -736,6 +743,7 @@ db::manager_fetch_result_t db::save(db::database &db, db::model const &model, db
             // データベースにアトリビュートのデータを挿入する
             if (auto update_result = db.execute_update(entity_insert_sql, changed_data.attributes)) {
                 saved_data.attributes = changed_data.attributes;
+                saved_data.attributes.erase(db::object_id_field);
             } else {
                 return db::manager_fetch_result_t{db::manager_error{db::manager_error_type::insert_attributes_failed,
                                                                     std::move(update_result.error())}};
@@ -749,6 +757,9 @@ db::manager_fetch_result_t db::save(db::database &db, db::model const &model, db
                 return db::manager_fetch_result_t{
                     db::manager_error{db::manager_error_type::last_insert_rowid_failed, std::move(row_result.error())}};
             }
+
+            saved_data.object_id = db::object_id{changed_data.attributes.at(db::object_id_field),
+                                                 changed_data.object_id.temporary_value()};
 
             entity_saved_datas.emplace_back(std::move(saved_data));
         }
@@ -769,7 +780,7 @@ db::manager_fetch_result_t db::save(db::database &db, db::model const &model, db
             auto &saved_data = saved_entity_datas.at(idx);
 
             auto const &src_pk_id = saved_data.attributes.at(db::pk_id_field);
-            auto const &src_obj_id = saved_data.attributes.at(db::object_id_field);
+            auto const &src_obj_id = saved_data.object_id.stable_value();
 
             for (auto const &rel_pair : changed_data.relations) {
                 // データベースに関連のデータを挿入する
@@ -875,6 +886,7 @@ db::manager_result_t db::remove_relations_at_save(db::database &db, db::model co
                     erase_if_exists(obj_data.attributes, db::pk_id_field);
                     // 保存するデータのセーブIDを今セーブするIDに置き換える
                     replace(obj_data.attributes, db::save_id_field, next_save_id);
+                    replace(obj_data.attributes, db::object_id_field, obj_data.object_id.stable_value());
                     // データベースにアトリビュートのデータを挿入する
                     if (auto ul = unless(db.execute_update(entity_insert_sql, obj_data.attributes))) {
                         return db::make_error_result(db::manager_error_type::insert_attributes_failed,
