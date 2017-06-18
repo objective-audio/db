@@ -1,5 +1,5 @@
 //
-//  yas_db_identifier_tests.mm
+//  yas_db_object_id_tests.mm
 //
 
 #import <XCTest/XCTest.h>
@@ -7,11 +7,11 @@
 
 using namespace yas;
 
-@interface yas_db_identifier_tests : XCTestCase
+@interface yas_db_object_id_tests : XCTestCase
 
 @end
 
-@implementation yas_db_identifier_tests
+@implementation yas_db_object_id_tests
 
 - (void)setUp {
     [super setUp];
@@ -27,7 +27,7 @@ using namespace yas;
     XCTAssertTrue(stable_id);
     XCTAssertTrue(stable_id.is_stable());
     XCTAssertFalse(stable_id.is_temporary());
-    XCTAssertEqual(stable_id.stable(), db::value{1});
+    XCTAssertEqual(stable_id.stable_value(), db::value{1});
 }
 
 - (void)test_temporary_id {
@@ -36,19 +36,19 @@ using namespace yas;
     XCTAssertTrue(tmp_id);
     XCTAssertTrue(tmp_id.is_temporary());
     XCTAssertFalse(tmp_id.is_stable());
-    XCTAssertEqual(tmp_id.temporary(), db::value{"2"});
+    XCTAssertEqual(tmp_id.temporary(), "2");
 }
 
 - (void)test_make_stable_id {
     auto stable_id = db::make_stable_id(db::value{3});
 
-    XCTAssertEqual(stable_id.stable(), db::value{3});
+    XCTAssertEqual(stable_id.stable_value(), db::value{3});
 }
 
 - (void)test_make_temporary_id {
     auto tmp_id = db::make_temporary_id();
 
-    XCTAssertEqual(tmp_id.temporary(), db::value{std::to_string(tmp_id.identifier())});
+    XCTAssertEqual(tmp_id.temporary(), std::to_string(tmp_id.identifier()));
 }
 
 - (void)test_null_id {
@@ -63,11 +63,11 @@ using namespace yas;
     identifier.set_stable(db::value{20});
 
     XCTAssertTrue(identifier.is_stable());
-    XCTAssertEqual(identifier.stable(), db::value{20});
+    XCTAssertEqual(identifier.stable_value(), db::value{20});
 
     identifier.set_stable(30);
 
-    XCTAssertEqual(identifier.stable(), db::value{30});
+    XCTAssertEqual(identifier.stable_value(), db::value{30});
 }
 
 - (void)test_is_equal {
@@ -92,6 +92,34 @@ using namespace yas;
     XCTAssertTrue(tmp_to_stable_id == stable_id_a1);
     XCTAssertFalse(tmp_to_stable_id == tmp_id_b);
     XCTAssertFalse(tmp_to_stable_id == stable_id_b);
+}
+
+- (void)test_is_stable {
+    auto stable_id = db::make_stable_id(db::value{1});
+    
+    XCTAssertTrue(stable_id.is_stable());
+    
+    auto tmp_id = db::make_temporary_id();
+    
+    XCTAssertFalse(tmp_id.is_stable());
+    
+    auto each_id = db::object_id{db::value{2}, db::value{"3"}};
+    
+    XCTAssertTrue(stable_id.is_stable());
+}
+
+- (void)test_is_temporary {
+    auto stable_id = db::make_stable_id(db::value{1});
+    
+    XCTAssertFalse(stable_id.is_temporary());
+    
+    auto tmp_id = db::make_temporary_id();
+    
+    XCTAssertTrue(tmp_id.is_temporary());
+    
+    auto each_id = db::object_id{db::value{2}, db::value{"3"}};
+    
+    XCTAssertFalse(stable_id.is_temporary());
 }
 
 - (void)test_copy_temporary {

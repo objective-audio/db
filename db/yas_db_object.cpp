@@ -26,7 +26,8 @@ struct db::const_object::impl : public base::impl {
     db::object_id _identifier;
 
     // const_objectとして作る場合
-    impl(db::entity const &entity, db::object_data const &obj_data = {}) : _entity(entity), _identifier(nullptr) {
+    impl(db::entity const &entity, db::object_data const &obj_data = {.object_id = db::null_id()})
+        : _entity(entity), _identifier(nullptr) {
         this->load_data(obj_data);
     }
 
@@ -100,7 +101,7 @@ struct db::const_object::impl : public base::impl {
         if (this->_relations.count(rel_name) > 0) {
             auto const &ids = this->_relations.at(rel_name);
             if (idx < ids.size()) {
-                return ids.at(idx).stable();
+                return ids.at(idx).stable_value();
             }
         }
         return db::null_value();
@@ -129,7 +130,7 @@ struct db::const_object::impl : public base::impl {
                 auto &rel_id_set = relation_ids.at(tgt_entity_name);
                 auto const &rel = this->_relations.at(rel_name);
                 for (auto const &tgt_obj_id : rel) {
-                    rel_id_set.emplace(tgt_obj_id.stable().get<db::integer>());
+                    rel_id_set.emplace(tgt_obj_id.stable());
                 }
             }
         }
@@ -170,10 +171,30 @@ struct db::const_object::impl : public base::impl {
     }
 
     void update_identifier(db::object_data const &obj_data) {
-        if (obj_data.attributes.count(db::object_id_field)) {
-            this->update_identifier(obj_data.attributes.at(db::object_id_field));
+        if (obj_data.object_id) {
+            this->_validate_temporary_id(obj_data.object_id);
+            this->update_identifier(obj_data.object_id.stable_value());
         } else {
             throw std::invalid_argument("object_id not found in object_data.");
+        }
+    }
+
+   private:
+    void _validate_temporary_id(db::object_id const &other_object_id) {
+        if (!other_object_id) {
+            return;
+        }
+
+        if (!other_object_id.temporary_value()) {
+            return;
+        }
+
+        if (!this->_identifier.temporary_value()) {
+            return;
+        }
+
+        if (other_object_id.temporary() != this->_identifier.temporary()) {
+            throw std::invalid_argument("not equal temporary values.");
         }
     }
 };
@@ -399,7 +420,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
             std::vector<std::size_t> indices;
 
             erase_if(this->_relations.at(rel_name), [relation_id, &idx, &indices](db::object_id const &object_id) {
-                bool const result = object_id.stable() == relation_id;
+                bool const result = object_id.stable_value() == relation_id;
                 if (result) {
                     indices.push_back(idx);
                 }
@@ -497,7 +518,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
 
 #warning insertedな時にstableなことがあるのはなぜか？
         if (this->_status != db::object_status::inserted) {
-            attributes.emplace(db::object_id_field, this->_identifier.stable());
+            attributes.emplace(db::object_id_field, this->_identifier.stable_value());
         }
 
         for (auto const &pair : this->_entity.all_attributes) {
@@ -612,14 +633,14 @@ db::object_vector_t db::object::relation_objects(std::string const &rel_name) co
     std::string const &tgt_entity_name = this->entity().relations.at(rel_name).target_entity_name;
     return to_vector<db::object>(rel_ids, [manager = manager(), &tgt_entity_name](db::value const &id) {
 #warning object_idはrelationが直接持っているのを使いたい
-        return manager.cached_object(tgt_entity_name, db::make_stable_id(id));
+        return manager.cached_or_inserted_object(tgt_entity_name, db::make_stable_id(id));
     });
 }
 
 db::object db::object::relation_object_at(std::string const &rel_name, std::size_t const idx) const {
     std::string const &tgt_entity_name = this->entity().relations.at(rel_name).target_entity_name;
 #warning object_idはrelationが直接持っているのを使いたい
-    return this->manager().cached_object(tgt_entity_name, db::make_stable_id(relation_id(rel_name, idx)));
+    return this->manager().cached_or_inserted_object(tgt_entity_name, db::make_stable_id(relation_id(rel_name, idx)));
 }
 
 void db::object::set_relation_ids(std::string const &rel_name, value_vector_t const &relation_ids) {
@@ -641,21 +662,21 @@ void db::object::remove_relation_id(std::string const &rel_name, db::value const
 void db::object::set_relation_objects(std::string const &rel_name, object_vector_t const &rel_objects) {
     impl_ptr<impl>()->set_relation_ids(
         rel_name, to_vector<db::value>(rel_objects, [entity_name = entity_name()](auto const &obj) {
-            return obj.object_id().stable();
+            return obj.object_id().stable_value();
         }));
 }
 
 void db::object::add_relation_object(std::string const &rel_name, object const &rel_object) {
-    impl_ptr<impl>()->add_relation_id(rel_name, rel_object.object_id().stable());
+    impl_ptr<impl>()->add_relation_id(rel_name, rel_object.object_id().stable_value());
 }
 
 void db::object::insert_relation_object(std::string const &rel_name, db::object const &rel_object,
                                         std::size_t const idx) {
-    impl_ptr<impl>()->insert_relation_id(rel_name, rel_object.object_id().stable(), idx);
+    impl_ptr<impl>()->insert_relation_id(rel_name, rel_object.object_id().stable_value(), idx);
 }
 
 void db::object::remove_relation_object(std::string const &rel_name, object const &rel_object) {
-    impl_ptr<impl>()->remove_relation_id(rel_name, rel_object.object_id().stable());
+    impl_ptr<impl>()->remove_relation_id(rel_name, rel_object.object_id().stable_value());
 }
 
 void db::object::remove_relation_at(std::string const &rel_name, std::size_t const idx) {

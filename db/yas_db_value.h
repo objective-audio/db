@@ -121,3 +121,18 @@ std::string to_string(db::value_map_vector_map_t const &, bool const formatted =
 db::time_point_t to_time_point(db::value const &);
 db::value to_value(db::time_point_t const &);
 }
+
+template <>
+struct std::hash<yas::db::value> {
+    std::size_t operator()(yas::db::value const &value) const {
+        auto const &type = value.type();
+        if (type == typeid(yas::db::integer)) {
+            return std::hash<yas::db::integer::type>()(value.get<yas::db::integer>());
+        } else if (type == typeid(yas::db::real)) {
+            return std::hash<yas::db::real::type>()(value.get<yas::db::real>());
+        } else if (type == typeid(yas::db::text)) {
+            return std::hash<yas::db::text::type>()(value.get<yas::db::text>());
+        }
+        return 0;
+    }
+};

@@ -410,8 +410,8 @@ using namespace yas;
     db::object obj_a0{nullptr, model.entity("sample_a")};
     db::object obj_a1{nullptr, model.entity("sample_a")};
 
-    obj_a0.manageable().load_data({.attributes = {{db::object_id_field, db::value{0}}}});
-    obj_a1.manageable().load_data({.attributes = {{db::object_id_field, db::value{1}}}});
+    obj_a0.manageable().load_data({.object_id = db::make_stable_id(db::value{0})});
+    obj_a1.manageable().load_data({.object_id = db::make_stable_id(db::value{1})});
 
     obj_a0.set_attribute_value("name", db::value{"a0"});
     obj_a1.set_attribute_value("name", db::value{"a1"});
@@ -444,10 +444,10 @@ using namespace yas;
     db::object obj_b0{nullptr, model.entity("sample_b")};
     db::object obj_b1{nullptr, model.entity("sample_b")};
 
-    obj_a0.manageable().load_data({.attributes = {{db::object_id_field, db::value{0}}}});
-    obj_a1.manageable().load_data({.attributes = {{db::object_id_field, db::value{1}}}});
-    obj_b0.manageable().load_data({.attributes = {{db::object_id_field, db::value{2}}}});
-    obj_b1.manageable().load_data({.attributes = {{db::object_id_field, db::value{3}}}});
+    obj_a0.manageable().load_data({.object_id = db::make_stable_id(db::value{0})});
+    obj_a1.manageable().load_data({.object_id = db::make_stable_id(db::value{1})});
+    obj_b0.manageable().load_data({.object_id = db::make_stable_id(db::value{2})});
+    obj_b1.manageable().load_data({.object_id = db::make_stable_id(db::value{3})});
 
     obj_a0.set_attribute_value("name", db::value{"a0"});
     obj_a1.set_attribute_value("name", db::value{"a1"});
