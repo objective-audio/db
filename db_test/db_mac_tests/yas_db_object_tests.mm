@@ -59,8 +59,8 @@ using namespace yas;
     XCTAssertThrows(obj.attribute_value("hoge"));
 
     XCTAssertEqual(obj.relation_size("child"), 2);
-    XCTAssertEqual(obj.relation_id("child", 0), db::value{12});
-    XCTAssertEqual(obj.relation_id("child", 1), db::value{34});
+    XCTAssertEqual(obj.relation_id("child", 0).stable(), 12);
+    XCTAssertEqual(obj.relation_id("child", 1).stable(), 34);
 }
 
 - (void)test_create_const_object {
@@ -84,8 +84,8 @@ using namespace yas;
     XCTAssertThrows(obj.attribute_value("hoge"));
 
     XCTAssertEqual(obj.relation_size("child"), 2);
-    XCTAssertEqual(obj.relation_id("child", 0), db::value{12});
-    XCTAssertEqual(obj.relation_id("child", 1), db::value{34});
+    XCTAssertEqual(obj.relation_id("child", 0).stable(), 12);
+    XCTAssertEqual(obj.relation_id("child", 1).stable(), 34);
 }
 
 - (void)test_reload_values {
@@ -122,9 +122,9 @@ using namespace yas;
     XCTAssertThrows(obj.attribute_value("hoge"));
 
     XCTAssertEqual(obj.relation_size("child"), 3);
-    XCTAssertEqual(obj.relation_id("child", 0), db::value{234});
-    XCTAssertEqual(obj.relation_id("child", 1), db::value{567});
-    XCTAssertEqual(obj.relation_id("child", 2), db::value{890});
+    XCTAssertEqual(obj.relation_id("child", 0).stable(), 234);
+    XCTAssertEqual(obj.relation_id("child", 1).stable(), 567);
+    XCTAssertEqual(obj.relation_id("child", 2).stable(), 890);
 }
 
 - (void)test_set_and_get_value {
@@ -158,23 +158,23 @@ using namespace yas;
 
     XCTAssertEqual(obj.relation_ids("child").size(), 3);
     XCTAssertEqual(obj.relation_size("child"), 3);
-    XCTAssertEqual(obj.relation_ids("child").at(0), db::value{321});
-    XCTAssertEqual(obj.relation_ids("child").at(1), db::value{654});
-    XCTAssertEqual(obj.relation_ids("child").at(2), db::value{987});
-    XCTAssertEqual(obj.relation_id("child", 0), db::value{321});
-    XCTAssertEqual(obj.relation_id("child", 1), db::value{654});
-    XCTAssertEqual(obj.relation_id("child", 2), db::value{987});
+    XCTAssertEqual(obj.relation_ids("child").at(0).stable(), 321);
+    XCTAssertEqual(obj.relation_ids("child").at(1).stable(), 654);
+    XCTAssertEqual(obj.relation_ids("child").at(2).stable(), 987);
+    XCTAssertEqual(obj.relation_id("child", 0).stable(), 321);
+    XCTAssertEqual(obj.relation_id("child", 1).stable(), 654);
+    XCTAssertEqual(obj.relation_id("child", 2).stable(), 987);
 
     obj.remove_relation_id("child", db::value{654});
 
     XCTAssertEqual(obj.relation_size("child"), 2);
-    XCTAssertEqual(obj.relation_id("child", 0), db::value{321});
-    XCTAssertEqual(obj.relation_id("child", 1), db::value{987});
+    XCTAssertEqual(obj.relation_id("child", 0).stable(), 321);
+    XCTAssertEqual(obj.relation_id("child", 1).stable(), 987);
 
     obj.remove_relation_at("child", 0);
 
     XCTAssertEqual(obj.relation_size("child"), 1);
-    XCTAssertEqual(obj.relation_id("child", 0), db::value{987});
+    XCTAssertEqual(obj.relation_id("child", 0).stable(), 987);
 
     obj.remove_all_relations("child");
 
@@ -208,23 +208,23 @@ using namespace yas;
 
     XCTAssertEqual(obj.relation_size("child"), 3);
 
-    XCTAssertEqual(obj.relation_ids("child").at(0), db::value{5});
-    XCTAssertEqual(obj.relation_ids("child").at(1), db::value{6});
-    XCTAssertEqual(obj.relation_ids("child").at(2), db::value{7});
-    XCTAssertEqual(obj.relation_id("child", 0), db::value{5});
-    XCTAssertEqual(obj.relation_id("child", 1), db::value{6});
-    XCTAssertEqual(obj.relation_id("child", 2), db::value{7});
+    XCTAssertEqual(obj.relation_ids("child").at(0).stable(), 5);
+    XCTAssertEqual(obj.relation_ids("child").at(1).stable(), 6);
+    XCTAssertEqual(obj.relation_ids("child").at(2).stable(), 7);
+    XCTAssertEqual(obj.relation_id("child", 0).stable(), 5);
+    XCTAssertEqual(obj.relation_id("child", 1).stable(), 6);
+    XCTAssertEqual(obj.relation_id("child", 2).stable(), 7);
 
     obj.remove_relation_object("child", obj_b2);
 
     XCTAssertEqual(obj.relation_size("child"), 2);
-    XCTAssertEqual(obj.relation_id("child", 0), db::value{5});
-    XCTAssertEqual(obj.relation_id("child", 1), db::value{7});
+    XCTAssertEqual(obj.relation_id("child", 0).stable(), 5);
+    XCTAssertEqual(obj.relation_id("child", 1).stable(), 7);
 
     obj.remove_relation_at("child", 0);
 
     XCTAssertEqual(obj.relation_size("child"), 1);
-    XCTAssertEqual(obj.relation_id("child", 0), db::value{7});
+    XCTAssertEqual(obj.relation_id("child", 0).stable(), 7);
 
     obj.remove_all_relations("child");
 
@@ -255,9 +255,9 @@ using namespace yas;
 
     XCTAssertEqual(obj.relation_ids("child").size(), 3);
 
-    XCTAssertEqual(obj.relation_id("child", 0), db::value{7});
-    XCTAssertEqual(obj.relation_id("child", 1), db::value{5});
-    XCTAssertEqual(obj.relation_id("child", 2), db::value{6});
+    XCTAssertEqual(obj.relation_id("child", 0).stable(), 7);
+    XCTAssertEqual(obj.relation_id("child", 1).stable(), 5);
+    XCTAssertEqual(obj.relation_id("child", 2).stable(), 6);
 }
 
 - (void)test_insert_relation_object {
@@ -284,9 +284,9 @@ using namespace yas;
 
     XCTAssertEqual(obj.relation_ids("child").size(), 3);
 
-    XCTAssertEqual(obj.relation_id("child", 0), db::value{7});
-    XCTAssertEqual(obj.relation_id("child", 1), db::value{5});
-    XCTAssertEqual(obj.relation_id("child", 2), db::value{6});
+    XCTAssertEqual(obj.relation_id("child", 0).stable(), 7);
+    XCTAssertEqual(obj.relation_id("child", 1).stable(), 5);
+    XCTAssertEqual(obj.relation_id("child", 2).stable(), 6);
 }
 
 - (void)test_replace_value {
@@ -317,7 +317,7 @@ using namespace yas;
 
     XCTAssertEqual(obj.object_id().stable_value(), db::value{45});
     XCTAssertEqual(obj.attribute_value("name"), db::value{"tanaka"});
-    XCTAssertEqual(obj.relation_ids("child").at(0), db::value{111});
+    XCTAssertEqual(obj.relation_ids("child").at(0).stable(), 111);
 
     obj.remove();
 
@@ -574,19 +574,19 @@ using namespace yas;
 
         if (called_count == 0) {
             XCTAssertEqual(obj.relation_size(name), 2);
-            XCTAssertEqual(obj.relation_id(name, 0), db::value{10});
-            XCTAssertEqual(obj.relation_id(name, 1), db::value{20});
+            XCTAssertEqual(obj.relation_id(name, 0).stable(), 10);
+            XCTAssertEqual(obj.relation_id(name, 1).stable(), 20);
             XCTAssertEqual(rel_info.reason, db::object::change_reason::replaced);
             XCTAssertEqual(rel_info.indices.size(), 0);
         } else if (called_count == 1) {
             XCTAssertEqual(obj.relation_size(name), 3);
-            XCTAssertEqual(obj.relation_id(name, 2), db::value{30});
+            XCTAssertEqual(obj.relation_id(name, 2).stable(), 30);
             XCTAssertEqual(rel_info.reason, db::object::change_reason::inserted);
             XCTAssertEqual(rel_info.indices.size(), 1);
         } else if (called_count == 2) {
             XCTAssertEqual(obj.relation_size(name), 2);
-            XCTAssertEqual(obj.relation_id(name, 0), db::value{10});
-            XCTAssertEqual(obj.relation_id(name, 1), db::value{30});
+            XCTAssertEqual(obj.relation_id(name, 0).stable(), 10);
+            XCTAssertEqual(obj.relation_id(name, 1).stable(), 30);
             XCTAssertEqual(rel_info.reason, db::object::change_reason::removed);
             XCTAssertEqual(rel_info.indices.size(), 1);
         } else if (called_count == 3) {
@@ -641,8 +641,8 @@ using namespace yas;
         XCTAssertEqual(obj.attribute_value("weight"), db::value{53.4});
 
         XCTAssertEqual(obj.relation_size("child"), 2);
-        XCTAssertEqual(obj.relation_id("child", 0), db::value{55});
-        XCTAssertEqual(obj.relation_id("child", 1), db::value{66});
+        XCTAssertEqual(obj.relation_id("child", 0).stable(), 55);
+        XCTAssertEqual(obj.relation_id("child", 1).stable(), 66);
 
         called = true;
     });
@@ -673,8 +673,8 @@ using namespace yas;
 
     XCTAssertEqual(obj.attribute_value("age"), db::value{20});
     XCTAssertEqual(obj.attribute_value("name"), db::value{"test_name"});
-    XCTAssertEqual(obj.relation_id("child", 0), db::value{23});
-    XCTAssertEqual(obj.relation_id("child", 1), db::value{45});
+    XCTAssertEqual(obj.relation_id("child", 0).stable(), 23);
+    XCTAssertEqual(obj.relation_id("child", 1).stable(), 45);
 
     obj.manageable().clear_data();
 
