@@ -86,25 +86,25 @@ struct db::const_object::impl : public base::impl {
         return db::null_value();
     }
 
-    db::value_vector_t relation_ids(std::string const &rel_name) {
+    db::id_vector_t relation_ids(std::string const &rel_name) {
         this->validate_relation_name(rel_name);
 
         if (this->_relations.count(rel_name) > 0) {
-            return db::to_values(this->_relations.at(rel_name));
+            return this->_relations.at(rel_name);
         }
         return {};
     }
 
-    db::value const &relation_id(std::string const &rel_name, std::size_t const idx) {
+    db::object_id const &relation_id(std::string const &rel_name, std::size_t const idx) {
         this->validate_relation_name(rel_name);
 
         if (this->_relations.count(rel_name) > 0) {
             auto const &ids = this->_relations.at(rel_name);
             if (idx < ids.size()) {
-                return ids.at(idx).stable_value();
+                return ids.at(idx);
             }
         }
-        return db::null_value();
+        return db::null_id();
     }
 
     std::size_t relation_size(std::string const &rel_name) {
@@ -226,11 +226,11 @@ db::value const &db::const_object::attribute_value(std::string const &attr_name)
     return impl_ptr<impl>()->attribute_value(attr_name);
 }
 
-db::value_vector_t db::const_object::relation_ids(std::string const &rel_name) const {
+db::id_vector_t db::const_object::relation_ids(std::string const &rel_name) const {
     return impl_ptr<impl>()->relation_ids(rel_name);
 }
 
-db::value const &db::const_object::relation_id(std::string const &rel_name, std::size_t const idx) const {
+db::object_id const &db::const_object::relation_id(std::string const &rel_name, std::size_t const idx) const {
     return impl_ptr<impl>()->relation_id(rel_name, idx);
 }
 
@@ -631,16 +631,14 @@ void db::object::set_attribute_value(std::string const &attr_name, db::value con
 db::object_vector_t db::object::relation_objects(std::string const &rel_name) const {
     auto const &rel_ids = impl_ptr<impl>()->relation_ids(rel_name);
     std::string const &tgt_entity_name = this->entity().relations.at(rel_name).target_entity_name;
-    return to_vector<db::object>(rel_ids, [manager = manager(), &tgt_entity_name](db::value const &id) {
-#warning object_idはrelationが直接持っているのを使いたい
-        return manager.cached_or_inserted_object(tgt_entity_name, db::make_stable_id(id));
+    return to_vector<db::object>(rel_ids, [manager = manager(), &tgt_entity_name](db::object_id const &rel_id) {
+        return manager.cached_or_inserted_object(tgt_entity_name, rel_id);
     });
 }
 
 db::object db::object::relation_object_at(std::string const &rel_name, std::size_t const idx) const {
     std::string const &tgt_entity_name = this->entity().relations.at(rel_name).target_entity_name;
-#warning object_idはrelationが直接持っているのを使いたい
-    return this->manager().cached_or_inserted_object(tgt_entity_name, db::make_stable_id(relation_id(rel_name, idx)));
+    return this->manager().cached_or_inserted_object(tgt_entity_name, relation_id(rel_name, idx));
 }
 
 void db::object::set_relation_ids(std::string const &rel_name, value_vector_t const &relation_ids) {

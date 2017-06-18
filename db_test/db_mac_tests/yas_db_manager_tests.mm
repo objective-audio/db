@@ -269,8 +269,7 @@ using namespace yas;
     manager.fetch_const_objects(
         []() {
             return db::to_fetch_option(db::select_option{
-                .table = "sample_a",
-                .field_orders = {db::field_order{.field = "age", .order = db::order::ascending}}});
+                .table = "sample_a", .field_orders = {db::field_order{.field = "age", .order = db::order::ascending}}});
         },
         [self, &manager](auto result) {
             XCTAssertTrue(result);
@@ -811,7 +810,7 @@ using namespace yas;
 
                               XCTAssertEqual(a_objects.at(2).relation_size("child"), 1);
                               XCTAssertEqual(a_objects.at(2).relation_ids("child").size(), 1);
-                              XCTAssertEqual(a_objects.at(2).relation_id("child", 0), db::value{1});
+                              XCTAssertEqual(a_objects.at(2).relation_id("child", 0).stable(), 1);
 
                               [exp3 fulfill];
                           });
@@ -858,8 +857,8 @@ using namespace yas;
 
             XCTAssertEqual(a_objects.at(0).relation_size("child"), 2);
             XCTAssertEqual(a_objects.at(0).relation_ids("child").size(), 2);
-            XCTAssertEqual(a_objects.at(0).relation_id("child", 0), db::value{2});
-            XCTAssertEqual(a_objects.at(0).relation_id("child", 1), db::value{1});
+            XCTAssertEqual(a_objects.at(0).relation_id("child", 0).stable(), 2);
+            XCTAssertEqual(a_objects.at(0).relation_id("child", 1).stable(), 1);
         });
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
@@ -912,7 +911,7 @@ using namespace yas;
 
                                     XCTAssertEqual(a_objects.at(0).relation_size("child"), 1);
                                     XCTAssertEqual(a_objects.at(0).relation_ids("child").size(), 1);
-                                    XCTAssertEqual(a_objects.at(0).relation_id("child", 0), db::value{1});
+                                    XCTAssertEqual(a_objects.at(0).relation_id("child", 0).stable(), 1);
                                 });
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
@@ -979,10 +978,10 @@ using namespace yas;
 
         XCTAssertEqual(objects.at("sample_a").at(0).relation_size("child"), 1);
         XCTAssertEqual(objects.at("sample_a").at(0).relation_object_at("child", 0), objects.at("sample_b").at(0));
-        XCTAssertEqual(objects.at("sample_a").at(0).relation_id("child", 0), db::value{1});
+        XCTAssertEqual(objects.at("sample_a").at(0).relation_id("child", 0).stable(), 1);
         XCTAssertEqual(objects.at("sample_a").at(0).relation_size("friend"), 1);
         XCTAssertEqual(objects.at("sample_a").at(0).relation_object_at("friend", 0), objects.at("sample_c").at(0));
-        XCTAssertEqual(objects.at("sample_a").at(0).relation_id("friend", 0), db::value{1});
+        XCTAssertEqual(objects.at("sample_a").at(0).relation_id("friend", 0).stable(), 1);
 
         XCTAssertEqual(objects.at("sample_b").at(0).relation_size("parent"), 1);
         XCTAssertEqual(objects.at("sample_b").at(0).relation_object_at("parent", 0), objects.at("sample_a").at(0));
@@ -1176,8 +1175,8 @@ using namespace yas;
         XCTAssertEqual(obj.action(), db::update_action_value());
         XCTAssertEqual(obj.relation_size("child"), 2);
         XCTAssertEqual(obj.relation_ids("child").size(), 2);
-        XCTAssertEqual(obj.relation_id("child", 0), db::value{100});
-        XCTAssertEqual(obj.relation_id("child", 1), db::value{200});
+        XCTAssertEqual(obj.relation_id("child", 0).stable(), 100);
+        XCTAssertEqual(obj.relation_id("child", 1).stable(), 200);
     });
 
     manager.execute([self, exp3, &manager](operation const &) {
@@ -1217,8 +1216,8 @@ using namespace yas;
     XCTAssertEqual(object.status(), db::object_status::saved);
     XCTAssertEqual(object.relation_size("child"), 2);
     XCTAssertEqual(object.relation_ids("child").size(), 2);
-    XCTAssertEqual(object.relation_id("child", 0), db::value{100});
-    XCTAssertEqual(object.relation_id("child", 1), db::value{200});
+    XCTAssertEqual(object.relation_id("child", 0).stable(), 100);
+    XCTAssertEqual(object.relation_id("child", 1).stable(), 200);
 
     object.remove();
 

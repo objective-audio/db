@@ -8,11 +8,12 @@
 
 namespace yas {
 namespace db {
-    std::vector<const_object> get_const_relation_objects(const_object const &object,
-                                                         const_object_map_map_t const &objects,
-                                                         std::string const &rel_name);
-    db::const_object get_const_relation_object(const_object const &object, const_object_map_map_t const &objects,
-                                               std::string const &rel_name, std::size_t const idx);
+    std::vector<db::const_object> get_const_relation_objects(db::const_object const &object,
+                                                             db::const_object_map_map_t const &objects,
+                                                             std::string const &rel_name);
+    db::const_object get_const_relation_object(db::const_object const &object,
+                                               db::const_object_map_map_t const &objects, std::string const &rel_name,
+                                               std::size_t const idx);
 
     template <typename T>
     db::integer_set_map_t relation_ids(T const &objects) {

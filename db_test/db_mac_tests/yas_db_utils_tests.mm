@@ -552,8 +552,8 @@ using namespace yas;
             auto const &object_a = pair.first;
             XCTAssertEqual(object_a.attribute_value("name"), db::value{"value_1"});
             XCTAssertEqual(object_a.relation_size("child"), 2);
-            XCTAssertEqual(object_a.relation_id("child", 0), db::value{1});
-            XCTAssertEqual(object_a.relation_id("child", 1), db::value{2});
+            XCTAssertEqual(object_a.relation_id("child", 0).stable(), 1);
+            XCTAssertEqual(object_a.relation_id("child", 1).stable(), 2);
 
             auto const_objects = db::get_const_relation_objects(object_a, objects, "child");
             XCTAssertEqual(const_objects.size(), 2);
