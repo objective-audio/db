@@ -66,7 +66,6 @@ struct db::object_id::impl : base::impl {
     }
 
     std::size_t hash() {
-#warning tempしかないものとstableのあるものは比べない。フェッチしてきたらまずキャッシュのidentifierにset_stableしてしまう
         if (_stable) {
             return std::hash<db::integer::type>()(_stable.get<db::integer>());
         } else {
@@ -94,16 +93,24 @@ void db::object_id::set_stable(db::value value) {
     impl_ptr<impl>()->set_stable(std::move(value));
 }
 
-db::value const &db::object_id::stable() const {
+db::value const &db::object_id::stable_value() const {
     return impl_ptr<impl>()->stable();
 }
 
-db::value const &db::object_id::temporary() const {
+db::value const &db::object_id::temporary_value() const {
     return impl_ptr<impl>()->temporary();
 }
 
+db::integer::type const &db::object_id::stable() const {
+    return this->stable_value().get<db::integer>();
+}
+
+std::string const &db::object_id::temporary() const {
+    return this->temporary_value().get<db::text>();
+}
+
 bool db::object_id::is_stable() const {
-    return !!impl_ptr<impl>()->is_stable();
+    return impl_ptr<impl>()->is_stable();
 }
 
 bool db::object_id::is_temporary() const {
@@ -111,7 +118,7 @@ bool db::object_id::is_temporary() const {
 }
 
 db::object_id db::object_id::copy() const {
-    return db::object_id{this->stable(), this->temporary()};
+    return db::object_id{this->stable_value(), this->impl_ptr<impl>()->temporary()};
 }
 
 std::size_t db::object_id::hash() const {
@@ -131,7 +138,9 @@ std::string yas::to_string(db::object_id const &obj_id) {
         return "null";
     }
 
-    return "{" + joined({"temporary:" + to_string(obj_id.temporary()), "stable:" + to_string(obj_id.stable())}, ", ") +
+    return "{" +
+           joined({"stable:" + to_string(obj_id.stable_value()), "temporary:" + to_string(obj_id.temporary_value())},
+                  ", ") +
            "}";
 }
 

@@ -20,8 +20,10 @@ namespace db {
         void set_stable(db::integer::type const);
         void set_stable(db::value);
 
-        db::value const &stable() const;
-        db::value const &temporary() const;
+        db::value const &stable_value() const;
+        db::value const &temporary_value() const;
+        db::integer::type const &stable() const;
+        std::string const &temporary() const;
 
         bool is_stable() const;
         bool is_temporary() const;
