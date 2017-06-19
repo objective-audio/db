@@ -312,7 +312,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
         }
         return db::null_object();
     }
-    
+
     // キャッシュされた単独のオブジェクトをエンティティ名とオブジェクトIDを指定して取得する
     db::object cached_or_inserted_object(std::string const &entity_name, db::object_id const &object_id) {
         if (object_id.is_temporary()) {
@@ -356,7 +356,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                     inv_entity_name,
                     [&inv_rel_names, &object](std::string const &, db::object_id const &, db::object &inv_rel_obj) {
                         for (auto const &inv_rel_name : inv_rel_names) {
-                            inv_rel_obj.remove_relation_id(inv_rel_name, object.object_id().stable_value());
+                            inv_rel_obj.remove_relation_id(inv_rel_name, object.object_id());
                         }
                     });
             }

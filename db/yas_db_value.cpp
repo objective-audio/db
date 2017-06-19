@@ -227,6 +227,11 @@ std::string yas::to_string(const db::value &value) {
     return std::string{};
 }
 
+std::string yas::to_string(db::value_vector_t const &vector) {
+    auto components = to_vector<std::string>(vector, [](auto const &value) { return to_string(value); });
+    return "[" + joined(components, ",") + "]";
+}
+
 std::string yas::to_string(db::value_map_t const &map) {
     std::vector<std::string> components;
     for (auto const &pair : map) {
@@ -237,7 +242,7 @@ std::string yas::to_string(db::value_map_t const &map) {
 
 std::string yas::to_string(db::value_map_vector_t const &vector, bool const formatted) {
     std::string const new_line = formatted ? "\n" : "";
-    
+
     std::vector<std::string> components;
     for (auto const &map : vector) {
         components.emplace_back(to_string(map));

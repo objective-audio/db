@@ -146,15 +146,15 @@ using namespace yas;
     db::model model((__bridge CFDictionaryRef)model_dict);
     db::object obj{nullptr, model.entity("sample_a")};
 
-    obj.add_relation_id("child", db::value{321});
+    obj.add_relation_id("child", db::make_stable_id(db::value{321}));
 
     XCTAssertEqual(obj.relation_ids("child").size(), 1);
 
-    obj.add_relation_id("child", db::value{654});
+    obj.add_relation_id("child", db::make_stable_id(db::value{654}));
 
     XCTAssertEqual(obj.relation_ids("child").size(), 2);
 
-    obj.add_relation_id("child", db::value{987});
+    obj.add_relation_id("child", db::make_stable_id(db::value{987}));
 
     XCTAssertEqual(obj.relation_ids("child").size(), 3);
     XCTAssertEqual(obj.relation_size("child"), 3);
@@ -165,7 +165,7 @@ using namespace yas;
     XCTAssertEqual(obj.relation_id("child", 1).stable(), 654);
     XCTAssertEqual(obj.relation_id("child", 2).stable(), 987);
 
-    obj.remove_relation_id("child", db::value{654});
+    obj.remove_relation_id("child", db::make_stable_id(db::value{654}));
 
     XCTAssertEqual(obj.relation_size("child"), 2);
     XCTAssertEqual(obj.relation_id("child", 0).stable(), 321);
@@ -243,15 +243,15 @@ using namespace yas;
     obj_b2.manageable().load_data({.object_id = db::make_stable_id(db::value{6})});
     obj_b3.manageable().load_data({.object_id = db::make_stable_id(db::value{7})});
 
-    obj.insert_relation_id("child", obj_b1.object_id().stable_value(), 0);
+    obj.insert_relation_id("child", obj_b1.object_id(), 0);
 
     XCTAssertEqual(obj.relation_ids("child").size(), 1);
 
-    obj.insert_relation_id("child", obj_b2.object_id().stable_value(), 1);
+    obj.insert_relation_id("child", obj_b2.object_id(), 1);
 
     XCTAssertEqual(obj.relation_ids("child").size(), 2);
 
-    obj.insert_relation_id("child", obj_b3.object_id().stable_value(), 0);
+    obj.insert_relation_id("child", obj_b3.object_id(), 0);
 
     XCTAssertEqual(obj.relation_ids("child").size(), 3);
 
@@ -313,7 +313,7 @@ using namespace yas;
     obj.manageable().load_data({.object_id = db::make_stable_id(db::value{45})});
     obj.set_attribute_value(db::pk_id_field, db::value{11});
     obj.set_attribute_value("name", db::value{"tanaka"});
-    obj.set_relation_ids("child", {db::value{111}});
+    obj.set_relation_ids("child", {db::make_stable_id(db::value{111})});
 
     XCTAssertEqual(obj.object_id().stable_value(), db::value{45});
     XCTAssertEqual(obj.attribute_value("name"), db::value{"tanaka"});
@@ -350,14 +350,14 @@ using namespace yas;
     obj.manageable().load_data(obj_data);
     XCTAssertEqual(obj.action(), db::insert_action_value());
 
-    obj.add_relation_id("child", db::value{2});
+    obj.add_relation_id("child", db::make_stable_id(db::value{2}));
     XCTAssertEqual(obj.action(), db::update_action_value());
 
     manageable_obj.set_status(db::object_status::updating);
     obj.manageable().load_data(obj_data);
     XCTAssertEqual(obj.action(), db::insert_action_value());
 
-    obj.set_relation_ids("child", {db::value{1}});
+    obj.set_relation_ids("child", {db::make_stable_id(db::value{1})});
     XCTAssertEqual(obj.action(), db::update_action_value());
 
     manageable_obj.set_status(db::object_status::updating);
@@ -396,7 +396,8 @@ using namespace yas;
     obj.set_attribute_value("data", db::null_value());
     obj.set_attribute_value(db::save_id_field, db::value{100});
 
-    obj.set_relation_ids("child", db::value_vector_t{db::value{33}, db::value{44}});
+    obj.set_relation_ids("child",
+                         db::id_vector_t{db::make_stable_id(db::value{33}), db::make_stable_id(db::value{44})});
 
     db::object_id_pool_t obj_id_pool;
 
@@ -433,11 +434,11 @@ using namespace yas;
 
     db::object obj_a1{nullptr, model.entity("sample_a")};
     obj_a1.manageable().load_data({.object_id = db::make_stable_id(db::value{10})});
-    obj_a1.set_relation_ids("child", db::value_vector_t{db::value{10}});
+    obj_a1.set_relation_ids("child", db::id_vector_t{db::make_stable_id(db::value{10})});
 
     db::object obj_a2{nullptr, model.entity("sample_a")};
     obj_a2.manageable().load_data({.object_id = db::make_stable_id(db::value{20})});
-    obj_a2.set_relation_ids("child", db::value_vector_t{db::value{10}});
+    obj_a2.set_relation_ids("child", db::id_vector_t{db::make_stable_id(db::value{10})});
 
     db::object obj_b{nullptr, model.entity("sample_b")};
     obj_b.manageable().load_data({.object_id = db::make_stable_id(db::value{10})});
@@ -487,7 +488,8 @@ using namespace yas;
     db::model model((__bridge CFDictionaryRef)model_dict);
     db::object obj{nullptr, model.entity("sample_a")};
 
-    obj.set_relation_ids("child", db::value_vector_t{db::value{1}, db::value{2}, db::value{3}, db::value{2}});
+    obj.set_relation_ids("child", db::id_vector_t{db::make_stable_id(db::value{1}), db::make_stable_id(db::value{2}),
+                                                  db::make_stable_id(db::value{3}), db::make_stable_id(db::value{2})});
 
     XCTAssertEqual(obj.relation_size("child"), 4);
 
@@ -509,10 +511,12 @@ using namespace yas;
     db::model model((__bridge CFDictionaryRef)model_dict);
 
     db::object obj1{nullptr, model.entity("sample_a")};
-    obj1.set_relation_ids("child", db::value_vector_t{db::value{1}, db::value{2}, db::value{3}});
+    obj1.set_relation_ids("child", db::id_vector_t{db::make_stable_id(db::value{1}), db::make_stable_id(db::value{2}),
+                                                   db::make_stable_id(db::value{3})});
 
     db::object obj2{nullptr, model.entity("sample_a")};
-    obj2.set_relation_ids("child", db::value_vector_t{db::value{5}, db::value{4}, db::value{3}});
+    obj2.set_relation_ids("child", db::id_vector_t{db::make_stable_id(db::value{5}), db::make_stable_id(db::value{4}),
+                                                   db::make_stable_id(db::value{3})});
 
     auto rel_ids =
         db::relation_ids(db::object_vector_map_t{std::make_pair("sample_a", db::object_vector_t{obj1, obj2})});
@@ -598,15 +602,16 @@ using namespace yas;
         ++called_count;
     });
 
-    obj.set_relation_ids("child", db::value_vector_t{db::value{10}, db::value{20}});
+    obj.set_relation_ids("child",
+                         db::id_vector_t{db::make_stable_id(db::value{10}), db::make_stable_id(db::value{20})});
 
     XCTAssertEqual(called_count, 1);
 
-    obj.add_relation_id("child", db::value{30});
+    obj.add_relation_id("child", db::make_stable_id(db::value{30}));
 
     XCTAssertEqual(called_count, 2);
 
-    obj.remove_relation_id("child", db::value{20});
+    obj.remove_relation_id("child", db::make_stable_id(db::value{20}));
 
     XCTAssertEqual(called_count, 3);
 
@@ -667,7 +672,7 @@ using namespace yas;
 
     obj.set_attribute_value("age", db::value{20});
     obj.set_attribute_value("name", db::value{"test_name"});
-    obj.set_relation_ids("child", {db::value{23}, db::value{45}});
+    obj.set_relation_ids("child", {db::make_stable_id(db::value{23}), db::make_stable_id(db::value{45})});
 
     XCTAssertEqual(obj.status(), db::object_status::changed);
 
@@ -692,7 +697,7 @@ using namespace yas;
     db::object obj{nullptr, model.entity("sample_a")};
 
     obj.set_attribute_value("name", db::value{"test_name"});
-    obj.set_relation_ids("child", {db::value{101}, db::value{102}});
+    obj.set_relation_ids("child", {db::make_stable_id(db::value{101}), db::make_stable_id(db::value{102})});
 
     XCTAssertEqual(obj.status(), db::object_status::changed);
 

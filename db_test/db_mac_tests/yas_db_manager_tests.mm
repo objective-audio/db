@@ -292,29 +292,55 @@ using namespace yas;
     db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
 
-    manager.setup([self, &manager](auto result) {
+    XCTestExpectation *setupExp = [self expectationWithDescription:@"setup"];
+
+    manager.setup([self, &manager, &setupExp](auto result) {
         XCTAssertTrue(result);
 
-        auto object_a = manager.insert_object("sample_a");
-        auto object_b = manager.insert_object("sample_b");
-
-        XCTAssertThrows(object_a.set_relation_objects("child", {object_b}));
-        XCTAssertThrows(object_a.add_relation_object("child", object_b));
+        [setupExp fulfill];
     });
 
-    manager.save([self](auto result) {
+    [self waitForExpectations:@[setupExp] timeout:10.0];
+
+    auto object_a = manager.insert_object("sample_a");
+    auto object_b1 = manager.insert_object("sample_b");
+    auto object_b2 = manager.insert_object("sample_b");
+
+    XCTAssertTrue(object_a.object_id().is_temporary());
+    XCTAssertTrue(object_b1.object_id().is_temporary());
+    XCTAssertTrue(object_b2.object_id().is_temporary());
+
+    XCTAssertNoThrow(object_a.add_relation_object("child", object_b1));
+    XCTAssertNoThrow(object_a.add_relation_object("child", object_b2));
+
+    XCTestExpectation *saveExp = [self expectationWithDescription:@"save"];
+
+    db::object_vector_map_t result_objects;
+
+    manager.save([self, &result_objects, &saveExp](auto result) {
         XCTAssertTrue(result);
 
-        db::object &object_a = result.value().at("sample_a").at(0);
-        auto &object_b = result.value().at("sample_b").at(0);
+        result_objects = std::move(result.value());
 
-        XCTAssertNoThrow(object_a.set_relation_objects("child", {object_b}));
-        XCTAssertEqual(object_a.relation_object_at("child", 0), object_b);
+        [saveExp fulfill];
     });
 
-    XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
-    manager.execute([exp](auto const &op) { [exp fulfill]; });
-    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+    [self waitForExpectations:@[saveExp] timeout:10.0];
+
+    XCTAssertTrue(object_a.object_id().is_stable());
+    XCTAssertTrue(object_b1.object_id().is_stable());
+    XCTAssertTrue(object_b2.object_id().is_stable());
+
+    XCTAssertEqual(object_a.relation_id("child", 0), object_b1.object_id());
+    XCTAssertEqual(object_a.relation_id("child", 1), object_b2.object_id());
+    XCTAssertEqual(object_a.relation_object_at("child", 0), object_b1);
+    XCTAssertEqual(object_a.relation_object_at("child", 1), object_b2);
+
+    db::object &result_object_a = result_objects.at("sample_a").at(0);
+
+    XCTAssertEqual(object_a, result_object_a);
+    XCTAssertTrue(contains(result_objects.at("sample_b"), object_b1));
+    XCTAssertTrue(contains(result_objects.at("sample_b"), object_b2));
 }
 
 - (void)test_object_relation_objects {
@@ -773,7 +799,7 @@ using namespace yas;
     XCTAssertEqual(manager.current_save_id(), db::value{1});
     XCTAssertEqual(manager.last_save_id(), db::value{1});
     objects.at("sample_a").at(1).set_attribute_value("name", db::value{"value_1"});
-    objects.at("sample_a").at(1).add_relation_id("child", objects.at("sample_b").at(0).object_id().stable_value());
+    objects.at("sample_a").at(1).add_relation_id("child", objects.at("sample_b").at(0).object_id());
 
     XCTestExpectation *exp2 = [self expectationWithDescription:@"2"];
 
@@ -819,8 +845,8 @@ using namespace yas;
 
     objects.at("sample_a").at(2).set_attribute_value("name", db::value{"value_2"});
     objects.at("sample_a").at(2).remove_all_relations("child");
-    objects.at("sample_a").at(2).add_relation_id("child", objects.at("sample_b").at(1).object_id().stable_value());
-    objects.at("sample_a").at(2).add_relation_id("child", objects.at("sample_b").at(0).object_id().stable_value());
+    objects.at("sample_a").at(2).add_relation_id("child", objects.at("sample_b").at(1).object_id());
+    objects.at("sample_a").at(2).add_relation_id("child", objects.at("sample_b").at(0).object_id());
 
     XCTestExpectation *exp4 = [self expectationWithDescription:@"4"];
 
@@ -889,7 +915,7 @@ using namespace yas;
             objects.at("sample_a").at(0).set_attribute_value("name", db::value{"value_0"});
 
             auto &object_b = objects.at("sample_b").at(0);
-            objects.at("sample_a").at(0).add_relation_id("child", object_b.object_id().stable_value());
+            objects.at("sample_a").at(0).add_relation_id("child", object_b.object_id());
 
             XCTAssertEqual(object_b.object_id().stable_value(), db::value{1});
 
@@ -1152,8 +1178,8 @@ using namespace yas;
     auto &object = main_objects.at(1);
     object.set_attribute_value("name", db::value{"new_value"});
     object.set_attribute_value("age", db::value{77});
-    object.add_relation_id("child", db::value{100});
-    object.add_relation_id("child", db::value{200});
+    object.add_relation_id("child", db::make_stable_id(db::value{100}));
+    object.add_relation_id("child", db::make_stable_id(db::value{200}));
     XCTAssertEqual(object.status(), db::object_status::changed);
 
     XCTestExpectation *exp3 = [self expectationWithDescription:@"3"];
@@ -2017,7 +2043,7 @@ using namespace yas;
     [self waitForExpectationsWithTimeout:1.0 handler:nil];
 }
 
-- (void)test_invert_relatin_removed_in_cache {
+- (void)test_invert_relation_removed_in_cache {
     // フェッチされていないオブジェクトに逆関連があった場合に、キャッシュ上のオブジェクトから削除されているかテスト
 
     db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
