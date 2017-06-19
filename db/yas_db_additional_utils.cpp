@@ -737,7 +737,9 @@ db::manager_fetch_result_t db::save(db::database &db, db::model const &model, db
                 if (auto max_value = db::max(db, entity_name, db::object_id_field)) {
                     obj_id = max_value.get<db::integer>();
                 }
-                replace(changed_data.attributes, db::object_id_field, db::value{obj_id + 1});
+                auto const next_obj_id = obj_id + 1;
+                replace(changed_data.attributes, db::object_id_field, db::value{next_obj_id});
+                changed_data.object_id.set_stable(next_obj_id);
             }
 
             // データベースにアトリビュートのデータを挿入する

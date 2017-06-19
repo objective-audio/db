@@ -114,6 +114,7 @@ namespace db {
 }
 
 std::string to_string(db::value const &);
+std::string to_string(db::value_vector_t const &);
 std::string to_string(db::value_map_t const &);
 std::string to_string(db::value_map_vector_t const &, bool const formatted = false);
 std::string to_string(db::value_map_vector_map_t const &, bool const formatted = false);
