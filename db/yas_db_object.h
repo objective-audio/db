@@ -26,7 +26,7 @@ namespace db {
        public:
         class impl;
 
-        const_object(db::entity const &entity, db::object_data const &obj_data);
+        const_object(db::entity const &entity, db::object_load_data const &obj_data);
         const_object(std::nullptr_t);
 
         db::entity const &entity() const;
