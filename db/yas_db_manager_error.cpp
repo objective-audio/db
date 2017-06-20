@@ -73,8 +73,8 @@ std::string yas::to_string(db::manager_error_type const &error) {
             return "select_revert_failed";
         case db::manager_error_type::select_relation_removed_failed:
             return "select_relation_removed_failed";
-        case db::manager_error_type::make_object_datas_failed:
-            return "make_object_datas_failed";
+        case db::manager_error_type::make_object_load_datas_failed:
+            return "make_object_load_datas_failed";
         case db::manager_error_type::out_of_range_save_id:
             return "out_of_range_save_id";
         case db::manager_error_type::select_failed:

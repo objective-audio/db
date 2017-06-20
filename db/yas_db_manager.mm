@@ -78,7 +78,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
 
     // 1つのオブジェクトにデータベースから読み込まれたデータをロードする
     bool load_and_cache_object_from_data(db::object &object, std::string const &entity_name,
-                                         db::object_data const &data, bool const force) {
+                                         db::object_load_data const &data, bool const force) {
         auto manager = cast<db::manager>();
 
         if (data.object_id) {
@@ -106,7 +106,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
 
     // 複数のエンティティのデータをロードしてキャッシュする
     // ロードされたオブエジェクトはエンティティごとに順番がある状態で返される
-    db::object_vector_map_t load_and_cache_vector_object_from_datas(db::object_data_vector_map_t const &datas,
+    db::object_vector_map_t load_and_cache_vector_object_from_datas(db::object_load_data_vector_map_t const &datas,
                                                                     bool const force, bool const is_save) {
         db::object_vector_map_t loaded_objects;
         for (auto const &entity_pair : datas) {
@@ -149,7 +149,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
 
     // 複数のエンティティのデータをロードしてキャッシュする
     // ロードされたオブジェクトはエンティティごとにobject_idをキーとしたmapで返される
-    db::object_map_map_t load_and_cache_map_object_from_datas(db::object_data_vector_map_t const &datas,
+    db::object_map_map_t load_and_cache_map_object_from_datas(db::object_load_data_vector_map_t const &datas,
                                                               bool const force) {
         db::object_map_map_t loaded_objects;
         for (auto const &entity_pair : datas) {
@@ -284,7 +284,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
 
     // object_datasに含まれるオブジェクトIDと一致するものは_changed_objectsから取り除く
     // データベースに保存された後などに呼ばれる。
-    void erase_changed_objects(db::object_data_vector_map_t const &object_datas) {
+    void erase_changed_objects(db::object_load_data_vector_map_t const &object_datas) {
         for (auto const &entity_pair : object_datas) {
             auto const &entity_name = entity_pair.first;
             if (this->_changed_objects.count(entity_name) > 0) {
@@ -390,10 +390,10 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
     }
 
     // バックグラウンドでデータベースからオブジェクトデータを取得する。条件はselect_optionで指定。単独のエンティティのみ
-    void execute_fetch_object_datas(
-        fetch_preparation_option_f &&preparation,
-        std::function<void(db::manager_result_t &&state, db::object_data_vector_map_t &&fetched_datas)> &&completion,
-        operation_option_t &&op_option) {
+    void execute_fetch_object_datas(fetch_preparation_option_f &&preparation,
+                                    std::function<void(db::manager_result_t &&state,
+                                                       db::object_load_data_vector_map_t &&fetched_datas)> &&completion,
+                                    operation_option_t &&op_option) {
         auto execution =
             [preparation = std::move(preparation), completion = std::move(completion),
              manager = cast<db::manager>()](operation const &) mutable {
@@ -405,7 +405,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
             auto &db = manager.database();
             auto const &model = manager.model();
             db::manager_result_t state{nullptr};
-            db::object_data_vector_map_t fetched_datas;
+            db::object_load_data_vector_map_t fetched_datas;
 
             if (auto begin_result = db::begin_transaction(db)) {
                 // トランザクション開始
@@ -435,10 +435,10 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
     }
 
     // バックグラウンドでデータベースからオブジェクトデータを取得する。条件はobject_idで指定。単独のエンティティのみ
-    void execute_fetch_object_datas(
-        fetch_preparation_ids_f &&ids_preparation,
-        std::function<void(db::manager_result_t &&state, db::object_data_vector_map_t &&fetched_datas)> &&completion,
-        operation_option_t &&op_option) {
+    void execute_fetch_object_datas(fetch_preparation_ids_f &&ids_preparation,
+                                    std::function<void(db::manager_result_t &&state,
+                                                       db::object_load_data_vector_map_t &&fetched_datas)> &&completion,
+                                    operation_option_t &&op_option) {
         fetch_preparation_option_f opt_preparation = [ids_preparation = std::move(ids_preparation)]() {
             return db::to_fetch_option(ids_preparation());
         };
@@ -695,7 +695,7 @@ void db::manager::reset(db::manager::completion_f completion, operation_option_t
     };
 
     auto impl_completion = [completion = std::move(completion), manager = *this](
-        db::manager_result_t && state, db::object_data_vector_map_t && fetched_datas) {
+        db::manager_result_t && state, db::object_load_data_vector_map_t && fetched_datas) {
         auto lambda = [
             manager, completion = std::move(completion), state = std::move(state),
             fetched_datas = std::move(fetched_datas)
@@ -749,7 +749,7 @@ void db::manager::insert_objects(db::manager::insert_preparation_values_f prepar
         auto const &model = manager.model();
 
         db::info ret_db_info = db::null_info();
-        object_data_vector_map_t inserted_datas;
+        object_load_data_vector_map_t inserted_datas;
 
         db::manager_result_t state{nullptr};
 
@@ -814,7 +814,7 @@ void db::manager::insert_objects(db::manager::insert_preparation_values_f prepar
 void db::manager::fetch_objects(db::manager::fetch_preparation_option_f preparation,
                                 db::manager::vector_completion_f completion, operation_option_t option) {
     auto impl_completion = [completion = std::move(completion), manager = *this](
-        db::manager_result_t && state, db::object_data_vector_map_t && fetched_datas) {
+        db::manager_result_t && state, db::object_load_data_vector_map_t && fetched_datas) {
         auto lambda = [
             state = std::move(state), completion = std::move(completion), fetched_datas = std::move(fetched_datas),
             manager
@@ -837,7 +837,7 @@ void db::manager::fetch_objects(db::manager::fetch_preparation_option_f preparat
 void db::manager::fetch_const_objects(db::manager::fetch_preparation_option_f preparation,
                                       db::manager::const_vector_completion_f completion, operation_option_t option) {
     auto impl_completion = [completion = std::move(completion), manager = *this](
-        db::manager_result_t && state, db::object_data_vector_map_t && fetched_datas) {
+        db::manager_result_t && state, db::object_load_data_vector_map_t && fetched_datas) {
         auto lambda = [
             state = std::move(state), completion = std::move(completion), fetched_datas = std::move(fetched_datas),
             manager
@@ -859,7 +859,7 @@ void db::manager::fetch_const_objects(db::manager::fetch_preparation_option_f pr
 void db::manager::fetch_objects(db::manager::fetch_preparation_ids_f preparation,
                                 db::manager::map_completion_f completion, operation_option_t option) {
     auto impl_completion = [completion = std::move(completion), manager = *this](
-        db::manager_result_t && state, db::object_data_vector_map_t && fetched_datas) {
+        db::manager_result_t && state, db::object_load_data_vector_map_t && fetched_datas) {
         auto lambda = [
             manager, completion = std::move(completion), state = std::move(state),
             fetched_datas = std::move(fetched_datas)
@@ -882,7 +882,7 @@ void db::manager::fetch_objects(db::manager::fetch_preparation_ids_f preparation
 void db::manager::fetch_const_objects(db::manager::fetch_preparation_ids_f preparation,
                                       db::manager::const_map_completion_f completion, operation_option_t option) {
     auto impl_completion = [completion = std::move(completion), manager = *this](
-        db::manager_result_t && state, db::object_data_vector_map_t && fetched_datas) {
+        db::manager_result_t && state, db::object_load_data_vector_map_t && fetched_datas) {
         auto lambda = [
             manager, completion = std::move(completion), state = std::move(state),
             fetched_datas = std::move(fetched_datas)
@@ -912,7 +912,7 @@ void db::manager::save(db::manager::vector_completion_f completion, operation_op
         auto const &model = manager.model();
 
         db::info db_info = db::null_info();
-        db::object_data_vector_map_t saved_datas;
+        db::object_load_data_vector_map_t saved_datas;
 
         db::manager_result_t state{nullptr};
 
@@ -995,7 +995,7 @@ void db::manager::revert(db::manager::revert_preparation_f preparation, db::mana
         db::manager_result_t state{nullptr};
 
         db::value_map_vector_map_t reverted_attrs;
-        db::object_data_vector_map_t reverted_datas;
+        db::object_load_data_vector_map_t reverted_datas;
         db::info ret_db_info = db::null_info();
 
         if (auto begin_result = db::begin_transaction(db)) {
@@ -1042,12 +1042,12 @@ void db::manager::revert(db::manager::revert_preparation_f preparation, db::mana
 
                     // アトリビュートのみのデータから関連のデータを加えてobject_dataを生成する
                     if (auto obj_datas_result =
-                            db::make_entity_object_datas(db, entity_name, rel_models, entity_attrs)) {
+                            db::make_entity_object_load_datas(db, entity_name, rel_models, entity_attrs)) {
                         reverted_datas.emplace(entity_name, std::move(obj_datas_result.value()));
                     } else {
                         reverted_attrs.clear();
                         reverted_datas.clear();
-                        state = db::make_error_result(db::manager_error_type::make_object_datas_failed,
+                        state = db::make_error_result(db::manager_error_type::make_object_load_datas_failed,
                                                       std::move(obj_datas_result.error()));
                         break;
                     }

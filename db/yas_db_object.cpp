@@ -26,7 +26,7 @@ struct db::const_object::impl : public base::impl {
     db::object_id _identifier;
 
     // const_objectとして作る場合
-    impl(db::entity const &entity, db::object_data const &obj_data = {.object_id = db::null_id()})
+    impl(db::entity const &entity, db::object_load_data const &obj_data = {.object_id = db::null_id()})
         : _entity(entity), _identifier(nullptr) {
         this->load_data(obj_data);
     }
@@ -48,7 +48,7 @@ struct db::const_object::impl : public base::impl {
         return false;
     }
 
-    void load_data(db::object_data const &obj_data) {
+    void load_data(db::object_load_data const &obj_data) {
         this->clear();
 
         this->update_identifier(obj_data);
@@ -174,7 +174,7 @@ struct db::const_object::impl : public base::impl {
         }
     }
 
-    void update_identifier(db::object_data const &obj_data) {
+    void update_identifier(db::object_load_data const &obj_data) {
         if (obj_data.object_id) {
             this->_validate_temporary_id(obj_data.object_id);
             this->update_identifier(obj_data.object_id.stable_value());
@@ -205,7 +205,7 @@ struct db::const_object::impl : public base::impl {
 
 #pragma mark - db::const_object
 
-db::const_object::const_object(db::entity const &entity, db::object_data const &obj_data)
+db::const_object::const_object(db::entity const &entity, db::object_load_data const &obj_data)
     : base(std::make_unique<impl>(entity, obj_data)) {
 }
 
@@ -297,7 +297,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
     // object_dataのデータを読み込んで上書きする
     // force == falseなら、データベースへの保存処理を始めた後でもオブジェクトに変更があったら上書きしない
     // force == trueなら、必ず上書きする
-    void load_data(db::object_data const &obj_data, bool const force) override {
+    void load_data(db::object_load_data const &obj_data, bool const force) override {
         if (this->_status != db::object_status::changed || force) {
             this->clear();
 

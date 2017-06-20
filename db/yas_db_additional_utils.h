@@ -71,11 +71,12 @@ namespace db {
     // object_dataの配列からconst_objectの配列を生成する
     // 全てのエンティティを含む
     db::const_object_vector_map_t to_const_vector_objects(db::model const &model,
-                                                          db::object_data_vector_map_t const &datas);
+                                                          db::object_load_data_vector_map_t const &datas);
 
     // object_dataの配列からobject_idをキーとしたconst_objectのmapを生成する
     // 全てのエンティティを含む
-    db::const_object_map_map_t to_const_map_objects(db::model const &model, db::object_data_vector_map_t const &datas);
+    db::const_object_map_map_t to_const_map_objects(db::model const &model,
+                                                    db::object_load_data_vector_map_t const &datas);
 
     // select_optionをfetch_optionにして取得
     db::fetch_option to_fetch_option(db::select_option);
@@ -92,9 +93,9 @@ namespace db {
 
     // エンティティ単位で、複数のオブジェクトのアトリビュートの値を元にobject_dataの配列を生成する
     // 内部でDBから関連先の情報を取得している
-    db::object_data_vector_result_t make_entity_object_datas(db::database &db, std::string const &entity_name,
-                                                             db::relation_map_t const &rel_models,
-                                                             db::value_map_vector_t const &entity_attrs);
+    db::object_load_data_vector_result_t make_entity_object_load_datas(db::database &db, std::string const &entity_name,
+                                                                       db::relation_map_t const &rel_models,
+                                                                       db::value_map_vector_t const &entity_attrs);
 }
 
 // setup

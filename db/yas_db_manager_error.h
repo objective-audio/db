@@ -32,7 +32,7 @@ namespace db {
         select_revert_failed,
         select_relation_removed_failed,
 
-        make_object_datas_failed,
+        make_object_load_datas_failed,
 
         delete_failed,
         purge_failed,
