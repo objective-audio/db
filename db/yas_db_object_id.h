@@ -34,6 +34,7 @@ namespace db {
     };
 
     db::object_id make_stable_id(db::value);
+    db::object_id make_stable_id(db::integer::type const);
     db::object_id make_temporary_id();
 
     db::object_id const &null_id();
