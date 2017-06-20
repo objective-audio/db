@@ -339,7 +339,7 @@ using namespace yas;
     XCTAssertEqual(object_a.relation_object_at("child", 0), object_b1);
     XCTAssertEqual(object_a.relation_object_at("child", 1), object_b2);
 
-    db::object &result_object_a = result_objects.at("sample_a").at(0);
+    db::object &result_object_a = result_objects.at("sample_a").begin()->second;
 
     XCTAssertEqual(object_a, result_object_a);
     XCTAssertTrue(result_objects.at("sample_b").count(object_b1.object_id().stable()) > 0);
