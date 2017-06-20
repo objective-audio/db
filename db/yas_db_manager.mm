@@ -150,7 +150,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
     // 複数のエンティティのデータをロードしてキャッシュする
     // ロードされたオブジェクトはエンティティごとにobject_idをキーとしたmapで返される
     db::object_map_map_t load_and_cache_map_object_from_datas(db::object_load_data_vector_map_t const &datas,
-                                                              bool const force) {
+                                                              bool const force, bool const is_save) {
         db::object_map_map_t loaded_objects;
         for (auto const &entity_pair : datas) {
             auto const &entity_name = entity_pair.first;
@@ -161,6 +161,24 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
 
             for (auto const &data : entity_datas) {
                 auto object = db::null_object();
+                if (is_save && this->_inserted_objects.count(entity_name) > 0) {
+                    // セーブ時で仮に挿入されたオブジェクトがある場合にオブジェクトを取得
+                    auto &entity_objects = this->_inserted_objects.at(entity_name);
+                    if (entity_objects.size() > 0) {
+                        auto const &temporary_id = data.object_id.temporary();
+                        if (entity_objects.count(temporary_id) > 0) {
+                            object = entity_objects.at(temporary_id);
+                            entity_objects.erase(temporary_id);
+                        } else {
+                            throw std::runtime_error("inserted object not found.");
+                        }
+
+                        if (entity_objects.size() == 0) {
+                            this->_inserted_objects.erase(entity_name);
+                        }
+                    }
+                }
+
                 if (this->load_and_cache_object_from_data(object, entity_name, data, force)) {
                     objects.emplace(object.object_id().stable(), std::move(object));
                 }
@@ -701,7 +719,7 @@ void db::manager::reset(db::manager::completion_f completion, operation_option_t
             fetched_datas = std::move(fetched_datas)
         ]() mutable {
             if (state) {
-                manager.impl_ptr<impl>()->load_and_cache_map_object_from_datas(fetched_datas, true);
+                manager.impl_ptr<impl>()->load_and_cache_map_object_from_datas(fetched_datas, true, false);
                 manager.impl_ptr<impl>()->erase_changed_objects(fetched_datas);
                 manager.impl_ptr<impl>()->_inserted_objects.clear();
                 completion(db::manager_result_t{nullptr});
@@ -866,7 +884,7 @@ void db::manager::fetch_objects(db::manager::fetch_preparation_ids_f preparation
         ]() mutable {
             if (state) {
                 auto loaded_objects =
-                    manager.impl_ptr<impl>()->load_and_cache_map_object_from_datas(fetched_datas, false);
+                    manager.impl_ptr<impl>()->load_and_cache_map_object_from_datas(fetched_datas, false, false);
                 completion(db::manager_map_result_t{std::move(loaded_objects)});
             } else {
                 completion(db::manager_map_result_t{std::move(state.error())});
@@ -900,7 +918,7 @@ void db::manager::fetch_const_objects(db::manager::fetch_preparation_ids_f prepa
     impl_ptr<impl>()->execute_fetch_object_datas(std::move(preparation), std::move(impl_completion), std::move(option));
 }
 
-void db::manager::save(db::manager::vector_completion_f completion, operation_option_t option) {
+void db::manager::save(db::manager::map_completion_f completion, operation_option_t option) {
     auto execution = [completion = std::move(completion), manager = *this](operation const &) mutable {
         db::object_save_data_vector_map_t changed_datas;
         // 変更のあったデータをメインスレッドで取得する
@@ -967,11 +985,11 @@ void db::manager::save(db::manager::vector_completion_f completion, operation_op
             if (state) {
                 manager.impl_ptr<impl>()->set_db_info(std::move(db_info));
                 auto loaded_objects =
-                    manager.impl_ptr<impl>()->load_and_cache_vector_object_from_datas(saved_datas, false, true);
+                    manager.impl_ptr<impl>()->load_and_cache_map_object_from_datas(saved_datas, false, true);
                 manager.impl_ptr<impl>()->erase_changed_objects(saved_datas);
-                completion(db::manager_vector_result_t{std::move(loaded_objects)});
+                completion(db::manager_map_result_t{std::move(loaded_objects)});
             } else {
-                completion(db::manager_vector_result_t{std::move(state.error())});
+                completion(db::manager_map_result_t{std::move(state.error())});
             }
         };
 
