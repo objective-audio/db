@@ -1200,7 +1200,7 @@ using namespace yas;
         auto const &a_objects = objects.at("sample_a");
         XCTAssertEqual(a_objects.size(), 1);
 
-        auto const &obj = a_objects.at(0);
+        auto const &obj = a_objects.begin()->second;
         XCTAssertEqual(obj.save_id(), db::value{2});
         XCTAssertEqual(obj.attribute_value("name"), db::value{"new_value"});
         XCTAssertEqual(obj.attribute_value("age"), db::value{77});
@@ -1267,7 +1267,7 @@ using namespace yas;
         auto const &a_objects = objects.at("sample_a");
         XCTAssertEqual(a_objects.size(), 1);
 
-        auto const &obj = a_objects.at(0);
+        auto const &obj = a_objects.begin()->second;
         XCTAssertEqual(obj.save_id(), db::value{3});
         XCTAssertEqual(obj.attribute_value("name"), db::null_value());
         XCTAssertEqual(obj.attribute_value("age"), db::value{10});
