@@ -131,7 +131,7 @@ void db_controller::add(entity const &entity) {
 
     _manager.suspend();
 
-    _manager.save([](auto result) {});
+    _manager.save([](db::manager_map_result_t result) {});
 
     auto inserted_object = std::make_shared<db::object>(db::null_object());
 
@@ -281,7 +281,7 @@ void db_controller::purge() {
 
     _manager.suspend();
 
-    _manager.save([](auto result) {});
+    _manager.save([](db::manager_map_result_t result) {});
 
     _manager.purge([](auto purge_result) {});
 
@@ -308,7 +308,7 @@ void db_controller::save_changed() {
 
     _manager.suspend();
 
-    _manager.save([](auto save_result) {});
+    _manager.save([](db::manager_map_result_t result) {});
 
     this->_update_objects([weak = to_weak(shared_from_this())](auto update_result) {
         if (auto shared = weak.lock()) {

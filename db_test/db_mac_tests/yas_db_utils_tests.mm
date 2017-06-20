@@ -518,7 +518,7 @@ using namespace yas;
 
         });
 
-    manager.save([self](auto result) mutable { XCTAssertTrue(result); });
+    manager.save([self](db::manager_map_result_t result) mutable { XCTAssertTrue(result); });
 
     manager.fetch_const_objects(
         []() {

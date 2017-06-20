@@ -377,7 +377,7 @@ using namespace yas;
         object.set_attribute_value("name", db::value{"name_0_2"});
     });
 
-    manager.save([self, &manager](auto result) {
+    manager.save([self, &manager](db::manager_map_result_t result) {
         XCTAssertTrue(result);
         XCTAssertEqual(manager.current_save_id(), db::value{3});
     });
@@ -436,7 +436,7 @@ using namespace yas;
             obj_a.set_relation_objects("child", {obj_b0});
         });
 
-    manager.save([self, &manager, &objects](auto result) {
+    manager.save([self, &manager, &objects](db::manager_map_result_t result) {
         XCTAssertTrue(result);
         XCTAssertEqual(manager.current_save_id(), db::value{2});
 
@@ -451,7 +451,7 @@ using namespace yas;
         obj_a.set_relation_objects("child", {obj_b1, obj_b0});
     });
 
-    manager.save([self, &manager, &objects](auto result) {
+    manager.save([self, &manager, &objects](db::manager_map_result_t result) {
         XCTAssertTrue(result);
         XCTAssertEqual(manager.current_save_id(), db::value{3});
 
@@ -466,7 +466,7 @@ using namespace yas;
         obj_a.set_relation_objects("child", {obj_b1});
     });
 
-    manager.save([self, &manager, &objects](auto result) {
+    manager.save([self, &manager, &objects](db::manager_map_result_t result) {
         XCTAssertTrue(result);
         XCTAssertEqual(manager.current_save_id(), db::value{4});
     });
