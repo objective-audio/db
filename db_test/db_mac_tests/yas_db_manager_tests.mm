@@ -148,20 +148,22 @@ using namespace yas;
         XCTAssertEqual(manager.inserted_object_count("sample_a"), 2);
     });
 
-    manager.save([self, &manager, &objects](auto result) {
+    manager.save([self, &manager, &objects](db::manager_map_result_t result) {
         XCTAssertTrue(result);
         XCTAssertEqual(manager.current_save_id(), db::value{1});
 
-        auto &a_objects = result.value().at("sample_a");
+        db::object_map_t &a_objects = result.value().at("sample_a");
         XCTAssertEqual(a_objects.size(), 2);
 
-        for (auto const &saved_object : a_objects) {
+#warning objectを元にやったほうがいいかも？
+        for (auto const &saved_pair : a_objects) {
+            db::integer::type const &saved_id = saved_pair.first;
             auto object = db::null_object();
             std::size_t idx = 0;
             auto each = make_fast_each(2);
             while (yas_each_next(each)) {
                 auto const &tmp_idx = yas_each_index(each);
-                if (objects.at(tmp_idx).object_id() == saved_object.object_id()) {
+                if (objects.at(tmp_idx).object_id().stable() == saved_id) {
                     XCTAssertFalse(object);
                     object = objects.at(tmp_idx);
                     idx = tmp_idx;
@@ -169,6 +171,7 @@ using namespace yas;
                 }
             }
 
+            db::object const &saved_object = saved_pair.second;
             XCTAssertEqual(saved_object, object);
             XCTAssertTrue(saved_object.object_id().stable_value());
 
@@ -315,9 +318,9 @@ using namespace yas;
 
     XCTestExpectation *saveExp = [self expectationWithDescription:@"save"];
 
-    db::object_vector_map_t result_objects;
+    db::object_map_map_t result_objects;
 
-    manager.save([self, &result_objects, &saveExp](auto result) {
+    manager.save([self, &result_objects, &saveExp](db::manager_map_result_t result) {
         XCTAssertTrue(result);
 
         result_objects = std::move(result.value());
@@ -339,8 +342,8 @@ using namespace yas;
     db::object &result_object_a = result_objects.at("sample_a").at(0);
 
     XCTAssertEqual(object_a, result_object_a);
-    XCTAssertTrue(contains(result_objects.at("sample_b"), object_b1));
-    XCTAssertTrue(contains(result_objects.at("sample_b"), object_b2));
+    XCTAssertTrue(result_objects.at("sample_b").count(object_b1.object_id().stable()) > 0);
+    XCTAssertTrue(result_objects.at("sample_b").count(object_b2.object_id().stable()) > 0);
 }
 
 - (void)test_object_relation_objects {
@@ -992,28 +995,33 @@ using namespace yas;
 
     XCTestExpectation *exp2 = [self expectationWithDescription:@"2"];
 
-    manager.save([self, exp2](auto save_result) {
+    manager.save([self, exp2](db::manager_map_result_t save_result) {
         XCTAssertTrue(save_result);
 
-        auto const &objects = save_result.value();
+        db::object_map_map_t const &objects = save_result.value();
 
         XCTAssertEqual(objects.size(), 3);
         XCTAssertEqual(objects.at("sample_a").size(), 1);
         XCTAssertEqual(objects.at("sample_b").size(), 1);
         XCTAssertEqual(objects.at("sample_c").size(), 1);
+        
+        auto const &a_object = objects.at("sample_a").begin()->second;
+        auto const &b_object = objects.at("sample_b").begin()->second;
+        auto const &c_object = objects.at("sample_c").begin()->second;
+        
+        XCTAssertEqual(a_object.relation_size("child"), 1);
+        XCTAssertEqual(a_object.relation_object_at("child", 0), b_object);
+        XCTAssertEqual(a_object.relation_id("child", 0).stable(), 1);
+        XCTAssertEqual(a_object.relation_size("friend"), 1);
+        XCTAssertEqual(a_object.relation_object_at("friend", 0), c_object);
+        XCTAssertEqual(a_object.relation_id("friend", 0).stable(), 1);
 
-        XCTAssertEqual(objects.at("sample_a").at(0).relation_size("child"), 1);
-        XCTAssertEqual(objects.at("sample_a").at(0).relation_object_at("child", 0), objects.at("sample_b").at(0));
-        XCTAssertEqual(objects.at("sample_a").at(0).relation_id("child", 0).stable(), 1);
-        XCTAssertEqual(objects.at("sample_a").at(0).relation_size("friend"), 1);
-        XCTAssertEqual(objects.at("sample_a").at(0).relation_object_at("friend", 0), objects.at("sample_c").at(0));
-        XCTAssertEqual(objects.at("sample_a").at(0).relation_id("friend", 0).stable(), 1);
+        XCTAssertEqual(b_object.relation_size("parent"), 1);
+        XCTAssertEqual(b_object.relation_object_at("parent", 0), a_object);
 
-        XCTAssertEqual(objects.at("sample_b").at(0).relation_size("parent"), 1);
-        XCTAssertEqual(objects.at("sample_b").at(0).relation_object_at("parent", 0), objects.at("sample_a").at(0));
-
-        XCTAssertEqual(objects.at("sample_c").at(0).relation_size("friend"), 1);
-        XCTAssertEqual(objects.at("sample_c").at(0).relation_object_at("friend", 0), objects.at("sample_a").at(0));
+        
+        XCTAssertEqual(c_object.relation_size("friend"), 1);
+        XCTAssertEqual(c_object.relation_object_at("friend", 0), a_object);
 
         [exp2 fulfill];
     });

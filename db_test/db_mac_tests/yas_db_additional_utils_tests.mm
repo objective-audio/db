@@ -366,18 +366,15 @@ using namespace yas;
             XCTAssertEqual(object.object_id().stable_value(), db::value{2});
         });
 
-    manager.save([self, &manager](auto result) {
+    manager.save([self, &manager](db::manager_map_result_t result) {
         XCTAssertTrue(result);
         XCTAssertEqual(manager.current_save_id(), db::value{2});
 
-        auto &objects = result.value();
-        auto &a_objects = objects.at("sample_a");
+        db::object_map_map_t &objects = result.value();
+        db::object_map_t &a_objects = objects.at("sample_a");
 
-        for (auto &object : a_objects) {
-            if (object.object_id().stable_value() == db::value{1}) {
-                object.set_attribute_value("name", db::value{"name_0_2"});
-            }
-        }
+        db::object &object = a_objects.at(1);
+        object.set_attribute_value("name", db::value{"name_0_2"});
     });
 
     manager.save([self, &manager](auto result) {
