@@ -289,6 +289,15 @@ db::id_vector_t db::to_stable_ids(db::value_vector_t const &values) {
     return to_vector<db::object_id>(values, [](db::value const &value) { return db::make_stable_id(value); });
 }
 
+db::id_vector_map_t db::to_stable_ids(db::value_vector_map_t const &values) {
+    db::id_vector_map_t result;
+    result.reserve(values.size());
+    for (auto const &pair : values) {
+        result.emplace(pair.first, db::to_stable_ids(pair.second));
+    }
+    return result;
+}
+
 db::id_vector_t db::copy_ids(db::id_vector_t const &ids) {
     return to_vector<db::object_id>(ids, [](db::object_id const &obj_id) { return obj_id.copy(); });
 }
