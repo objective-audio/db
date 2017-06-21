@@ -306,6 +306,15 @@ db::value_vector_t db::to_values(db::id_vector_t const &ids) {
     return to_vector<db::value>(ids, [](db::object_id const &obj_id) { return obj_id.stable_value(); });
 }
 
+db::value_vector_map_t db::to_values(db::id_vector_map_t const &ids) {
+    db::value_vector_map_t result;
+    result.reserve(ids.size());
+    for (auto const &pair : ids) {
+        result.emplace(pair.first, db::to_values(pair.second));
+    }
+    return result;
+}
+
 // 複数のエンティティのobject_dataのvectorから、const_objectのvectorを生成する
 db::const_object_vector_map_t db::to_const_vector_objects(db::model const &model,
                                                           db::object_load_data_vector_map_t const &datas) {
