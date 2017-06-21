@@ -67,7 +67,7 @@ struct db::const_object::impl : public base::impl {
             if (obj_data.relations.count(rel_name) > 0) {
                 this->validate_relation_name(rel_name);
 
-                this->_relations.emplace(rel_name, db::to_stable_ids(obj_data.relations.at(rel_name)));
+                this->_relations.emplace(rel_name, obj_data.relations.at(rel_name));
             }
         }
     }
@@ -313,7 +313,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
             for (auto const &pair : this->_entity.relations) {
                 auto const &rel_name = pair.first;
                 if (obj_data.relations.count(rel_name) > 0) {
-                    this->set_relation_ids(rel_name, db::to_stable_ids(obj_data.relations.at(rel_name)), true);
+                    this->set_relation_ids(rel_name, obj_data.relations.at(rel_name), true);
                 }
             }
 
