@@ -102,7 +102,7 @@ namespace db {
     struct object_load_data {
         db::object_id object_id;
         db::value_map_t attributes;
-        db::value_vector_map_t relations;
+        db::id_vector_map_t relations;
     };
 
     struct object_save_data {
