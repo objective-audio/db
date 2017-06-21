@@ -155,23 +155,12 @@ using namespace yas;
         db::object_map_t &a_objects = result.value().at("sample_a");
         XCTAssertEqual(a_objects.size(), 2);
 
-#warning objectを元にやったほうがいいかも？
-        for (auto const &saved_pair : a_objects) {
-            db::integer::type const &saved_id = saved_pair.first;
-            auto object = db::null_object();
-            std::size_t idx = 0;
-            auto each = make_fast_each(2);
-            while (yas_each_next(each)) {
-                auto const &tmp_idx = yas_each_index(each);
-                if (objects.at(tmp_idx).object_id().stable() == saved_id) {
-                    XCTAssertFalse(object);
-                    object = objects.at(tmp_idx);
-                    idx = tmp_idx;
-                    break;
-                }
-            }
+        auto each = make_fast_each(objects.size());
+        while (yas_each_next(each)) {
+            auto const &idx = yas_each_index(each);
+            auto const &object = objects.at(idx);
+            auto const &saved_object = a_objects.at(object.object_id().stable());
 
-            db::object const &saved_object = saved_pair.second;
             XCTAssertEqual(saved_object, object);
             XCTAssertTrue(saved_object.object_id().stable_value());
 
