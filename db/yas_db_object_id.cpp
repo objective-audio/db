@@ -129,6 +129,10 @@ db::object_id db::make_stable_id(db::value stable) {
     return db::object_id{std::move(stable), db::null_value()};
 }
 
+db::object_id db::make_stable_id(db::integer::type const stable) {
+    return db::object_id{db::value{stable}, db::null_value()};
+}
+
 db::object_id db::make_temporary_id() {
     return db::object_id{db::null_value(), db::null_value()};
 }
