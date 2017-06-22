@@ -138,4 +138,10 @@ using namespace yas;
     XCTAssertTrue(src == dst);
 }
 
+- (void)test_to_string {
+    XCTAssertEqual(to_string(db::object_id{db::value{1}, db::value{"2"}}), "{stable:1, temporary:'2'}");
+    XCTAssertEqual(to_string(db::object_id{nullptr, db::value{"2"}}), "{stable:null, temporary:'2'}");
+    XCTAssertEqual(to_string(db::object_id{db::value{1}, nullptr}), "{stable:1, temporary:null}");
+}
+
 @end

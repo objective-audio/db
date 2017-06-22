@@ -501,4 +501,59 @@ using namespace yas;
     [self waitForExpectationsWithTimeout:1.0 handler:nil];
 }
 
+- (void)test_to_stable_ids_from_vector {
+    db::value_vector_t values{db::value{10}, db::value{11}};
+
+    db::id_vector_t ids = db::to_stable_ids(values);
+
+    XCTAssertEqual(ids.at(0), db::make_stable_id(10));
+    XCTAssertEqual(ids.at(1), db::make_stable_id(11));
+}
+
+- (void)test_to_stable_ids_from_map {
+    db::value_vector_map_t values;
+    values.emplace("a", db::value_vector_t{db::value{10}, db::value{11}});
+    values.emplace("b", db::value_vector_t{db::value{20}, db::value{21}});
+
+    db::id_vector_map_t ids = db::to_stable_ids(values);
+
+    XCTAssertEqual(ids.at("a").at(0), db::make_stable_id(10));
+    XCTAssertEqual(ids.at("a").at(1), db::make_stable_id(11));
+    XCTAssertEqual(ids.at("b").at(0), db::make_stable_id(20));
+    XCTAssertEqual(ids.at("b").at(1), db::make_stable_id(21));
+}
+
+- (void)test_copy_ids {
+    db::id_vector_t ids{db::make_stable_id(30), db::make_temporary_id()};
+
+    db::id_vector_t copied_ids = db::copy_ids(ids);
+
+    XCTAssertEqual(copied_ids.at(0), db::make_stable_id(30));
+    XCTAssertEqual(copied_ids.at(1).temporary(), ids.at(1).temporary());
+    XCTAssertNotEqual(copied_ids.at(0).identifier(), ids.at(0).identifier());
+    XCTAssertNotEqual(copied_ids.at(1).identifier(), ids.at(1).identifier());
+}
+
+- (void)test_to_values_from_vector {
+    db::id_vector_t ids{db::make_stable_id(40), db::make_stable_id(41)};
+
+    db::value_vector_t values = db::to_values(ids);
+
+    XCTAssertEqual(values.at(0), db::value{40});
+    XCTAssertEqual(values.at(1), db::value{41});
+}
+
+- (void)test_to_values_from_map {
+    db::id_vector_map_t ids;
+    ids.emplace("a", db::id_vector_t{db::make_stable_id(50), db::make_stable_id(51)});
+    ids.emplace("b", db::id_vector_t{db::make_stable_id(60), db::make_stable_id(61)});
+
+    db::value_vector_map_t values = db::to_values(ids);
+
+    XCTAssertEqual(values.at("a").at(0), db::value{50});
+    XCTAssertEqual(values.at("a").at(1), db::value{51});
+    XCTAssertEqual(values.at("b").at(0), db::value{60});
+    XCTAssertEqual(values.at("b").at(1), db::value{61});
+}
+
 @end
