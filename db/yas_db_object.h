@@ -26,7 +26,7 @@ namespace db {
        public:
         class impl;
 
-        const_object(db::entity const &entity, db::object_load_data const &obj_data);
+        const_object(db::entity const &entity, db::object_data const &obj_data);
         const_object(std::nullptr_t);
 
         db::entity const &entity() const;
@@ -111,7 +111,7 @@ namespace db {
 
         bool is_temporary() const;
 
-        db::object_save_data save_data(db::object_id_pool_t &) const;
+        db::object_data save_data(db::object_id_pool_t &) const;
 
         db::manageable_object &manageable();
 

@@ -317,7 +317,7 @@ db::value_vector_map_t db::to_values(db::id_vector_map_t const &ids) {
 
 // 複数のエンティティのobject_dataのvectorから、const_objectのvectorを生成する
 db::const_object_vector_map_t db::to_const_vector_objects(db::model const &model,
-                                                          db::object_load_data_vector_map_t const &datas) {
+                                                          db::object_data_vector_map_t const &datas) {
     db::const_object_vector_map_t objects;
     for (auto const &entity_pair : datas) {
         auto const &entity_name = entity_pair.first;
@@ -338,8 +338,7 @@ db::const_object_vector_map_t db::to_const_vector_objects(db::model const &model
 }
 
 // 複数のエンティティのobject_dataのvectorから、object_idをキーとしたconst_objectのmapを生成する
-db::const_object_map_map_t db::to_const_map_objects(db::model const &model,
-                                                    db::object_load_data_vector_map_t const &datas) {
+db::const_object_map_map_t db::to_const_map_objects(db::model const &model, db::object_data_vector_map_t const &datas) {
     db::const_object_map_map_t objects;
     for (auto const &entity_pair : datas) {
         auto const &entity_name = entity_pair.first;
@@ -383,10 +382,10 @@ db::manager_result_t db::make_error_result(db::manager_error_type const &error_t
 }
 
 // 単独のエンティティでオブジェクトのアトリビュートの値を元に関連の値をデータベースから取得してobject_dataのvectorを生成する
-db::object_load_data_vector_result_t db::make_entity_object_load_datas(db::database &db, std::string const &entity_name,
-                                                                       db::relation_map_t const &rel_models,
-                                                                       db::value_map_vector_t const &entity_attrs) {
-    db::object_load_data_vector_t entity_datas;
+db::object_data_vector_result_t db::make_entity_object_load_datas(db::database &db, std::string const &entity_name,
+                                                                  db::relation_map_t const &rel_models,
+                                                                  db::value_map_vector_t const &entity_attrs) {
+    db::object_data_vector_t entity_datas;
     entity_datas.reserve(entity_attrs.size());
 
     for (db::value_map_t attrs : entity_attrs) {
@@ -399,18 +398,18 @@ db::object_load_data_vector_result_t db::make_entity_object_load_datas(db::datab
             if (auto rel_data_result = db::select_relation_data(db, rel_models, save_id, src_obj_id)) {
                 rels = db::to_stable_ids(rel_data_result.value());
             } else {
-                return db::object_load_data_vector_result_t{std::move(rel_data_result.error())};
+                return db::object_data_vector_result_t{std::move(rel_data_result.error())};
             }
         }
 
         db::object_id obj_id = db::make_stable_id(attrs.at(db::object_id_field));
         attrs.erase(db::object_id_field);
 
-        entity_datas.emplace_back(db::object_load_data{
+        entity_datas.emplace_back(db::object_data{
             .object_id = std::move(obj_id), .attributes = std::move(attrs), .relations = std::move(rels)});
     }
 
-    return db::object_load_data_vector_result_t{std::move(entity_datas)};
+    return db::object_data_vector_result_t{std::move(entity_datas)};
 }
 
 #pragma mark - setup
@@ -549,7 +548,7 @@ db::manager_fetch_result_t db::insert(db::database &db, db::model const &model, 
         }
     }
 
-    object_load_data_vector_map_t inserted_datas;
+    db::object_data_vector_map_t inserted_datas;
     db::integer::type start_obj_id = 1;
     auto next_save_id = info.next_save_id_value();
 
@@ -592,7 +591,7 @@ db::manager_fetch_result_t db::insert(db::database &db, db::model const &model, 
             if (auto select_result = db::select(db, std::move(option))) {
                 // データをobject_dataにしてcompletionに返すinserted_datasに追加
                 if (inserted_datas.count(entity_name) == 0) {
-                    db::object_load_data_vector_t entity_datas{};
+                    db::object_data_vector_t entity_datas{};
                     entity_datas.reserve(entity_values.size());
                     inserted_datas.emplace(entity_name, std::move(entity_datas));
                 }
@@ -601,8 +600,7 @@ db::manager_fetch_result_t db::insert(db::database &db, db::model const &model, 
                 db::object_id obj_id = db::make_stable_id(attributes.at(db::object_id_field));
                 attributes.erase(db::object_id_field);
                 inserted_datas.at(entity_name)
-                    .emplace_back(
-                        db::object_load_data{.object_id = std::move(obj_id), .attributes = std::move(attributes)});
+                    .emplace_back(db::object_data{.object_id = std::move(obj_id), .attributes = std::move(attributes)});
             } else {
                 return db::manager_fetch_result_t{
                     db::manager_error{db::manager_error_type::select_failed, std::move(select_result.error())}};
@@ -624,7 +622,7 @@ db::manager_fetch_result_t db::fetch(db::database &db, db::model const &model, d
         return db::manager_fetch_result_t{std::move(info_select_result.error())};
     }
 
-    db::object_load_data_vector_map_t fetched_datas;
+    db::object_data_vector_map_t fetched_datas;
 
     for (auto const &pair : fetch_option.select_options()) {
         std::string const entity_name = pair.first;
@@ -723,7 +721,7 @@ db::manager_result_t db::purge_db(db::database &db, db::model const &model) {
 }
 
 db::manager_fetch_result_t db::save(db::database &db, db::model const &model, db::info const &info,
-                                    db::object_save_data_vector_map_t const &changed_datas) {
+                                    db::object_data_vector_map_t const &changed_datas) {
     // ラストのセーブIDよりカレントが前ならカレントより後のデータは削除する
     if (info.current_save_id() < info.last_save_id()) {
         if (auto ul = unless(db::delete_next_to_last(db, model, info.current_save_id_value()))) {
@@ -731,7 +729,7 @@ db::manager_fetch_result_t db::save(db::database &db, db::model const &model, db
         }
     }
 
-    db::object_load_data_vector_map_t saved_datas;
+    db::object_data_vector_map_t saved_datas;
 
     auto const next_save_id = info.next_save_id_value();
     auto const save_id_pair = std::make_pair(db::save_id_field, next_save_id);
@@ -741,10 +739,10 @@ db::manager_fetch_result_t db::save(db::database &db, db::model const &model, db
         auto const &changed_entity_datas = entity_pair.second;
         auto const entity_insert_sql = model.entity(entity_name).sql_for_insert();
 
-        db::object_load_data_vector_t entity_saved_datas;
+        db::object_data_vector_t entity_saved_datas;
 
         for (auto changed_data : changed_entity_datas) {
-            db::object_load_data saved_data{.object_id = db::null_id()};
+            db::object_data saved_data{.object_id = db::null_id()};
 
             // 保存するデータのアトリビュートのidは削除する（rowidなのでいらない）
             erase_if_exists(changed_data.attributes, db::pk_id_field);
@@ -822,7 +820,7 @@ db::manager_fetch_result_t db::save(db::database &db, db::model const &model, db
 }
 
 db::manager_result_t db::remove_relations_at_save(db::database &db, db::model const &model, db::info const &info,
-                                                  db::object_save_data_vector_map_t const &changed_datas) {
+                                                  db::object_data_vector_map_t const &changed_datas) {
     // オブジェクトが削除された場合に逆関連があったらデータベース上で関連を外す
     db::value const next_save_id = info.next_save_id_value();
 
@@ -841,7 +839,7 @@ db::manager_result_t db::remove_relations_at_save(db::database &db, db::model co
         db::value_vector_t tgt_obj_ids;
         tgt_obj_ids.reserve(changed_entity_datas.size());
 
-        for (db::object_save_data const &data : changed_entity_datas) {
+        for (db::object_data const &data : changed_entity_datas) {
             auto const &action = data.attributes.at(db::action_field);
             if (action.get<db::text>() != db::remove_action) {
                 // 削除されていなければスキップ
@@ -879,7 +877,7 @@ db::manager_result_t db::remove_relations_at_save(db::database &db, db::model co
                 }
             }
 
-            db::object_load_data_vector_t inv_removed_datas;
+            db::object_data_vector_t inv_removed_datas;
 
             if (entity_attrs_map.size() > 0) {
                 // アトリビュートを元に関連を取得する
