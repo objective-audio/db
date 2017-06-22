@@ -1060,7 +1060,7 @@ void db::manager::revert(db::manager::revert_preparation_f preparation, db::mana
 
                     // アトリビュートのみのデータから関連のデータを加えてobject_dataを生成する
                     if (auto obj_datas_result =
-                            db::make_entity_object_load_datas(db, entity_name, rel_models, entity_attrs)) {
+                            db::make_entity_object_datas(db, entity_name, rel_models, entity_attrs)) {
                         reverted_datas.emplace(entity_name, std::move(obj_datas_result.value()));
                     } else {
                         reverted_attrs.clear();

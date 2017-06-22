@@ -94,9 +94,9 @@ namespace db {
 
     // エンティティ単位で、複数のオブジェクトのアトリビュートの値を元にobject_dataの配列を生成する
     // 内部でDBから関連先の情報を取得している
-    db::object_data_vector_result_t make_entity_object_load_datas(db::database &db, std::string const &entity_name,
-                                                                  db::relation_map_t const &rel_models,
-                                                                  db::value_map_vector_t const &entity_attrs);
+    db::object_data_vector_result_t make_entity_object_datas(db::database &db, std::string const &entity_name,
+                                                             db::relation_map_t const &rel_models,
+                                                             db::value_map_vector_t const &entity_attrs);
 }
 
 // setup

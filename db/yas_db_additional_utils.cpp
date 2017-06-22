@@ -382,9 +382,9 @@ db::manager_result_t db::make_error_result(db::manager_error_type const &error_t
 }
 
 // 単独のエンティティでオブジェクトのアトリビュートの値を元に関連の値をデータベースから取得してobject_dataのvectorを生成する
-db::object_data_vector_result_t db::make_entity_object_load_datas(db::database &db, std::string const &entity_name,
-                                                                  db::relation_map_t const &rel_models,
-                                                                  db::value_map_vector_t const &entity_attrs) {
+db::object_data_vector_result_t db::make_entity_object_datas(db::database &db, std::string const &entity_name,
+                                                             db::relation_map_t const &rel_models,
+                                                             db::value_map_vector_t const &entity_attrs) {
     db::object_data_vector_t entity_datas;
     entity_datas.reserve(entity_attrs.size());
 
@@ -633,7 +633,7 @@ db::manager_fetch_result_t db::fetch(db::database &db, db::model const &model, d
         if (auto select_result = db::select_last(db, sel_option, current_save_id)) {
             // アトリビュートのみのデータから関連のデータを加えてobject_dataを生成する
             auto &entity_attrs = select_result.value();
-            if (auto obj_datas_result = db::make_entity_object_load_datas(db, entity_name, rel_models, entity_attrs)) {
+            if (auto obj_datas_result = db::make_entity_object_datas(db, entity_name, rel_models, entity_attrs)) {
                 auto &entity_obj_datas = obj_datas_result.value();
                 if (entity_obj_datas.size() > 0) {
                     fetched_datas.emplace(entity_name, std::move(entity_obj_datas));
@@ -887,7 +887,7 @@ db::manager_result_t db::remove_relations_at_save(db::database &db, db::model co
 
                 auto const &rel_models = model.relations(inv_entity_name);
                 if (auto obj_datas_result =
-                        db::make_entity_object_load_datas(db, inv_entity_name, rel_models, entity_attrs_vec)) {
+                        db::make_entity_object_datas(db, inv_entity_name, rel_models, entity_attrs_vec)) {
                     // 同じidのオブジェクトは上書きかスキップする？
                     // すでにsaveしたものは被っていないはず
                     inv_removed_datas = std::move(obj_datas_result.value());
