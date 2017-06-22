@@ -431,6 +431,31 @@ using namespace yas;
     XCTAssertEqual(data.attributes.count(db::save_id_field), 0);
 }
 
+- (void)test_object_id_of_save_data {
+    // save_dataで返されるobject_idが共通になっているか
+    NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
+    db::model model((__bridge CFDictionaryRef)model_dict);
+
+    db::object obj_a{nullptr, model.entity("sample_a")};
+    obj_a.manageable().load_data({.object_id = db::make_stable_id(100)});
+
+    db::object obj_b{nullptr, model.entity("sample_b")};
+    obj_b.manageable().load_data({.object_id = db::make_stable_id(200)});
+
+    obj_a.add_relation_object("child", obj_b);
+
+    db::object_id_pool_t obj_id_pool;
+
+    db::object_data save_data_a = obj_a.save_data(obj_id_pool);
+    db::object_data save_data_b = obj_b.save_data(obj_id_pool);
+
+    db::object_id const &rel_b_id = save_data_a.relations.at("child").at(0);
+    db::object_id const &obj_b_id = save_data_b.object_id;
+
+    XCTAssertEqual(rel_b_id, obj_b_id);
+    XCTAssertEqual(rel_b_id.identifier(), obj_b_id.identifier());
+}
+
 - (void)test_save_data_same_object_id {
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
