@@ -289,12 +289,30 @@ db::id_vector_t db::to_stable_ids(db::value_vector_t const &values) {
     return to_vector<db::object_id>(values, [](db::value const &value) { return db::make_stable_id(value); });
 }
 
+db::id_vector_map_t db::to_stable_ids(db::value_vector_map_t const &values) {
+    db::id_vector_map_t result;
+    result.reserve(values.size());
+    for (auto const &pair : values) {
+        result.emplace(pair.first, db::to_stable_ids(pair.second));
+    }
+    return result;
+}
+
 db::id_vector_t db::copy_ids(db::id_vector_t const &ids) {
     return to_vector<db::object_id>(ids, [](db::object_id const &obj_id) { return obj_id.copy(); });
 }
 
 db::value_vector_t db::to_values(db::id_vector_t const &ids) {
     return to_vector<db::value>(ids, [](db::object_id const &obj_id) { return obj_id.stable_value(); });
+}
+
+db::value_vector_map_t db::to_values(db::id_vector_map_t const &ids) {
+    db::value_vector_map_t result;
+    result.reserve(ids.size());
+    for (auto const &pair : ids) {
+        result.emplace(pair.first, db::to_values(pair.second));
+    }
+    return result;
 }
 
 // 複数のエンティティのobject_dataのvectorから、const_objectのvectorを生成する
@@ -372,14 +390,14 @@ db::object_load_data_vector_result_t db::make_entity_object_load_datas(db::datab
     entity_datas.reserve(entity_attrs.size());
 
     for (db::value_map_t attrs : entity_attrs) {
-        db::value_vector_map_t rels;
+        db::id_vector_map_t rels;
 
         if (attrs.count(db::save_id_field) > 0) {
             auto const &save_id = attrs.at(db::save_id_field);
             auto const &src_obj_id = attrs.at(db::object_id_field);
 
             if (auto rel_data_result = db::select_relation_data(db, rel_models, save_id, src_obj_id)) {
-                rels = std::move(rel_data_result.value());
+                rels = db::to_stable_ids(rel_data_result.value());
             } else {
                 return db::object_load_data_vector_result_t{std::move(rel_data_result.error())};
             }
@@ -792,7 +810,7 @@ db::manager_fetch_result_t db::save(db::database &db, db::model const &model, db
                 auto rel_tgt_obj_ids = db::to_values(rel_pair.second);
                 if (auto insert_result =
                         db::insert_relations(db, rel_model, src_pk_id, src_obj_id, rel_tgt_obj_ids, next_save_id)) {
-                    saved_data.relations.emplace(rel_pair.first, std::move(rel_tgt_obj_ids));
+                    saved_data.relations.emplace(rel_pair.first, rel_pair.second);
                 } else {
                     return db::manager_fetch_result_t{std::move(insert_result.error())};
                 }
@@ -907,11 +925,11 @@ db::manager_result_t db::remove_relations_at_save(db::database &db, db::model co
                             // データベースに関連のデータを挿入する
                             auto const &rel_model = rel_models.at(rel_pair.first);
                             auto const rel_tgt_obj_ids = filter(rel_pair.second, [&tgt_obj_ids](auto const &obj_id) {
-                                return !contains(tgt_obj_ids, obj_id);
+                                return !contains(tgt_obj_ids, obj_id.stable_value());
                             });
                             if (rel_tgt_obj_ids.size() > 0) {
                                 if (auto ul = unless(db::insert_relations(db, rel_model, src_pk_id, src_obj_id,
-                                                                          rel_tgt_obj_ids, next_save_id))) {
+                                                                          db::to_values(rel_tgt_obj_ids), next_save_id))) {
                                     return std::move(ul.value);
                                 }
                             }

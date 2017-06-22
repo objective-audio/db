@@ -45,7 +45,7 @@ using namespace yas;
     db::object_id obj_id = db::make_stable_id(db::value{1});
     db::value_map_t attributes{std::make_pair("age", db::value{10}), std::make_pair("name", db::value{"name_val"}),
                                std::make_pair("weight", db::value{53.4}), std::make_pair("hoge", db::value{"hage"})};
-    db::value_vector_map_t relations{std::make_pair("child", db::value_vector_t{db::value{12}, db::value{34}})};
+    db::id_vector_map_t relations{std::make_pair("child", db::id_vector_t{db::make_stable_id(12), db::make_stable_id(34)})};
     db::object_load_data obj_data{
         .object_id = std::move(obj_id), .attributes = std::move(attributes), .relations = std::move(relations)};
 
@@ -70,7 +70,7 @@ using namespace yas;
     db::object_id obj_id = db::make_stable_id(db::value{1});
     db::value_map_t attributes{std::make_pair("age", db::value{10}), std::make_pair("name", db::value{"name_val"}),
                                std::make_pair("weight", db::value{53.4}), std::make_pair("hoge", db::value{"hage"})};
-    db::value_vector_map_t relations{std::make_pair("child", db::value_vector_t{db::value{12}, db::value{34}})};
+    db::id_vector_map_t relations{std::make_pair("child", db::id_vector_t{db::make_stable_id(12), db::make_stable_id(34)})};
     db::object_load_data obj_data{
         .object_id = std::move(obj_id), .attributes = std::move(attributes), .relations = std::move(relations)};
 
@@ -97,7 +97,7 @@ using namespace yas;
     db::value_map_t prev_attributes{std::make_pair("age", db::value{10}), std::make_pair("name", db::value{"name_val"}),
                                     std::make_pair("weight", db::value{53.4}),
                                     std::make_pair("hoge", db::value{"hage"})};
-    db::value_vector_map_t prev_relations{std::make_pair("child", db::value_vector_t{db::value{12}, db::value{34}})};
+    db::id_vector_map_t prev_relations{std::make_pair("child", db::id_vector_t{db::make_stable_id(12), db::make_stable_id(34)})};
     db::object_load_data prev_obj_data{.object_id = std::move(obj_id),
                                   .attributes = std::move(prev_attributes),
                                   .relations = std::move(prev_relations)};
@@ -106,8 +106,8 @@ using namespace yas;
 
     db::object_id post_obj_id = db::make_stable_id(db::value{1});
     db::value_map_t post_attributes{std::make_pair("age", db::value{543}), std::make_pair("hoge", db::value{"poke"})};
-    db::value_vector_map_t post_relations{
-        std::make_pair("child", db::value_vector_t{db::value{234}, db::value{567}, db::value{890}})};
+    db::id_vector_map_t post_relations{
+        std::make_pair("child", db::id_vector_t{db::make_stable_id(234), db::make_stable_id(567), db::make_stable_id(890)})};
     db::object_load_data post_obj_data{.object_id = std::move(post_obj_id),
                                   .attributes = std::move(post_attributes),
                                   .relations = std::move(post_relations)};
@@ -339,7 +339,7 @@ using namespace yas;
     db::object_load_data obj_data{
         .object_id = db::make_stable_id(db::value{0}),
         .attributes = db::value_map_t{std::make_pair(db::action_field, db::insert_action_value())},
-        .relations = db::value_vector_map_t{std::make_pair("child", db::value_vector_t{db::value{12}, db::value{34}})}};
+        .relations = db::id_vector_map_t{std::make_pair("child", db::id_vector_t{db::make_stable_id(12), db::make_stable_id(34)})}};
     obj.manageable().load_data(obj_data);
     XCTAssertEqual(obj.action(), db::insert_action_value());
 
@@ -655,7 +655,7 @@ using namespace yas;
     db::object_id obj_id = db::make_stable_id(db::value{1});
     db::value_map_t attributes{std::make_pair("age", db::value{10}), std::make_pair("name", db::value{"name_val"}),
                                std::make_pair("weight", db::value{53.4})};
-    db::value_vector_map_t relations{std::make_pair("child", db::value_vector_t{db::value{55}, db::value{66}})};
+    db::id_vector_map_t relations{std::make_pair("child", db::id_vector_t{db::make_stable_id(55), db::make_stable_id(66)})};
     db::object_load_data obj_data{
         .object_id = std::move(obj_id), .attributes = std::move(attributes), .relations = std::move(relations)};
 
