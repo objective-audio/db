@@ -640,7 +640,7 @@ db::manager_fetch_result_t db::fetch(db::database &db, db::model const &model, d
                 }
             } else {
                 return db::manager_fetch_result_t{db::manager_error{
-                    db::manager_error_type::make_object_load_datas_failed, std::move(obj_datas_result.error())}};
+                    db::manager_error_type::make_object_datas_failed, std::move(obj_datas_result.error())}};
             }
         } else {
             return db::manager_fetch_result_t{
@@ -892,7 +892,7 @@ db::manager_result_t db::remove_relations_at_save(db::database &db, db::model co
                     // すでにsaveしたものは被っていないはず
                     inv_removed_datas = std::move(obj_datas_result.value());
                 } else {
-                    return db::make_error_result(db::manager_error_type::make_object_load_datas_failed,
+                    return db::make_error_result(db::manager_error_type::make_object_datas_failed,
                                                  std::move(obj_datas_result.error()));
                 }
             }

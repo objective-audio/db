@@ -1065,7 +1065,7 @@ void db::manager::revert(db::manager::revert_preparation_f preparation, db::mana
                     } else {
                         reverted_attrs.clear();
                         reverted_datas.clear();
-                        state = db::make_error_result(db::manager_error_type::make_object_load_datas_failed,
+                        state = db::make_error_result(db::manager_error_type::make_object_datas_failed,
                                                       std::move(obj_datas_result.error()));
                         break;
                     }
