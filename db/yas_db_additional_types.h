@@ -17,8 +17,7 @@ namespace db {
     class const_object;
     class attribute;
     class relation;
-    class object_load_data;
-    class object_save_data;
+    class object_data;
     class entity;
     class index;
     class manager_error;
@@ -42,10 +41,8 @@ namespace db {
     using const_object_vector_map_t = std::unordered_map<std::string, db::const_object_vector_t>;
     using weak_object_map_t = std::unordered_map<db::object_id, weak<db::object>>;
     using weak_object_map_map_t = std::unordered_map<std::string, db::weak_object_map_t>;
-    using object_load_data_vector_t = std::vector<db::object_load_data>;
-    using object_load_data_vector_map_t = std::unordered_map<std::string, db::object_load_data_vector_t>;
-    using object_save_data_vector_t = std::vector<db::object_save_data>;
-    using object_save_data_vector_map_t = std::unordered_map<std::string, db::object_save_data_vector_t>;
+    using object_data_vector_t = std::vector<db::object_data>;
+    using object_data_vector_map_t = std::unordered_map<std::string, db::object_data_vector_t>;
 
     // for model
     using entity_map_t = std::unordered_map<std::string, db::entity>;
@@ -57,7 +54,7 @@ namespace db {
     static std::string const current_save_id_field = "cur_save_id";
     static std::string const last_save_id_field = "last_save_id";
 
-    using object_load_data_vector_result_t = result<db::object_load_data_vector_t, db::error>;
+    using object_data_vector_result_t = result<db::object_data_vector_t, db::error>;
     using value_vector_result_t = result<std::vector<db::value>, db::error>;
     using value_vector_map_result_t = result<db::value_vector_map_t, db::error>;
 
@@ -68,7 +65,7 @@ namespace db {
     using manager_const_vector_result_t = result<db::const_object_vector_map_t, db::manager_error>;
     using manager_const_map_result_t = result<db::const_object_map_map_t, db::manager_error>;
     using manager_info_result_t = result<db::info, db::manager_error>;
-    using manager_fetch_result_t = result<db::object_load_data_vector_map_t, db::manager_error>;
+    using manager_fetch_result_t = result<db::object_data_vector_map_t, db::manager_error>;
 
     // for entity
     using attribute_map_t = std::unordered_map<std::string, db::attribute>;
@@ -99,13 +96,7 @@ namespace db {
         updating,
     };
 
-    struct object_load_data {
-        db::object_id object_id;
-        db::value_map_t attributes;
-        db::id_vector_map_t relations;
-    };
-
-    struct object_save_data {
+    struct object_data {
         db::object_id object_id;
         db::value_map_t attributes;
         db::id_vector_map_t relations;

@@ -14,7 +14,7 @@ namespace db {
         struct impl : protocol::impl {
             virtual void set_status(db::object_status const &) = 0;
             virtual void load_insertion_data() = 0;
-            virtual void load_data(db::object_load_data const &obj_data, bool const force) = 0;
+            virtual void load_data(db::object_data const &obj_data, bool const force) = 0;
             virtual void load_save_id(db::value const &save_id) = 0;
             virtual void clear_data() = 0;
         };
@@ -33,7 +33,7 @@ namespace db {
             impl_ptr<impl>()->load_insertion_data();
         }
 
-        void load_data(db::object_load_data const &obj_data, bool const force = false) {
+        void load_data(db::object_data const &obj_data, bool const force = false) {
             impl_ptr<impl>()->load_data(obj_data, force);
         }
 
