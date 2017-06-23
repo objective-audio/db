@@ -33,7 +33,7 @@ db_controller::db_controller() : _manager(nullptr), _objects() {
 }
 
 void db_controller::setup(db::manager::completion_f completion) {
-    _begin_processing();
+    this->_begin_processing();
 
     auto model_dict = make_objc_ptr<NSDictionary *>([]() {
         return @{
@@ -54,7 +54,7 @@ void db_controller::setup(db::manager::completion_f completion) {
     db::model model{(__bridge CFDictionaryRef)model_dict.object()};
 
     for (auto const &pair : model.entities()) {
-        _objects.emplace(pair.first, db::object_vector_t{});
+        this->_objects.emplace(pair.first, db::object_vector_t{});
     }
 
     auto path = make_objc_ptr<NSString *>([]() {
@@ -62,9 +62,9 @@ void db_controller::setup(db::manager::completion_f completion) {
         return [paths.firstObject stringByAppendingPathComponent:@"db.sqlite"];
     });
 
-    _manager = db::manager{to_string((__bridge CFStringRef)path.object()), model};
+    this->_manager = db::manager{to_string((__bridge CFStringRef)path.object()), model};
 
-    _manager.setup([weak = to_weak(shared_from_this()), completion = std::move(completion)](auto setup_result) {
+    this->_manager.setup([weak = to_weak(shared_from_this()), completion = std::move(completion)](auto setup_result) {
         if (auto shared = weak.lock()) {
             if (setup_result) {
                 shared->_update_objects([
@@ -86,7 +86,7 @@ void db_controller::setup(db::manager::completion_f completion) {
 
     auto weak_manager = to_weak(_manager);
 
-    _observer = _manager.subject().make_wild_card_observer([&controller = *this](auto const &context) {
+    this->_observer = this->_manager.subject().make_wild_card_observer([&controller = *this](auto const &context) {
         auto const &key = context.key;
         auto const &change_info = context.value;
 
@@ -110,32 +110,32 @@ void db_controller::setup(db::manager::completion_f completion) {
 }
 
 void db_controller::add_temporary(entity const &entity) {
-    if (_processing) {
+    if (this->_processing) {
         return;
     }
 
-    auto object = _manager.insert_object(to_entity_name(entity));
-    auto &objects = _objects_at(entity);
+    auto object = this->_manager.insert_object(to_entity_name(entity));
+    auto &objects = this->_objects_at(entity);
 
     auto idx = objects.size();
     objects.push_back(object);
-    _subject.notify(method::object_inserted, {object, db::value{static_cast<db::integer::type>(idx)}});
+    this->_subject.notify(method::object_inserted, {object, db::value{static_cast<db::integer::type>(idx)}});
 }
 
 void db_controller::add(entity const &entity) {
-    if (_processing) {
+    if (this->_processing) {
         return;
     }
 
-    _begin_processing();
+    this->_begin_processing();
 
-    _manager.suspend();
+    this->_manager.suspend();
 
-    _manager.save([](db::manager_map_result_t result) {});
+    this->_manager.save([](db::manager_map_result_t result) {});
 
     auto inserted_object = std::make_shared<db::object>(db::null_object());
 
-    _manager.insert_objects(
+    this->_manager.insert_objects(
         [entity]() {
             auto uuid = make_cf_ref(CFUUIDCreate(nullptr));
             auto uuid_str = make_cf_ref(CFUUIDCreateString(nullptr, uuid.object()));
@@ -170,14 +170,14 @@ void db_controller::add(entity const &entity) {
         }
     });
 
-    _manager.resume();
+    this->_manager.resume();
 }
 
 void db_controller::remove(entity const &entity, std::size_t const &idx) {
     auto &objects = _objects_at(entity);
 
     if (objects.size() > idx) {
-        if (_processing) {
+        if (this->_processing) {
             return;
         }
 
@@ -186,23 +186,23 @@ void db_controller::remove(entity const &entity, std::size_t const &idx) {
 }
 
 void db_controller::undo() {
-    if (_processing) {
+    if (this->_processing) {
         return;
     }
 
-    if (!can_undo()) {
+    if (!this->can_undo()) {
         return;
     }
 
-    _begin_processing();
+    this->_begin_processing();
 
     auto const undo_id = current_save_id() - 1;
 
-    _manager.suspend();
+    this->_manager.suspend();
 
-    _manager.reset([](auto result) mutable {});
+    this->_manager.reset([](auto result) mutable {});
 
-    _manager.revert([undo_id]() { return undo_id; }, [](auto revert_result) {});
+    this->_manager.revert([undo_id]() { return undo_id; }, [](auto revert_result) {});
 
     this->_update_objects([weak = to_weak(shared_from_this())](auto update_result) {
         if (auto shared = weak.lock()) {
@@ -215,23 +215,23 @@ void db_controller::undo() {
 }
 
 void db_controller::redo() {
-    if (_processing) {
+    if (this->_processing) {
         return;
     }
 
-    if (!can_redo()) {
+    if (!this->can_redo()) {
         return;
     }
 
-    _begin_processing();
+    this->_begin_processing();
 
     auto const redo_id = current_save_id() + 1;
 
-    _manager.suspend();
+    this->_manager.suspend();
 
-    _manager.reset([](auto result) mutable {});
+    this->_manager.reset([](auto result) mutable {});
 
-    _manager.revert([redo_id]() { return redo_id; }, [](auto revert_result) {});
+    this->_manager.revert([redo_id]() { return redo_id; }, [](auto revert_result) {});
 
     this->_update_objects([weak = to_weak(shared_from_this())](auto update_result) {
         if (auto shared = weak.lock()) {
@@ -240,11 +240,11 @@ void db_controller::redo() {
         }
     });
 
-    _manager.resume();
+    this->_manager.resume();
 }
 
 void db_controller::clear() {
-    if (_processing) {
+    if (this->_processing) {
         return;
     }
 
@@ -252,11 +252,11 @@ void db_controller::clear() {
         return;
     }
 
-    _begin_processing();
+    this->_begin_processing();
 
-    _manager.suspend();
+    this->_manager.suspend();
 
-    _manager.clear([](auto clear_result) {});
+    this->_manager.clear([](auto clear_result) {});
 
     this->_update_objects([weak = to_weak(shared_from_this())](auto update_result) {
         if (auto shared = weak.lock()) {
@@ -265,25 +265,25 @@ void db_controller::clear() {
         }
     });
 
-    _manager.resume();
+    this->_manager.resume();
 }
 
 void db_controller::purge() {
-    if (_processing) {
+    if (this->_processing) {
         return;
     }
 
-    if (!can_purge()) {
+    if (!this->can_purge()) {
         return;
     }
 
-    _begin_processing();
+    this->_begin_processing();
 
-    _manager.suspend();
+    this->_manager.suspend();
 
-    _manager.save([](db::manager_map_result_t result) {});
+    this->_manager.save([](db::manager_map_result_t result) {});
 
-    _manager.purge([](auto purge_result) {});
+    this->_manager.purge([](auto purge_result) {});
 
     this->_update_objects([weak = to_weak(shared_from_this())](auto update_result) {
         if (auto shared = weak.lock()) {
@@ -292,23 +292,23 @@ void db_controller::purge() {
         }
     });
 
-    _manager.resume();
+    this->_manager.resume();
 }
 
 void db_controller::save_changed() {
-    if (_processing) {
+    if (this->_processing) {
         return;
     }
 
-    if (!has_changed()) {
+    if (!this->has_changed()) {
         return;
     }
 
-    _begin_processing();
+    this->_begin_processing();
 
-    _manager.suspend();
+    this->_manager.suspend();
 
-    _manager.save([](db::manager_map_result_t result) {});
+    this->_manager.save([](db::manager_map_result_t result) {});
 
     this->_update_objects([weak = to_weak(shared_from_this())](auto update_result) {
         if (auto shared = weak.lock()) {
@@ -317,23 +317,23 @@ void db_controller::save_changed() {
         }
     });
 
-    _manager.resume();
+    this->_manager.resume();
 }
 
 void db_controller::cancel_changed() {
-    if (_processing) {
+    if (this->_processing) {
         return;
     }
 
-    if (!has_changed()) {
+    if (!this->has_changed()) {
         return;
     }
 
-    _begin_processing();
+    this->_begin_processing();
 
-    _manager.suspend();
+    this->_manager.suspend();
 
-    _manager.reset([](auto result) mutable {});
+    this->_manager.reset([](auto result) mutable {});
 
     this->_update_objects([weak = to_weak(shared_from_this())](auto update_result) {
         if (auto shared = weak.lock()) {
@@ -342,55 +342,55 @@ void db_controller::cancel_changed() {
         }
     });
 
-    _manager.resume();
+    this->_manager.resume();
 }
 
 bool db_controller::can_add() const {
-    return !has_changed();
+    return !this->has_changed();
 }
 
 bool db_controller::can_undo() const {
-    return !has_changed() && current_save_id() > 0;
+    return !this->has_changed() && this->current_save_id() > 0;
 }
 
 bool db_controller::can_redo() const {
-    return !has_changed() && current_save_id() < last_save_id();
+    return !this->has_changed() && this->current_save_id() < this->last_save_id();
 }
 
 bool db_controller::can_clear() const {
-    return last_save_id() != 0;
+    return this->last_save_id() != 0;
 }
 
 bool db_controller::can_purge() const {
-    return !has_changed() && last_save_id() > 1;
+    return !this->has_changed() && this->last_save_id() > 1;
 }
 
 bool db_controller::has_changed() const {
-    return _manager.has_changed_objects() || _manager.has_inserted_objects();
+    return this->_manager.has_changed_objects() || this->_manager.has_inserted_objects();
 }
 
 db::object const &db_controller::object(entity const &entity, std::size_t const idx) const {
-    return _objects.at(to_entity_name(entity)).at(idx);
+    return this->_objects.at(to_entity_name(entity)).at(idx);
 }
 
 std::size_t db_controller::object_count(entity const &entity) const {
-    return _objects.at(to_entity_name(entity)).size();
+    return this->_objects.at(to_entity_name(entity)).size();
 }
 
 db::integer::type const &db_controller::current_save_id() const {
-    return _manager.current_save_id().get<db::integer>();
+    return this->_manager.current_save_id().get<db::integer>();
 }
 
 db::integer::type const &db_controller::last_save_id() const {
-    return _manager.last_save_id().get<db::integer>();
+    return this->_manager.last_save_id().get<db::integer>();
 }
 
 db_controller::subject_t &db_controller::subject() {
-    return _subject;
+    return this->_subject;
 }
 
 bool db_controller::is_processing() const {
-    return _processing;
+    return this->_processing;
 }
 
 db_controller::entity db_controller::entity_for_name(std::string const &entity_name) {
@@ -404,20 +404,20 @@ db_controller::entity db_controller::entity_for_name(std::string const &entity_n
 }
 
 db::object_vector_t &db_controller::_objects_at(db_controller::entity const &entity) {
-    return _objects.at(to_entity_name(entity));
+    return this->_objects.at(to_entity_name(entity));
 }
 
 void db_controller::_update_objects(std::function<void(db::manager_result_t)> &&completion) {
-    _manager.suspend();
+    this->_manager.suspend();
 
     auto results = std::make_shared<std::vector<db::manager_result_t>>();
 
-    for (auto const &entity_pair : _manager.model().entities()) {
+    for (auto const &entity_pair : this->_manager.model().entities()) {
         auto const entity = this->entity_for_name(entity_pair.second.name);
         this->_update_objects(entity, [results](auto result) { results->emplace_back(std::move(result)); });
     }
 
-    _manager.execute([completion = std::move(completion), results](operation const &) {
+    this->_manager.execute([completion = std::move(completion), results](operation const &) {
         for (auto const &result : *results) {
             if (!result) {
                 completion(result);
@@ -427,15 +427,15 @@ void db_controller::_update_objects(std::function<void(db::manager_result_t)> &&
         completion(db::manager_result_t{nullptr});
     });
 
-    _manager.resume();
+    this->_manager.resume();
 }
 
 void db_controller::_update_objects(entity const &entity, std::function<void(db::manager_result_t)> &&completion) {
-    _manager.suspend();
+    this->_manager.suspend();
 
     auto const entity_name = to_entity_name(entity);
 
-    _manager.fetch_objects(
+    this->_manager.fetch_objects(
         [entity_name]() {
             return db::to_fetch_option(
                 db::select_option{.table = entity_name, .field_orders = {{db::object_id_field, db::order::ascending}}});
@@ -458,17 +458,17 @@ void db_controller::_update_objects(entity const &entity, std::function<void(db:
             completion(std::move(result));
         });
 
-    _manager.resume();
+    this->_manager.resume();
 }
 
 void db_controller::_begin_processing() {
-    _processing = true;
+    this->_processing = true;
 
     subject().notify(method::processing_changed, {nullptr, db::value{static_cast<db::integer::type>(true)}});
 }
 
 void db_controller::_end_processing() {
-    _processing = false;
+    this->_processing = false;
 
     subject().notify(method::processing_changed, {nullptr, db::value{static_cast<db::integer::type>(false)}});
 }
