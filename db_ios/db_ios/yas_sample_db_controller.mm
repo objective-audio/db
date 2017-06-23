@@ -127,6 +127,10 @@ void db_controller::add(entity const &entity) {
         return;
     }
 
+    if (!this->can_add()) {
+        return;
+    }
+
     this->_begin_processing();
 
     this->_manager.suspend();
