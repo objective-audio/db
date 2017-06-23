@@ -4,8 +4,7 @@
 
 #pragma once
 
-#include "yas_db_object_id.h"
-#include "yas_stl_utils.h"
+#include "yas_base.h"
 #include <unordered_map>
 #include <functional>
 
