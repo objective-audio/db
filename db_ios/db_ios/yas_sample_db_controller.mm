@@ -147,12 +147,14 @@ void db_controller::add(entity const &entity) {
 
             return db::value_map_vector_map_t{{to_entity_name(entity), {std::move(obj)}}};
         },
-        [inserted_object, entity](auto insert_result) mutable {
-            if (insert_result) {
-                auto objects = insert_result.value().at(to_entity_name(entity));
+        [inserted_object, entity](auto result) mutable {
+            if (result) {
+                auto objects = result.value().at(to_entity_name(entity));
                 if (objects.size() > 0) {
                     *inserted_object = objects.at(0);
                 }
+            } else {
+                std::runtime_error(to_string(result.error()));
             }
         });
 
@@ -204,11 +206,24 @@ void db_controller::undo() {
 
     this->_manager.suspend();
 
-    this->_manager.reset([](auto result) mutable {});
+    this->_manager.reset([](auto result) {
+        if (!result) {
+            std::runtime_error(to_string(result.error()));
+        }
+    });
 
-    this->_manager.revert([undo_id]() { return undo_id; }, [](auto revert_result) {});
+    this->_manager.revert([undo_id]() { return undo_id; },
+                          [](auto result) {
+                              if (!result) {
+                                  std::runtime_error(to_string(result.error()));
+                              }
+                          });
 
-    this->_update_objects([weak = to_weak(shared_from_this())](auto update_result) {
+    this->_update_objects([weak = to_weak(shared_from_this())](auto result) {
+        if (!result) {
+            std::runtime_error(to_string(result.error()));
+        }
+
         if (auto shared = weak.lock()) {
             shared->_end_processing();
             shared->_subject.notify(method::objects_updated);
@@ -233,11 +248,24 @@ void db_controller::redo() {
 
     this->_manager.suspend();
 
-    this->_manager.reset([](auto result) mutable {});
+    this->_manager.reset([](auto result) {
+        if (!result) {
+            std::runtime_error(to_string(result.error()));
+        }
+    });
 
-    this->_manager.revert([redo_id]() { return redo_id; }, [](auto revert_result) {});
+    this->_manager.revert([redo_id]() { return redo_id; },
+                          [](auto result) {
+                              if (!result) {
+                                  std::runtime_error(to_string(result.error()));
+                              }
+                          });
 
-    this->_update_objects([weak = to_weak(shared_from_this())](auto update_result) {
+    this->_update_objects([weak = to_weak(shared_from_this())](auto result) {
+        if (!result) {
+            std::runtime_error(to_string(result.error()));
+        }
+
         if (auto shared = weak.lock()) {
             shared->_end_processing();
             shared->_subject.notify(method::objects_updated);
@@ -260,7 +288,11 @@ void db_controller::clear() {
 
     this->_manager.suspend();
 
-    this->_manager.clear([](auto clear_result) {});
+    this->_manager.clear([](db::manager_result_t result) {
+        if (!result) {
+            std::runtime_error(to_string(result.error()));
+        }
+    });
 
     this->_update_objects([weak = to_weak(shared_from_this())](auto update_result) {
         if (auto shared = weak.lock()) {
@@ -285,9 +317,17 @@ void db_controller::purge() {
 
     this->_manager.suspend();
 
-    this->_manager.save([](db::manager_map_result_t result) {});
+    this->_manager.save([](db::manager_map_result_t result) {
+        if (!result) {
+            std::runtime_error(to_string(result.error()));
+        }
+    });
 
-    this->_manager.purge([](auto purge_result) {});
+    this->_manager.purge([](db::manager_result_t result) {
+        if (!result) {
+            std::runtime_error(to_string(result.error()));
+        }
+    });
 
     this->_update_objects([weak = to_weak(shared_from_this())](auto update_result) {
         if (auto shared = weak.lock()) {
@@ -312,7 +352,11 @@ void db_controller::save_changed() {
 
     this->_manager.suspend();
 
-    this->_manager.save([](db::manager_map_result_t result) {});
+    this->_manager.save([](db::manager_map_result_t result) {
+        if (!result) {
+            std::runtime_error(to_string(result.error()));
+        }
+    });
 
     this->_update_objects([weak = to_weak(shared_from_this())](auto update_result) {
         if (auto shared = weak.lock()) {
@@ -337,7 +381,11 @@ void db_controller::cancel_changed() {
 
     this->_manager.suspend();
 
-    this->_manager.reset([](auto result) mutable {});
+    this->_manager.reset([](auto result) mutable {
+        if (!result) {
+            std::runtime_error(to_string(result.error()));
+        }
+    });
 
     this->_update_objects([weak = to_weak(shared_from_this())](auto update_result) {
         if (auto shared = weak.lock()) {
