@@ -58,9 +58,8 @@ namespace sample {
         auto const &object = _db_controller.lock()->object(_entity, indexPath.row);
         auto const &name = object.attribute_value("name");
         [normalCell setupWithTitle:"object_id:" + to_string(object.object_id()) + " name:" + to_string(name)];
-        normalCell.selectionStyle =
-            !object.is_temporary() ? UITableViewCellSelectionStyleDefault : UITableViewCellSelectionStyleNone;
-        normalCell.textLabel.textColor = !object.is_temporary() ? [UIColor blackColor] : [UIColor lightGrayColor];
+        normalCell.selectionStyle = UITableViewCellSelectionStyleDefault;
+        normalCell.textLabel.textColor = [UIColor blackColor];
     }
 
     return cell;
@@ -77,13 +76,11 @@ namespace sample {
 
     if (auto db_controller = _db_controller.lock()) {
         auto const &object = db_controller->object(_entity, indexPath.row);
-        if (!object.is_temporary()) {
-            _selected_handler(object);
+        _selected_handler(object);
 
-            [self.navigationController popViewControllerAnimated:YES];
+        [self.navigationController popViewControllerAnimated:YES];
 
-            _selected_handler = nullptr;
-        }
+        _selected_handler = nullptr;
     }
 }
 
