@@ -41,4 +41,5 @@ namespace db {
     };
 }
 std::string to_string(db::error_type const &);
+std::string to_string(db::error const &);
 }
