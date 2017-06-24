@@ -61,4 +61,5 @@ namespace db {
     };
 }
 std::string to_string(db::manager_error_type const &);
+std::string to_string(db::manager_error const &);
 }
