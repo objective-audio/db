@@ -86,3 +86,11 @@ std::string yas::to_string(db::manager_error_type const &error) {
     }
     return std::string();
 }
+
+std::string yas::to_string(db::manager_error const &error) {
+    if (error) {
+        return "{type:" + to_string(error.type()) + ", database_error" + to_string(error.database_error()) + "}";
+    } else {
+        return "null";
+    }
+}
