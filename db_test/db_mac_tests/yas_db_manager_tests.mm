@@ -280,7 +280,9 @@ using namespace yas;
     [self waitForExpectationsWithTimeout:1.0 handler:nil];
 }
 
-- (void)test_set_relation_to_inserted_object {
+- (void)test_set_relation_to_temporary_object {
+    // temporaryなオブジェクトのrelationにtemporaryなオブジェクトをセットして保存するテスト
+
     db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
 
@@ -333,6 +335,60 @@ using namespace yas;
     XCTAssertEqual(object_a, result_object_a);
     XCTAssertTrue(result_objects.at("sample_b").count(object_b1.object_id().stable()) > 0);
     XCTAssertTrue(result_objects.at("sample_b").count(object_b2.object_id().stable()) > 0);
+}
+
+- (void)test_set_temporary_relation_to_saved_object {
+    // stableなオブジェクトのrelationにtemporaryなオブジェクトをセットして保存するテスト
+
+    db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
+    auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
+
+    {
+        XCTestExpectation *setupExp = [self expectationWithDescription:@"setup"];
+
+        manager.setup([self, &manager, &setupExp](auto result) {
+            XCTAssertTrue(result);
+
+            [setupExp fulfill];
+        });
+
+        [self waitForExpectations:@[setupExp] timeout:10.0];
+    }
+
+    auto object_a = manager.insert_object("sample_a");
+
+    {
+        XCTestExpectation *saveExp = [self expectationWithDescription:@"save"];
+
+        manager.save([self, &saveExp](db::manager_map_result_t result) {
+            XCTAssertTrue(result);
+
+            [saveExp fulfill];
+        });
+
+        [self waitForExpectations:@[saveExp] timeout:10.0];
+    }
+
+    XCTAssertTrue(object_a.object_id().is_stable());
+
+    auto object_b = manager.insert_object("sample_b");
+
+    object_a.add_relation_object("child", object_b);
+
+    {
+        XCTestExpectation *saveExp = [self expectationWithDescription:@"save"];
+
+        manager.save([self, &saveExp](db::manager_map_result_t result) {
+            XCTAssertTrue(result);
+
+            [saveExp fulfill];
+        });
+
+        [self waitForExpectations:@[saveExp] timeout:10.0];
+    }
+
+    XCTAssertTrue(object_a.relation_id("child", 0).is_stable());
+    XCTAssertEqual(object_a.relation_object_at("child", 0).object_id(), object_b.object_id());
 }
 
 - (void)test_object_relation_objects {
