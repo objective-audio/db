@@ -403,7 +403,6 @@ db::object_data_vector_result_t db::make_entity_object_datas(db::database &db, s
         }
 
         db::object_id obj_id = db::make_stable_id(attrs.at(db::object_id_field));
-        attrs.erase(db::object_id_field);
 
         entity_datas.emplace_back(db::object_data{
             .object_id = std::move(obj_id), .attributes = std::move(attrs), .relations = std::move(rels)});
@@ -598,7 +597,6 @@ db::manager_fetch_result_t db::insert(db::database &db, db::model const &model, 
 
                 auto &attributes = select_result.value().at(0);
                 db::object_id obj_id = db::make_stable_id(attributes.at(db::object_id_field));
-                attributes.erase(db::object_id_field);
                 inserted_datas.at(entity_name)
                     .emplace_back(db::object_data{.object_id = std::move(obj_id), .attributes = std::move(attributes)});
             } else {
@@ -763,7 +761,6 @@ db::manager_fetch_result_t db::save(db::database &db, db::model const &model, db
             // データベースにアトリビュートのデータを挿入する
             if (auto update_result = db.execute_update(entity_insert_sql, changed_data.attributes)) {
                 saved_data.attributes = changed_data.attributes;
-                saved_data.attributes.erase(db::object_id_field);
             } else {
                 return db::manager_fetch_result_t{db::manager_error{db::manager_error_type::insert_attributes_failed,
                                                                     std::move(update_result.error())}};
