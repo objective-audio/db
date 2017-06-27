@@ -76,38 +76,52 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
         return object;
     }
 
-    // 1つのオブジェクトにデータベースから読み込まれたデータをロードする
-    bool load_and_cache_object_from_data(db::object &object, std::string const &entity_name,
-                                         db::object_data const &data, bool const force) {
-        auto manager = cast<db::manager>();
-
-        if (data.object_id) {
-            if (object) {
-                // 挿入した場合
-                db::object_id obj_id = object.object_id();
-                obj_id.set_stable(data.object_id.stable_value());
-                this->_cached_objects.set(entity_name, obj_id, object);
-            } else {
-                object = this->_cached_objects.get_or_create(entity_name, data.object_id, [&manager, &entity_name]() {
-                    return db::object{manager, manager.model().entity(entity_name)};
-                });
-            }
-
-            // オブジェクトにデータをロード
-            object.manageable().load_data(data, force);
-
-            return true;
-        } else {
-            throw "object_id not found.";
+    db::object load_and_cache_object(std::string const &entity_name, db::object_data const &data, bool const force,
+                                     bool const is_save) {
+        if (!data.object_id) {
+            throw std::invalid_argument("object_id not found.");
         }
 
-        return false;
+        auto object = db::null_object();
+
+        if (is_save && this->_inserted_objects.count(entity_name) > 0) {
+            // セーブ時で仮に挿入されたオブジェクトがある場合にオブジェクトを取得
+            auto &entity_objects = this->_inserted_objects.at(entity_name);
+            if (entity_objects.size() > 0) {
+                auto const &temporary_id = data.object_id.temporary();
+                if (entity_objects.count(temporary_id) > 0) {
+                    object = entity_objects.at(temporary_id);
+                    entity_objects.erase(temporary_id);
+
+                    db::object_id obj_id = object.object_id();
+                    obj_id.set_stable(data.object_id.stable_value());
+                    this->_cached_objects.set(entity_name, obj_id, object);
+
+                    if (entity_objects.size() == 0) {
+                        this->_inserted_objects.erase(entity_name);
+                    }
+                }
+            }
+        }
+
+        if (!object) {
+            // 挿入でなければobjectはnullなので、キャッシュに追加または取得する
+            auto manager = cast<db::manager>();
+            object = this->_cached_objects.get_or_create(entity_name, data.object_id, [&manager, &entity_name]() {
+                return db::object{manager, manager.model().entity(entity_name)};
+            });
+        }
+
+        // オブジェクトにデータをロード
+        object.manageable().load_data(data, force);
+
+        return object;
     }
 
     // 複数のエンティティのデータをロードしてキャッシュする
     // ロードされたオブエジェクトはエンティティごとに順番がある状態で返される
-    db::object_vector_map_t load_and_cache_vector_object_from_datas(db::object_data_vector_map_t const &datas,
-                                                                    bool const force, bool const is_save) {
+    db::object_vector_map_t load_and_cache_object_vector(db::object_data_vector_map_t const &datas, bool const force,
+                                                         bool const is_save) {
         db::object_vector_map_t loaded_objects;
         for (auto const &entity_pair : datas) {
             auto const &entity_name = entity_pair.first;
@@ -116,30 +130,9 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
             db::object_vector_t objects;
             objects.reserve(entity_datas.size());
 
-            for (auto const &data : entity_datas) {
-                auto object = db::null_object();
-                if (is_save && this->_inserted_objects.count(entity_name) > 0) {
-                    // セーブ時で仮に挿入されたオブジェクトがある場合にオブジェクトを取得
-                    auto &entity_objects = this->_inserted_objects.at(entity_name);
-                    if (entity_objects.size() > 0) {
-                        auto const &temporary_id = data.object_id.temporary();
-                        if (entity_objects.count(temporary_id) > 0) {
-                            object = entity_objects.at(temporary_id);
-                            entity_objects.erase(temporary_id);
-                        } else {
-                            throw std::runtime_error("inserted object not found.");
-                        }
-
-                        if (entity_objects.size() == 0) {
-                            this->_inserted_objects.erase(entity_name);
-                        }
-                    }
-                }
-
-                // オブジェクトにデータをロード。挿入でなければobjectはnullで、必要に応じて内部でキャッシュに追加される
-                if (this->load_and_cache_object_from_data(object, entity_name, data, force)) {
-                    objects.emplace_back(std::move(object));
-                }
+            for (db::object_data const &data : entity_datas) {
+                auto object = this->load_and_cache_object(entity_name, data, force, is_save);
+                objects.emplace_back(std::move(object));
             }
 
             loaded_objects.emplace(entity_name, std::move(objects));
@@ -149,8 +142,8 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
 
     // 複数のエンティティのデータをロードしてキャッシュする
     // ロードされたオブジェクトはエンティティごとにobject_idをキーとしたmapで返される
-    db::object_map_map_t load_and_cache_map_object_from_datas(db::object_data_vector_map_t const &datas,
-                                                              bool const force, bool const is_save) {
+    db::object_map_map_t load_and_cache_object_map(db::object_data_vector_map_t const &datas, bool const force,
+                                                   bool const is_save) {
         db::object_map_map_t loaded_objects;
         for (auto const &entity_pair : datas) {
             auto const &entity_name = entity_pair.first;
@@ -160,28 +153,8 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
             objects.reserve(entity_datas.size());
 
             for (auto const &data : entity_datas) {
-                auto object = db::null_object();
-                if (is_save && this->_inserted_objects.count(entity_name) > 0) {
-                    // セーブ時で仮に挿入されたオブジェクトがある場合にオブジェクトを取得
-                    auto &entity_objects = this->_inserted_objects.at(entity_name);
-                    if (entity_objects.size() > 0) {
-                        auto const &temporary_id = data.object_id.temporary();
-                        if (entity_objects.count(temporary_id) > 0) {
-                            object = entity_objects.at(temporary_id);
-                            entity_objects.erase(temporary_id);
-                        } else {
-                            throw std::runtime_error("inserted object not found.");
-                        }
-
-                        if (entity_objects.size() == 0) {
-                            this->_inserted_objects.erase(entity_name);
-                        }
-                    }
-                }
-
-                if (this->load_and_cache_object_from_data(object, entity_name, data, force)) {
-                    objects.emplace(object.object_id().stable(), std::move(object));
-                }
+                auto object = this->load_and_cache_object(entity_name, data, force, is_save);
+                objects.emplace(object.object_id().stable(), std::move(object));
             }
 
             loaded_objects.emplace(entity_name, std::move(objects));
@@ -719,7 +692,7 @@ void db::manager::reset(db::manager::completion_f completion, operation_option_t
             fetched_datas = std::move(fetched_datas)
         ]() mutable {
             if (state) {
-                manager.impl_ptr<impl>()->load_and_cache_map_object_from_datas(fetched_datas, true, false);
+                manager.impl_ptr<impl>()->load_and_cache_object_map(fetched_datas, true, false);
                 manager.impl_ptr<impl>()->erase_changed_objects(fetched_datas);
                 manager.impl_ptr<impl>()->_inserted_objects.clear();
                 completion(db::manager_result_t{nullptr});
@@ -818,7 +791,7 @@ void db::manager::insert_objects(db::manager::insert_preparation_values_f prepar
             if (state) {
                 manager.impl_ptr<impl>()->set_db_info(std::move(db_info));
                 auto loaded_objects =
-                    manager.impl_ptr<impl>()->load_and_cache_vector_object_from_datas(inserted_datas, false, false);
+                    manager.impl_ptr<impl>()->load_and_cache_object_vector(inserted_datas, false, false);
                 completion(db::manager_vector_result_t{std::move(loaded_objects)});
             } else {
                 completion(db::manager_vector_result_t{std::move(state.error())});
@@ -839,7 +812,7 @@ void db::manager::fetch_objects(db::manager::fetch_preparation_option_f preparat
         ]() mutable {
             if (state) {
                 auto loaded_objects =
-                    manager.impl_ptr<impl>()->load_and_cache_vector_object_from_datas(fetched_datas, false, false);
+                    manager.impl_ptr<impl>()->load_and_cache_object_vector(fetched_datas, false, false);
                 completion(db::manager_vector_result_t{std::move(loaded_objects)});
             } else {
                 completion(db::manager_vector_result_t{std::move(state.error())});
@@ -883,8 +856,7 @@ void db::manager::fetch_objects(db::manager::fetch_preparation_ids_f preparation
             fetched_datas = std::move(fetched_datas)
         ]() mutable {
             if (state) {
-                auto loaded_objects =
-                    manager.impl_ptr<impl>()->load_and_cache_map_object_from_datas(fetched_datas, false, false);
+                auto loaded_objects = manager.impl_ptr<impl>()->load_and_cache_object_map(fetched_datas, false, false);
                 completion(db::manager_map_result_t{std::move(loaded_objects)});
             } else {
                 completion(db::manager_map_result_t{std::move(state.error())});
@@ -984,8 +956,7 @@ void db::manager::save(db::manager::map_completion_f completion, operation_optio
         ]() mutable {
             if (state) {
                 manager.impl_ptr<impl>()->set_db_info(std::move(db_info));
-                auto loaded_objects =
-                    manager.impl_ptr<impl>()->load_and_cache_map_object_from_datas(saved_datas, false, true);
+                auto loaded_objects = manager.impl_ptr<impl>()->load_and_cache_object_map(saved_datas, false, true);
                 manager.impl_ptr<impl>()->erase_changed_objects(saved_datas);
                 completion(db::manager_map_result_t{std::move(loaded_objects)});
             } else {
@@ -1101,7 +1072,7 @@ void db::manager::revert(db::manager::revert_preparation_f preparation, db::mana
             if (state) {
                 manager.impl_ptr<impl>()->set_db_info(std::move(db_info));
                 auto loaded_objects =
-                manager.impl_ptr<impl>()->load_and_cache_vector_object_from_datas(reverted_datas, false, false);
+                manager.impl_ptr<impl>()->load_and_cache_object_vector(reverted_datas, false, false);
                 completion(db::manager_vector_result_t{std::move(loaded_objects)});
             } else {
                 completion(db::manager_vector_result_t{std::move(state.error())});
