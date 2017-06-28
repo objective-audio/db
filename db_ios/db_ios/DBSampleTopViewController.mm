@@ -25,8 +25,8 @@ namespace sample {
     };
 
     enum class top_action_row : std::size_t {
-        add_temp_a,
-        add_temp_b,
+        create_a,
+        create_b,
         insert_a,
         insert_b,
         undo,
@@ -319,11 +319,11 @@ top_info_row_type_t to_idx(sample::top_info_row const &row) {
     bool enabled = true;
 
     switch (row) {
-        case top_action_row::add_temp_a:
-            cell.textLabel.text = @"Add Temporary A";
+        case top_action_row::create_a:
+            cell.textLabel.text = @"Create A";
             break;
-        case top_action_row::add_temp_b:
-            cell.textLabel.text = @"Add Temporary B";
+        case top_action_row::create_b:
+            cell.textLabel.text = @"Create B";
             break;
         case top_action_row::insert_a:
             cell.textLabel.text = @"Insert A";
@@ -413,10 +413,10 @@ top_info_row_type_t to_idx(sample::top_info_row const &row) {
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     if (indexPath.section == to_idx(top_section::actions)) {
         switch (top_action_row(indexPath.row)) {
-            case top_action_row::add_temp_a:
+            case top_action_row::create_a:
                 _db_controller->add_temporary(db_controller::entity::a);
                 break;
-            case top_action_row::add_temp_b:
+            case top_action_row::create_b:
                 _db_controller->add_temporary(db_controller::entity::b);
                 break;
             case top_action_row::insert_a:
