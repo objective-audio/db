@@ -11,7 +11,7 @@ namespace sample {
     class db_controller : public std::enable_shared_from_this<db_controller> {
        public:
         enum class entity { a, b };
-        enum class method { objects_updated, object_inserted, processing_changed, object_changed, db_info_changed };
+        enum class method { objects_updated, object_created, processing_changed, object_changed, db_info_changed };
 
         struct change_info {
             db::object const object;
@@ -29,7 +29,7 @@ namespace sample {
         void setup(db::manager::completion_f completion);
 
         void add_temporary(entity const &);
-        void add(entity const &);
+        void insert(entity const &);
         void remove(entity const &, std::size_t const &idx);
         void undo();
         void redo();

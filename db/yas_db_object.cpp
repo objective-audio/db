@@ -330,7 +330,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
     }
 
     void load_insertion_data() override {
-        this->_status = db::object_status::inserted;
+        this->_status = db::object_status::created;
         set_attribute_value(db::action_field, db::insert_action_value(), true);
 
         for (auto const &pair : this->_entity.all_attributes) {
@@ -361,7 +361,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
                 this->set_update_action();
             }
 
-            if (this->_status != db::object_status::inserted) {
+            if (this->_status != db::object_status::created) {
                 this->_status = db::object_status::changed;
             }
 
@@ -379,7 +379,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
         if (!loading) {
             this->set_update_action();
 
-            if (this->_status != db::object_status::inserted) {
+            if (this->_status != db::object_status::created) {
                 this->_status = db::object_status::changed;
             }
 
@@ -409,7 +409,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
 
         this->set_update_action();
 
-        if (this->_status != db::object_status::inserted) {
+        if (this->_status != db::object_status::created) {
             this->_status = db::object_status::changed;
         }
 
@@ -435,7 +435,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
 
             this->set_update_action();
 
-            if (this->_status != db::object_status::inserted) {
+            if (this->_status != db::object_status::created) {
                 this->_status = db::object_status::changed;
             }
 
@@ -455,7 +455,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
 
             this->set_update_action();
 
-            if (this->_status != db::object_status::inserted) {
+            if (this->_status != db::object_status::created) {
                 this->_status = db::object_status::changed;
             }
 
@@ -478,7 +478,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
 
             this->set_update_action();
 
-            if (this->_status != db::object_status::inserted) {
+            if (this->_status != db::object_status::created) {
                 this->_status = db::object_status::changed;
             }
 
@@ -521,8 +521,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
         db::object_id object_id = pool.get_or_create(entity_name, this->_identifier,
                                                      [&identifier = this->_identifier]() { return identifier.copy(); });
 
-#warning insertedな時にstableなことがあるのはなぜか？
-        if (this->_status != db::object_status::inserted) {
+        if (this->_status != db::object_status::created) {
             attributes.emplace(db::object_id_field, this->_identifier.stable_value());
         }
 
@@ -562,7 +561,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
     }
 
     void set_update_action() {
-        if (this->_status != db::object_status::inserted && !this->is_equal_to_action(db::remove_action) &&
+        if (this->_status != db::object_status::created && !this->is_equal_to_action(db::remove_action) &&
             !this->is_equal_to_action(db::update_action)) {
             this->set_attribute_value(db::action_field, db::update_action_value(), true);
         }
@@ -637,13 +636,13 @@ db::object_vector_t db::object::relation_objects(std::string const &rel_name) co
     auto const &rel_ids = impl_ptr<impl>()->relation_ids(rel_name);
     std::string const &tgt_entity_name = this->entity().relations.at(rel_name).target_entity_name;
     return to_vector<db::object>(rel_ids, [manager = manager(), &tgt_entity_name](db::object_id const &rel_id) {
-        return manager.cached_or_inserted_object(tgt_entity_name, rel_id);
+        return manager.cached_or_created_object(tgt_entity_name, rel_id);
     });
 }
 
 db::object db::object::relation_object_at(std::string const &rel_name, std::size_t const idx) const {
     std::string const &tgt_entity_name = this->entity().relations.at(rel_name).target_entity_name;
-    return this->manager().cached_or_inserted_object(tgt_entity_name, relation_id(rel_name, idx));
+    return this->manager().cached_or_created_object(tgt_entity_name, relation_id(rel_name, idx));
 }
 
 void db::object::set_relation_ids(std::string const &rel_name, db::id_vector_t const &relation_ids) {
@@ -747,7 +746,7 @@ std::string yas::to_string(db::object_status const &status) {
     switch (status) {
         case db::object_status::invalid:
             return "invalid";
-        case db::object_status::inserted:
+        case db::object_status::created:
             return "inserted";
         case db::object_status::saved:
             return "saved";

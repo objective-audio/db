@@ -114,15 +114,15 @@ void db_controller::add_temporary(entity const &entity) {
         return;
     }
 
-    auto object = this->_manager.insert_object(to_entity_name(entity));
+    auto object = this->_manager.create_object(to_entity_name(entity));
     auto &objects = this->_objects_at(entity);
 
     auto idx = objects.size();
     objects.push_back(object);
-    this->_subject.notify(method::object_inserted, {object, db::value{static_cast<db::integer::type>(idx)}});
+    this->_subject.notify(method::object_created, {object, db::value{static_cast<db::integer::type>(idx)}});
 }
 
-void db_controller::add(entity const &entity) {
+void db_controller::insert(entity const &entity) {
     if (this->_processing) {
         return;
     }
@@ -172,7 +172,7 @@ void db_controller::add(entity const &entity) {
             }
 
             shared->_end_processing();
-            shared->_subject.notify(method::object_inserted, {object, idx_value});
+            shared->_subject.notify(method::object_created, {object, idx_value});
         }
     });
 
@@ -418,7 +418,7 @@ bool db_controller::can_purge() const {
 }
 
 bool db_controller::has_changed() const {
-    return this->_manager.has_changed_objects() || this->_manager.has_inserted_objects();
+    return this->_manager.has_changed_objects() || this->_manager.has_created_objects();
 }
 
 db::object const &db_controller::object(entity const &entity, std::size_t const idx) const {

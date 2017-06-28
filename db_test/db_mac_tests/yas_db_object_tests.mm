@@ -494,9 +494,9 @@ using namespace yas;
 
     XCTAssertEqual(obj.status(), db::object_status::invalid);
 
-    manageable_obj.set_status(db::object_status::inserted);
+    manageable_obj.set_status(db::object_status::created);
 
-    XCTAssertEqual(obj.status(), db::object_status::inserted);
+    XCTAssertEqual(obj.status(), db::object_status::created);
 
     manageable_obj.set_status(db::object_status::saved);
 
@@ -802,7 +802,7 @@ using namespace yas;
 
 - (void)test_object_status_to_string {
     XCTAssertEqual(to_string(db::object_status::invalid), "invalid");
-    XCTAssertEqual(to_string(db::object_status::inserted), "inserted");
+    XCTAssertEqual(to_string(db::object_status::created), "inserted");
     XCTAssertEqual(to_string(db::object_status::saved), "saved");
     XCTAssertEqual(to_string(db::object_status::changed), "changed");
     XCTAssertEqual(to_string(db::object_status::updating), "updating");
