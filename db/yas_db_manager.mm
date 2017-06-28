@@ -1109,7 +1109,7 @@ bool db::manager::has_changed_objects() const {
     return false;
 }
 
-std::size_t db::manager::inserted_object_count(std::string const &entity_name) const {
+std::size_t db::manager::created_object_count(std::string const &entity_name) const {
     if (impl_ptr<impl>()->_created_objects.count(entity_name) > 0) {
         return impl_ptr<impl>()->_created_objects.at(entity_name).size();
     }

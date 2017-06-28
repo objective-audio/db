@@ -145,7 +145,7 @@ using namespace yas;
         XCTAssertEqual(objects[1].status(), db::object_status::created);
 
         XCTAssertTrue(manager.has_created_objects());
-        XCTAssertEqual(manager.inserted_object_count("sample_a"), 2);
+        XCTAssertEqual(manager.created_object_count("sample_a"), 2);
     });
 
     manager.save([self, &manager, &objects](db::manager_map_result_t result) {
@@ -179,7 +179,7 @@ using namespace yas;
         }
 
         XCTAssertFalse(manager.has_created_objects());
-        XCTAssertEqual(manager.inserted_object_count("sample_a"), 0);
+        XCTAssertEqual(manager.created_object_count("sample_a"), 0);
     });
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
@@ -203,7 +203,7 @@ using namespace yas;
         objects[1].set_attribute_value("name", db::value{"test_name_1_inserted"});
 
         XCTAssertTrue(manager.has_created_objects());
-        XCTAssertEqual(manager.inserted_object_count("sample_a"), 2);
+        XCTAssertEqual(manager.created_object_count("sample_a"), 2);
     });
 
     manager.save([self, &manager, &objects](db::manager_map_result_t result) {
@@ -226,7 +226,7 @@ using namespace yas;
         XCTAssertTrue(manager.has_changed_objects());
         XCTAssertEqual(manager.changed_object_count("sample_a"), 2);
         XCTAssertFalse(manager.has_created_objects());
-        XCTAssertEqual(manager.inserted_object_count("sample_a"), 0);
+        XCTAssertEqual(manager.created_object_count("sample_a"), 0);
 
         objects.emplace_back(manager.insert_object("sample_a"));
         objects.emplace_back(manager.insert_object("sample_a"));
@@ -1936,28 +1936,28 @@ using namespace yas;
     [self waitForExpectationsWithTimeout:1.0 handler:nil];
 }
 
-- (void)test_inserted_object_count {
+- (void)test_created_object_count {
     db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
 
     manager.setup([self, &manager](auto result) {
         XCTAssertTrue(result);
 
-        XCTAssertEqual(manager.inserted_object_count("sample_a"), 0);
+        XCTAssertEqual(manager.created_object_count("sample_a"), 0);
 
         manager.insert_object("sample_a");
 
-        XCTAssertEqual(manager.inserted_object_count("sample_a"), 1);
+        XCTAssertEqual(manager.created_object_count("sample_a"), 1);
 
         manager.insert_object("sample_a");
 
-        XCTAssertEqual(manager.inserted_object_count("sample_a"), 2);
+        XCTAssertEqual(manager.created_object_count("sample_a"), 2);
     });
 
     manager.save([self, &manager](db::manager_map_result_t result) {
         XCTAssertTrue(result);
 
-        XCTAssertEqual(manager.inserted_object_count("sample_a"), 0);
+        XCTAssertEqual(manager.created_object_count("sample_a"), 0);
     });
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];

@@ -105,7 +105,7 @@ namespace db {
 
         bool has_created_objects() const;
         bool has_changed_objects() const;
-        std::size_t inserted_object_count(std::string const &entity_name) const;
+        std::size_t created_object_count(std::string const &entity_name) const;
         std::size_t changed_object_count(std::string const &entity_name) const;
 
         db::object_observable &object_observable();
