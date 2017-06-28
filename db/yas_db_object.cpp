@@ -521,7 +521,6 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
         db::object_id object_id = pool.get_or_create(entity_name, this->_identifier,
                                                      [&identifier = this->_identifier]() { return identifier.copy(); });
 
-#warning insertedな時にstableなことがあるのはなぜか？
         if (this->_status != db::object_status::created) {
             attributes.emplace(db::object_id_field, this->_identifier.stable_value());
         }
