@@ -74,7 +74,7 @@ namespace db {
 
         dispatch_queue_t dispatch_queue() const;
 
-        db::object insert_object(std::string const entity_name);
+        db::object create_object(std::string const entity_name);
 
         void suspend();
         void resume();

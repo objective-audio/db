@@ -114,7 +114,7 @@ void db_controller::add_temporary(entity const &entity) {
         return;
     }
 
-    auto object = this->_manager.insert_object(to_entity_name(entity));
+    auto object = this->_manager.create_object(to_entity_name(entity));
     auto &objects = this->_objects_at(entity);
 
     auto idx = objects.size();

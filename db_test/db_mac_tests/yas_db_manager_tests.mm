@@ -112,7 +112,7 @@ using namespace yas;
     [self waitForExpectationsWithTimeout:1.0 handler:nil];
 }
 
-- (void)test_insert_object {
+- (void)test_create_object {
     db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
 
@@ -121,8 +121,8 @@ using namespace yas;
     manager.setup([self, &manager, &objects](auto result) {
         XCTAssertTrue(result);
 
-        objects.emplace_back(manager.insert_object("sample_a"));
-        objects.emplace_back(manager.insert_object("sample_a"));
+        objects.emplace_back(manager.create_object("sample_a"));
+        objects.emplace_back(manager.create_object("sample_a"));
 
         for (auto const &idx : make_each_index(2)) {
             auto const &object = objects[idx];
@@ -187,7 +187,7 @@ using namespace yas;
     [self waitForExpectationsWithTimeout:1.0 handler:nil];
 }
 
-- (void)test_insert_and_save_objects {
+- (void)test_create_and_save_objects {
     db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
 
@@ -196,8 +196,8 @@ using namespace yas;
     manager.setup([self, &manager, &objects](auto result) {
         XCTAssertTrue(result);
 
-        objects.emplace_back(manager.insert_object("sample_a"));
-        objects.emplace_back(manager.insert_object("sample_a"));
+        objects.emplace_back(manager.create_object("sample_a"));
+        objects.emplace_back(manager.create_object("sample_a"));
 
         objects[0].set_attribute_value("name", db::value{"test_name_0_inserted"});
         objects[1].set_attribute_value("name", db::value{"test_name_1_inserted"});
@@ -228,8 +228,8 @@ using namespace yas;
         XCTAssertFalse(manager.has_created_objects());
         XCTAssertEqual(manager.created_object_count("sample_a"), 0);
 
-        objects.emplace_back(manager.insert_object("sample_a"));
-        objects.emplace_back(manager.insert_object("sample_a"));
+        objects.emplace_back(manager.create_object("sample_a"));
+        objects.emplace_back(manager.create_object("sample_a"));
 
         objects[2].set_attribute_value("name", db::value{"test_name_2_inserted"});
         objects[2].set_attribute_value("age", db::value{2});
@@ -296,9 +296,9 @@ using namespace yas;
 
     [self waitForExpectations:@[setupExp] timeout:10.0];
 
-    auto object_a = manager.insert_object("sample_a");
-    auto object_b1 = manager.insert_object("sample_b");
-    auto object_b2 = manager.insert_object("sample_b");
+    auto object_a = manager.create_object("sample_a");
+    auto object_b1 = manager.create_object("sample_b");
+    auto object_b2 = manager.create_object("sample_b");
 
     XCTAssertTrue(object_a.object_id().is_temporary());
     XCTAssertTrue(object_b1.object_id().is_temporary());
@@ -355,7 +355,7 @@ using namespace yas;
         [self waitForExpectations:@[setupExp] timeout:10.0];
     }
 
-    auto object_a = manager.insert_object("sample_a");
+    auto object_a = manager.create_object("sample_a");
 
     {
         XCTestExpectation *saveExp = [self expectationWithDescription:@"save"];
@@ -371,7 +371,7 @@ using namespace yas;
 
     XCTAssertTrue(object_a.object_id().is_stable());
 
-    auto object_b = manager.insert_object("sample_b");
+    auto object_b = manager.create_object("sample_b");
 
     object_a.add_relation_object("child", object_b);
 
@@ -401,10 +401,10 @@ using namespace yas;
 
     [self waitForExpectations:@[setup_exp] timeout:10.0];
 
-    db::object obj = manager.insert_object("sample_a");
-    db::object obj_b1 = manager.insert_object("sample_b");
-    db::object obj_b2 = manager.insert_object("sample_b");
-    db::object obj_b3 = manager.insert_object("sample_b");
+    db::object obj = manager.create_object("sample_a");
+    db::object obj_b1 = manager.create_object("sample_b");
+    db::object obj_b2 = manager.create_object("sample_b");
+    db::object obj_b3 = manager.create_object("sample_b");
 
     XCTestExpectation *save_exp = [self expectationWithDescription:@"setup manager"];
 
@@ -1894,7 +1894,7 @@ using namespace yas;
 
         XCTAssertFalse(manager.has_created_objects());
 
-        manager.insert_object("sample_a");
+        manager.create_object("sample_a");
 
         XCTAssertTrue(manager.has_created_objects());
     });
@@ -1945,11 +1945,11 @@ using namespace yas;
 
         XCTAssertEqual(manager.created_object_count("sample_a"), 0);
 
-        manager.insert_object("sample_a");
+        manager.create_object("sample_a");
 
         XCTAssertEqual(manager.created_object_count("sample_a"), 1);
 
-        manager.insert_object("sample_a");
+        manager.create_object("sample_a");
 
         XCTAssertEqual(manager.created_object_count("sample_a"), 2);
     });
@@ -2014,7 +2014,7 @@ using namespace yas;
 
     [self waitForExpectations:@[setupExp] timeout:10.0];
 
-    auto object = manager.insert_object("sample_a");
+    auto object = manager.create_object("sample_a");
 
     XCTAssertTrue(object.is_temporary());
 
