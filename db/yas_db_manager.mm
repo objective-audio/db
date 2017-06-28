@@ -43,7 +43,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
     operation_queue _op_queue;
     std::size_t _suspend_count = 0;
     db::weak_pool<db::object_id, db::object> _cached_objects;
-    db::tmp_object_map_map_t _inserted_objects;
+    db::tmp_object_map_map_t _created_objects;
     db::object_map_map_t _changed_objects;
     db::info _db_info = db::null_info();
     db::manager::subject_t _subject;
@@ -66,12 +66,12 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
 
         object.manageable().load_insertion_data();
 
-        if (this->_inserted_objects.count(entity_name) == 0) {
-            this->_inserted_objects.insert(std::make_pair(entity_name, db::tmp_object_map_t{}));
+        if (this->_created_objects.count(entity_name) == 0) {
+            this->_created_objects.insert(std::make_pair(entity_name, db::tmp_object_map_t{}));
         }
 
         // この時点でobject_idはtemporary
-        this->_inserted_objects.at(entity_name).emplace(object.object_id().temporary(), object);
+        this->_created_objects.at(entity_name).emplace(object.object_id().temporary(), object);
 
         return object;
     }
@@ -84,9 +84,9 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
 
         auto object = db::null_object();
 
-        if (is_save && this->_inserted_objects.count(entity_name) > 0) {
+        if (is_save && this->_created_objects.count(entity_name) > 0) {
             // セーブ時で仮に挿入されたオブジェクトがある場合にオブジェクトを取得
-            auto &entity_objects = this->_inserted_objects.at(entity_name);
+            auto &entity_objects = this->_created_objects.at(entity_name);
             if (entity_objects.size() > 0) {
                 auto const &temporary_id = data.object_id.temporary();
                 if (entity_objects.count(temporary_id) > 0) {
@@ -98,7 +98,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
                     this->_cached_objects.set(entity_name, obj_id, object);
 
                     if (entity_objects.size() == 0) {
-                        this->_inserted_objects.erase(entity_name);
+                        this->_created_objects.erase(entity_name);
                     }
                 }
             }
@@ -198,7 +198,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
 
             // 仮に挿入されたオブジェクトの数
             std::size_t const inserted_count =
-                this->_inserted_objects.count(entity_name) ? this->_inserted_objects.at(entity_name).size() : 0;
+                this->_created_objects.count(entity_name) ? this->_created_objects.at(entity_name).size() : 0;
             // 値に変更のあったオブジェクトの数
             std::size_t const changed_count =
                 this->_changed_objects.count(entity_name) ? this->_changed_objects.at(entity_name).size() : 0;
@@ -215,7 +215,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
 
             if (inserted_count > 0) {
                 // 挿入されたオブジェクトからデータベース用のデータを取得
-                auto const &entity_objects = this->_inserted_objects.at(entity_name);
+                auto const &entity_objects = this->_created_objects.at(entity_name);
 
                 for (auto const &pair : entity_objects) {
                     auto const &object = pair.second;
@@ -295,8 +295,8 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
     }
 
     db::object _inserted_object(std::string const &entity_name, std::string const &tmp_obj_id) {
-        if (this->_inserted_objects.count(entity_name) > 0) {
-            auto const &entity_objects = this->_inserted_objects.at(entity_name);
+        if (this->_created_objects.count(entity_name) > 0) {
+            auto const &entity_objects = this->_created_objects.at(entity_name);
             if (entity_objects.count(tmp_obj_id) > 0) {
                 return entity_objects.at(tmp_obj_id);
             }
@@ -319,9 +319,9 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
 
         if (object.status() == db::object_status::created) {
             // 仮に挿入された状態の場合
-            if (this->_inserted_objects.count(entity_name) > 0 && object.is_removed()) {
-                // オブジェクトが削除されていたら、_inserted_objectsからも削除
-                this->_inserted_objects.at(entity_name).erase(object.object_id().temporary());
+            if (this->_created_objects.count(entity_name) > 0 && object.is_removed()) {
+                // オブジェクトが削除されていたら、_created_objectsからも削除
+                this->_created_objects.at(entity_name).erase(object.object_id().temporary());
             }
         } else {
             // 挿入されたのではない場合
@@ -694,7 +694,7 @@ void db::manager::reset(db::manager::completion_f completion, operation_option_t
             if (state) {
                 manager.impl_ptr<impl>()->load_and_cache_object_map(fetched_datas, true, false);
                 manager.impl_ptr<impl>()->erase_changed_objects(fetched_datas);
-                manager.impl_ptr<impl>()->_inserted_objects.clear();
+                manager.impl_ptr<impl>()->_created_objects.clear();
                 completion(db::manager_result_t{nullptr});
             } else {
                 completion(db::manager_result_t{std::move(state.error())});
@@ -1090,7 +1090,7 @@ db::object db::manager::cached_or_inserted_object(std::string const &entity_name
 }
 
 bool db::manager::has_inserted_objects() const {
-    for (auto const &entity_pair : impl_ptr<impl>()->_inserted_objects) {
+    for (auto const &entity_pair : impl_ptr<impl>()->_created_objects) {
         if (entity_pair.second.size() > 0) {
             return true;
         }
@@ -1110,8 +1110,8 @@ bool db::manager::has_changed_objects() const {
 }
 
 std::size_t db::manager::inserted_object_count(std::string const &entity_name) const {
-    if (impl_ptr<impl>()->_inserted_objects.count(entity_name) > 0) {
-        return impl_ptr<impl>()->_inserted_objects.at(entity_name).size();
+    if (impl_ptr<impl>()->_created_objects.count(entity_name) > 0) {
+        return impl_ptr<impl>()->_created_objects.at(entity_name).size();
     }
     return 0;
 }
