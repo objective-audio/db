@@ -144,7 +144,7 @@ using namespace yas;
         XCTAssertEqual(objects[0].status(), db::object_status::created);
         XCTAssertEqual(objects[1].status(), db::object_status::created);
 
-        XCTAssertTrue(manager.has_inserted_objects());
+        XCTAssertTrue(manager.has_created_objects());
         XCTAssertEqual(manager.inserted_object_count("sample_a"), 2);
     });
 
@@ -178,7 +178,7 @@ using namespace yas;
             }
         }
 
-        XCTAssertFalse(manager.has_inserted_objects());
+        XCTAssertFalse(manager.has_created_objects());
         XCTAssertEqual(manager.inserted_object_count("sample_a"), 0);
     });
 
@@ -202,13 +202,13 @@ using namespace yas;
         objects[0].set_attribute_value("name", db::value{"test_name_0_inserted"});
         objects[1].set_attribute_value("name", db::value{"test_name_1_inserted"});
 
-        XCTAssertTrue(manager.has_inserted_objects());
+        XCTAssertTrue(manager.has_created_objects());
         XCTAssertEqual(manager.inserted_object_count("sample_a"), 2);
     });
 
     manager.save([self, &manager, &objects](db::manager_map_result_t result) {
         XCTAssertTrue(result);
-        XCTAssertFalse(manager.has_inserted_objects());
+        XCTAssertFalse(manager.has_created_objects());
 
         XCTAssertEqual(objects[0].status(), db::object_status::saved);
         XCTAssertEqual(objects[1].status(), db::object_status::saved);
@@ -225,7 +225,7 @@ using namespace yas;
 
         XCTAssertTrue(manager.has_changed_objects());
         XCTAssertEqual(manager.changed_object_count("sample_a"), 2);
-        XCTAssertFalse(manager.has_inserted_objects());
+        XCTAssertFalse(manager.has_created_objects());
         XCTAssertEqual(manager.inserted_object_count("sample_a"), 0);
 
         objects.emplace_back(manager.insert_object("sample_a"));
@@ -236,7 +236,7 @@ using namespace yas;
         objects[3].set_attribute_value("name", db::value{"test_name_3_inserted"});
         objects[3].set_attribute_value("age", db::value{3});
 
-        XCTAssertTrue(manager.has_inserted_objects());
+        XCTAssertTrue(manager.has_created_objects());
     });
 
     manager.save([self, &manager, &objects](db::manager_map_result_t result) {
@@ -1892,17 +1892,17 @@ using namespace yas;
     manager.setup([self, &manager](auto result) {
         XCTAssertTrue(result);
 
-        XCTAssertFalse(manager.has_inserted_objects());
+        XCTAssertFalse(manager.has_created_objects());
 
         manager.insert_object("sample_a");
 
-        XCTAssertTrue(manager.has_inserted_objects());
+        XCTAssertTrue(manager.has_created_objects());
     });
 
     manager.save([self, &manager](db::manager_map_result_t result) {
         XCTAssertTrue(result);
 
-        XCTAssertFalse(manager.has_inserted_objects());
+        XCTAssertFalse(manager.has_created_objects());
     });
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];

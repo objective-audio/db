@@ -103,7 +103,7 @@ namespace db {
 
         db::object cached_or_inserted_object(std::string const &entity_name, db::object_id const &object_id) const;
 
-        bool has_inserted_objects() const;
+        bool has_created_objects() const;
         bool has_changed_objects() const;
         std::size_t inserted_object_count(std::string const &entity_name) const;
         std::size_t changed_object_count(std::string const &entity_name) const;

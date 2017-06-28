@@ -1089,7 +1089,7 @@ db::object db::manager::cached_or_inserted_object(std::string const &entity_name
     return impl_ptr<impl>()->cached_or_inserted_object(entity_name, object_id);
 }
 
-bool db::manager::has_inserted_objects() const {
+bool db::manager::has_created_objects() const {
     for (auto const &entity_pair : impl_ptr<impl>()->_created_objects) {
         if (entity_pair.second.size() > 0) {
             return true;

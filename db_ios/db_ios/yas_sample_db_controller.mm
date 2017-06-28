@@ -418,7 +418,7 @@ bool db_controller::can_purge() const {
 }
 
 bool db_controller::has_changed() const {
-    return this->_manager.has_changed_objects() || this->_manager.has_inserted_objects();
+    return this->_manager.has_changed_objects() || this->_manager.has_created_objects();
 }
 
 db::object const &db_controller::object(entity const &entity, std::size_t const idx) const {
