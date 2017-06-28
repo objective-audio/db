@@ -122,7 +122,7 @@ top_info_row_type_t to_idx(sample::top_info_row const &row) {
             [controller updateTableForInfo:top_info_row::save_id];
         } else if (key == db_controller::method::objects_updated) {
             [controller updateTable];
-        } else if (key == db_controller::method::object_inserted) {
+        } else if (key == db_controller::method::object_created) {
             auto const &object = info.object;
             auto const entity = db_controller::entity_for_name(object.entity_name());
             [controller updateTableForInsertedRow:NSInteger(info.value.get<db::integer>()) entity:entity];

@@ -119,7 +119,7 @@ void db_controller::add_temporary(entity const &entity) {
 
     auto idx = objects.size();
     objects.push_back(object);
-    this->_subject.notify(method::object_inserted, {object, db::value{static_cast<db::integer::type>(idx)}});
+    this->_subject.notify(method::object_created, {object, db::value{static_cast<db::integer::type>(idx)}});
 }
 
 void db_controller::add(entity const &entity) {
@@ -172,7 +172,7 @@ void db_controller::add(entity const &entity) {
             }
 
             shared->_end_processing();
-            shared->_subject.notify(method::object_inserted, {object, idx_value});
+            shared->_subject.notify(method::object_created, {object, idx_value});
         }
     });
 
