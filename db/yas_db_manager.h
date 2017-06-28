@@ -101,7 +101,7 @@ namespace db {
         void save(map_completion_f completion, operation_option_t option = {});
         void revert(revert_preparation_f preparation, vector_completion_f completion, operation_option_t option = {});
 
-        db::object cached_or_inserted_object(std::string const &entity_name, db::object_id const &object_id) const;
+        db::object cached_or_created_object(std::string const &entity_name, db::object_id const &object_id) const;
 
         bool has_created_objects() const;
         bool has_changed_objects() const;

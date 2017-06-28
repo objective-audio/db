@@ -305,7 +305,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
     }
 
     // キャッシュされた単独のオブジェクトをエンティティ名とオブジェクトIDを指定して取得する
-    db::object cached_or_inserted_object(std::string const &entity_name, db::object_id const &object_id) {
+    db::object cached_or_created_object(std::string const &entity_name, db::object_id const &object_id) {
         if (object_id.is_temporary()) {
             return this->_inserted_object(entity_name, object_id.temporary());
         } else {
@@ -1085,8 +1085,8 @@ void db::manager::revert(db::manager::revert_preparation_f preparation, db::mana
     this->execute(execution, std::move(option));
 }
 
-db::object db::manager::cached_or_inserted_object(std::string const &entity_name, db::object_id const &object_id) const {
-    return impl_ptr<impl>()->cached_or_inserted_object(entity_name, object_id);
+db::object db::manager::cached_or_created_object(std::string const &entity_name, db::object_id const &object_id) const {
+    return impl_ptr<impl>()->cached_or_created_object(entity_name, object_id);
 }
 
 bool db::manager::has_created_objects() const {

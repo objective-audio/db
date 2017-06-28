@@ -212,8 +212,8 @@ using namespace yas;
 
         XCTAssertEqual(objects[0].status(), db::object_status::saved);
         XCTAssertEqual(objects[1].status(), db::object_status::saved);
-        XCTAssertTrue(manager.cached_or_inserted_object("sample_a", objects[0].object_id()));
-        XCTAssertTrue(manager.cached_or_inserted_object("sample_a", objects[1].object_id()));
+        XCTAssertTrue(manager.cached_or_created_object("sample_a", objects[0].object_id()));
+        XCTAssertTrue(manager.cached_or_created_object("sample_a", objects[1].object_id()));
 
         objects[0].set_attribute_value("name", db::value{"test_name_0_saved"});
         objects[0].set_attribute_value("age", db::value{0});
@@ -633,11 +633,11 @@ using namespace yas;
     XCTAssertEqual(manager.current_save_id(), db::value{2});
     XCTAssertEqual(manager.last_save_id(), db::value{2});
 
-    auto const object_1 = manager.cached_or_inserted_object("sample_a", db::make_stable_id(db::value{1}));
+    auto const object_1 = manager.cached_or_created_object("sample_a", db::make_stable_id(db::value{1}));
     XCTAssertTrue(object_1);
     XCTAssertEqual(object_1.object_id().stable_value(), db::value{1});
 
-    XCTAssertFalse(manager.cached_or_inserted_object("sample_a", db::make_stable_id(db::value{5})));
+    XCTAssertFalse(manager.cached_or_created_object("sample_a", db::make_stable_id(db::value{5})));
 }
 
 - (void)test_insert_objects_by_values {
@@ -1072,9 +1072,9 @@ using namespace yas;
 
     [self waitForExpectationsWithTimeout:1.0 handler:nil];
 
-    XCTAssertFalse(manager.cached_or_inserted_object("sample_a", db::make_stable_id(db::value{1})));
-    XCTAssertFalse(manager.cached_or_inserted_object("sample_b", db::make_stable_id(db::value{1})));
-    XCTAssertFalse(manager.cached_or_inserted_object("sample_c", db::make_stable_id(db::value{1})));
+    XCTAssertFalse(manager.cached_or_created_object("sample_a", db::make_stable_id(db::value{1})));
+    XCTAssertFalse(manager.cached_or_created_object("sample_b", db::make_stable_id(db::value{1})));
+    XCTAssertFalse(manager.cached_or_created_object("sample_c", db::make_stable_id(db::value{1})));
 
     XCTestExpectation *exp3 = [self expectationWithDescription:@"3"];
 
@@ -1731,7 +1731,7 @@ using namespace yas;
         XCTAssertEqual(object.object_id().stable_value(), db::value{1});
         XCTAssertEqual(object.attribute_value("name"), db::value{"test_clear_value"});
 
-        XCTAssertTrue(manager.cached_or_inserted_object("sample_a", db::make_stable_id(db::value{1})));
+        XCTAssertTrue(manager.cached_or_created_object("sample_a", db::make_stable_id(db::value{1})));
     });
 
     manager.clear([self, &manager, &object](auto result) {
@@ -1740,7 +1740,7 @@ using namespace yas;
         XCTAssertEqual(object.status(), db::object_status::invalid);
         XCTAssertFalse(object.attribute_value("name"));
 
-        XCTAssertFalse(manager.cached_or_inserted_object("sample_a", db::make_stable_id(db::value{1})));
+        XCTAssertFalse(manager.cached_or_created_object("sample_a", db::make_stable_id(db::value{1})));
     });
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
@@ -2331,9 +2331,9 @@ using namespace yas;
 
     {
         // キャッシュが残っていないことを確認
-        XCTAssertFalse(manager.cached_or_inserted_object("sample_a", obj_a0_id));
-        XCTAssertFalse(manager.cached_or_inserted_object("sample_a", obj_a1_id));
-        XCTAssertFalse(manager.cached_or_inserted_object("sample_a", obj_a2_id));
+        XCTAssertFalse(manager.cached_or_created_object("sample_a", obj_a0_id));
+        XCTAssertFalse(manager.cached_or_created_object("sample_a", obj_a1_id));
+        XCTAssertFalse(manager.cached_or_created_object("sample_a", obj_a2_id));
     }
 
     {
@@ -2374,9 +2374,9 @@ using namespace yas;
 
     {
         // キャッシュが残っていないことを確認
-        XCTAssertFalse(manager.cached_or_inserted_object("sample_a", obj_a0_id));
-        XCTAssertFalse(manager.cached_or_inserted_object("sample_a", obj_a1_id));
-        XCTAssertFalse(manager.cached_or_inserted_object("sample_a", obj_a2_id));
+        XCTAssertFalse(manager.cached_or_created_object("sample_a", obj_a0_id));
+        XCTAssertFalse(manager.cached_or_created_object("sample_a", obj_a1_id));
+        XCTAssertFalse(manager.cached_or_created_object("sample_a", obj_a2_id));
     }
 
     {
@@ -2432,9 +2432,9 @@ using namespace yas;
 
     {
         // キャッシュが残っていないことを確認
-        XCTAssertFalse(manager.cached_or_inserted_object("sample_a", obj_a0_id));
-        XCTAssertFalse(manager.cached_or_inserted_object("sample_a", obj_a1_id));
-        XCTAssertFalse(manager.cached_or_inserted_object("sample_a", obj_a2_id));
+        XCTAssertFalse(manager.cached_or_created_object("sample_a", obj_a0_id));
+        XCTAssertFalse(manager.cached_or_created_object("sample_a", obj_a1_id));
+        XCTAssertFalse(manager.cached_or_created_object("sample_a", obj_a2_id));
     }
 
     {
@@ -2489,9 +2489,9 @@ using namespace yas;
 
     {
         // キャッシュが残っていないことを確認
-        XCTAssertFalse(manager.cached_or_inserted_object("sample_a", obj_a0_id));
-        XCTAssertFalse(manager.cached_or_inserted_object("sample_a", obj_a1_id));
-        XCTAssertFalse(manager.cached_or_inserted_object("sample_a", obj_a2_id));
+        XCTAssertFalse(manager.cached_or_created_object("sample_a", obj_a0_id));
+        XCTAssertFalse(manager.cached_or_created_object("sample_a", obj_a1_id));
+        XCTAssertFalse(manager.cached_or_created_object("sample_a", obj_a2_id));
     }
 
     {
@@ -2519,12 +2519,12 @@ using namespace yas;
 
     {
         // キャッシュが残っていないことを確認
-        XCTAssertFalse(manager.cached_or_inserted_object("sample_a", obj_a0_id));
-        XCTAssertFalse(manager.cached_or_inserted_object("sample_a", obj_a1_id));
-        XCTAssertFalse(manager.cached_or_inserted_object("sample_a", obj_a2_id));
-        XCTAssertFalse(manager.cached_or_inserted_object("sample_b", obj_b0_id));
-        XCTAssertFalse(manager.cached_or_inserted_object("sample_b", obj_b1_id));
-        XCTAssertFalse(manager.cached_or_inserted_object("sample_b", obj_b2_id));
+        XCTAssertFalse(manager.cached_or_created_object("sample_a", obj_a0_id));
+        XCTAssertFalse(manager.cached_or_created_object("sample_a", obj_a1_id));
+        XCTAssertFalse(manager.cached_or_created_object("sample_a", obj_a2_id));
+        XCTAssertFalse(manager.cached_or_created_object("sample_b", obj_b0_id));
+        XCTAssertFalse(manager.cached_or_created_object("sample_b", obj_b1_id));
+        XCTAssertFalse(manager.cached_or_created_object("sample_b", obj_b2_id));
     }
 
     {

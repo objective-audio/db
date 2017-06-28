@@ -637,13 +637,13 @@ db::object_vector_t db::object::relation_objects(std::string const &rel_name) co
     auto const &rel_ids = impl_ptr<impl>()->relation_ids(rel_name);
     std::string const &tgt_entity_name = this->entity().relations.at(rel_name).target_entity_name;
     return to_vector<db::object>(rel_ids, [manager = manager(), &tgt_entity_name](db::object_id const &rel_id) {
-        return manager.cached_or_inserted_object(tgt_entity_name, rel_id);
+        return manager.cached_or_created_object(tgt_entity_name, rel_id);
     });
 }
 
 db::object db::object::relation_object_at(std::string const &rel_name, std::size_t const idx) const {
     std::string const &tgt_entity_name = this->entity().relations.at(rel_name).target_entity_name;
-    return this->manager().cached_or_inserted_object(tgt_entity_name, relation_id(rel_name, idx));
+    return this->manager().cached_or_created_object(tgt_entity_name, relation_id(rel_name, idx));
 }
 
 void db::object::set_relation_ids(std::string const &rel_name, db::id_vector_t const &relation_ids) {
