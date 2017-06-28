@@ -138,8 +138,8 @@ using namespace yas;
             XCTAssertEqual(object.attribute_value(db::save_id_field), db::value{0});
         }
 
-        objects[0].set_attribute_value("name", db::value{"test_name_0_inserted"});
-        objects[1].set_attribute_value("name", db::value{"test_name_1_inserted"});
+        objects[0].set_attribute_value("name", db::value{"test_name_0_created"});
+        objects[1].set_attribute_value("name", db::value{"test_name_1_created"});
 
         XCTAssertEqual(objects[0].status(), db::object_status::created);
         XCTAssertEqual(objects[1].status(), db::object_status::created);
@@ -172,9 +172,9 @@ using namespace yas;
             XCTAssertEqual(saved_object.attribute_value(db::save_id_field), db::value{1});
 
             if (idx == 0) {
-                XCTAssertEqual(saved_object.attribute_value("name"), db::value{"test_name_0_inserted"});
+                XCTAssertEqual(saved_object.attribute_value("name"), db::value{"test_name_0_created"});
             } else if (idx == 1) {
-                XCTAssertEqual(saved_object.attribute_value("name"), db::value{"test_name_1_inserted"});
+                XCTAssertEqual(saved_object.attribute_value("name"), db::value{"test_name_1_created"});
             }
         }
 
@@ -199,8 +199,8 @@ using namespace yas;
         objects.emplace_back(manager.create_object("sample_a"));
         objects.emplace_back(manager.create_object("sample_a"));
 
-        objects[0].set_attribute_value("name", db::value{"test_name_0_inserted"});
-        objects[1].set_attribute_value("name", db::value{"test_name_1_inserted"});
+        objects[0].set_attribute_value("name", db::value{"test_name_0_created"});
+        objects[1].set_attribute_value("name", db::value{"test_name_1_created"});
 
         XCTAssertTrue(manager.has_created_objects());
         XCTAssertEqual(manager.created_object_count("sample_a"), 2);
@@ -231,9 +231,9 @@ using namespace yas;
         objects.emplace_back(manager.create_object("sample_a"));
         objects.emplace_back(manager.create_object("sample_a"));
 
-        objects[2].set_attribute_value("name", db::value{"test_name_2_inserted"});
+        objects[2].set_attribute_value("name", db::value{"test_name_2_created"});
         objects[2].set_attribute_value("age", db::value{2});
-        objects[3].set_attribute_value("name", db::value{"test_name_3_inserted"});
+        objects[3].set_attribute_value("name", db::value{"test_name_3_created"});
         objects[3].set_attribute_value("age", db::value{3});
 
         XCTAssertTrue(manager.has_created_objects());
@@ -244,8 +244,8 @@ using namespace yas;
 
         XCTAssertEqual(objects[0].attribute_value("name"), db::value{"test_name_0_saved"});
         XCTAssertEqual(objects[1].attribute_value("name"), db::value{"test_name_1_saved"});
-        XCTAssertEqual(objects[2].attribute_value("name"), db::value{"test_name_2_inserted"});
-        XCTAssertEqual(objects[3].attribute_value("name"), db::value{"test_name_3_inserted"});
+        XCTAssertEqual(objects[2].attribute_value("name"), db::value{"test_name_2_created"});
+        XCTAssertEqual(objects[3].attribute_value("name"), db::value{"test_name_3_created"});
 
         XCTAssertEqual(objects[0].status(), db::object_status::saved);
         XCTAssertEqual(objects[1].status(), db::object_status::saved);
@@ -271,8 +271,8 @@ using namespace yas;
 
             XCTAssertEqual(objects[0].attribute_value("name"), db::value{"test_name_0_saved"});
             XCTAssertEqual(objects[1].attribute_value("name"), db::value{"test_name_1_saved"});
-            XCTAssertEqual(objects[2].attribute_value("name"), db::value{"test_name_2_inserted"});
-            XCTAssertEqual(objects[3].attribute_value("name"), db::value{"test_name_3_inserted"});
+            XCTAssertEqual(objects[2].attribute_value("name"), db::value{"test_name_2_created"});
+            XCTAssertEqual(objects[3].attribute_value("name"), db::value{"test_name_3_created"});
         });
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
