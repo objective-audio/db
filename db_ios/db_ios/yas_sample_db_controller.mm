@@ -122,7 +122,7 @@ void db_controller::add_temporary(entity const &entity) {
     this->_subject.notify(method::object_created, {object, db::value{static_cast<db::integer::type>(idx)}});
 }
 
-void db_controller::add(entity const &entity) {
+void db_controller::insert(entity const &entity) {
     if (this->_processing) {
         return;
     }

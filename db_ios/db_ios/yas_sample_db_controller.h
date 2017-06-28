@@ -29,7 +29,7 @@ namespace sample {
         void setup(db::manager::completion_f completion);
 
         void add_temporary(entity const &);
-        void add(entity const &);
+        void insert(entity const &);
         void remove(entity const &, std::size_t const &idx);
         void undo();
         void redo();

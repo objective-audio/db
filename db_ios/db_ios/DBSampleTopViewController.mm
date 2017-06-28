@@ -27,8 +27,8 @@ namespace sample {
     enum class top_action_row : std::size_t {
         add_temp_a,
         add_temp_b,
-        add_a,
-        add_b,
+        insert_a,
+        insert_b,
         undo,
         redo,
         clear,
@@ -325,12 +325,12 @@ top_info_row_type_t to_idx(sample::top_info_row const &row) {
         case top_action_row::add_temp_b:
             cell.textLabel.text = @"Add Temporary B";
             break;
-        case top_action_row::add_a:
-            cell.textLabel.text = @"Add A";
+        case top_action_row::insert_a:
+            cell.textLabel.text = @"Insert A";
             enabled = _db_controller->can_add();
             break;
-        case top_action_row::add_b:
-            cell.textLabel.text = @"Add B";
+        case top_action_row::insert_b:
+            cell.textLabel.text = @"Insert B";
             enabled = _db_controller->can_add();
             break;
         case top_action_row::undo:
@@ -419,11 +419,11 @@ top_info_row_type_t to_idx(sample::top_info_row const &row) {
             case top_action_row::add_temp_b:
                 _db_controller->add_temporary(db_controller::entity::b);
                 break;
-            case top_action_row::add_a:
-                _db_controller->add(db_controller::entity::a);
+            case top_action_row::insert_a:
+                _db_controller->insert(db_controller::entity::a);
                 break;
-            case top_action_row::add_b:
-                _db_controller->add(db_controller::entity::b);
+            case top_action_row::insert_b:
+                _db_controller->insert(db_controller::entity::b);
                 break;
             case top_action_row::undo:
                 _db_controller->undo();
