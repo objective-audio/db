@@ -317,7 +317,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
     void _object_did_change(db::object const &object) {
         auto const &entity_name = object.entity_name();
 
-        if (object.status() == db::object_status::inserted) {
+        if (object.status() == db::object_status::created) {
             // 仮に挿入された状態の場合
             if (this->_inserted_objects.count(entity_name) > 0 && object.is_removed()) {
                 // オブジェクトが削除されていたら、_inserted_objectsからも削除

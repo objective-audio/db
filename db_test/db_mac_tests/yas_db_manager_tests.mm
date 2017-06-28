@@ -127,7 +127,7 @@ using namespace yas;
         for (auto const &idx : make_each_index(2)) {
             auto const &object = objects[idx];
 
-            XCTAssertEqual(object.status(), db::object_status::inserted);
+            XCTAssertEqual(object.status(), db::object_status::created);
             XCTAssertTrue(object.object_id().is_temporary());
             XCTAssertEqual(object.attribute_value(db::action_field), db::insert_action_value());
             XCTAssertEqual(object.attribute_value("name"), db::value{"default_value"});
@@ -141,8 +141,8 @@ using namespace yas;
         objects[0].set_attribute_value("name", db::value{"test_name_0_inserted"});
         objects[1].set_attribute_value("name", db::value{"test_name_1_inserted"});
 
-        XCTAssertEqual(objects[0].status(), db::object_status::inserted);
-        XCTAssertEqual(objects[1].status(), db::object_status::inserted);
+        XCTAssertEqual(objects[0].status(), db::object_status::created);
+        XCTAssertEqual(objects[1].status(), db::object_status::created);
 
         XCTAssertTrue(manager.has_inserted_objects());
         XCTAssertEqual(manager.inserted_object_count("sample_a"), 2);

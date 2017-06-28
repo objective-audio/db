@@ -330,7 +330,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
     }
 
     void load_insertion_data() override {
-        this->_status = db::object_status::inserted;
+        this->_status = db::object_status::created;
         set_attribute_value(db::action_field, db::insert_action_value(), true);
 
         for (auto const &pair : this->_entity.all_attributes) {
@@ -361,7 +361,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
                 this->set_update_action();
             }
 
-            if (this->_status != db::object_status::inserted) {
+            if (this->_status != db::object_status::created) {
                 this->_status = db::object_status::changed;
             }
 
@@ -379,7 +379,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
         if (!loading) {
             this->set_update_action();
 
-            if (this->_status != db::object_status::inserted) {
+            if (this->_status != db::object_status::created) {
                 this->_status = db::object_status::changed;
             }
 
@@ -409,7 +409,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
 
         this->set_update_action();
 
-        if (this->_status != db::object_status::inserted) {
+        if (this->_status != db::object_status::created) {
             this->_status = db::object_status::changed;
         }
 
@@ -435,7 +435,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
 
             this->set_update_action();
 
-            if (this->_status != db::object_status::inserted) {
+            if (this->_status != db::object_status::created) {
                 this->_status = db::object_status::changed;
             }
 
@@ -455,7 +455,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
 
             this->set_update_action();
 
-            if (this->_status != db::object_status::inserted) {
+            if (this->_status != db::object_status::created) {
                 this->_status = db::object_status::changed;
             }
 
@@ -478,7 +478,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
 
             this->set_update_action();
 
-            if (this->_status != db::object_status::inserted) {
+            if (this->_status != db::object_status::created) {
                 this->_status = db::object_status::changed;
             }
 
@@ -522,7 +522,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
                                                      [&identifier = this->_identifier]() { return identifier.copy(); });
 
 #warning insertedな時にstableなことがあるのはなぜか？
-        if (this->_status != db::object_status::inserted) {
+        if (this->_status != db::object_status::created) {
             attributes.emplace(db::object_id_field, this->_identifier.stable_value());
         }
 
@@ -562,7 +562,7 @@ struct db::object::impl : public const_object::impl, public manageable_object::i
     }
 
     void set_update_action() {
-        if (this->_status != db::object_status::inserted && !this->is_equal_to_action(db::remove_action) &&
+        if (this->_status != db::object_status::created && !this->is_equal_to_action(db::remove_action) &&
             !this->is_equal_to_action(db::update_action)) {
             this->set_attribute_value(db::action_field, db::update_action_value(), true);
         }
@@ -747,7 +747,7 @@ std::string yas::to_string(db::object_status const &status) {
     switch (status) {
         case db::object_status::invalid:
             return "invalid";
-        case db::object_status::inserted:
+        case db::object_status::created:
             return "inserted";
         case db::object_status::saved:
             return "saved";

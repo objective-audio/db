@@ -90,7 +90,7 @@ namespace db {
 
     enum class object_status {
         invalid,
-        inserted,
+        created,
         saved,
         changed,
         updating,
