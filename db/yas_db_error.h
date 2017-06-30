@@ -26,7 +26,9 @@ namespace db {
 
     struct error {
         error(std::nullptr_t);
-        explicit error(db::error_type const type, db::sqlite_result_code const &code = 0, std::string message = "");
+        explicit error(db::error_type const type);
+        error(db::error_type const type, db::sqlite_result_code const &code);
+        error(db::error_type const type, db::sqlite_result_code const &code, std::string message);
 
         explicit operator bool() const;
 
