@@ -9,7 +9,6 @@
 #include "yas_db_weak_pool.h"
 #include <set>
 #include <unordered_set>
-#include <deque>
 
 namespace yas {
 namespace db {
@@ -33,8 +32,6 @@ namespace db {
     using tmp_object_map_map_t = std::unordered_map<std::string, db::tmp_object_map_t>;
     using object_vector_t = std::vector<db::object>;
     using object_vector_map_t = std::unordered_map<std::string, db::object_vector_t>;
-    using object_deque_t = std::deque<db::object>;
-    using object_deque_map_t = std::unordered_map<std::string, db::object_deque_t>;
     using const_object_map_t = std::unordered_map<db::integer::type, db::const_object>;
     using const_object_map_map_t = std::unordered_map<std::string, db::const_object_map_t>;
     using const_object_vector_t = std::vector<db::const_object>;
