@@ -61,7 +61,7 @@ namespace db {
                                  .where_exprs = std::move(where_exprs),
                                  .arguments = {{db::save_id_field, save_id}, {db::src_obj_id_field, src_obj_id}}};
 
-        if (auto select_result = db::select(db, option)) {
+        if (db::select_result_t select_result = db::select(db, option)) {
             auto const &result_rels = select_result.value();
             db::value_vector_t rel_tgts;
             rel_tgts.reserve(result_rels.size());
@@ -80,13 +80,13 @@ namespace db {
         db::value_vector_map_t relations;
 
         for (auto const &rel_model_pair : rel_models) {
-            auto const &rel_name = rel_model_pair.first;
-            auto const &rel_table = rel_model_pair.second.table_name;
+            std::string const &rel_name = rel_model_pair.first;
+            std::string const &rel_table = rel_model_pair.second.table_name;
 
-            if (auto select_result = db::select_relation_target_ids(db, rel_table, save_id, src_obj_id)) {
-                relations.emplace(rel_name, std::move(select_result.value()));
+            if (db::value_vector_result_t result = db::select_relation_target_ids(db, rel_table, save_id, src_obj_id)) {
+                relations.emplace(rel_name, std::move(result.value()));
             } else {
-                return db::value_vector_map_result_t{std::move(select_result.error())};
+                return db::value_vector_map_result_t{std::move(result.error())};
             }
         }
 
@@ -132,9 +132,9 @@ db::select_result_t db::select_for_undo(db::database const &db, std::string cons
                              .where_exprs = reverted_last_rowids_where,
                              .field_orders = {{db::object_id_field, db::order::ascending}}};
 
-    auto result = db::select(db, option);
+    db::select_result_t result = db::select(db, option);
     if (!result) {
-        return db::select_result_t{std::move(result.error())};
+        return result;
     }
 
     // アンドゥで戻そうとしている範囲のデータの中で、insertのobject_idの集合をobject_idのみで取得
@@ -149,9 +149,9 @@ db::select_result_t db::select_for_undo(db::database const &db, std::string cons
         .arguments = {{db::action_field, db::insert_action_value()}},
         .field_orders = {{db::object_id_field, db::order::ascending}}};
 
-    auto empty_result = db::select(db, empty_option);
+    db::select_result_t empty_result = db::select(db, empty_option);
     if (!empty_result) {
-        return db::select_result_t{std::move(empty_result.error())};
+        return empty_result;
     }
 
     // キャッシュを上書きするためのデータを返す
@@ -190,7 +190,7 @@ db::select_result_t db::select_for_revert(db::database const &db, std::string co
 db::select_result_t db::select_for_save(db::database const &db, std::string const &entity_table,
                                         std::string const &rel_table, db::value_vector_t const &tgt_obj_ids) {
     // 最後のオブジェクトのpk_idを取得するsql
-    auto const last_exprs = db::last_where_exprs(entity_table, "", nullptr, false);
+    std::string const last_exprs = db::last_where_exprs(entity_table, "", nullptr, false);
     db::select_option const last_option{.table = entity_table, .fields = {db::pk_id_field}, .where_exprs = last_exprs};
 
     // 最後のオブジェクトの中でtgt_obj_idsに一致する関連のsrc_pk_idを取得するsql
@@ -211,7 +211,7 @@ db::select_result_t db::select_for_save(db::database const &db, std::string cons
 #pragma mark - info
 
 db::manager_info_result_t db::fetch_info(db::database const &db) {
-    if (auto select_result = db::select_single(db, db::select_option{.table = db::info_table})) {
+    if (db::select_single_result_t select_result = db::select_single(db, db::select_option{.table = db::info_table})) {
         auto const &values = select_result.value();
         if (values.count(db::version_field) == 0) {
             return db::manager_info_result_t{db::manager_error{db::manager_error_type::version_not_found}};
@@ -249,8 +249,8 @@ db::manager_result_t db::create_info(db::database &db, yas::version const &versi
 db::manager_info_result_t db::update_info(db::database &db, db::value const &cur_save_id,
                                           db::value const &last_save_id) {
     db::value_vector_t const params{cur_save_id, last_save_id};
-    if (auto update_result = db.execute_update(db::info::sql_for_update_save_ids(), params)) {
-        if (auto select_result = db::fetch_info(db)) {
+    if (db::update_result_t update_result = db.execute_update(db::info::sql_for_update_save_ids(), params)) {
+        if (db::manager_info_result_t select_result = db::fetch_info(db)) {
             return db::manager_info_result_t{std::move(select_result.value())};
         } else {
             return db::manager_info_result_t{std::move(select_result.error())};
@@ -263,8 +263,8 @@ db::manager_info_result_t db::update_info(db::database &db, db::value const &cur
 
 db::manager_info_result_t db::update_current_save_id(db::database &db, db::value const &cur_save_id) {
     db::value_vector_t const params{cur_save_id};
-    if (auto update_result = db.execute_update(db::info::sql_for_update_current_save_id(), params)) {
-        if (auto select_result = db::fetch_info(db)) {
+    if (db::update_result_t update_result = db.execute_update(db::info::sql_for_update_current_save_id(), params)) {
+        if (db::manager_info_result_t select_result = db::fetch_info(db)) {
             return db::manager_info_result_t{std::move(select_result.value())};
         } else {
             return db::manager_info_result_t{std::move(select_result.error())};
@@ -276,7 +276,8 @@ db::manager_info_result_t db::update_current_save_id(db::database &db, db::value
 }
 
 db::manager_result_t db::update_version(db::database &db, yas::version const &version) {
-    if (auto update_result = db.execute_update(db::info::sql_for_update_version(), {db::value{version.str()}})) {
+    if (db::update_result_t update_result =
+            db.execute_update(db::info::sql_for_update_version(), {db::value{version.str()}})) {
         return db::manager_result_t{nullptr};
     } else {
         return db::make_error_result(db::manager_error_type::update_info_failed, std::move(update_result.error()));
@@ -320,13 +321,13 @@ db::const_object_vector_map_t db::to_const_vector_objects(db::model const &model
                                                           db::object_data_vector_map_t const &datas) {
     db::const_object_vector_map_t objects;
     for (auto const &entity_pair : datas) {
-        auto const &entity_name = entity_pair.first;
-        auto const &entity_datas = entity_pair.second;
+        std::string const &entity_name = entity_pair.first;
+        db::object_data_vector_t const &entity_datas = entity_pair.second;
 
         db::const_object_vector_t entity_objects;
         entity_objects.reserve(entity_datas.size());
 
-        for (auto const &data : entity_datas) {
+        for (db::object_data const &data : entity_datas) {
             if (db::const_object obj{model.entity(entity_name), data}) {
                 entity_objects.emplace_back(std::move(obj));
             }
@@ -341,13 +342,13 @@ db::const_object_vector_map_t db::to_const_vector_objects(db::model const &model
 db::const_object_map_map_t db::to_const_map_objects(db::model const &model, db::object_data_vector_map_t const &datas) {
     db::const_object_map_map_t objects;
     for (auto const &entity_pair : datas) {
-        auto const &entity_name = entity_pair.first;
-        auto const &entity_datas = entity_pair.second;
+        std::string const &entity_name = entity_pair.first;
+        db::object_data_vector_t const &entity_datas = entity_pair.second;
 
         db::const_object_map_t entity_objects;
         entity_objects.reserve(entity_datas.size());
 
-        for (auto const &data : entity_datas) {
+        for (db::object_data const &data : entity_datas) {
             if (db::const_object obj{model.entity(entity_name), data}) {
                 entity_objects.emplace(obj.object_id().stable(), std::move(obj));
             }
@@ -392,10 +393,11 @@ db::object_data_vector_result_t db::make_entity_object_datas(db::database &db, s
         db::id_vector_map_t rels;
 
         if (attrs.count(db::save_id_field) > 0) {
-            auto const &save_id = attrs.at(db::save_id_field);
-            auto const &src_obj_id = attrs.at(db::object_id_field);
+            db::value const &save_id = attrs.at(db::save_id_field);
+            db::value const &src_obj_id = attrs.at(db::object_id_field);
 
-            if (auto rel_data_result = db::select_relation_data(db, rel_models, save_id, src_obj_id)) {
+            if (db::value_vector_map_result_t rel_data_result =
+                    db::select_relation_data(db, rel_models, save_id, src_obj_id)) {
                 rels = db::to_stable_ids(rel_data_result.value());
             } else {
                 return db::object_data_vector_result_t{std::move(rel_data_result.error())};
@@ -415,9 +417,9 @@ db::object_data_vector_result_t db::make_entity_object_datas(db::database &db, s
 
 db::manager_result_t db::migrate_db_if_needed(db::database &db, db::model const &model) {
     // infoからバージョンを取得。1つしかデータが無いこと前提
-    if (auto select_result = db::fetch_info(db)) {
+    if (db::manager_info_result_t select_result = db::fetch_info(db)) {
         // infoを現在のバージョンで上書き
-        if (auto update_result = db::update_version(db, model.version())) {
+        if (db::manager_result_t update_result = db::update_version(db, model.version())) {
             db::info const &info = select_result.value();
             if (model.version() <= info.version()) {
                 // モデルのバージョンがデータベースのバージョンがより低ければマイグレーションを行わない
@@ -432,15 +434,15 @@ db::manager_result_t db::migrate_db_if_needed(db::database &db, db::model const 
 
     // マイグレーションが必要な場合
     for (auto const &entity_pair : model.entities()) {
-        auto const &entity_name = entity_pair.first;
-        auto const &entity = entity_pair.second;
+        std::string const &entity_name = entity_pair.first;
+        db::entity const &entity = entity_pair.second;
 
         if (db::table_exists(db, entity_name)) {
             // エンティティのテーブルがすでに存在している場合
             for (auto const &attr_pair : entity.all_attributes) {
                 if (!db::column_exists(db, attr_pair.first, entity_name)) {
                     // テーブルにカラムが存在しなければalter tableを実行する
-                    auto const &attr = attr_pair.second;
+                    db::attribute const &attr = attr_pair.second;
                     if (auto ul = unless(db.execute_update(alter_table_sql(entity_name, attr.sql())))) {
                         return db::make_error_result(db::manager_error_type::alter_entity_table_failed,
                                                      std::move(ul.value.error()));
@@ -468,7 +470,7 @@ db::manager_result_t db::migrate_db_if_needed(db::database &db, db::model const 
     // インデックスのテーブルを作成する
     for (auto const &index_pair : model.indices()) {
         if (!db::index_exists(db, index_pair.first)) {
-            auto &index = index_pair.second;
+            db::index const &index = index_pair.second;
             if (auto ul = unless(db.execute_update(index.sql_for_create()))) {
                 return db::make_error_result(db::manager_error_type::create_index_failed, std::move(ul.value.error()));
             }
@@ -487,7 +489,7 @@ db::manager_result_t db::create_info_and_tables(db::database &db, db::model cons
     // 全てのエンティティと関連のテーブルをデータベース上に作成する
     auto const &entities = model.entities();
     for (auto &entity_pair : entities) {
-        auto &entity = entity_pair.second;
+        db::entity const &entity = entity_pair.second;
         if (auto ul = unless(db.execute_update(entity.sql_for_create()))) {
             return db::make_error_result(db::manager_error_type::create_entity_table_failed,
                                          std::move(ul.value.error()));
@@ -503,7 +505,7 @@ db::manager_result_t db::create_info_and_tables(db::database &db, db::model cons
 
     // 全てのインデックスをデータベース上に作成する
     for (auto const &index_pair : model.indices()) {
-        auto &index = index_pair.second;
+        db::index const &index = index_pair.second;
         if (auto ul = unless(db.execute_update(index.sql_for_create()))) {
             return db::make_error_result(db::manager_error_type::create_index_failed, std::move(ul.value.error()));
         }
@@ -515,8 +517,8 @@ db::manager_result_t db::create_info_and_tables(db::database &db, db::model cons
 db::manager_result_t db::clear_db(db::database &db, db::model const &model) {
     // トランザクション開始
     for (auto const &entity_pair : model.entities()) {
-        auto const &entity = entity_pair.second;
-        auto const &entity_table_name = entity.name;
+        db::entity const &entity = entity_pair.second;
+        std::string const &entity_table_name = entity.name;
 
         // エンティティのテーブルのデータを全てデータベースから削除
         if (auto ul = unless(db.execute_update(db::delete_sql(entity_table_name)))) {
@@ -524,7 +526,7 @@ db::manager_result_t db::clear_db(db::database &db, db::model const &model) {
         }
 
         for (auto const &rel_pair : entity.relations) {
-            auto const rel_table_name = rel_pair.second.table_name;
+            std::string const rel_table_name = rel_pair.second.table_name;
 
             // 関連のテーブルのデータを全てデータベースから削除
             if (auto ul = unless(db.execute_update(db::delete_sql(rel_table_name)))) {
@@ -549,15 +551,15 @@ db::manager_fetch_result_t db::insert(db::database &db, db::model const &model, 
 
     db::object_data_vector_map_t inserted_datas;
     db::integer::type start_obj_id = 1;
-    auto next_save_id = info.next_save_id_value();
+    db::value next_save_id = info.next_save_id_value();
 
     for (auto &values_pair : values) {
-        auto const &entity_name = values_pair.first;
+        std::string const &entity_name = values_pair.first;
         auto &entity_values = values_pair.second;
 
         // エンティティのデータ中のオブジェクトIDの最大値から次のIDを取得する
         // まだデータがなければ初期値の1のまま
-        if (auto const max_value = db::max(db, entity_name, db::object_id_field)) {
+        if (db::value const max_value = db::max(db, entity_name, db::object_id_field)) {
             start_obj_id = max_value.get<db::integer>() + 1;
         }
 
@@ -587,7 +589,7 @@ db::manager_fetch_result_t db::insert(db::database &db, db::model const &model, 
                                      .where_exprs = db::equal_field_expr(db::object_id_field),
                                      .arguments = {{std::make_pair(db::object_id_field, obj_id_value)}}};
 
-            if (auto select_result = db::select(db, std::move(option))) {
+            if (db::select_result_t select_result = db::select(db, std::move(option))) {
                 // データをobject_dataにしてcompletionに返すinserted_datasに追加
                 if (inserted_datas.count(entity_name) == 0) {
                     db::object_data_vector_t entity_datas{};
@@ -614,7 +616,7 @@ db::manager_fetch_result_t db::insert(db::database &db, db::model const &model, 
 db::manager_fetch_result_t db::fetch(db::database &db, db::model const &model, db::fetch_option const &fetch_option) {
     // カレントセーブIDをデータベースから取得
     db::value current_save_id = db::null_value();
-    if (auto info_select_result = db::fetch_info(db)) {
+    if (db::manager_info_result_t info_select_result = db::fetch_info(db)) {
         current_save_id = info_select_result.value().current_save_id_value();
     } else {
         return db::manager_fetch_result_t{std::move(info_select_result.error())};
@@ -624,11 +626,11 @@ db::manager_fetch_result_t db::fetch(db::database &db, db::model const &model, d
 
     for (auto const &pair : fetch_option.select_options()) {
         std::string const entity_name = pair.first;
-        auto const &sel_option = pair.second;
-        auto const &rel_models = model.relations(entity_name);
+        db::select_option const &sel_option = pair.second;
+        db::relation_map_t const &rel_models = model.relations(entity_name);
 
         // カレントセーブIDまでで条件にあった最後のデータをデータベースから取得する
-        if (auto select_result = db::select_last(db, sel_option, current_save_id)) {
+        if (db::select_result_t select_result = db::select_last(db, sel_option, current_save_id)) {
             // アトリビュートのみのデータから関連のデータを加えてobject_dataを生成する
             auto &entity_attrs = select_result.value();
             if (auto obj_datas_result = db::make_entity_object_datas(db, entity_name, rel_models, entity_attrs)) {
@@ -664,8 +666,8 @@ db::update_result_t db::purge_relations(database &db, std::string const &table, 
 
 db::manager_result_t db::purge_db(db::database &db, db::model const &model) {
     // DB情報をデータベースから取得
-    if (auto select_result = db::fetch_info(db)) {
-        auto const &db_info = select_result.value();
+    if (db::manager_info_result_t select_result = db::fetch_info(db)) {
+        db::info const &db_info = select_result.value();
         if (db_info.current_save_id() < db_info.last_save_id()) {
             // ラストよりカレントのセーブIDが小さければ、カレントより大きいセーブIDのデータを削除
             // つまり、アンドゥした分を削除
@@ -681,22 +683,22 @@ db::manager_result_t db::purge_db(db::database &db, db::model const &model) {
     db::value_vector_t const one_value_args{db::value{db::integer::type{1}}};
 
     for (auto const &entity_pair : model.entities()) {
-        auto const &entity_name = entity_pair.first;
-        auto const &entity = entity_pair.second;
+        std::string const &entity_name = entity_pair.first;
+        db::entity const &entity = entity_pair.second;
 
         // エンティティのデータをパージする（同じオブジェクトIDのデータは最後のものだけ生かす）
-        if (auto purge_result = db::purge_attributes(db, entity_name)) {
+        if (db::update_result_t purge_result = db::purge_attributes(db, entity_name)) {
             // 残ったデータのセーブIDを全て1にする
-            auto const update_entity_sql = db::update_sql(entity_name, save_id_fields);
-            if (auto update_result = db.execute_update(update_entity_sql, one_value_args)) {
+            std::string const update_entity_sql = db::update_sql(entity_name, save_id_fields);
+            if (db::update_result_t update_result = db.execute_update(update_entity_sql, one_value_args)) {
                 for (auto const &rel_pair : entity.relations) {
-                    auto const &relation = rel_pair.second;
-                    auto const &rel_table_name = relation.table_name;
+                    db::relation const &relation = rel_pair.second;
+                    std::string const &rel_table_name = relation.table_name;
 
                     // 関連のデータをパージする（同じソースIDのデータは最後のものだけ生かす）
-                    if (auto purge_rel_result = db::purge_relations(db, rel_table_name, entity_name)) {
+                    if (db::update_result_t purge_rel_result = db::purge_relations(db, rel_table_name, entity_name)) {
                         // 残ったデータのセーブIDを全て1にする
-                        auto const update_rel_sql = db::update_sql(rel_table_name, save_id_fields);
+                        std::string const update_rel_sql = db::update_sql(rel_table_name, save_id_fields);
                         if (auto ul = unless(db.execute_update(update_rel_sql, one_value_args))) {
                             return db::make_error_result(db::manager_error_type::update_save_id_failed,
                                                          std::move(ul.value.error()));
@@ -729,17 +731,17 @@ db::manager_fetch_result_t db::save(db::database &db, db::model const &model, db
 
     db::object_data_vector_map_t saved_datas;
 
-    auto const next_save_id = info.next_save_id_value();
+    db::value const next_save_id = info.next_save_id_value();
     auto const save_id_pair = std::make_pair(db::save_id_field, next_save_id);
 
     for (auto const &entity_pair : changed_datas) {
-        auto const &entity_name = entity_pair.first;
+        std::string const &entity_name = entity_pair.first;
         auto const &changed_entity_datas = entity_pair.second;
-        auto const entity_insert_sql = model.entity(entity_name).sql_for_insert();
+        std::string const entity_insert_sql = model.entity(entity_name).sql_for_insert();
 
         db::object_data_vector_t entity_saved_datas;
 
-        for (auto changed_data : changed_entity_datas) {
+        for (db::object_data changed_data : changed_entity_datas) {
             db::object_data saved_data{.object_id = db::null_id()};
 
             // 保存するデータのアトリビュートのidは削除する（rowidなのでいらない）
@@ -750,16 +752,16 @@ db::manager_fetch_result_t db::save(db::database &db, db::model const &model, db
             if (changed_data.attributes.count(db::object_id_field) == 0) {
                 // 保存するデータにまだオブジェクトIDがなければ（挿入されてtemporaryな状態）データベース上の最大値+1をセットする
                 db::integer::type obj_id = 0;
-                if (auto max_value = db::max(db, entity_name, db::object_id_field)) {
+                if (db::value max_value = db::max(db, entity_name, db::object_id_field)) {
                     obj_id = max_value.get<db::integer>();
                 }
-                auto const next_obj_id = obj_id + 1;
+                db::integer::type const next_obj_id = obj_id + 1;
                 replace(changed_data.attributes, db::object_id_field, db::value{next_obj_id});
                 changed_data.object_id.set_stable(next_obj_id);
             }
 
             // データベースにアトリビュートのデータを挿入する
-            if (auto update_result = db.execute_update(entity_insert_sql, changed_data.attributes)) {
+            if (db::update_result_t update_result = db.execute_update(entity_insert_sql, changed_data.attributes)) {
                 saved_data.attributes = changed_data.attributes;
             } else {
                 return db::manager_fetch_result_t{db::manager_error{db::manager_error_type::insert_attributes_failed,
@@ -767,8 +769,8 @@ db::manager_fetch_result_t db::save(db::database &db, db::model const &model, db
             }
 
             // 挿入したデータのrowidを取得
-            if (auto row_result = db.last_insert_rowid()) {
-                auto pk_id = db::value{std::move(row_result.value())};
+            if (db::row_result_t row_result = db.last_insert_rowid()) {
+                db::value pk_id{std::move(row_result.value())};
                 saved_data.attributes.emplace(db::pk_id_field, std::move(pk_id));
             } else {
                 return db::manager_fetch_result_t{
@@ -785,25 +787,25 @@ db::manager_fetch_result_t db::save(db::database &db, db::model const &model, db
     }
 
     for (auto const &entity_pair : changed_datas) {
-        auto const &entity_name = entity_pair.first;
+        std::string const &entity_name = entity_pair.first;
         auto const &changed_entity_datas = entity_pair.second;
         auto const &rel_models = model.relations(entity_name);
         auto &saved_entity_datas = saved_datas.at(entity_name);
 
         auto each = make_fast_each(changed_entity_datas.size());
         while (yas_each_next(each)) {
-            auto const &idx = yas_each_index(each);
-            auto const &changed_data = changed_entity_datas.at(idx);
-            auto &saved_data = saved_entity_datas.at(idx);
+            std::size_t const &idx = yas_each_index(each);
+            db::object_data const &changed_data = changed_entity_datas.at(idx);
+            db::object_data &saved_data = saved_entity_datas.at(idx);
 
-            auto const &src_pk_id = saved_data.attributes.at(db::pk_id_field);
-            auto const &src_obj_id = saved_data.object_id.stable_value();
+            db::value const &src_pk_id = saved_data.attributes.at(db::pk_id_field);
+            db::value const &src_obj_id = saved_data.object_id.stable_value();
 
             for (auto const &rel_pair : changed_data.relations) {
                 // データベースに関連のデータを挿入する
-                auto const &rel_model = rel_models.at(rel_pair.first);
-                auto rel_tgt_obj_ids = db::to_values(rel_pair.second);
-                if (auto insert_result =
+                db::relation const &rel_model = rel_models.at(rel_pair.first);
+                db::value_vector_t rel_tgt_obj_ids = db::to_values(rel_pair.second);
+                if (db::manager_result_t insert_result =
                         db::insert_relations(db, rel_model, src_pk_id, src_obj_id, rel_tgt_obj_ids, next_save_id)) {
                     saved_data.relations.emplace(rel_pair.first, rel_pair.second);
                 } else {
@@ -823,7 +825,7 @@ db::manager_result_t db::remove_relations_at_save(db::database &db, db::model co
 
     for (auto const &entity_pair : changed_datas) {
         // エンティティごとの処理
-        auto const &entity_name = entity_pair.first;
+        std::string const &entity_name = entity_pair.first;
         auto const &changed_entity_datas = entity_pair.second;
         auto const &inv_rel_names = model.entity(entity_name).inverse_relation_names;
 
@@ -837,7 +839,7 @@ db::manager_result_t db::remove_relations_at_save(db::database &db, db::model co
         tgt_obj_ids.reserve(changed_entity_datas.size());
 
         for (db::object_data const &data : changed_entity_datas) {
-            auto const &action = data.attributes.at(db::action_field);
+            db::value const &action = data.attributes.at(db::action_field);
             if (action.get<db::text>() != db::remove_action) {
                 // 削除されていなければスキップ
                 continue;
@@ -859,8 +861,9 @@ db::manager_result_t db::remove_relations_at_save(db::database &db, db::model co
 
             // tgt_obj_idsが関連先に含まれているオブジェクトのアトリビュートを取得
             for (auto const &rel_name : rel_names) {
-                auto const &rel = model.relation(inv_entity_name, rel_name);
-                if (auto select_result = db::select_for_save(db, inv_entity_name, rel.table_name, tgt_obj_ids)) {
+                db::relation const &rel = model.relation(inv_entity_name, rel_name);
+                if (db::select_result_t select_result =
+                        db::select_for_save(db, inv_entity_name, rel.table_name, tgt_obj_ids)) {
                     for (auto const &attr : select_result.value()) {
                         std::string obj_id_str = to_string(attr.at(db::object_id_field));
                         if (entity_attrs_map.count(obj_id_str) == 0) {
@@ -895,10 +898,10 @@ db::manager_result_t db::remove_relations_at_save(db::database &db, db::model co
             }
 
             if (inv_removed_datas.size() > 0) {
-                auto const &entity_insert_sql = model.entity(inv_entity_name).sql_for_insert();
+                std::string const &entity_insert_sql = model.entity(inv_entity_name).sql_for_insert();
                 auto const &rel_models = model.relations(inv_entity_name);
 
-                for (auto &obj_data : inv_removed_datas) {
+                for (db::object_data &obj_data : inv_removed_datas) {
                     // 保存するデータのアトリビュートのidは削除する（rowidなのでいらない）
                     erase_if_exists(obj_data.attributes, db::pk_id_field);
                     // 保存するデータのセーブIDを今セーブするIDに置き換える
@@ -912,14 +915,14 @@ db::manager_result_t db::remove_relations_at_save(db::database &db, db::model co
                     }
 
                     // pk_idを取得してセットする
-                    if (auto row_result = db.last_insert_rowid()) {
-                        auto const src_pk_id = db::value{std::move(row_result.value())};
-                        auto const src_obj_id = obj_data.attributes.at(db::object_id_field);
+                    if (db::row_result_t row_result = db.last_insert_rowid()) {
+                        db::value const src_pk_id = db::value{std::move(row_result.value())};
+                        db::value const src_obj_id = obj_data.attributes.at(db::object_id_field);
 
                         for (auto const &rel_pair : obj_data.relations) {
                             // データベースに関連のデータを挿入する
-                            auto const &rel_model = rel_models.at(rel_pair.first);
-                            auto const rel_tgt_obj_ids = filter(rel_pair.second, [&tgt_obj_ids](auto const &obj_id) {
+                            db::relation const &rel_model = rel_models.at(rel_pair.first);
+                            auto const rel_tgt_obj_ids = filter(rel_pair.second, [&tgt_obj_ids](db::object_id const &obj_id) {
                                 return !contains(tgt_obj_ids, obj_id.stable_value());
                             });
                             if (rel_tgt_obj_ids.size() > 0) {
@@ -944,14 +947,14 @@ db::manager_result_t db::remove_relations_at_save(db::database &db, db::model co
 // 指定したsave_idより大きいsave_idのデータを、全てのエンティティに対してデータベース上から削除する
 db::manager_result_t db::delete_next_to_last(db::database &db, db::model const &model, db::value const &save_id) {
     auto const &entity_models = model.entities();
-    auto const delete_exprs = expr(db::save_id_field, ">", to_string(save_id));
+    std::string const delete_exprs = expr(db::save_id_field, ">", to_string(save_id));
 
     for (auto const &entity_pair : entity_models) {
-        auto const &entity_name = entity_pair.first;
+        std::string const &entity_name = entity_pair.first;
 
-        if (auto delete_result = db.execute_update(db::delete_sql(entity_name, delete_exprs))) {
+        if (db::update_result_t delete_result = db.execute_update(db::delete_sql(entity_name, delete_exprs))) {
             for (auto const &rel_pair : entity_pair.second.relations) {
-                auto const table = rel_pair.second.table_name;
+                std::string const table = rel_pair.second.table_name;
 
                 if (auto ul = unless(db.execute_update(db::delete_sql(table, delete_exprs)))) {
                     return db::make_error_result(db::manager_error_type::delete_failed, std::move(ul.value.error()));
@@ -968,12 +971,12 @@ db::manager_result_t db::delete_next_to_last(db::database &db, db::model const &
 db::manager_result_t db::insert_relations(db::database &db, db::relation const &rel_model, db::value const &src_pk_id,
                                           db::value const &src_obj_id, db::value_vector_t const &rel_tgt_obj_ids,
                                           db::value const &save_id) {
-    auto const &rel_insert_sql = rel_model.sql_for_insert();
+    std::string const &rel_insert_sql = rel_model.sql_for_insert();
     auto src_pk_id_pair = std::make_pair(db::src_pk_id_field, src_pk_id);
     auto src_obj_id_pair = std::make_pair(db::src_obj_id_field, src_obj_id);
     auto save_id_pair = std::make_pair(db::save_id_field, save_id);
 
-    for (auto const &rel_tgt_obj_id : rel_tgt_obj_ids) {
+    for (db::value const &rel_tgt_obj_id : rel_tgt_obj_ids) {
         auto tgt_obj_id_pair = std::make_pair(db::tgt_obj_id_field, rel_tgt_obj_id);
 
         db::value_map_t args{src_pk_id_pair, src_obj_id_pair, std::move(tgt_obj_id_pair), save_id_pair};

@@ -28,11 +28,11 @@ db::relation::relation(std::string const &src_entity_name, std::string const &at
 }
 
 std::string db::relation::sql_for_create() const {
-    auto id_sql = db::attribute::id_attribute().sql();
-    auto src_pk_id_sql = db::attribute{db::src_pk_id_field, db::integer::name}.sql();
-    auto src_obj_id_sql = db::attribute{db::src_obj_id_field, db::integer::name}.sql();
-    auto tgt_obj_id_sql = db::attribute{db::tgt_obj_id_field, db::integer::name}.sql();
-    auto save_id_sql = db::attribute{db::save_id_field, db::integer::name}.sql();
+    std::string id_sql = db::attribute::id_attribute().sql();
+    std::string src_pk_id_sql = db::attribute{db::src_pk_id_field, db::integer::name}.sql();
+    std::string src_obj_id_sql = db::attribute{db::src_obj_id_field, db::integer::name}.sql();
+    std::string tgt_obj_id_sql = db::attribute{db::tgt_obj_id_field, db::integer::name}.sql();
+    std::string save_id_sql = db::attribute{db::save_id_field, db::integer::name}.sql();
 
     return db::create_table_sql(this->table_name,
                                 {std::move(id_sql), std::move(src_pk_id_sql), std::move(src_obj_id_sql),

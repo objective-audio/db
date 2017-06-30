@@ -108,7 +108,7 @@ db::update_result_t db::in_save_point(db::database &db, std::function<void(bool 
 #endif
 
 bool db::table_exists(db::database const &db, std::string const &table_name) {
-    if (auto row_set = db::get_table_schema(db, table_name)) {
+    if (db::row_set row_set = db::get_table_schema(db, table_name)) {
         if (row_set.next()) {
             return true;
         }
@@ -117,7 +117,7 @@ bool db::table_exists(db::database const &db, std::string const &table_name) {
 }
 
 bool db::index_exists(db::database const &db, std::string const &index_name) {
-    if (auto row_set = db::get_index_schema(db, index_name)) {
+    if (db::row_set row_set = db::get_index_schema(db, index_name)) {
         if (row_set.next()) {
             return true;
         }
@@ -126,26 +126,26 @@ bool db::index_exists(db::database const &db, std::string const &index_name) {
 }
 
 db::row_set db::get_schema(db::database const &db) {
-    if (auto query_result = db.execute_query(
+    if (db::query_result_t result = db.execute_query(
             "select type, name, tbl_name, rootpage, sql from (select * from sqlite_master union all select * from "
             "sqlite_temp_master) where type != 'meta' and name not like 'sqlite_%' order by tbl_name, type desc, "
             "name")) {
-        return query_result.value();
+        return result.value();
     }
     return nullptr;
 }
 
 db::row_set db::get_table_schema(db::database const &db, std::string const &table_name) {
-    if (auto query_result = db.execute_query("PRAGMA table_info('" + table_name + "')")) {
-        return query_result.value();
+    if (db::query_result_t result = db.execute_query("PRAGMA table_info('" + table_name + "')")) {
+        return result.value();
     }
     return nullptr;
 }
 
 db::row_set db::get_index_schema(db::database const &db, std::string const &index_name) {
-    if (auto query_result =
+    if (db::query_result_t result =
             db.execute_query("SELECT * FROM sqlite_master WHERE type = 'index' AND name = '" + index_name + "';")) {
-        return query_result.value();
+        return result.value();
     }
     return nullptr;
 }
@@ -154,9 +154,9 @@ bool db::column_exists(db::database const &db, std::string column_name, std::str
     std::string lower_table_name = to_lower(std::move(table_name));
     std::string lower_column_name = to_lower(std::move(column_name));
 
-    if (auto row_set = db::get_table_schema(db, lower_table_name)) {
+    if (db::row_set row_set = db::get_table_schema(db, lower_table_name)) {
         while (row_set.next()) {
-            auto value = row_set.column_value("name");
+            db::value value = row_set.column_value("name");
             if (to_lower(value.get<db::text>()) == lower_column_name) {
                 return true;
             }
@@ -167,17 +167,17 @@ bool db::column_exists(db::database const &db, std::string column_name, std::str
 }
 
 db::select_result_t db::select(db::database const &db, db::select_option const &option) {
-    auto const sql = db::select_sql(option) + ";";
+    std::string const sql = db::select_sql(option) + ";";
 
     db::value_map_vector_t value_map_vector;
 
-    if (auto query_result = db.execute_query(sql, option.arguments)) {
-        auto row_set = query_result.value();
+    if (db::query_result_t result = db.execute_query(sql, option.arguments)) {
+        auto row_set = result.value();
         while (row_set.next()) {
             value_map_vector.emplace_back(row_set.values());
         }
     } else {
-        return db::select_result_t{std::move(query_result.error())};
+        return db::select_result_t{std::move(result.error())};
     }
 
     return db::select_result_t{value_map_vector};
@@ -186,7 +186,7 @@ db::select_result_t db::select(db::database const &db, db::select_option const &
 db::select_single_result_t db::select_single(db::database const &db, db::select_option option) {
     option.limit_range = {.location = 0, .length = 1};
 
-    if (auto result = db::select(db, option)) {
+    if (db::select_result_t result = db::select(db, option)) {
         if (result.value().size() > 0) {
             return db::select_single_result_t{std::move(result.value().at(0))};
         }
@@ -196,8 +196,8 @@ db::select_single_result_t db::select_single(db::database const &db, db::select_
 }
 
 db::value db::max(database const &db, std::string const &table_name, std::string const &field) {
-    if (auto query_result = db.execute_query("SELECT MAX(" + field + ") FROM " + table_name + ";")) {
-        auto &row_set = query_result.value();
+    if (db::query_result_t result = db.execute_query("SELECT MAX(" + field + ") FROM " + table_name + ";")) {
+        auto &row_set = result.value();
         if (row_set.next()) {
             return row_set.column_value(0);
         }

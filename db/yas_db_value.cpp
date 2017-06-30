@@ -33,7 +33,7 @@ bool db::blob::operator==(blob const &rhs) const {
     } else if (this->size() == rhs.size()) {
         auto each = make_fast_each(size());
         while (yas_each_next(each)) {
-            auto const &idx = yas_each_index(each);
+            std::size_t const &idx = yas_each_index(each);
             if (lhs_data[idx] != rhs_data[idx]) {
                 return false;
             }
@@ -81,7 +81,7 @@ struct db::value::impl : public impl_base {
 
     virtual bool is_equal(std::shared_ptr<base::impl> const &rhs) const override {
         if (auto casted_rhs = std::dynamic_pointer_cast<impl>(rhs)) {
-            auto &type_info = type();
+            std::type_info const &type_info = type();
             if (type_info == casted_rhs->type()) {
                 return this->_value == casted_rhs->_value;
             }
@@ -181,7 +181,7 @@ template db::blob::type const &db::value::get<db::blob>() const;
 template db::null::type const &db::value::get<db::null>() const;
 
 std::string db::value::sql() const {
-    auto const &type_info = type();
+    std::type_info const &type_info = type();
     if (type_info == typeid(db::integer)) {
         return std::to_string(get<db::integer>());
     } else if (type_info == typeid(db::real)) {
@@ -210,7 +210,7 @@ db::value const &db::null_value() {
 }
 
 std::string yas::to_string(const db::value &value) {
-    auto const &type = value.type();
+    std::type_info const &type = value.type();
 
     if (type == typeid(db::integer)) {
         return std::to_string(value.get<db::integer>());
@@ -228,7 +228,7 @@ std::string yas::to_string(const db::value &value) {
 }
 
 std::string yas::to_string(db::value_vector_t const &vector) {
-    auto components = to_vector<std::string>(vector, [](auto const &value) { return to_string(value); });
+    auto components = to_vector<std::string>(vector, [](db::value const &value) { return to_string(value); });
     return "[" + joined(components, ",") + "]";
 }
 
@@ -260,7 +260,7 @@ std::string yas::to_string(db::value_map_vector_map_t const &map, bool const for
 
 db::time_point_t yas::to_time_point(db::value const &value) {
     if (value.type() == typeid(db::integer)) {
-        auto integer_value = value.get<db::integer>();
+        db::integer::type integer_value = value.get<db::integer>();
         return db::time_point_t{std::chrono::nanoseconds{integer_value}};
     }
     return {};
