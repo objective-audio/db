@@ -54,7 +54,6 @@ namespace db {
     using value_vector_map_result_t = result<db::value_vector_map_t, db::error>;
 
     using manager_result_t = result<std::nullptr_t, db::manager_error>;
-    using manager_value_result_t = result<db::value, db::manager_error>;
     using manager_vector_result_t = result<db::object_vector_map_t, db::manager_error>;
     using manager_map_result_t = result<db::object_map_map_t, db::manager_error>;
     using manager_const_vector_result_t = result<db::const_object_vector_map_t, db::manager_error>;
