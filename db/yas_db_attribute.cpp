@@ -19,9 +19,13 @@ namespace db {
 }
 }
 
-db::attribute::attribute(std::string const &name, std::string const &type, db::value const &default_value,
-                         bool const not_null, bool const primary, bool const unique)
-    : name(name), type(type), default_value(default_value), not_null(not_null), primary(primary), unique(unique) {
+db::attribute::attribute(args args)
+    : name(args.name),
+      type(args.type),
+      default_value(args.default_value),
+      not_null(args.not_null),
+      primary(args.primary),
+      unique(args.unique) {
     if (name.size() == 0) {
         throw std::invalid_argument("invalid name");
     }
@@ -65,26 +69,26 @@ std::string db::attribute::sql() const {
 }
 
 db::attribute const &db::attribute::id_attribute() {
-    static db::attribute const attr{db::pk_id_field, db::integer::name, nullptr, false, true};
+    static db::attribute const attr{{db::pk_id_field, db::integer::name, nullptr, false, true}};
     return attr;
 }
 
 db::attribute const &db::attribute::object_id_attribute() {
-    static db::attribute const attr{db::object_id_field, db::integer::name, db::value{db::integer::type{0}}, true};
+    static db::attribute const attr{{db::object_id_field, db::integer::name, db::value{db::integer::type{0}}, true}};
     return attr;
 }
 
 db::attribute const &db::attribute::save_id_attribute() {
-    static db::attribute const attr{db::save_id_field, db::integer::name, db::value{db::integer::type{0}}, true};
+    static db::attribute const attr{{db::save_id_field, db::integer::name, db::value{db::integer::type{0}}, true}};
     return attr;
 }
 
 db::attribute const &db::attribute::action_attribute() {
-    static db::attribute const attr{db::action_field, db::text::name, db::insert_action_value(), true};
+    static db::attribute const attr{{db::action_field, db::text::name, db::insert_action_value(), true}};
     return attr;
 }
 
 db::attribute db::make_attribute(std::string const &name, CFDictionaryRef const dict) {
-    return db::attribute{name, get<std::string>(dict, db::type_key), get<db::value>(dict, db::default_key),
-                         get<bool>(dict, db::not_null_key), false};
+    return db::attribute{{name, get<std::string>(dict, db::type_key), get<db::value>(dict, db::default_key),
+                          get<bool>(dict, db::not_null_key), false}};
 }
