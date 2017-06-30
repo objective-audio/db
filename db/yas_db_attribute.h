@@ -19,7 +19,6 @@ namespace db {
 
         attribute(std::string const &name, std::string const &type, db::value const &default_value = nullptr,
                   bool const not_null = false, bool const primary = false, bool const unique = false);
-        attribute(std::string const &name, CFDictionaryRef const dict);
 
         std::string sql() const;
 
@@ -28,5 +27,7 @@ namespace db {
         static db::attribute const &save_id_attribute();
         static db::attribute const &action_attribute();
     };
+
+    db::attribute make_attribute(std::string const &name, CFDictionaryRef const dict);
 }
 }

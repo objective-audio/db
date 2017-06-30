@@ -46,11 +46,6 @@ db::attribute::attribute(std::string const &name, std::string const &type, db::v
     }
 }
 
-db::attribute::attribute(std::string const &name, CFDictionaryRef const dict)
-    : attribute(name, get<std::string>(dict, db::type_key), get<db::value>(dict, db::default_key),
-                get<bool>(dict, db::not_null_key), false) {
-}
-
 std::string db::attribute::sql() const {
     std::ostringstream stream;
     stream << this->name << " " << this->type;
@@ -87,4 +82,9 @@ db::attribute const &db::attribute::save_id_attribute() {
 db::attribute const &db::attribute::action_attribute() {
     static db::attribute const attr{db::action_field, db::text::name, db::insert_action_value(), true};
     return attr;
+}
+
+db::attribute db::make_attribute(std::string const &name, CFDictionaryRef const dict) {
+    return db::attribute{name, get<std::string>(dict, db::type_key), get<db::value>(dict, db::default_key),
+                         get<bool>(dict, db::not_null_key), false};
 }
