@@ -36,8 +36,6 @@ namespace db {
     using const_object_map_map_t = std::unordered_map<std::string, db::const_object_map_t>;
     using const_object_vector_t = std::vector<db::const_object>;
     using const_object_vector_map_t = std::unordered_map<std::string, db::const_object_vector_t>;
-    using weak_object_map_t = std::unordered_map<db::object_id, weak<db::object>>;
-    using weak_object_map_map_t = std::unordered_map<std::string, db::weak_object_map_t>;
     using object_data_vector_t = std::vector<db::object_data>;
     using object_data_vector_map_t = std::unordered_map<std::string, db::object_data_vector_t>;
 
