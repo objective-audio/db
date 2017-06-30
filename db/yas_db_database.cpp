@@ -105,7 +105,7 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
             if (SQLITE_BUSY == result_code || SQLITE_LOCKED == result_code) {
                 if (!tried_finalizing_open_statements) {
                     tried_finalizing_open_statements = true;
-                    while (auto stmt = sqlite3_next_stmt(this->_sqlite_handle, nullptr)) {
+                    while (sqlite3_stmt *stmt = sqlite3_next_stmt(this->_sqlite_handle, nullptr)) {
                         sqlite3_finalize(stmt);
                         retry = true;
                     }
@@ -161,7 +161,7 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
     void clear_cached_statements() {
         for (auto &pair : this->_cached_statements) {
             for (auto &statementpair : pair.second) {
-                if (auto statement = statementpair.second.closable()) {
+                if (db::closable &statement = statementpair.second.closable()) {
                     statement.close();
                 }
             }
@@ -171,7 +171,7 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
 
     void close_open_row_sets() {
         for (auto &pair : this->_open_row_sets) {
-            if (auto row_set = pair.second.lock()) {
+            if (db::row_set row_set = pair.second.lock()) {
                 row_set.db_settable().set_database(nullptr);
                 row_set.closable().close();
             }
@@ -189,8 +189,8 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
         if (type == typeid(db::null)) {
             sqlite3_bind_null(stmt, column_idx);
         } else if (type == typeid(db::blob)) {
-            auto const &blob = value.get<db::blob>();
-            const void *data = blob.data();
+            db::blob const &blob = value.get<db::blob>();
+            void const *data = blob.data();
             if (!data) {
                 data = "";
             }
@@ -233,7 +233,7 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
             result_code = sqlite3_prepare_v2(this->_sqlite_handle, sql.c_str(), -1, &stmt, 0);
 
             if (!result_code) {
-                auto result = db::update_result_t{db::error{db::error_type::sqlite, result_code, last_error_message()}};
+                db::update_result_t result{db::error{db::error_type::sqlite, result_code, last_error_message()}};
                 sqlite3_finalize(stmt);
                 this->_is_executing_statement = false;
                 return result;
@@ -257,7 +257,7 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
             }
         } else if (vec.size() == query_count) {
             while (idx < query_count) {
-                auto &value = vec.at(idx);
+                db::value const &value = vec.at(idx);
 
                 ++idx;
                 this->bind(value, idx, stmt);
@@ -316,13 +316,13 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
         static auto execute_bulk_sql_callback = [](void *id, int columns, char **values, char **names) {
             auto database_id = (db::callback_id){id}.database;
             if (db::_databases.count(database_id) > 0) {
-                if (auto database = db::_databases.at(database_id).lock()) {
+                if (db::database database = db::_databases.at(database_id).lock()) {
                     std::unordered_map<std::string, db::value> map;
                     auto each = make_fast_each(columns);
                     while (yas_each_next(each)) {
-                        auto const &idx = yas_each_index(each);
-                        auto const &name = names[idx];
-                        auto const &value = values[idx];
+                        int const &idx = yas_each_index(each);
+                        char const *const name = names[idx];
+                        char const *const value = values[idx];
                         if (name) {
                             if (value) {
                                 map.insert(std::make_pair(name, db::value{value}));
@@ -332,7 +332,7 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
                         }
                     }
 
-                    if (auto &callback = database.callback_for_execute_statements()) {
+                    if (callback_f const &callback = database.callback_for_execute_statements()) {
                         return callback(map);
                     }
                 }
@@ -390,7 +390,7 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
             result_code = sqlite3_prepare_v2(this->_sqlite_handle, sql.c_str(), -1, &stmt, 0);
 
             if (!result_code) {
-                auto result = db::query_result_t{db::error{db::error_type::sqlite, result_code, last_error_message()}};
+                db::query_result_t result{db::error{db::error_type::sqlite, result_code, last_error_message()}};
                 sqlite3_finalize(stmt);
                 this->_is_executing_statement = false;
                 return result;
@@ -413,7 +413,7 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
             }
         } else if (vec.size() == query_count) {
             while (idx < query_count) {
-                auto &value = vec.at(idx);
+                db::value const &value = vec.at(idx);
                 ++idx;
                 bind(value, idx, stmt);
             }
@@ -482,7 +482,7 @@ class db::database::impl : public base::impl, public row_set_observable::impl {
             db::callback_id id{.database = _db_key};
 
             static auto sqlite_busy_handler = [](void *id, int count) {
-                auto database_id = (db::callback_id){id}.database;
+                uint8_t const database_id = (db::callback_id){id}.database;
                 if (db::_databases.count(database_id) > 0) {
                     if (auto database = db::_databases.at(database_id).lock()) {
                         if (count == 0) {
@@ -568,9 +568,9 @@ bool db::database::good_connection() {
         return false;
     }
 
-    if (auto query_result = execute_query("select name from sqlite_master where type='table'")) {
-        auto &row_set = query_result.value();
-        if (auto closable_rs = row_set.closable()) {
+    if (db::query_result_t query_result = execute_query("select name from sqlite_master where type='table'")) {
+        db::row_set &row_set = query_result.value();
+        if (db::closable &closable_rs = row_set.closable()) {
             closable_rs.close();
         }
         return true;

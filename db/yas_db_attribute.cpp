@@ -31,7 +31,7 @@ db::attribute::attribute(std::string const &name, std::string const &type, db::v
     }
 
     if (default_value) {
-        auto const &default_type = default_value.type();
+        std::type_info const &default_type = default_value.type();
         if (type == db::integer::name && default_type != typeid(db::integer)) {
             throw std::invalid_argument("invalid default_value type");
         } else if (type == db::real::name && default_type != typeid(db::real)) {

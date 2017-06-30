@@ -37,7 +37,7 @@ class db::row_set::impl : public base::impl, public closable::impl, public db_se
     void close() override {
         this->_statement.reset();
         if (this->_database) {
-            if (auto observable_db = this->_database.row_set_observable()) {
+            if (db::row_set_observable &observable_db = this->_database.row_set_observable()) {
                 observable_db.row_set_did_close(identifier());
             }
             this->_database = nullptr;
@@ -58,11 +58,11 @@ class db::row_set::impl : public base::impl, public closable::impl, public db_se
 
     std::unordered_map<std::string, int> const &column_name_to_index_map() const {
         if (this->_column_name_to_index_map.empty()) {
-            auto *const stmt = this->_statement.stmt();
+            sqlite3_stmt *const stmt = this->_statement.stmt();
             int column_count = sqlite3_column_count(stmt);
             auto each = make_fast_each(column_count);
             while (yas_each_next(each)) {
-                auto const &idx = yas_each_index(each);
+                int const &idx = yas_each_index(each);
                 this->_column_name_to_index_map.insert(std::make_pair(to_lower(sqlite3_column_name(stmt, idx)), idx));
             }
         }
@@ -91,7 +91,7 @@ db::statement const &db::row_set::statement() const {
 }
 
 db::next_result_code db::row_set::next() {
-    auto result = next_result_code(sqlite3_step(impl_ptr<impl>()->statement().stmt()));
+    next_result_code result{sqlite3_step(impl_ptr<impl>()->statement().stmt())};
 
     if (!result) {
         impl_ptr<impl>()->close();
@@ -101,8 +101,8 @@ db::next_result_code db::row_set::next() {
 }
 
 bool db::row_set::has_row() {
-    if (auto const database = impl_ptr<impl>()->database()) {
-        if (auto const sqlite_handle = database.sqlite_handle()) {
+    if (db::database const &database = impl_ptr<impl>()->database()) {
+        if (sqlite3 *const sqlite_handle = database.sqlite_handle()) {
             return sqlite3_errcode(sqlite_handle) == SQLITE_ROW;
         }
     }
@@ -142,7 +142,7 @@ bool db::row_set::column_is_null(std::string column_name) {
 
 db::value db::row_set::column_value(int const column_idx) const {
     if (column_idx >= 0) {
-        auto *const stmt = impl_ptr<impl>()->statement().stmt();
+        sqlite3_stmt *const stmt = impl_ptr<impl>()->statement().stmt();
         int type = sqlite3_column_type(stmt, column_idx);
 
         if (type != SQLITE_NULL) {
@@ -172,7 +172,7 @@ db::value db::row_set::column_value(std::string column_name) const {
 }
 
 db::value_map_t db::row_set::values() const {
-    auto *const stmt = impl_ptr<impl>()->statement().stmt();
+    sqlite3_stmt *const stmt = impl_ptr<impl>()->statement().stmt();
     int const column_count = sqlite3_data_count(stmt);
 
     db::value_map_t map;
@@ -180,7 +180,7 @@ db::value_map_t db::row_set::values() const {
 
     auto each = make_fast_each(column_count);
     while (yas_each_next(each)) {
-        auto const &idx = yas_each_index(each);
+        int const &idx = yas_each_index(each);
         map.insert(std::make_pair(sqlite3_column_name(stmt, idx), column_value(idx)));
     }
 

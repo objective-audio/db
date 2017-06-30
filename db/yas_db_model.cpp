@@ -36,7 +36,7 @@ struct db::model::impl : public base::impl {
             return;
         }
 
-        auto version_str = get<std::string>(cf_dict, db::version_key);
+        std::string version_str = get<std::string>(cf_dict, db::version_key);
         if (version_str.size() > 0) {
             this->_version = yas::version{version_str};
         } else {
@@ -54,7 +54,7 @@ struct db::model::impl : public base::impl {
         std::unordered_map<std::string, db::string_set_map_t> entity_inv_rel_names;
 
         for (auto &cf_entities_pair : each_dictionary(cf_entities_dict)) {
-            auto entity_name = to_string((CFStringRef)cf_entities_pair.first);
+            std::string entity_name = to_string((CFStringRef)cf_entities_pair.first);
             if (entity_name.size() == 0) {
                 throw "invalid entity name";
                 return;
@@ -68,16 +68,16 @@ struct db::model::impl : public base::impl {
 
             db::attribute_map_t attributes;
 
-            auto const &id_attr = db::attribute::id_attribute();
+            db::attribute const &id_attr = db::attribute::id_attribute();
             attributes.emplace(id_attr.name, id_attr);
 
-            auto const &obj_id_attr = db::attribute::object_id_attribute();
+            db::attribute const &obj_id_attr = db::attribute::object_id_attribute();
             attributes.emplace(obj_id_attr.name, obj_id_attr);
 
-            auto const &save_id_attr = db::attribute::save_id_attribute();
+            db::attribute const &save_id_attr = db::attribute::save_id_attribute();
             attributes.emplace(save_id_attr.name, save_id_attr);
 
-            auto const &action_attr = db::attribute::action_attribute();
+            db::attribute const &action_attr = db::attribute::action_attribute();
             attributes.emplace(action_attr.name, action_attr);
 
             CFDictionaryRef cf_attributes = get<CFDictionaryRef>(cf_entity_dict, db::attributes_key);
@@ -101,7 +101,7 @@ struct db::model::impl : public base::impl {
                     if (cf_relation_dict) {
                         db::relation relation{entity_name, relation_name, cf_relation_dict};
 
-                        auto const &tgt_entity_name = relation.target_entity_name;
+                        std::string const &tgt_entity_name = relation.target_entity_name;
                         if (entity_inv_rel_names.count(tgt_entity_name) == 0) {
                             entity_inv_rel_names.insert(std::make_pair(tgt_entity_name, db::string_set_map_t{}));
                         }
@@ -120,7 +120,7 @@ struct db::model::impl : public base::impl {
         }
 
         for (auto &entity_pair : entity_params) {
-            auto const &entity_name = entity_pair.first;
+            std::string const &entity_name = entity_pair.first;
             db::string_set_map_t inv_rel_names;
             if (entity_inv_rel_names.count(entity_name)) {
                 inv_rel_names = std::move(entity_inv_rel_names.at(entity_name));
@@ -133,7 +133,7 @@ struct db::model::impl : public base::impl {
         CFDictionaryRef cf_indices_dict = get<CFDictionaryRef>(cf_dict, db::indices_key);
         if (cf_indices_dict) {
             for (auto &cf_index_pair : each_dictionary(cf_indices_dict)) {
-                auto index_name = to_string((CFStringRef)cf_index_pair.first);
+                std::string index_name = to_string((CFStringRef)cf_index_pair.first);
                 if (index_name.size() == 0) {
                     throw "invalid index name";
                     return;

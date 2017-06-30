@@ -12,7 +12,7 @@ db::sqlite_result_code::sqlite_result_code(int const &value) : result_code(value
 }
 
 db::sqlite_result_code::operator bool() const {
-    auto value = this->raw_value();
+    int value = this->raw_value();
     return value == SQLITE_OK || value == SQLITE_DONE;
 }
 

@@ -64,7 +64,7 @@ db::value yas::get(CFDictionaryRef const dict, std::string const &key) {
 
 template <>
 bool yas::get(CFDictionaryRef const dict, std::string const &key) {
-    auto db_value = get<db::value>(dict, key);
+    db::value db_value = get<db::value>(dict, key);
     if (db_value) {
         return db_value.get<db::integer>() != 0;
     }
