@@ -11,6 +11,9 @@ using namespace yas;
 db::manager_error::manager_error(std::nullptr_t) : _type(), _db_error(nullptr) {
 }
 
+db::manager_error::manager_error(db::manager_error_type const error_type) : db::manager_error(error_type, nullptr) {
+}
+
 db::manager_error::manager_error(db::manager_error_type const error_type, db::error db_error)
     : _type(error_type), _db_error(std::move(db_error)) {
 }
