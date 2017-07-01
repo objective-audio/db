@@ -367,9 +367,12 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
     }
 
     // バックグラウンドでデータベースの処理をする
-    void execute(execution_f &&execution, operation_option_t &&option) {
-        auto op_lambda = [execution = std::move(execution), manager = cast<manager>()](operation const &op) mutable {
-            if (!op.is_canceled()) {
+    void execute(execution_f &&execution, operation_option_t &&option,
+                 cancellation_f &&cancellation = []() { return false; }) {
+        auto op_lambda =
+            [cancellation = std::move(cancellation), execution = std::move(execution),
+             manager = cast<manager>()](operation const &op) mutable {
+            if (!op.is_canceled() && !cancellation()) {
                 auto &db = manager.impl_ptr<impl>()->_database;
                 db.open();
                 execution(op);
@@ -707,8 +710,9 @@ void db::manager::reset(db::manager::completion_f completion, operation_option_t
     impl_ptr<impl>()->execute_fetch_object_datas(std::move(preparation), std::move(impl_completion), std::move(option));
 }
 
-void db::manager::execute(db::manager::execution_f &&execution, operation_option_t &&option) {
-    impl_ptr<impl>()->execute(std::move(execution), std::move(option));
+void db::manager::execute(db::manager::execution_f &&execution, operation_option_t &&option,
+                          db::manager::cancellation_f &&cancellation) {
+    impl_ptr<impl>()->execute(std::move(execution), std::move(option), std::move(cancellation));
 }
 
 void db::manager::insert_objects(db::manager::insert_preparation_count_f preparation,

@@ -41,6 +41,7 @@ namespace db {
 
         enum class method { object_changed, db_info_changed };
 
+        using cancellation_f = std::function<bool(void)>;
         using execution_f = std::function<void(operation const &)>;
 
         using insert_preparation_count_f = std::function<db::entity_count_map_t(void)>;
@@ -80,7 +81,8 @@ namespace db {
         void resume();
         bool is_suspended() const;
 
-        void execute(execution_f &&execution, operation_option_t &&option = {});
+        void execute(execution_f &&execution, operation_option_t &&option = {},
+                     cancellation_f &&cancellation = []() { return false; });
 
         void setup(completion_f, operation_option_t option = {});
         void clear(completion_f, operation_option_t option = {});
