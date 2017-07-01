@@ -135,28 +135,28 @@ void db_controller::insert(entity const &entity) {
 
     this->_manager.suspend();
 
-    this->_manager.save([](db::manager_map_result_t result) {});
+    this->_manager.save([]() { return false; }, [](db::manager_map_result_t result) {});
 
     auto inserted_object = std::make_shared<db::object>(db::null_object());
 
-    this->_manager.insert_objects(
-        [entity]() {
-            auto uuid = make_cf_ref(CFUUIDCreate(nullptr));
-            auto uuid_str = make_cf_ref(CFUUIDCreateString(nullptr, uuid.object()));
-            db::value_map_t obj{{"name", db::value{to_string(uuid_str.object())}}};
+    this->_manager.insert_objects([]() { return false; },
+                                  [entity]() {
+                                      auto uuid = make_cf_ref(CFUUIDCreate(nullptr));
+                                      auto uuid_str = make_cf_ref(CFUUIDCreateString(nullptr, uuid.object()));
+                                      db::value_map_t obj{{"name", db::value{to_string(uuid_str.object())}}};
 
-            return db::value_map_vector_map_t{{to_entity_name(entity), {std::move(obj)}}};
-        },
-        [inserted_object, entity](auto result) mutable {
-            if (result) {
-                auto objects = result.value().at(to_entity_name(entity));
-                if (objects.size() > 0) {
-                    *inserted_object = objects.at(0);
-                }
-            } else {
-                std::runtime_error(to_string(result.error()));
-            }
-        });
+                                      return db::value_map_vector_map_t{{to_entity_name(entity), {std::move(obj)}}};
+                                  },
+                                  [inserted_object, entity](auto result) mutable {
+                                      if (result) {
+                                          auto objects = result.value().at(to_entity_name(entity));
+                                          if (objects.size() > 0) {
+                                              *inserted_object = objects.at(0);
+                                          }
+                                      } else {
+                                          std::runtime_error(to_string(result.error()));
+                                      }
+                                  });
 
     this->_update_objects([weak = to_weak(shared_from_this()), inserted_object, entity](auto update_result) {
         if (auto shared = weak.lock()) {
@@ -206,13 +206,14 @@ void db_controller::undo() {
 
     this->_manager.suspend();
 
-    this->_manager.reset([](auto result) {
-        if (!result) {
-            std::runtime_error(to_string(result.error()));
-        }
-    });
+    this->_manager.reset([]() { return false; },
+                         [](auto result) {
+                             if (!result) {
+                                 std::runtime_error(to_string(result.error()));
+                             }
+                         });
 
-    this->_manager.revert([undo_id]() { return undo_id; },
+    this->_manager.revert([]() { return false; }, [undo_id]() { return undo_id; },
                           [](auto result) {
                               if (!result) {
                                   std::runtime_error(to_string(result.error()));
@@ -248,13 +249,14 @@ void db_controller::redo() {
 
     this->_manager.suspend();
 
-    this->_manager.reset([](auto result) {
-        if (!result) {
-            std::runtime_error(to_string(result.error()));
-        }
-    });
+    this->_manager.reset([]() { return false; },
+                         [](auto result) {
+                             if (!result) {
+                                 std::runtime_error(to_string(result.error()));
+                             }
+                         });
 
-    this->_manager.revert([redo_id]() { return redo_id; },
+    this->_manager.revert([]() { return false; }, [redo_id]() { return redo_id; },
                           [](auto result) {
                               if (!result) {
                                   std::runtime_error(to_string(result.error()));
@@ -288,11 +290,12 @@ void db_controller::clear() {
 
     this->_manager.suspend();
 
-    this->_manager.clear([](db::manager_result_t result) {
-        if (!result) {
-            std::runtime_error(to_string(result.error()));
-        }
-    });
+    this->_manager.clear([]() { return false; },
+                         [](db::manager_result_t result) {
+                             if (!result) {
+                                 std::runtime_error(to_string(result.error()));
+                             }
+                         });
 
     this->_update_objects([weak = to_weak(shared_from_this())](auto update_result) {
         if (auto shared = weak.lock()) {
@@ -317,17 +320,19 @@ void db_controller::purge() {
 
     this->_manager.suspend();
 
-    this->_manager.save([](db::manager_map_result_t result) {
-        if (!result) {
-            std::runtime_error(to_string(result.error()));
-        }
-    });
+    this->_manager.save([]() { return false; },
+                        [](db::manager_map_result_t result) {
+                            if (!result) {
+                                std::runtime_error(to_string(result.error()));
+                            }
+                        });
 
-    this->_manager.purge([](db::manager_result_t result) {
-        if (!result) {
-            std::runtime_error(to_string(result.error()));
-        }
-    });
+    this->_manager.purge([]() { return false; },
+                         [](db::manager_result_t result) {
+                             if (!result) {
+                                 std::runtime_error(to_string(result.error()));
+                             }
+                         });
 
     this->_update_objects([weak = to_weak(shared_from_this())](auto update_result) {
         if (auto shared = weak.lock()) {
@@ -352,11 +357,12 @@ void db_controller::save_changed() {
 
     this->_manager.suspend();
 
-    this->_manager.save([](db::manager_map_result_t result) {
-        if (!result) {
-            std::runtime_error(to_string(result.error()));
-        }
-    });
+    this->_manager.save([]() { return false; },
+                        [](db::manager_map_result_t result) {
+                            if (!result) {
+                                std::runtime_error(to_string(result.error()));
+                            }
+                        });
 
     this->_update_objects([weak = to_weak(shared_from_this())](auto update_result) {
         if (auto shared = weak.lock()) {
@@ -381,11 +387,12 @@ void db_controller::cancel_changed() {
 
     this->_manager.suspend();
 
-    this->_manager.reset([](auto result) mutable {
-        if (!result) {
-            std::runtime_error(to_string(result.error()));
-        }
-    });
+    this->_manager.reset([]() { return false; },
+                         [](auto result) mutable {
+                             if (!result) {
+                                 std::runtime_error(to_string(result.error()));
+                             }
+                         });
 
     this->_update_objects([weak = to_weak(shared_from_this())](auto update_result) {
         if (auto shared = weak.lock()) {
@@ -469,7 +476,7 @@ void db_controller::_update_objects(std::function<void(db::manager_result_t)> &&
         this->_update_objects(entity, [results](auto result) { results->emplace_back(std::move(result)); });
     }
 
-    this->_manager.execute([completion = std::move(completion), results](operation const &) {
+    this->_manager.execute([]() { return false; }, [completion = std::move(completion), results](operation const &) {
         for (auto const &result : *results) {
             if (!result) {
                 completion(result);
@@ -488,6 +495,7 @@ void db_controller::_update_objects(entity const &entity, std::function<void(db:
     auto const entity_name = to_entity_name(entity);
 
     this->_manager.fetch_objects(
+        []() { return false; },
         [entity_name]() {
             return db::to_fetch_option(
                 db::select_option{.table = entity_name, .field_orders = {{db::object_id_field, db::order::ascending}}});
