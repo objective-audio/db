@@ -627,7 +627,7 @@ void db::manager::clear(db::manager::cancellation_f cancellation, db::manager::c
     this->execute(std::move(execution), std::move(option), std::move(cancellation));
 }
 
-void db::manager::purge(db::manager::completion_f completion, operation_option_t option) {
+void db::manager::purge(cancellation_f cancellation, db::manager::completion_f completion, operation_option_t option) {
     auto execution = [completion = std::move(completion), manager = *this](operation const &op) mutable {
         auto &db = manager.database();
         auto const &model = manager.model();

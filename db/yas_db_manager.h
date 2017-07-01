@@ -86,7 +86,7 @@ namespace db {
 
         void setup(completion_f, operation_option_t option = {});
         void clear(cancellation_f, completion_f, operation_option_t option = {});
-        void purge(completion_f, operation_option_t option = {});
+        void purge(cancellation_f, completion_f, operation_option_t option = {});
         void reset(completion_f, operation_option_t option = {});
         void insert_objects(insert_preparation_count_f preparation, vector_completion_f completion,
                             operation_option_t option = {});
