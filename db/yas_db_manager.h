@@ -99,7 +99,7 @@ namespace db {
                                  operation_option_t option = {});
         void fetch_const_objects(cancellation_f, fetch_preparation_ids_f, const_map_completion_f,
                                  operation_option_t option = {});
-        void save(map_completion_f completion, operation_option_t option = {});
+        void save(cancellation_f, map_completion_f completion, operation_option_t option = {});
         void revert(revert_preparation_f preparation, vector_completion_f completion, operation_option_t option = {});
 
         db::object cached_or_created_object(std::string const &entity_name, db::object_id const &object_id) const;

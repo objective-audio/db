@@ -519,7 +519,7 @@ using namespace yas;
 
                            });
 
-    manager.save([self](db::manager_map_result_t result) mutable { XCTAssertTrue(result); });
+    manager.save([]() { return false; }, [self](db::manager_map_result_t result) mutable { XCTAssertTrue(result); });
 
     manager.fetch_const_objects(
         []() { return false; },

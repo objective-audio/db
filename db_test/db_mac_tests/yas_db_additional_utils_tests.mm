@@ -366,21 +366,23 @@ using namespace yas;
                                XCTAssertEqual(object.object_id().stable_value(), db::value{2});
                            });
 
-    manager.save([self, &manager](db::manager_map_result_t result) {
-        XCTAssertTrue(result);
-        XCTAssertEqual(manager.current_save_id(), db::value{2});
+    manager.save([]() { return false; },
+                 [self, &manager](db::manager_map_result_t result) {
+                     XCTAssertTrue(result);
+                     XCTAssertEqual(manager.current_save_id(), db::value{2});
 
-        db::object_map_map_t &objects = result.value();
-        db::object_map_t &a_objects = objects.at("sample_a");
+                     db::object_map_map_t &objects = result.value();
+                     db::object_map_t &a_objects = objects.at("sample_a");
 
-        db::object &object = a_objects.at(1);
-        object.set_attribute_value("name", db::value{"name_0_2"});
-    });
+                     db::object &object = a_objects.at(1);
+                     object.set_attribute_value("name", db::value{"name_0_2"});
+                 });
 
-    manager.save([self, &manager](db::manager_map_result_t result) {
-        XCTAssertTrue(result);
-        XCTAssertEqual(manager.current_save_id(), db::value{3});
-    });
+    manager.save([]() { return false; },
+                 [self, &manager](db::manager_map_result_t result) {
+                     XCTAssertTrue(result);
+                     XCTAssertEqual(manager.current_save_id(), db::value{3});
+                 });
 
     manager.execute([self, &manager](auto const &op) {
         auto &db = manager.database();
@@ -436,40 +438,43 @@ using namespace yas;
                                obj_a.set_relation_objects("child", {obj_b0});
                            });
 
-    manager.save([self, &manager, &objects](db::manager_map_result_t result) {
-        XCTAssertTrue(result);
-        XCTAssertEqual(manager.current_save_id(), db::value{2});
+    manager.save([]() { return false; },
+                 [self, &manager, &objects](db::manager_map_result_t result) {
+                     XCTAssertTrue(result);
+                     XCTAssertEqual(manager.current_save_id(), db::value{2});
 
-        db::object &obj_a = objects.at("sample_a").at(0);
-        db::object &obj_b0 = objects.at("sample_b").at(0);
-        db::object &obj_b1 = objects.at("sample_b").at(1);
+                     db::object &obj_a = objects.at("sample_a").at(0);
+                     db::object &obj_b0 = objects.at("sample_b").at(0);
+                     db::object &obj_b1 = objects.at("sample_b").at(1);
 
-        obj_a.set_attribute_value("name", db::value{"test_a_3"});
-        obj_b0.set_attribute_value("name", db::value{"test_b0_3"});
-        obj_b1.set_attribute_value("name", db::value{"test_b1_3"});
+                     obj_a.set_attribute_value("name", db::value{"test_a_3"});
+                     obj_b0.set_attribute_value("name", db::value{"test_b0_3"});
+                     obj_b1.set_attribute_value("name", db::value{"test_b1_3"});
 
-        obj_a.set_relation_objects("child", {obj_b1, obj_b0});
-    });
+                     obj_a.set_relation_objects("child", {obj_b1, obj_b0});
+                 });
 
-    manager.save([self, &manager, &objects](db::manager_map_result_t result) {
-        XCTAssertTrue(result);
-        XCTAssertEqual(manager.current_save_id(), db::value{3});
+    manager.save([]() { return false; },
+                 [self, &manager, &objects](db::manager_map_result_t result) {
+                     XCTAssertTrue(result);
+                     XCTAssertEqual(manager.current_save_id(), db::value{3});
 
-        db::object &obj_a = objects.at("sample_a").at(0);
-        db::object &obj_b0 = objects.at("sample_b").at(0);
-        db::object &obj_b1 = objects.at("sample_b").at(1);
+                     db::object &obj_a = objects.at("sample_a").at(0);
+                     db::object &obj_b0 = objects.at("sample_b").at(0);
+                     db::object &obj_b1 = objects.at("sample_b").at(1);
 
-        obj_a.set_attribute_value("name", db::value{"test_a_4"});
-        obj_b0.set_attribute_value("name", db::value{"test_b0_4"});
-        obj_b1.set_attribute_value("name", db::value{"test_b1_4"});
+                     obj_a.set_attribute_value("name", db::value{"test_a_4"});
+                     obj_b0.set_attribute_value("name", db::value{"test_b0_4"});
+                     obj_b1.set_attribute_value("name", db::value{"test_b1_4"});
 
-        obj_a.set_relation_objects("child", {obj_b1});
-    });
+                     obj_a.set_relation_objects("child", {obj_b1});
+                 });
 
-    manager.save([self, &manager, &objects](db::manager_map_result_t result) {
-        XCTAssertTrue(result);
-        XCTAssertEqual(manager.current_save_id(), db::value{4});
-    });
+    manager.save([]() { return false; },
+                 [self, &manager, &objects](db::manager_map_result_t result) {
+                     XCTAssertTrue(result);
+                     XCTAssertEqual(manager.current_save_id(), db::value{4});
+                 });
 
     manager.execute([self, &manager](auto const &op) {
         auto &db = manager.database();
