@@ -45,7 +45,7 @@ using namespace yas;
         [exp fulfill];
     });
 
-    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+    [self waitForExpectationsWithTimeout:10.0 handler:nil];
 }
 
 - (void)test_execute_update_and_query_in_bg {
@@ -73,7 +73,7 @@ using namespace yas;
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
     manager.execute([exp](auto const &op) { [exp fulfill]; });
-    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+    [self waitForExpectationsWithTimeout:10.0 handler:nil];
 }
 
 - (void)test_setup {
@@ -109,7 +109,7 @@ using namespace yas;
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
     manager.execute([exp](auto const &op) { [exp fulfill]; });
-    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+    [self waitForExpectationsWithTimeout:10.0 handler:nil];
 }
 
 - (void)test_create_object {
@@ -184,7 +184,7 @@ using namespace yas;
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
     manager.execute([exp](auto const &op) { [exp fulfill]; });
-    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+    [self waitForExpectationsWithTimeout:10.0 handler:nil];
 }
 
 - (void)test_create_and_save_objects {
@@ -277,7 +277,7 @@ using namespace yas;
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
     manager.execute([exp](auto const &op) { [exp fulfill]; });
-    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+    [self waitForExpectationsWithTimeout:10.0 handler:nil];
 }
 
 - (void)test_set_relation_to_temporary_object {
@@ -481,7 +481,7 @@ using namespace yas;
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
     manager.execute([exp](auto const &op) { [exp fulfill]; });
-    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+    [self waitForExpectationsWithTimeout:10.0 handler:nil];
 
     manager = nullptr;
 
@@ -542,7 +542,7 @@ using namespace yas;
 
     exp = [self expectationWithDescription:@"exp"];
     manager.execute([exp](auto const &op) { [exp fulfill]; });
-    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+    [self waitForExpectationsWithTimeout:10.0 handler:nil];
 }
 
 - (void)test_insert_objects_by_count {
@@ -591,7 +591,7 @@ using namespace yas;
             [exp1 fulfill];
         });
 
-    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+    [self waitForExpectationsWithTimeout:10.0 handler:nil];
 
     XCTAssertEqual(inserted_objects_1.size(), 1);
     XCTAssertGreaterThan(inserted_objects_1.count("sample_a"), 0);
@@ -624,7 +624,7 @@ using namespace yas;
             [exp2 fulfill];
         });
 
-    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+    [self waitForExpectationsWithTimeout:10.0 handler:nil];
 
     XCTAssertEqual(inserted_objects_2.size(), 1);
     XCTAssertEqual(inserted_objects_2.count("sample_a"), 1);
@@ -677,7 +677,7 @@ using namespace yas;
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
     manager.execute([exp](auto const &op) { [exp fulfill]; });
-    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+    [self waitForExpectationsWithTimeout:10.0 handler:nil];
 }
 
 - (void)test_insert_many_entity_objects {
@@ -707,7 +707,7 @@ using namespace yas;
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
     manager.execute([exp](auto const &op) { [exp fulfill]; });
-    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+    [self waitForExpectationsWithTimeout:10.0 handler:nil];
 }
 
 - (void)test_insert_with_delete {
@@ -794,7 +794,7 @@ using namespace yas;
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
     manager.execute([exp](auto const &op) { [exp fulfill]; });
-    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+    [self waitForExpectationsWithTimeout:10.0 handler:nil];
 }
 
 - (void)test_fetch_objects {
@@ -842,7 +842,7 @@ using namespace yas;
             [exp1 fulfill];
         });
 
-    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+    [self waitForExpectationsWithTimeout:10.0 handler:nil];
 
     XCTAssertEqual(manager.current_save_id(), db::value{1});
     XCTAssertEqual(manager.last_save_id(), db::value{1});
@@ -857,7 +857,7 @@ using namespace yas;
         [exp2 fulfill];
     });
 
-    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+    [self waitForExpectationsWithTimeout:10.0 handler:nil];
 
     XCTAssertEqual(manager.current_save_id(), db::value{2});
     XCTAssertEqual(manager.last_save_id(), db::value{2});
@@ -889,7 +889,7 @@ using namespace yas;
                               [exp3 fulfill];
                           });
 
-    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+    [self waitForExpectationsWithTimeout:10.0 handler:nil];
 
     objects.at("sample_a").at(2).set_attribute_value("name", db::value{"value_2"});
     objects.at("sample_a").at(2).remove_all_relations("child");
@@ -900,7 +900,7 @@ using namespace yas;
 
     manager.save([self, exp4](db::manager_map_result_t result) { [exp4 fulfill]; });
 
-    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+    [self waitForExpectationsWithTimeout:10.0 handler:nil];
 
     XCTAssertEqual(manager.current_save_id(), db::value{3});
     XCTAssertEqual(manager.last_save_id(), db::value{3});
@@ -937,7 +937,7 @@ using namespace yas;
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
     manager.execute([exp](auto const &op) { [exp fulfill]; });
-    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+    [self waitForExpectationsWithTimeout:10.0 handler:nil];
 }
 
 - (void)test_fetch_const_objects {
@@ -990,7 +990,7 @@ using namespace yas;
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
     manager.execute([exp](auto const &op) { [exp fulfill]; });
-    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+    [self waitForExpectationsWithTimeout:10.0 handler:nil];
 }
 
 - (void)test_fetch_relation_objects {
@@ -1036,7 +1036,7 @@ using namespace yas;
             [exp1 fulfill];
         });
 
-    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+    [self waitForExpectationsWithTimeout:10.0 handler:nil];
 
     XCTestExpectation *exp2 = [self expectationWithDescription:@"2"];
 
@@ -1070,7 +1070,7 @@ using namespace yas;
         [exp2 fulfill];
     });
 
-    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+    [self waitForExpectationsWithTimeout:10.0 handler:nil];
 
     XCTAssertFalse(manager.cached_or_created_object("sample_a", db::make_stable_id(db::value{1})));
     XCTAssertFalse(manager.cached_or_created_object("sample_b", db::make_stable_id(db::value{1})));
@@ -1097,7 +1097,7 @@ using namespace yas;
                               [exp3 fulfill];
                           });
 
-    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+    [self waitForExpectationsWithTimeout:10.0 handler:nil];
 
     manager.fetch_objects(
         [object_a]() {
@@ -1123,7 +1123,7 @@ using namespace yas;
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
     manager.execute([exp](auto const &op) { [exp fulfill]; });
-    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+    [self waitForExpectationsWithTimeout:10.0 handler:nil];
 }
 
 - (void)test_fetch_const_objects_by_ids {
@@ -1171,7 +1171,7 @@ using namespace yas;
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
     manager.execute([exp](auto const &op) { [exp fulfill]; });
-    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+    [self waitForExpectationsWithTimeout:10.0 handler:nil];
 }
 
 - (void)test_save_objects {
@@ -1210,7 +1210,7 @@ using namespace yas;
             [exp1 fulfill];
         });
 
-    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+    [self waitForExpectationsWithTimeout:10.0 handler:nil];
 
     XCTAssertEqual(manager.current_save_id(), db::value{1});
     XCTAssertEqual(manager.last_save_id(), db::value{1});
@@ -1224,7 +1224,7 @@ using namespace yas;
         [exp2 fulfill];
     });
 
-    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+    [self waitForExpectationsWithTimeout:10.0 handler:nil];
 
     XCTAssertEqual(main_objects.size(), 1);
     auto &object = main_objects.at(1);
@@ -1284,7 +1284,7 @@ using namespace yas;
         [exp3 fulfill];
     });
 
-    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+    [self waitForExpectationsWithTimeout:10.0 handler:nil];
 
     XCTAssertEqual(manager.current_save_id(), db::value{2});
     XCTAssertEqual(manager.last_save_id(), db::value{2});
@@ -1325,7 +1325,7 @@ using namespace yas;
         [exp4 fulfill];
     });
 
-    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+    [self waitForExpectationsWithTimeout:10.0 handler:nil];
 
     XCTAssertEqual(manager.current_save_id(), db::value{3});
     XCTAssertEqual(manager.last_save_id(), db::value{3});
@@ -1339,7 +1339,7 @@ using namespace yas;
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
     manager.execute([exp](auto const &op) { [exp fulfill]; });
-    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+    [self waitForExpectationsWithTimeout:10.0 handler:nil];
 
     XCTAssertEqual(manager.current_save_id(), db::value{3});
     XCTAssertEqual(manager.last_save_id(), db::value{3});
@@ -1419,7 +1419,7 @@ using namespace yas;
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
     manager.execute([exp](auto const &op) { [exp fulfill]; });
-    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+    [self waitForExpectationsWithTimeout:10.0 handler:nil];
 }
 
 - (void)test_revert_objects {
@@ -1514,7 +1514,7 @@ using namespace yas;
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
     manager.execute([exp](auto const &op) { [exp fulfill]; });
-    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+    [self waitForExpectationsWithTimeout:10.0 handler:nil];
 }
 
 - (void)test_restore_reverted_db {
@@ -1580,7 +1580,7 @@ using namespace yas;
 
         XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
         manager.execute([exp](auto const &op) { [exp fulfill]; });
-        [self waitForExpectationsWithTimeout:1.0 handler:nil];
+        [self waitForExpectationsWithTimeout:10.0 handler:nil];
     } else {
         XCTAssert(0);
     }
@@ -1626,7 +1626,7 @@ using namespace yas;
 
         XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
         manager.execute([exp](auto const &op) { [exp fulfill]; });
-        [self waitForExpectationsWithTimeout:1.0 handler:nil];
+        [self waitForExpectationsWithTimeout:10.0 handler:nil];
     } else {
         XCTAssert(0);
     }
@@ -1639,7 +1639,7 @@ using namespace yas;
     XCTestExpectation *exp1 = [self expectationWithDescription:@"1"];
     manager.setup([exp1](auto) { [exp1 fulfill]; });
 
-    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+    [self waitForExpectationsWithTimeout:10.0 handler:nil];
 
     XCTestExpectation *exp2 = [self expectationWithDescription:@"2"];
 
@@ -1674,7 +1674,7 @@ using namespace yas;
 
     manager.resume();
 
-    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+    [self waitForExpectationsWithTimeout:10.0 handler:nil];
 }
 
 - (void)test_suspend_count {
@@ -1745,7 +1745,7 @@ using namespace yas;
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
     manager.execute([exp](auto const &op) { [exp fulfill]; });
-    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+    [self waitForExpectationsWithTimeout:10.0 handler:nil];
 }
 
 - (void)test_purge {
@@ -1882,7 +1882,7 @@ using namespace yas;
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
     manager.execute([exp](auto const &op) { [exp fulfill]; });
-    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+    [self waitForExpectationsWithTimeout:10.0 handler:nil];
 }
 
 - (void)test_has_inserted {
@@ -1907,7 +1907,7 @@ using namespace yas;
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
     manager.execute([exp](auto const &op) { [exp fulfill]; });
-    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+    [self waitForExpectationsWithTimeout:10.0 handler:nil];
 }
 
 - (void)test_has_changed {
@@ -1933,7 +1933,7 @@ using namespace yas;
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
     manager.execute([exp](auto const &op) { [exp fulfill]; });
-    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+    [self waitForExpectationsWithTimeout:10.0 handler:nil];
 }
 
 - (void)test_created_object_count {
@@ -1962,7 +1962,7 @@ using namespace yas;
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
     manager.execute([exp](auto const &op) { [exp fulfill]; });
-    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+    [self waitForExpectationsWithTimeout:10.0 handler:nil];
 }
 
 - (void)test_changed_object_count {
@@ -1997,7 +1997,7 @@ using namespace yas;
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
     manager.execute([exp](auto const &op) { [exp fulfill]; });
-    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+    [self waitForExpectationsWithTimeout:10.0 handler:nil];
 }
 
 - (void)test_is_temporary {
@@ -2092,7 +2092,7 @@ using namespace yas;
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
     manager.execute([exp](auto const &op) { [exp fulfill]; });
-    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+    [self waitForExpectationsWithTimeout:10.0 handler:nil];
 }
 
 - (void)test_invert_relation_removed_in_cache {
@@ -2584,7 +2584,7 @@ using namespace yas;
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
     manager.execute([exp](auto const &op) { [exp fulfill]; });
-    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+    [self waitForExpectationsWithTimeout:10.0 handler:nil];
 }
 
 - (void)test_observing_db_info_changed {
@@ -2616,7 +2616,7 @@ using namespace yas;
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
     manager.execute([exp](auto const &op) { [exp fulfill]; });
-    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+    [self waitForExpectationsWithTimeout:10.0 handler:nil];
 }
 
 - (void)test_dispatch_queue {
@@ -2644,7 +2644,7 @@ using namespace yas;
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
     manager.execute([exp](auto const &op) { [exp fulfill]; });
-    [self waitForExpectationsWithTimeout:1.0 handler:nil];
+    [self waitForExpectationsWithTimeout:10.0 handler:nil];
 }
 
 - (void)test_make_error {

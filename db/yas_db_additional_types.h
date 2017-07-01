@@ -9,7 +9,6 @@
 #include "yas_db_weak_pool.h"
 #include <set>
 #include <unordered_set>
-#include <deque>
 
 namespace yas {
 namespace db {
@@ -33,14 +32,10 @@ namespace db {
     using tmp_object_map_map_t = std::unordered_map<std::string, db::tmp_object_map_t>;
     using object_vector_t = std::vector<db::object>;
     using object_vector_map_t = std::unordered_map<std::string, db::object_vector_t>;
-    using object_deque_t = std::deque<db::object>;
-    using object_deque_map_t = std::unordered_map<std::string, db::object_deque_t>;
     using const_object_map_t = std::unordered_map<db::integer::type, db::const_object>;
     using const_object_map_map_t = std::unordered_map<std::string, db::const_object_map_t>;
     using const_object_vector_t = std::vector<db::const_object>;
     using const_object_vector_map_t = std::unordered_map<std::string, db::const_object_vector_t>;
-    using weak_object_map_t = std::unordered_map<db::object_id, weak<db::object>>;
-    using weak_object_map_map_t = std::unordered_map<std::string, db::weak_object_map_t>;
     using object_data_vector_t = std::vector<db::object_data>;
     using object_data_vector_map_t = std::unordered_map<std::string, db::object_data_vector_t>;
 
@@ -59,7 +54,6 @@ namespace db {
     using value_vector_map_result_t = result<db::value_vector_map_t, db::error>;
 
     using manager_result_t = result<std::nullptr_t, db::manager_error>;
-    using manager_value_result_t = result<db::value, db::manager_error>;
     using manager_vector_result_t = result<db::object_vector_map_t, db::manager_error>;
     using manager_map_result_t = result<db::object_map_map_t, db::manager_error>;
     using manager_const_vector_result_t = result<db::const_object_vector_map_t, db::manager_error>;
