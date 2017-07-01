@@ -1771,16 +1771,16 @@ using namespace yas;
 
     XCTAssertTrue(is_setup_succeeded);
 
-    bool is_clear_called = false;
+    bool is_called = false;
 
     manager.clear([]() { return true; },
-                  [self, &manager, &object, &is_clear_called](auto result) mutable { is_clear_called = true; });
+                  [self, &manager, &object, &is_called](auto result) mutable { is_called = true; });
 
     XCTestExpectation *exp = [self expectationWithDescription:@"end"];
     manager.execute([&exp](auto const &op) { [exp fulfill]; });
     [self waitForExpectationsWithTimeout:10.0 handler:nil];
 
-    XCTAssertFalse(is_clear_called);
+    XCTAssertFalse(is_called);
 }
 
 - (void)test_purge {
