@@ -367,8 +367,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
     }
 
     // バックグラウンドでデータベースの処理をする
-    void execute(execution_f &&execution, operation_option_t &&option,
-                 cancellation_f &&cancellation = []() { return false; }) {
+    void execute(execution_f &&execution, operation_option_t &&option, cancellation_f &&cancellation) {
         auto op_lambda =
             [cancellation = std::move(cancellation), execution = std::move(execution),
              manager = cast<manager>()](operation const &op) mutable {
@@ -425,7 +424,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
             completion(std::move(state), std::move(fetched_datas));
         };
 
-        this->execute(std::move(execution), std::move(op_option));
+        this->execute(std::move(execution), std::move(op_option), []() { return false; });
     }
 
     // バックグラウンドでデータベースからオブジェクトデータを取得する。条件はobject_idで指定。単独のエンティティのみ
