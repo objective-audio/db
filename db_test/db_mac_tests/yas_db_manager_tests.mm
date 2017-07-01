@@ -1734,14 +1734,15 @@ using namespace yas;
         XCTAssertTrue(manager.cached_or_created_object("sample_a", db::make_stable_id(db::value{1})));
     });
 
-    manager.clear([self, &manager, &object](auto result) {
-        XCTAssertTrue(result);
+    manager.clear([]() { return false; },
+                  [self, &manager, &object](auto result) {
+                      XCTAssertTrue(result);
 
-        XCTAssertEqual(object.status(), db::object_status::invalid);
-        XCTAssertFalse(object.attribute_value("name"));
+                      XCTAssertEqual(object.status(), db::object_status::invalid);
+                      XCTAssertFalse(object.attribute_value("name"));
 
-        XCTAssertFalse(manager.cached_or_created_object("sample_a", db::make_stable_id(db::value{1})));
-    });
+                      XCTAssertFalse(manager.cached_or_created_object("sample_a", db::make_stable_id(db::value{1})));
+                  });
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
     manager.execute([exp](auto const &op) { [exp fulfill]; });

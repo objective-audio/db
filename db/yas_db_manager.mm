@@ -575,7 +575,8 @@ void db::manager::setup(db::manager::completion_f completion, operation_option_t
     this->execute(execution, std::move(option));
 }
 
-void db::manager::clear(db::manager::completion_f completion, operation_option_t option) {
+void db::manager::clear(db::manager::cancellation_f cancellation, db::manager::completion_f completion,
+                        operation_option_t option) {
     auto execution = [completion = std::move(completion), manager = *this](operation const &op) mutable {
         auto &db = manager.database();
         auto const &model = manager.model();
@@ -623,7 +624,7 @@ void db::manager::clear(db::manager::completion_f completion, operation_option_t
         dispatch_sync(manager.dispatch_queue(), std::move(completion_on_main));
     };
 
-    this->execute(execution, std::move(option));
+    this->execute(execution, std::move(option), std::move(cancellation));
 }
 
 void db::manager::purge(db::manager::completion_f completion, operation_option_t option) {
