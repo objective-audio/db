@@ -716,7 +716,8 @@ void db::manager::execute(db::manager::execution_f &&execution, operation_option
     impl_ptr<impl>()->execute(std::move(execution), std::move(option), std::move(cancellation));
 }
 
-void db::manager::insert_objects(db::manager::insert_preparation_count_f preparation,
+void db::manager::insert_objects(db::manager::cancellation_f cancellation,
+                                 db::manager::insert_preparation_count_f preparation,
                                  db::manager::vector_completion_f completion, operation_option_t option) {
     // エンティティごとの数を指定してデータベースにオブジェクトを挿入する
     auto impl_preparation = [preparation = std::move(preparation)]() {
@@ -730,10 +731,12 @@ void db::manager::insert_objects(db::manager::insert_preparation_count_f prepara
         return values;
     };
 
-    this->insert_objects(std::move(impl_preparation), std::move(completion), std::move(option));
+    this->insert_objects(std::move(cancellation), std::move(impl_preparation), std::move(completion),
+                         std::move(option));
 }
 
-void db::manager::insert_objects(db::manager::insert_preparation_values_f preparation,
+void db::manager::insert_objects(db::manager::cancellation_f cancellation,
+                                 db::manager::insert_preparation_values_f preparation,
                                  db::manager::vector_completion_f completion, operation_option_t option) {
     auto execution = [preparation = std::move(preparation), completion = std::move(completion),
                       manager = *this](operation const &op) mutable {
@@ -804,7 +807,7 @@ void db::manager::insert_objects(db::manager::insert_preparation_values_f prepar
         });
     };
 
-    this->execute(std::move(execution), std::move(option));
+    this->execute(std::move(execution), std::move(option), std::move(cancellation));
 }
 
 void db::manager::fetch_objects(db::manager::fetch_preparation_option_f preparation,

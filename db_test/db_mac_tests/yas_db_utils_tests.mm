@@ -499,24 +499,25 @@ using namespace yas;
 
     manager.setup([self, &manager](auto result) mutable { XCTAssertTrue(result); });
 
-    manager.insert_objects(
-        []() {
-            return db::entity_count_map_t{{"sample_a", 2}, {"sample_b", 2}};
-        },
-        [manager, self](auto result) mutable {
-            XCTAssertTrue(result);
+    manager.insert_objects([]() { return false; },
+                           []() {
+                               return db::entity_count_map_t{{"sample_a", 2}, {"sample_b", 2}};
+                           },
+                           [manager, self](auto result) mutable {
+                               XCTAssertTrue(result);
 
-            auto &objects = result.value();
-            objects.at("sample_a").at(0).set_attribute_value("name", db::value{"value_1"});
-            objects.at("sample_a")
-                .at(0)
-                .set_relation_objects("child", {objects.at("sample_b").at(0), objects.at("sample_b").at(1)});
-            objects.at("sample_a").at(1).set_attribute_value("name", db::value{"value_2"});
+                               auto &objects = result.value();
+                               objects.at("sample_a").at(0).set_attribute_value("name", db::value{"value_1"});
+                               objects.at("sample_a")
+                                   .at(0)
+                                   .set_relation_objects("child",
+                                                         {objects.at("sample_b").at(0), objects.at("sample_b").at(1)});
+                               objects.at("sample_a").at(1).set_attribute_value("name", db::value{"value_2"});
 
-            objects.at("sample_b").at(0).set_attribute_value("name", db::value{"value_3"});
-            objects.at("sample_b").at(1).set_attribute_value("name", db::value{"value_4"});
+                               objects.at("sample_b").at(0).set_attribute_value("name", db::value{"value_3"});
+                               objects.at("sample_b").at(1).set_attribute_value("name", db::value{"value_4"});
 
-        });
+                           });
 
     manager.save([self](db::manager_map_result_t result) mutable { XCTAssertTrue(result); });
 
