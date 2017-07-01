@@ -87,18 +87,17 @@ namespace db {
         void setup(completion_f, operation_option_t option = {});
         void clear(cancellation_f, completion_f, operation_option_t option = {});
         void purge(cancellation_f, completion_f, operation_option_t option = {});
-        void reset(completion_f, operation_option_t option = {});
+        void reset(cancellation_f, completion_f, operation_option_t option = {});
         void insert_objects(cancellation_f, insert_preparation_count_f, vector_completion_f,
                             operation_option_t option = {});
         void insert_objects(cancellation_f, insert_preparation_values_f, vector_completion_f,
                             operation_option_t option = {});
-        void fetch_objects(fetch_preparation_option_f preparation, vector_completion_f completion,
+        void fetch_objects(cancellation_f, fetch_preparation_option_f, vector_completion_f,
                            operation_option_t option = {});
-        void fetch_objects(fetch_preparation_ids_f preparation, map_completion_f completion,
-                           operation_option_t option = {});
-        void fetch_const_objects(fetch_preparation_option_f preparation, const_vector_completion_f completion,
+        void fetch_objects(cancellation_f, fetch_preparation_ids_f, map_completion_f, operation_option_t option = {});
+        void fetch_const_objects(cancellation_f, fetch_preparation_option_f, const_vector_completion_f,
                                  operation_option_t option = {});
-        void fetch_const_objects(fetch_preparation_ids_f preparation, const_map_completion_f completion,
+        void fetch_const_objects(cancellation_f, fetch_preparation_ids_f, const_map_completion_f,
                                  operation_option_t option = {});
         void save(map_completion_f completion, operation_option_t option = {});
         void revert(revert_preparation_f preparation, vector_completion_f completion, operation_option_t option = {});
