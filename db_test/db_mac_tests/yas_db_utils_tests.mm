@@ -522,6 +522,7 @@ using namespace yas;
     manager.save([self](db::manager_map_result_t result) mutable { XCTAssertTrue(result); });
 
     manager.fetch_const_objects(
+        []() { return false; },
         []() {
             return db::to_fetch_option(db::select_option{.table = "sample_a",
                                                          .where_exprs = db::equal_field_expr(db::object_id_field),
@@ -538,7 +539,7 @@ using namespace yas;
         });
 
     manager.fetch_const_objects(
-        [&pair]() { return pair.second; },
+        []() { return false; }, [&pair]() { return pair.second; },
         [self, &pair](auto result) mutable {
             XCTAssertTrue(result);
 
