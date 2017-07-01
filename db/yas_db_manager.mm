@@ -909,7 +909,8 @@ void db::manager::fetch_const_objects(db::manager::cancellation_f cancellation,
                                                  std::move(impl_completion), std::move(option));
 }
 
-void db::manager::save(cancellation_f cancellation, db::manager::map_completion_f completion, operation_option_t option) {
+void db::manager::save(cancellation_f cancellation, db::manager::map_completion_f completion,
+                       operation_option_t option) {
     auto execution = [completion = std::move(completion), manager = *this](operation const &) mutable {
         db::object_data_vector_map_t changed_datas;
         // 変更のあったデータをメインスレッドで取得する
@@ -989,8 +990,8 @@ void db::manager::save(cancellation_f cancellation, db::manager::map_completion_
     this->execute(std::move(execution), std::move(option), std::move(cancellation));
 }
 
-void db::manager::revert(db::manager::revert_preparation_f preparation, db::manager::vector_completion_f completion,
-                         operation_option_t option) {
+void db::manager::revert(cancellation_f cancellation, db::manager::revert_preparation_f preparation,
+                         db::manager::vector_completion_f completion, operation_option_t option) {
     auto execution = [preparation = std::move(preparation), completion = std::move(completion),
                       manager = *this](operation const &) mutable {
         // リバートする先のセーブIDをメインスレッドで準備する
@@ -1101,7 +1102,7 @@ void db::manager::revert(db::manager::revert_preparation_f preparation, db::mana
         dispatch_sync(manager.dispatch_queue(), std::move(completion_on_main));
     };
     
-    this->execute(std::move(execution), std::move(option));
+    this->execute(std::move(execution), std::move(option), std::move(cancellation));
 }
 
 db::object db::manager::cached_or_created_object(std::string const &entity_name, db::object_id const &object_id) const {

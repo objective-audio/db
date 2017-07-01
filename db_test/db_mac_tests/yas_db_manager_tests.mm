@@ -770,7 +770,7 @@ using namespace yas;
 
                  });
 
-    manager.revert([]() { return 2; },
+    manager.revert([]() { return false; }, []() { return 2; },
                    [self, &manager](auto result) {
                        XCTAssertTrue(result);
                        XCTAssertEqual(manager.current_save_id(), db::value{2});
@@ -1412,7 +1412,7 @@ using namespace yas;
                      XCTAssertEqual(a_objects.at(1).save_id(), db::value{3});
                  });
 
-    manager.revert([]() { return 2; },
+    manager.revert([]() { return false; }, []() { return 2; },
                    [self, &manager, &a_objects](auto result) {
                        XCTAssertTrue(result);
                        XCTAssertEqual(manager.current_save_id(), db::value{2});
@@ -1486,7 +1486,7 @@ using namespace yas;
                      XCTAssertTrue(a_object.is_removed());
                  });
 
-    manager.revert([]() { return 2; },
+    manager.revert([]() { return false; }, []() { return 2; },
                    [self, &a_object](auto result) mutable {
                        XCTAssertTrue(result);
 
@@ -1495,7 +1495,7 @@ using namespace yas;
                        XCTAssertFalse(a_object.is_removed());
                    });
 
-    manager.revert([]() { return 1; },
+    manager.revert([]() { return false; }, []() { return 1; },
                    [self, &a_object](auto result) mutable {
                        XCTAssertTrue(result);
 
@@ -1526,7 +1526,7 @@ using namespace yas;
         XCTAssertEqual(select_result.value().size(), 1);
     });
 
-    manager.revert([]() { return 0; },
+    manager.revert([]() { return false; }, []() { return 0; },
                    [self, &a_object](auto result) mutable {
                        XCTAssertTrue(result);
 
@@ -1599,7 +1599,7 @@ using namespace yas;
                          XCTAssertEqual(manager.last_save_id(), db::value{4});
                      });
 
-        manager.revert([]() { return 3; },
+        manager.revert([]() { return false; }, []() { return 3; },
                        [self, &manager](auto result) mutable {
                            XCTAssertTrue(result);
                            XCTAssertEqual(manager.current_save_id(), db::value{3});
@@ -1879,7 +1879,7 @@ using namespace yas;
                      XCTAssertEqual(manager.current_save_id(), db::value{4});
                  });
 
-    manager.revert([]() { return 3; },
+    manager.revert([]() { return false; }, []() { return 3; },
                    [self, &manager](auto result) {
                        XCTAssertTrue(result);
                        XCTAssertEqual(manager.current_save_id(), db::value{3});
