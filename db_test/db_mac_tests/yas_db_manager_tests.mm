@@ -1920,6 +1920,42 @@ using namespace yas;
     [self waitForExpectationsWithTimeout:10.0 handler:nil];
 }
 
+- (void)test_cancel_purge {
+    db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
+    auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
+    
+    auto object = db::null_object();
+    
+    XCTestExpectation *setupExp = [self expectationWithDescription:@"setup"];
+    
+    bool is_setup_succeeded = false;
+    
+    manager.setup([self, &manager, &setupExp, &is_setup_succeeded](auto result) {
+        if (result) {
+            is_setup_succeeded = true;
+        }
+        
+        [setupExp fulfill];
+    });
+    
+    [self waitForExpectations:@[setupExp] timeout:10.0];
+    
+    XCTAssertTrue(is_setup_succeeded);
+    
+    bool is_called = false;
+    
+    manager.purge([]() { return true; },
+                  [&is_called](auto result) {
+                      is_called = true;
+                  });
+    
+    XCTestExpectation *exp = [self expectationWithDescription:@"end"];
+    manager.execute([&exp](auto const &op) { [exp fulfill]; });
+    [self waitForExpectationsWithTimeout:10.0 handler:nil];
+    
+    XCTAssertFalse(is_called);
+}
+
 - (void)test_has_inserted {
     db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
