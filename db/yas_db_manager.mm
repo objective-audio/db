@@ -425,7 +425,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
             completion(std::move(state), std::move(fetched_datas));
         };
 
-        this->execute(execution, std::move(op_option));
+        this->execute(std::move(execution), std::move(op_option));
     }
 
     // バックグラウンドでデータベースからオブジェクトデータを取得する。条件はobject_idで指定。単独のエンティティのみ
@@ -572,7 +572,7 @@ void db::manager::setup(db::manager::completion_f completion, operation_option_t
         dispatch_sync(manager.dispatch_queue(), completion_on_main);
     };
 
-    this->execute(execution, std::move(option));
+    this->execute(std::move(execution), std::move(option));
 }
 
 void db::manager::clear(db::manager::cancellation_f cancellation, db::manager::completion_f completion,
@@ -624,7 +624,7 @@ void db::manager::clear(db::manager::cancellation_f cancellation, db::manager::c
         dispatch_sync(manager.dispatch_queue(), std::move(completion_on_main));
     };
 
-    this->execute(execution, std::move(option), std::move(cancellation));
+    this->execute(std::move(execution), std::move(option), std::move(cancellation));
 }
 
 void db::manager::purge(db::manager::completion_f completion, operation_option_t option) {
@@ -681,7 +681,7 @@ void db::manager::purge(db::manager::completion_f completion, operation_option_t
         dispatch_sync(manager.dispatch_queue(), std::move(completion_on_main));
     };
 
-    this->execute(execution, std::move(option));
+    this->execute(std::move(execution), std::move(option), std::move(cancellation));
 }
 
 void db::manager::reset(db::manager::completion_f completion, operation_option_t option) {
@@ -804,7 +804,7 @@ void db::manager::insert_objects(db::manager::insert_preparation_values_f prepar
         });
     };
 
-    this->execute(execution, std::move(option));
+    this->execute(std::move(execution), std::move(option));
 }
 
 void db::manager::fetch_objects(db::manager::fetch_preparation_option_f preparation,
@@ -972,7 +972,7 @@ void db::manager::save(db::manager::map_completion_f completion, operation_optio
         dispatch_sync(manager.dispatch_queue(), std::move(completion_on_main));
     };
 
-    this->execute(execution, std::move(option));
+    this->execute(std::move(execution), std::move(option));
 }
 
 void db::manager::revert(db::manager::revert_preparation_f preparation, db::manager::vector_completion_f completion,
@@ -1087,7 +1087,7 @@ void db::manager::revert(db::manager::revert_preparation_f preparation, db::mana
         dispatch_sync(manager.dispatch_queue(), std::move(completion_on_main));
     };
     
-    this->execute(execution, std::move(option));
+    this->execute(std::move(execution), std::move(option));
 }
 
 db::object db::manager::cached_or_created_object(std::string const &entity_name, db::object_id const &object_id) const {
