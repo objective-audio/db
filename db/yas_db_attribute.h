@@ -10,16 +10,23 @@
 namespace yas {
 namespace db {
     struct attribute {
+        struct args {
+            std::string name;
+            std::string type;
+            db::value default_value = nullptr;
+            bool not_null = false;
+            bool primary = false;
+            bool unique = false;
+        };
+
         std::string const name;
         std::string const type;
-        bool const not_null;
         db::value const default_value;
+        bool const not_null;
         bool const primary;
         bool const unique;
 
-        attribute(std::string const &name, std::string const &type, db::value const &default_value = nullptr,
-                  bool const not_null = false, bool const primary = false, bool const unique = false);
-        attribute(std::string const &name, CFDictionaryRef const dict);
+        attribute(args);
 
         std::string sql() const;
 
@@ -28,5 +35,7 @@ namespace db {
         static db::attribute const &save_id_attribute();
         static db::attribute const &action_attribute();
     };
+
+    db::attribute make_attribute(std::string const &name, CFDictionaryRef const dict);
 }
 }

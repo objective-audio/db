@@ -86,7 +86,7 @@ struct db::model::impl : public base::impl {
                     std::string attr_name = to_string((CFStringRef)cf_attribute_pair.first);
                     if (attr_name.size() > 0) {
                         CFDictionaryRef cf_attr_dict = get<CFDictionaryRef>(cf_attributes, attr_name);
-                        attributes.emplace(attr_name, db::attribute{attr_name, cf_attr_dict});
+                        attributes.emplace(attr_name, db::make_attribute(attr_name, cf_attr_dict));
                     }
                 }
             }

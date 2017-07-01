@@ -48,7 +48,8 @@ namespace db {
 
     struct manager_error {
         manager_error(std::nullptr_t);
-        explicit manager_error(db::manager_error_type const error_type, db::error db_error = nullptr);
+        explicit manager_error(db::manager_error_type const error_type);
+        manager_error(db::manager_error_type const error_type, db::error db_error);
 
         explicit operator bool() const;
 

@@ -18,6 +18,12 @@ db::sqlite_result_code::operator bool() const {
 
 #pragma mark - error
 
+db::error::error(db::error_type const type) : db::error(type, 0) {
+}
+
+db::error::error(db::error_type const type, db::sqlite_result_code const &code) : db::error(type, code, "") {
+}
+
 db::error::error(std::nullptr_t) : _type(db::error_type::none), _code(0), _message() {
 }
 
