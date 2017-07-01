@@ -384,28 +384,29 @@ using namespace yas;
                      XCTAssertEqual(manager.current_save_id(), db::value{3});
                  });
 
-    manager.execute([self, &manager](auto const &op) {
-        auto &db = manager.database();
+    manager.execute([]() { return false; },
+                    [self, &manager](auto const &op) {
+                        auto &db = manager.database();
 
-        auto update_result = db::purge_attributes(db, "sample_a");
-        XCTAssertTrue(update_result);
+                        auto update_result = db::purge_attributes(db, "sample_a");
+                        XCTAssertTrue(update_result);
 
-        auto select_result = db::select(db, db::select_option{.table = "sample_a"});
-        XCTAssertTrue(select_result);
+                        auto select_result = db::select(db, db::select_option{.table = "sample_a"});
+                        XCTAssertTrue(select_result);
 
-        auto &object_datas = select_result.value();
-        XCTAssertEqual(object_datas.size(), 2);
+                        auto &object_datas = select_result.value();
+                        XCTAssertEqual(object_datas.size(), 2);
 
-        XCTAssertEqual(object_datas.at(0).at("obj_id"), db::value{2});
-        XCTAssertEqual(object_datas.at(0).at("name"), db::value{"name_1_1"});
+                        XCTAssertEqual(object_datas.at(0).at("obj_id"), db::value{2});
+                        XCTAssertEqual(object_datas.at(0).at("name"), db::value{"name_1_1"});
 
-        XCTAssertEqual(object_datas.at(1).at("obj_id"), db::value{1});
-        XCTAssertEqual(object_datas.at(1).at("name"), db::value{"name_0_2"});
-    });
+                        XCTAssertEqual(object_datas.at(1).at("obj_id"), db::value{1});
+                        XCTAssertEqual(object_datas.at(1).at("name"), db::value{"name_0_2"});
+                    });
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
 
-    manager.execute([exp](auto const &op) { [exp fulfill]; });
+    manager.execute([]() { return false; }, [exp](auto const &op) { [exp fulfill]; });
 
     [self waitForExpectationsWithTimeout:1.0 handler:nil];
 }
@@ -476,32 +477,34 @@ using namespace yas;
                      XCTAssertEqual(manager.current_save_id(), db::value{4});
                  });
 
-    manager.execute([self, &manager](auto const &op) {
-        auto &db = manager.database();
+    manager.execute([]() { return false; },
+                    [self, &manager](auto const &op) {
+                        auto &db = manager.database();
 
-        auto purge_result = db::purge_attributes(db, "sample_a");
-        XCTAssertTrue(purge_result);
+                        auto purge_result = db::purge_attributes(db, "sample_a");
+                        XCTAssertTrue(purge_result);
 
-        auto const &rel_table_name = manager.model().entities().at("sample_a").relations.at("child").table_name;
+                        auto const &rel_table_name =
+                            manager.model().entities().at("sample_a").relations.at("child").table_name;
 
-        auto purge_relation_result = db::purge_relations(db, rel_table_name, "sample_a");
-        XCTAssertTrue(purge_relation_result);
+                        auto purge_relation_result = db::purge_relations(db, rel_table_name, "sample_a");
+                        XCTAssertTrue(purge_relation_result);
 
-        auto select_result = db::select(db, db::select_option{.table = rel_table_name});
-        XCTAssertTrue(select_result);
+                        auto select_result = db::select(db, db::select_option{.table = rel_table_name});
+                        XCTAssertTrue(select_result);
 
-        auto &entity_rel_values = select_result.value();
-        XCTAssertEqual(entity_rel_values.size(), 1);
+                        auto &entity_rel_values = select_result.value();
+                        XCTAssertEqual(entity_rel_values.size(), 1);
 
-        auto &rel_values = entity_rel_values.at(0);
-        XCTAssertEqual(rel_values.at(db::src_pk_id_field), db::value{4});
-        XCTAssertEqual(rel_values.at(db::src_obj_id_field), db::value{1});
-        XCTAssertEqual(rel_values.at(db::tgt_obj_id_field), db::value{2});
-    });
+                        auto &rel_values = entity_rel_values.at(0);
+                        XCTAssertEqual(rel_values.at(db::src_pk_id_field), db::value{4});
+                        XCTAssertEqual(rel_values.at(db::src_obj_id_field), db::value{1});
+                        XCTAssertEqual(rel_values.at(db::tgt_obj_id_field), db::value{2});
+                    });
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
 
-    manager.execute([exp](auto const &op) { [exp fulfill]; });
+    manager.execute([]() { return false; }, [exp](auto const &op) { [exp fulfill]; });
 
     [self waitForExpectationsWithTimeout:1.0 handler:nil];
 }

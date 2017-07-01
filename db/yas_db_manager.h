@@ -81,8 +81,7 @@ namespace db {
         void resume();
         bool is_suspended() const;
 
-        void execute(execution_f &&execution, operation_option_t &&option = {},
-                     cancellation_f &&cancellation = []() { return false; });
+        void execute(cancellation_f &&cancellation, execution_f &&execution, operation_option_t &&option = {});
 
         void setup(completion_f, operation_option_t option = {});
         void clear(cancellation_f, completion_f, operation_option_t option = {});

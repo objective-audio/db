@@ -571,7 +571,7 @@ using namespace yas;
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
 
-    manager.execute([exp](auto const &op) { [exp fulfill]; });
+    manager.execute([]() { return false; }, [exp](auto const &op) { [exp fulfill]; });
 
     [self waitForExpectationsWithTimeout:1.0 handler:nil];
 }
