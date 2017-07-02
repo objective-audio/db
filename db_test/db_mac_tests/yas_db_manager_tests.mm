@@ -1674,52 +1674,6 @@ using namespace yas;
     }
 }
 
-- (void)test_suspend_and_priority {
-    db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
-    auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1) priority_count:2];
-
-    XCTestExpectation *exp1 = [self expectationWithDescription:@"1"];
-    manager.setup([exp1](auto) { [exp1 fulfill]; });
-
-    [self waitForExpectationsWithTimeout:10.0 handler:nil];
-
-    XCTestExpectation *exp2 = [self expectationWithDescription:@"2"];
-
-    manager.suspend();
-
-    int call_count = 0;
-    int fetched_object_count = 0;
-
-    manager.insert_objects([]() { return false; },
-                           []() {
-                               return db::entity_count_map_t{{"sample_a", 1}};
-                           },
-                           [&call_count, exp2](auto) {
-                               call_count++;
-                               if (call_count == 2) {
-                                   [exp2 fulfill];
-                               }
-                           },
-                           {.priority = 1});
-
-    manager.fetch_objects([]() { return false; },
-                          []() { return db::to_fetch_option(db::select_option{.table = "sample_a"}); },
-                          [&call_count, exp2, &fetched_object_count, self](auto result) {
-                              XCTAssertTrue(result);
-                              XCTAssertEqual(result.value().count("sample_a"), 0);
-
-                              call_count++;
-                              if (call_count == 2) {
-                                  [exp2 fulfill];
-                              }
-                          },
-                          {.priority = 0});
-
-    manager.resume();
-
-    [self waitForExpectationsWithTimeout:10.0 handler:nil];
-}
-
 - (void)test_suspend_count {
     db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1) priority_count:2];
