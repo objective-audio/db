@@ -61,6 +61,8 @@ namespace db {
     using manager_info_result_t = result<db::info, db::manager_error>;
     using manager_fetch_result_t = result<db::object_data_vector_map_t, db::manager_error>;
 
+    static std::function<bool(void)> const no_cancellation = []() { return false; };
+
     // for entity
     using attribute_map_t = std::unordered_map<std::string, db::attribute>;
     using relation_map_t = std::unordered_map<std::string, db::relation>;
