@@ -346,7 +346,7 @@ using namespace yas;
 
     manager.setup([self, &manager](auto result) mutable { XCTAssertTrue(result); });
 
-    manager.insert_objects([]() { return false; },
+    manager.insert_objects(db::no_cancellation,
                            []() {
                                return db::entity_count_map_t{{"sample_a", 2}};
                            },
@@ -366,47 +366,44 @@ using namespace yas;
                                XCTAssertEqual(object.object_id().stable_value(), db::value{2});
                            });
 
-    manager.save([]() { return false; },
-                 [self, &manager](db::manager_map_result_t result) {
-                     XCTAssertTrue(result);
-                     XCTAssertEqual(manager.current_save_id(), db::value{2});
+    manager.save(db::no_cancellation, [self, &manager](db::manager_map_result_t result) {
+        XCTAssertTrue(result);
+        XCTAssertEqual(manager.current_save_id(), db::value{2});
 
-                     db::object_map_map_t &objects = result.value();
-                     db::object_map_t &a_objects = objects.at("sample_a");
+        db::object_map_map_t &objects = result.value();
+        db::object_map_t &a_objects = objects.at("sample_a");
 
-                     db::object &object = a_objects.at(1);
-                     object.set_attribute_value("name", db::value{"name_0_2"});
-                 });
+        db::object &object = a_objects.at(1);
+        object.set_attribute_value("name", db::value{"name_0_2"});
+    });
 
-    manager.save([]() { return false; },
-                 [self, &manager](db::manager_map_result_t result) {
-                     XCTAssertTrue(result);
-                     XCTAssertEqual(manager.current_save_id(), db::value{3});
-                 });
+    manager.save(db::no_cancellation, [self, &manager](db::manager_map_result_t result) {
+        XCTAssertTrue(result);
+        XCTAssertEqual(manager.current_save_id(), db::value{3});
+    });
 
-    manager.execute([]() { return false; },
-                    [self, &manager](auto const &op) {
-                        auto &db = manager.database();
+    manager.execute(db::no_cancellation, [self, &manager](auto const &op) {
+        auto &db = manager.database();
 
-                        auto update_result = db::purge_attributes(db, "sample_a");
-                        XCTAssertTrue(update_result);
+        auto update_result = db::purge_attributes(db, "sample_a");
+        XCTAssertTrue(update_result);
 
-                        auto select_result = db::select(db, db::select_option{.table = "sample_a"});
-                        XCTAssertTrue(select_result);
+        auto select_result = db::select(db, db::select_option{.table = "sample_a"});
+        XCTAssertTrue(select_result);
 
-                        auto &object_datas = select_result.value();
-                        XCTAssertEqual(object_datas.size(), 2);
+        auto &object_datas = select_result.value();
+        XCTAssertEqual(object_datas.size(), 2);
 
-                        XCTAssertEqual(object_datas.at(0).at("obj_id"), db::value{2});
-                        XCTAssertEqual(object_datas.at(0).at("name"), db::value{"name_1_1"});
+        XCTAssertEqual(object_datas.at(0).at("obj_id"), db::value{2});
+        XCTAssertEqual(object_datas.at(0).at("name"), db::value{"name_1_1"});
 
-                        XCTAssertEqual(object_datas.at(1).at("obj_id"), db::value{1});
-                        XCTAssertEqual(object_datas.at(1).at("name"), db::value{"name_0_2"});
-                    });
+        XCTAssertEqual(object_datas.at(1).at("obj_id"), db::value{1});
+        XCTAssertEqual(object_datas.at(1).at("name"), db::value{"name_0_2"});
+    });
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
 
-    manager.execute([]() { return false; }, [exp](auto const &op) { [exp fulfill]; });
+    manager.execute(db::no_cancellation, [exp](auto const &op) { [exp fulfill]; });
 
     [self waitForExpectationsWithTimeout:1.0 handler:nil];
 }
@@ -419,7 +416,7 @@ using namespace yas;
 
     db::object_vector_map_t objects;
 
-    manager.insert_objects([]() { return false; },
+    manager.insert_objects(db::no_cancellation,
                            []() {
                                return db::entity_count_map_t{{"sample_a", 1}, {"sample_b", 2}};
                            },
@@ -439,72 +436,67 @@ using namespace yas;
                                obj_a.set_relation_objects("child", {obj_b0});
                            });
 
-    manager.save([]() { return false; },
-                 [self, &manager, &objects](db::manager_map_result_t result) {
-                     XCTAssertTrue(result);
-                     XCTAssertEqual(manager.current_save_id(), db::value{2});
+    manager.save(db::no_cancellation, [self, &manager, &objects](db::manager_map_result_t result) {
+        XCTAssertTrue(result);
+        XCTAssertEqual(manager.current_save_id(), db::value{2});
 
-                     db::object &obj_a = objects.at("sample_a").at(0);
-                     db::object &obj_b0 = objects.at("sample_b").at(0);
-                     db::object &obj_b1 = objects.at("sample_b").at(1);
+        db::object &obj_a = objects.at("sample_a").at(0);
+        db::object &obj_b0 = objects.at("sample_b").at(0);
+        db::object &obj_b1 = objects.at("sample_b").at(1);
 
-                     obj_a.set_attribute_value("name", db::value{"test_a_3"});
-                     obj_b0.set_attribute_value("name", db::value{"test_b0_3"});
-                     obj_b1.set_attribute_value("name", db::value{"test_b1_3"});
+        obj_a.set_attribute_value("name", db::value{"test_a_3"});
+        obj_b0.set_attribute_value("name", db::value{"test_b0_3"});
+        obj_b1.set_attribute_value("name", db::value{"test_b1_3"});
 
-                     obj_a.set_relation_objects("child", {obj_b1, obj_b0});
-                 });
+        obj_a.set_relation_objects("child", {obj_b1, obj_b0});
+    });
 
-    manager.save([]() { return false; },
-                 [self, &manager, &objects](db::manager_map_result_t result) {
-                     XCTAssertTrue(result);
-                     XCTAssertEqual(manager.current_save_id(), db::value{3});
+    manager.save(db::no_cancellation, [self, &manager, &objects](db::manager_map_result_t result) {
+        XCTAssertTrue(result);
+        XCTAssertEqual(manager.current_save_id(), db::value{3});
 
-                     db::object &obj_a = objects.at("sample_a").at(0);
-                     db::object &obj_b0 = objects.at("sample_b").at(0);
-                     db::object &obj_b1 = objects.at("sample_b").at(1);
+        db::object &obj_a = objects.at("sample_a").at(0);
+        db::object &obj_b0 = objects.at("sample_b").at(0);
+        db::object &obj_b1 = objects.at("sample_b").at(1);
 
-                     obj_a.set_attribute_value("name", db::value{"test_a_4"});
-                     obj_b0.set_attribute_value("name", db::value{"test_b0_4"});
-                     obj_b1.set_attribute_value("name", db::value{"test_b1_4"});
+        obj_a.set_attribute_value("name", db::value{"test_a_4"});
+        obj_b0.set_attribute_value("name", db::value{"test_b0_4"});
+        obj_b1.set_attribute_value("name", db::value{"test_b1_4"});
 
-                     obj_a.set_relation_objects("child", {obj_b1});
-                 });
+        obj_a.set_relation_objects("child", {obj_b1});
+    });
 
-    manager.save([]() { return false; },
-                 [self, &manager, &objects](db::manager_map_result_t result) {
-                     XCTAssertTrue(result);
-                     XCTAssertEqual(manager.current_save_id(), db::value{4});
-                 });
+    manager.save(db::no_cancellation, [self, &manager, &objects](db::manager_map_result_t result) {
+        XCTAssertTrue(result);
+        XCTAssertEqual(manager.current_save_id(), db::value{4});
+    });
 
-    manager.execute([]() { return false; },
-                    [self, &manager](auto const &op) {
-                        auto &db = manager.database();
+    manager.execute(db::no_cancellation, [self, &manager](auto const &op) {
+        auto &db = manager.database();
 
-                        auto purge_result = db::purge_attributes(db, "sample_a");
-                        XCTAssertTrue(purge_result);
+        auto purge_result = db::purge_attributes(db, "sample_a");
+        XCTAssertTrue(purge_result);
 
-                        auto const &rel_table_name =
-                            manager.model().entities().at("sample_a").relations.at("child").table_name;
+        auto const &rel_table_name = manager.model().entities().at("sample_a").relations.at("child").table_name;
 
-                        auto purge_relation_result = db::purge_relations(db, rel_table_name, "sample_a");
-                        XCTAssertTrue(purge_relation_result);
+        auto purge_relation_result = db::purge_relations(db, rel_table_name, "sample_a");
+        XCTAssertTrue(purge_relation_result);
 
-                        auto select_result = db::select(db, db::select_option{.table = rel_table_name});
-                        XCTAssertTrue(select_result);
+        auto select_result = db::select(db, db::select_option{.table = rel_table_name});
+        XCTAssertTrue(select_result);
 
-                        auto &entity_rel_values = select_result.value();
-                        XCTAssertEqual(entity_rel_values.size(), 1);
+        auto &entity_rel_values = select_result.value();
+        XCTAssertEqual(entity_rel_values.size(), 1);
 
-                        auto &rel_values = entity_rel_values.at(0);
-                        XCTAssertEqual(rel_values.at(db::src_pk_id_field), db::value{4});
-                        XCTAssertEqual(rel_values.at(db::src_obj_id_field), db::value{1});
-                        XCTAssertEqual(rel_values.at(db::tgt_obj_id_field), db::value{2});
-                    });
+        auto &rel_values = entity_rel_values.at(0);
+        XCTAssertEqual(rel_values.at(db::src_pk_id_field), db::value{4});
+        XCTAssertEqual(rel_values.at(db::src_obj_id_field), db::value{1});
+        XCTAssertEqual(rel_values.at(db::tgt_obj_id_field), db::value{2});
+    });
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
 
-    manager.execute([]() { return false; }, [exp](auto const &op) { [exp fulfill]; });
+    manager.execute(db::no_cancellation, [exp](auto const &op) { [exp fulfill]; });
 
     [self waitForExpectationsWithTimeout:1.0 handler:nil];
 }

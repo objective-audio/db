@@ -135,11 +135,11 @@ void db_controller::insert(entity const &entity) {
 
     this->_manager.suspend();
 
-    this->_manager.save([]() { return false; }, [](db::manager_map_result_t result) {});
+    this->_manager.save(db::no_cancellation, [](db::manager_map_result_t result) {});
 
     auto inserted_object = std::make_shared<db::object>(db::null_object());
 
-    this->_manager.insert_objects([]() { return false; },
+    this->_manager.insert_objects(db::no_cancellation,
                                   [entity]() {
                                       auto uuid = make_cf_ref(CFUUIDCreate(nullptr));
                                       auto uuid_str = make_cf_ref(CFUUIDCreateString(nullptr, uuid.object()));
@@ -206,14 +206,13 @@ void db_controller::undo() {
 
     this->_manager.suspend();
 
-    this->_manager.reset([]() { return false; },
-                         [](auto result) {
-                             if (!result) {
-                                 std::runtime_error(to_string(result.error()));
-                             }
-                         });
+    this->_manager.reset(db::no_cancellation, [](auto result) {
+        if (!result) {
+            std::runtime_error(to_string(result.error()));
+        }
+    });
 
-    this->_manager.revert([]() { return false; }, [undo_id]() { return undo_id; },
+    this->_manager.revert(db::no_cancellation, [undo_id]() { return undo_id; },
                           [](auto result) {
                               if (!result) {
                                   std::runtime_error(to_string(result.error()));
@@ -249,14 +248,13 @@ void db_controller::redo() {
 
     this->_manager.suspend();
 
-    this->_manager.reset([]() { return false; },
-                         [](auto result) {
-                             if (!result) {
-                                 std::runtime_error(to_string(result.error()));
-                             }
-                         });
+    this->_manager.reset(db::no_cancellation, [](auto result) {
+        if (!result) {
+            std::runtime_error(to_string(result.error()));
+        }
+    });
 
-    this->_manager.revert([]() { return false; }, [redo_id]() { return redo_id; },
+    this->_manager.revert(db::no_cancellation, [redo_id]() { return redo_id; },
                           [](auto result) {
                               if (!result) {
                                   std::runtime_error(to_string(result.error()));
@@ -290,12 +288,11 @@ void db_controller::clear() {
 
     this->_manager.suspend();
 
-    this->_manager.clear([]() { return false; },
-                         [](db::manager_result_t result) {
-                             if (!result) {
-                                 std::runtime_error(to_string(result.error()));
-                             }
-                         });
+    this->_manager.clear(db::no_cancellation, [](db::manager_result_t result) {
+        if (!result) {
+            std::runtime_error(to_string(result.error()));
+        }
+    });
 
     this->_update_objects([weak = to_weak(shared_from_this())](auto update_result) {
         if (auto shared = weak.lock()) {
@@ -320,19 +317,17 @@ void db_controller::purge() {
 
     this->_manager.suspend();
 
-    this->_manager.save([]() { return false; },
-                        [](db::manager_map_result_t result) {
-                            if (!result) {
-                                std::runtime_error(to_string(result.error()));
-                            }
-                        });
+    this->_manager.save(db::no_cancellation, [](db::manager_map_result_t result) {
+        if (!result) {
+            std::runtime_error(to_string(result.error()));
+        }
+    });
 
-    this->_manager.purge([]() { return false; },
-                         [](db::manager_result_t result) {
-                             if (!result) {
-                                 std::runtime_error(to_string(result.error()));
-                             }
-                         });
+    this->_manager.purge(db::no_cancellation, [](db::manager_result_t result) {
+        if (!result) {
+            std::runtime_error(to_string(result.error()));
+        }
+    });
 
     this->_update_objects([weak = to_weak(shared_from_this())](auto update_result) {
         if (auto shared = weak.lock()) {
@@ -357,12 +352,11 @@ void db_controller::save_changed() {
 
     this->_manager.suspend();
 
-    this->_manager.save([]() { return false; },
-                        [](db::manager_map_result_t result) {
-                            if (!result) {
-                                std::runtime_error(to_string(result.error()));
-                            }
-                        });
+    this->_manager.save(db::no_cancellation, [](db::manager_map_result_t result) {
+        if (!result) {
+            std::runtime_error(to_string(result.error()));
+        }
+    });
 
     this->_update_objects([weak = to_weak(shared_from_this())](auto update_result) {
         if (auto shared = weak.lock()) {
@@ -387,12 +381,11 @@ void db_controller::cancel_changed() {
 
     this->_manager.suspend();
 
-    this->_manager.reset([]() { return false; },
-                         [](auto result) mutable {
-                             if (!result) {
-                                 std::runtime_error(to_string(result.error()));
-                             }
-                         });
+    this->_manager.reset(db::no_cancellation, [](auto result) mutable {
+        if (!result) {
+            std::runtime_error(to_string(result.error()));
+        }
+    });
 
     this->_update_objects([weak = to_weak(shared_from_this())](auto update_result) {
         if (auto shared = weak.lock()) {
@@ -476,7 +469,7 @@ void db_controller::_update_objects(std::function<void(db::manager_result_t)> &&
         this->_update_objects(entity, [results](auto result) { results->emplace_back(std::move(result)); });
     }
 
-    this->_manager.execute([]() { return false; }, [completion = std::move(completion), results](operation const &) {
+    this->_manager.execute(db::no_cancellation, [completion = std::move(completion), results](operation const &) {
         for (auto const &result : *results) {
             if (!result) {
                 completion(result);
@@ -495,7 +488,7 @@ void db_controller::_update_objects(entity const &entity, std::function<void(db:
     auto const entity_name = to_entity_name(entity);
 
     this->_manager.fetch_objects(
-        []() { return false; },
+        db::no_cancellation,
         [entity_name]() {
             return db::to_fetch_option(
                 db::select_option{.table = entity_name, .field_orders = {{db::object_id_field, db::order::ascending}}});
