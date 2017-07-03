@@ -423,7 +423,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
             completion(std::move(state), std::move(fetched_datas));
         };
 
-        this->execute([]() { return false; }, std::move(execution));
+        this->execute(std::move(cancellation), std::move(execution));
     }
 
     // バックグラウンドでデータベースからオブジェクトデータを取得する。条件はobject_idで指定。単独のエンティティのみ
@@ -569,7 +569,7 @@ void db::manager::setup(db::manager::completion_f completion) {
         dispatch_sync(manager.dispatch_queue(), completion_on_main);
     };
 
-    this->execute([]() { return false; }, std::move(execution));
+    this->execute(db::no_cancellation, std::move(execution));
 }
 
 void db::manager::clear(db::manager::cancellation_f cancellation, db::manager::completion_f completion) {
@@ -708,7 +708,7 @@ void db::manager::reset(db::manager::cancellation_f cancellation, db::manager::c
                                                  std::move(impl_completion));
 }
 
-void db::manager::execute(db::manager::cancellation_f &&cancellation, db::manager::execution_f &&execution) {
+void db::manager::execute(db::manager::cancellation_f cancellation, db::manager::execution_f &&execution) {
     impl_ptr<impl>()->execute(std::move(cancellation), std::move(execution));
 }
 

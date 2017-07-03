@@ -39,7 +39,7 @@ using namespace yas;
 
     XCTestExpectation *exp = [self expectationWithDescription:@"execution"];
 
-    manager.execute([]() { return false; },
+    manager.execute(db::no_cancellation,
                     [self, exp](auto const &operation) {
                         XCTAssertTrue(operation);
                         XCTAssertFalse([NSThread isMainThread]);
@@ -52,7 +52,7 @@ using namespace yas;
 - (void)test_execute_update_and_query_in_bg {
     auto manager = [yas_db_test_utils create_test_manager];
 
-    manager.execute([]() { return false; },
+    manager.execute(db::no_cancellation,
                     [self, &manager](auto const &operation) {
                         auto &db = manager.database();
 
@@ -75,7 +75,7 @@ using namespace yas;
                     });
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
-    manager.execute([]() { return false; }, [exp](auto const &op) { [exp fulfill]; });
+    manager.execute(db::no_cancellation, [exp](auto const &op) { [exp fulfill]; });
     [self waitForExpectationsWithTimeout:10.0 handler:nil];
 }
 
@@ -85,7 +85,7 @@ using namespace yas;
 
     manager.setup([self, &manager](auto result) { XCTAssertTrue(result); });
 
-    manager.execute([]() { return false; },
+    manager.execute(db::no_cancellation,
                     [self, &manager](auto const &op) {
                         auto &db = manager.database();
 
@@ -113,7 +113,7 @@ using namespace yas;
                     });
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
-    manager.execute([]() { return false; }, [exp](auto const &op) { [exp fulfill]; });
+    manager.execute(db::no_cancellation, [exp](auto const &op) { [exp fulfill]; });
     [self waitForExpectationsWithTimeout:10.0 handler:nil];
 }
 
@@ -153,7 +153,7 @@ using namespace yas;
         XCTAssertEqual(manager.created_object_count("sample_a"), 2);
     });
 
-    manager.save([]() { return false; },
+    manager.save(db::no_cancellation,
                  [self, &manager, &objects](db::manager_map_result_t result) {
                      XCTAssertTrue(result);
                      XCTAssertEqual(manager.current_save_id(), db::value{1});
@@ -189,7 +189,7 @@ using namespace yas;
                  });
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
-    manager.execute([]() { return false; }, [exp](auto const &op) { [exp fulfill]; });
+    manager.execute(db::no_cancellation, [exp](auto const &op) { [exp fulfill]; });
     [self waitForExpectationsWithTimeout:10.0 handler:nil];
 }
 
@@ -212,7 +212,7 @@ using namespace yas;
         XCTAssertEqual(manager.created_object_count("sample_a"), 2);
     });
 
-    manager.save([]() { return false; },
+    manager.save(db::no_cancellation,
                  [self, &manager, &objects](db::manager_map_result_t result) {
                      XCTAssertTrue(result);
                      XCTAssertFalse(manager.has_created_objects());
@@ -246,7 +246,7 @@ using namespace yas;
                      XCTAssertTrue(manager.has_created_objects());
                  });
 
-    manager.save([]() { return false; },
+    manager.save(db::no_cancellation,
                  [self, &manager, &objects](db::manager_map_result_t result) {
                      XCTAssertTrue(result);
 
@@ -267,7 +267,7 @@ using namespace yas;
                  });
 
     manager.fetch_const_objects(
-        []() { return false; },
+        db::no_cancellation,
         []() {
             return db::to_fetch_option(db::select_option{
                 .table = "sample_a", .field_orders = {db::field_order{.field = "age", .order = db::order::ascending}}});
@@ -285,7 +285,7 @@ using namespace yas;
         });
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
-    manager.execute([]() { return false; }, [exp](auto const &op) { [exp fulfill]; });
+    manager.execute(db::no_cancellation, [exp](auto const &op) { [exp fulfill]; });
     [self waitForExpectationsWithTimeout:10.0 handler:nil];
 }
 
@@ -320,7 +320,7 @@ using namespace yas;
 
     db::object_map_map_t result_objects;
 
-    manager.save([]() { return false; },
+    manager.save(db::no_cancellation,
                  [self, &result_objects, &saveExp](db::manager_map_result_t result) {
                      XCTAssertTrue(result);
 
@@ -370,7 +370,7 @@ using namespace yas;
     {
         XCTestExpectation *saveExp = [self expectationWithDescription:@"save"];
 
-        manager.save([]() { return false; },
+        manager.save(db::no_cancellation,
                      [self, &saveExp](db::manager_map_result_t result) {
                          XCTAssertTrue(result);
 
@@ -389,7 +389,7 @@ using namespace yas;
     {
         XCTestExpectation *saveExp = [self expectationWithDescription:@"save"];
 
-        manager.save([]() { return false; },
+        manager.save(db::no_cancellation,
                      [self, &saveExp](db::manager_map_result_t result) {
                          XCTAssertTrue(result);
 
@@ -420,7 +420,7 @@ using namespace yas;
 
     XCTestExpectation *save_exp = [self expectationWithDescription:@"setup manager"];
 
-    manager.save([]() { return false; }, [save_exp](db::manager_map_result_t save_result) { [save_exp fulfill]; });
+    manager.save(db::no_cancellation, [save_exp](db::manager_map_result_t save_result) { [save_exp fulfill]; });
 
     [self waitForExpectations:@[save_exp] timeout:10.0];
 
@@ -447,7 +447,7 @@ using namespace yas;
 
     manager.setup([self, &manager](auto result) { XCTAssertTrue(result); });
 
-    manager.execute([]() { return false; },
+    manager.execute(db::no_cancellation,
                     [self, &manager](auto const &) {
                         auto &db = manager.database();
 
@@ -494,7 +494,7 @@ using namespace yas;
                     });
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
-    manager.execute([]() { return false; }, [exp](auto const &op) { [exp fulfill]; });
+    manager.execute(db::no_cancellation, [exp](auto const &op) { [exp fulfill]; });
     [self waitForExpectationsWithTimeout:10.0 handler:nil];
 
     manager = nullptr;
@@ -505,7 +505,7 @@ using namespace yas;
     manager.setup([self, &manager](auto result) { XCTAssertTrue(result); });
 
     manager.execute(
-        []() { return false; },
+        db::no_cancellation,
         [self, &manager](auto const &) {
             auto &db = manager.database();
 
@@ -557,7 +557,7 @@ using namespace yas;
         });
 
     exp = [self expectationWithDescription:@"exp"];
-    manager.execute([]() { return false; }, [exp](auto const &op) { [exp fulfill]; });
+    manager.execute(db::no_cancellation, [exp](auto const &op) { [exp fulfill]; });
     [self waitForExpectationsWithTimeout:10.0 handler:nil];
 }
 
@@ -575,7 +575,7 @@ using namespace yas;
 
     db::object_vector_map_t inserted_objects_1;
 
-    manager.insert_objects([]() { return false; },
+    manager.insert_objects(db::no_cancellation,
                            []() {
                                return db::entity_count_map_t{{"sample_a", 3}};
                            },
@@ -620,7 +620,7 @@ using namespace yas;
 
     db::object_vector_map_t inserted_objects_2;
 
-    manager.insert_objects([]() { return false; },
+    manager.insert_objects(db::no_cancellation,
                            []() {
                                return db::entity_count_map_t{{"sample_a", 1}};
                            },
@@ -665,7 +665,7 @@ using namespace yas;
         XCTAssertEqual(manager.current_save_id(), db::value{0});
     });
 
-    manager.insert_objects([]() { return false; },
+    manager.insert_objects(db::no_cancellation,
                            []() {
                                db::value_map_t obj1{{"name", db::value{"test_name_1"}}, {"age", db::value{43}}};
                                db::value_map_t obj2{{"name", db::value{"test_name_2"}}, {"age", db::value{67}}};
@@ -692,7 +692,7 @@ using namespace yas;
                            });
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
-    manager.execute([]() { return false; }, [exp](auto const &op) { [exp fulfill]; });
+    manager.execute(db::no_cancellation, [exp](auto const &op) { [exp fulfill]; });
     [self waitForExpectationsWithTimeout:10.0 handler:nil];
 }
 
@@ -702,7 +702,7 @@ using namespace yas;
 
     manager.setup([self, &manager](auto result) { XCTAssertTrue(result); });
 
-    manager.insert_objects([]() { return false; },
+    manager.insert_objects(db::no_cancellation,
                            []() {
                                return db::entity_count_map_t{{"sample_a", 3}, {"sample_b", 5}};
                            },
@@ -722,7 +722,7 @@ using namespace yas;
                            });
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
-    manager.execute([]() { return false; }, [exp](auto const &op) { [exp fulfill]; });
+    manager.execute(db::no_cancellation, [exp](auto const &op) { [exp fulfill]; });
     [self waitForExpectationsWithTimeout:10.0 handler:nil];
 }
 
@@ -736,7 +736,7 @@ using namespace yas;
         XCTAssertEqual(manager.last_save_id(), db::value{0});
     });
 
-    manager.insert_objects([]() { return false; },
+    manager.insert_objects(db::no_cancellation,
                            []() {
                                return db::entity_count_map_t{{"sample_a", 1}};
                            },
@@ -751,13 +751,13 @@ using namespace yas;
                                object.set_attribute_value("name", db::value{"first_name_value"});
                            });
 
-    manager.save([]() { return false; },
+    manager.save(db::no_cancellation,
                  [self, &manager](db::manager_map_result_t result) {
                      XCTAssertTrue(result);
                      XCTAssertEqual(manager.current_save_id(), db::value{2});
                  });
 
-    manager.insert_objects([]() { return false; },
+    manager.insert_objects(db::no_cancellation,
                            []() {
                                return db::entity_count_map_t{{"sample_a", 1}};
                            },
@@ -772,20 +772,20 @@ using namespace yas;
                                object.set_attribute_value("name", db::value{"second_name_value"});
                            });
 
-    manager.save([]() { return false; },
+    manager.save(db::no_cancellation,
                  [self, &manager](db::manager_map_result_t result) {
                      XCTAssertTrue(result);
                      XCTAssertEqual(manager.current_save_id(), db::value{4});
 
                  });
 
-    manager.revert([]() { return false; }, []() { return 2; },
+    manager.revert(db::no_cancellation, []() { return 2; },
                    [self, &manager](auto result) {
                        XCTAssertTrue(result);
                        XCTAssertEqual(manager.current_save_id(), db::value{2});
                    });
 
-    manager.insert_objects([]() { return false; },
+    manager.insert_objects(db::no_cancellation,
                            []() {
                                return db::entity_count_map_t{{"sample_a", 1}};
                            },
@@ -798,7 +798,7 @@ using namespace yas;
                                XCTAssertEqual(object.save_id(), db::value{3});
                            });
 
-    manager.execute([]() { return false; },
+    manager.execute(db::no_cancellation,
                     [self, &manager](operation const &op) {
                         auto &db = manager.database();
                         auto result = db::select(db, {.table = "sample_a"});
@@ -812,7 +812,7 @@ using namespace yas;
                     });
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
-    manager.execute([]() { return false; }, [exp](auto const &op) { [exp fulfill]; });
+    manager.execute(db::no_cancellation, [exp](auto const &op) { [exp fulfill]; });
     [self waitForExpectationsWithTimeout:10.0 handler:nil];
 }
 
@@ -826,7 +826,7 @@ using namespace yas;
 
     db::object_vector_map_t objects;
 
-    manager.insert_objects([]() { return false; },
+    manager.insert_objects(db::no_cancellation,
                            []() {
                                return db::entity_count_map_t{{"sample_a", 3}, {"sample_b", 2}};
                            },
@@ -870,7 +870,7 @@ using namespace yas;
 
     XCTestExpectation *exp2 = [self expectationWithDescription:@"2"];
 
-    manager.save([]() { return false; },
+    manager.save(db::no_cancellation,
                  [self, exp2](db::manager_map_result_t result) {
                      XCTAssertTrue(result);
 
@@ -884,7 +884,7 @@ using namespace yas;
 
     XCTestExpectation *exp3 = [self expectationWithDescription:@"3"];
 
-    manager.fetch_objects([]() { return false; },
+    manager.fetch_objects(db::no_cancellation,
                           []() { return db::to_fetch_option(db::select_option{.table = "sample_a"}); },
                           [self, exp3](auto fetch_result) {
                               XCTAssertTrue(fetch_result);
@@ -919,7 +919,7 @@ using namespace yas;
 
     XCTestExpectation *exp4 = [self expectationWithDescription:@"4"];
 
-    manager.save([]() { return false; }, [self, exp4](db::manager_map_result_t result) { [exp4 fulfill]; });
+    manager.save(db::no_cancellation, [self, exp4](db::manager_map_result_t result) { [exp4 fulfill]; });
 
     [self waitForExpectationsWithTimeout:10.0 handler:nil];
 
@@ -927,7 +927,7 @@ using namespace yas;
     XCTAssertEqual(manager.last_save_id(), db::value{3});
 
     manager.fetch_objects(
-        []() { return false; },
+        db::no_cancellation,
         []() {
             return db::to_fetch_option(db::select_option{.table = "sample_a",
                                                          .where_exprs = db::field_expr("name", "like"),
@@ -958,7 +958,7 @@ using namespace yas;
         });
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
-    manager.execute([]() { return false; }, [exp](auto const &op) { [exp fulfill]; });
+    manager.execute(db::no_cancellation, [exp](auto const &op) { [exp fulfill]; });
     [self waitForExpectationsWithTimeout:10.0 handler:nil];
 }
 
@@ -971,7 +971,7 @@ using namespace yas;
 
     });
 
-    manager.insert_objects([]() { return false; },
+    manager.insert_objects(db::no_cancellation,
                            []() {
                                return db::entity_count_map_t{{"sample_a", 1}, {"sample_b", 1}};
                            },
@@ -991,9 +991,9 @@ using namespace yas;
 
                            });
 
-    manager.save([]() { return false; }, [self](db::manager_map_result_t result) { XCTAssertTrue(result); });
+    manager.save(db::no_cancellation, [self](db::manager_map_result_t result) { XCTAssertTrue(result); });
 
-    manager.fetch_const_objects([]() { return false; },
+    manager.fetch_const_objects(db::no_cancellation,
                                 []() { return db::to_fetch_option(db::select_option{.table = "sample_a"}); },
                                 [self](db::manager_const_vector_result_t fetch_result) mutable {
                                     XCTAssertTrue(fetch_result);
@@ -1012,7 +1012,7 @@ using namespace yas;
                                 });
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
-    manager.execute([]() { return false; }, [exp](auto const &op) { [exp fulfill]; });
+    manager.execute(db::no_cancellation, [exp](auto const &op) { [exp fulfill]; });
     [self waitForExpectationsWithTimeout:10.0 handler:nil];
 }
 
@@ -1024,7 +1024,7 @@ using namespace yas;
 
     XCTestExpectation *exp1 = [self expectationWithDescription:@"1"];
 
-    manager.insert_objects([]() { return false; },
+    manager.insert_objects(db::no_cancellation,
                            []() {
                                return db::entity_count_map_t{{"sample_a", 1}, {"sample_b", 1}, {"sample_c", 1}};
                            },
@@ -1063,7 +1063,7 @@ using namespace yas;
 
     XCTestExpectation *exp2 = [self expectationWithDescription:@"2"];
 
-    manager.save([]() { return false; },
+    manager.save(db::no_cancellation,
                  [self, exp2](db::manager_map_result_t save_result) {
                      XCTAssertTrue(save_result);
 
@@ -1104,7 +1104,7 @@ using namespace yas;
 
     auto object_a = db::null_object();
 
-    manager.fetch_objects([]() { return false; },
+    manager.fetch_objects(db::no_cancellation,
                           []() { return db::to_fetch_option(db::select_option{.table = "sample_a"}); },
                           [self, exp3, &object_a](auto const &fetch_result) {
                               XCTAssertTrue(fetch_result);
@@ -1125,7 +1125,7 @@ using namespace yas;
     [self waitForExpectationsWithTimeout:10.0 handler:nil];
 
     manager.fetch_objects(
-        []() { return false; },
+        db::no_cancellation,
         [object_a]() {
             return db::relation_ids(db::object_vector_map_t{std::make_pair("sample_a", db::object_vector_t{object_a})});
         },
@@ -1148,7 +1148,7 @@ using namespace yas;
         });
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
-    manager.execute([]() { return false; }, [exp](auto const &op) { [exp fulfill]; });
+    manager.execute(db::no_cancellation, [exp](auto const &op) { [exp fulfill]; });
     [self waitForExpectationsWithTimeout:10.0 handler:nil];
 }
 
@@ -1158,7 +1158,7 @@ using namespace yas;
 
     manager.setup([self, &manager](auto result) mutable { XCTAssertTrue(result); });
 
-    manager.insert_objects([]() { return false; },
+    manager.insert_objects(db::no_cancellation,
                            []() {
                                return db::entity_count_map_t{{"sample_a", 3}};
                            },
@@ -1178,9 +1178,9 @@ using namespace yas;
                                XCTAssertEqual(objects.at("sample_a").at(2).object_id().stable_value(), db::value{3});
                            });
 
-    manager.save([]() { return false; }, [self](db::manager_map_result_t result) { XCTAssertTrue(result); });
+    manager.save(db::no_cancellation, [self](db::manager_map_result_t result) { XCTAssertTrue(result); });
 
-    manager.fetch_const_objects([]() { return false; },
+    manager.fetch_const_objects(db::no_cancellation,
                                 []() {
                                     return db::integer_set_map_t{{"sample_a", {2}}};
                                 },
@@ -1196,7 +1196,7 @@ using namespace yas;
                                 });
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
-    manager.execute([]() { return false; }, [exp](auto const &op) { [exp fulfill]; });
+    manager.execute(db::no_cancellation, [exp](auto const &op) { [exp fulfill]; });
     [self waitForExpectationsWithTimeout:10.0 handler:nil];
 }
 
@@ -1214,7 +1214,7 @@ using namespace yas;
 
     XCTestExpectation *exp1 = [self expectationWithDescription:@"1"];
 
-    manager.insert_objects([]() { return false; },
+    manager.insert_objects(db::no_cancellation,
                            []() {
                                return db::entity_count_map_t{{"sample_a", 1}};
                            },
@@ -1243,7 +1243,7 @@ using namespace yas;
 
     XCTestExpectation *exp2 = [self expectationWithDescription:@"2"];
 
-    manager.save([]() { return false; },
+    manager.save(db::no_cancellation,
                  [self, exp2](db::manager_map_result_t result) {
                      auto const &objects = result.value();
                      XCTAssertEqual(objects.size(), 0);
@@ -1263,7 +1263,7 @@ using namespace yas;
 
     XCTestExpectation *exp3 = [self expectationWithDescription:@"3"];
 
-    manager.save([]() { return false; },
+    manager.save(db::no_cancellation,
                  [self, exp3](db::manager_map_result_t result) {
                      XCTAssertTrue(result);
 
@@ -1285,7 +1285,7 @@ using namespace yas;
                      XCTAssertEqual(obj.relation_id("child", 1).stable(), 200);
                  });
 
-    manager.execute([]() { return false; },
+    manager.execute(db::no_cancellation,
                     [self, exp3, &manager](operation const &) {
                         auto &db = manager.database();
 
@@ -1332,7 +1332,7 @@ using namespace yas;
 
     XCTestExpectation *exp4 = [self expectationWithDescription:@"4"];
 
-    manager.save([]() { return false; },
+    manager.save(db::no_cancellation,
                  [self, exp4](db::manager_map_result_t save_result) {
                      XCTAssertTrue(save_result);
 
@@ -1360,7 +1360,7 @@ using namespace yas;
     XCTAssertEqual(manager.current_save_id(), db::value{3});
     XCTAssertEqual(manager.last_save_id(), db::value{3});
 
-    manager.save([]() { return false; },
+    manager.save(db::no_cancellation,
                  [self](db::manager_map_result_t result) {
                      XCTAssertTrue(result);
 
@@ -1369,7 +1369,7 @@ using namespace yas;
                  });
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
-    manager.execute([]() { return false; }, [exp](auto const &op) { [exp fulfill]; });
+    manager.execute(db::no_cancellation, [exp](auto const &op) { [exp fulfill]; });
     [self waitForExpectationsWithTimeout:10.0 handler:nil];
 
     XCTAssertEqual(manager.current_save_id(), db::value{3});
@@ -1388,7 +1388,7 @@ using namespace yas;
 
     db::object_vector_t a_objects;
 
-    manager.insert_objects([]() { return false; },
+    manager.insert_objects(db::no_cancellation,
                            []() {
                                return db::entity_count_map_t{{"sample_a", 2}};
                            },
@@ -1406,7 +1406,7 @@ using namespace yas;
                                object.set_attribute_value("name", db::value{"name_value_0"});
                            });
 
-    manager.save([]() { return false; },
+    manager.save(db::no_cancellation,
                  [self, &manager, &a_objects](db::manager_map_result_t result) {
                      XCTAssertTrue(result);
                      XCTAssertEqual(manager.current_save_id(), db::value{2});
@@ -1416,14 +1416,14 @@ using namespace yas;
                      object.set_attribute_value("name", db::value{"name_value_1_a"});
                  });
 
-    manager.save([]() { return false; },
+    manager.save(db::no_cancellation,
                  [self, &manager, &a_objects](db::manager_map_result_t result) {
                      XCTAssertTrue(result);
                      XCTAssertEqual(manager.current_save_id(), db::value{3});
                      XCTAssertEqual(a_objects.at(1).save_id(), db::value{3});
                  });
 
-    manager.revert([]() { return false; }, []() { return 2; },
+    manager.revert(db::no_cancellation, []() { return 2; },
                    [self, &manager, &a_objects](auto result) {
                        XCTAssertTrue(result);
                        XCTAssertEqual(manager.current_save_id(), db::value{2});
@@ -1432,14 +1432,14 @@ using namespace yas;
                        object.set_attribute_value("name", db::value{"name_value_1_b"});
                    });
 
-    manager.save([]() { return false; },
+    manager.save(db::no_cancellation,
                  [self, &manager, &a_objects](db::manager_map_result_t result) {
                      XCTAssertTrue(result);
                      XCTAssertEqual(manager.current_save_id(), db::value{3});
                      XCTAssertEqual(a_objects.at(1).save_id(), db::value{3});
                  });
 
-    manager.execute([]() { return false; },
+    manager.execute(db::no_cancellation,
                     [self, &manager](operation const &op) {
                         auto &db = manager.database();
                         auto result = db::select(db, {.table = "sample_a"});
@@ -1453,7 +1453,7 @@ using namespace yas;
                     });
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
-    manager.execute([]() { return false; }, [exp](auto const &op) { [exp fulfill]; });
+    manager.execute(db::no_cancellation, [exp](auto const &op) { [exp fulfill]; });
     [self waitForExpectationsWithTimeout:10.0 handler:nil];
 }
 
@@ -1469,7 +1469,7 @@ using namespace yas;
         XCTAssertEqual(manager.last_save_id(), db::value{0});
     });
 
-    manager.insert_objects([]() { return false; },
+    manager.insert_objects(db::no_cancellation,
                            []() {
                                return db::entity_count_map_t{{"sample_a", 1}};
                            },
@@ -1481,7 +1481,7 @@ using namespace yas;
                                a_object.set_attribute_value("name", db::value{"value_2"});
                            });
 
-    manager.save([]() { return false; },
+    manager.save(db::no_cancellation,
                  [self, &a_object](db::manager_map_result_t result) mutable {
                      XCTAssertTrue(result);
 
@@ -1490,7 +1490,7 @@ using namespace yas;
                      a_object.remove();
                  });
 
-    manager.save([]() { return false; },
+    manager.save(db::no_cancellation,
                  [self, &a_object](db::manager_map_result_t result) mutable {
                      XCTAssertTrue(result);
 
@@ -1498,7 +1498,7 @@ using namespace yas;
                      XCTAssertTrue(a_object.is_removed());
                  });
 
-    manager.revert([]() { return false; }, []() { return 2; },
+    manager.revert(db::no_cancellation, []() { return 2; },
                    [self, &a_object](auto result) mutable {
                        XCTAssertTrue(result);
 
@@ -1507,7 +1507,7 @@ using namespace yas;
                        XCTAssertFalse(a_object.is_removed());
                    });
 
-    manager.revert([]() { return false; }, []() { return 1; },
+    manager.revert(db::no_cancellation, []() { return 1; },
                    [self, &a_object](auto result) mutable {
                        XCTAssertTrue(result);
 
@@ -1517,10 +1517,10 @@ using namespace yas;
                        a_object.set_attribute_value("name", db::value{"value_b"});
                    });
 
-    manager.save([]() { return false; }, [self](db::manager_map_result_t result) mutable { XCTAssertTrue(result); });
+    manager.save(db::no_cancellation, [self](db::manager_map_result_t result) mutable { XCTAssertTrue(result); });
 
     manager.execute(
-        []() { return false; },
+        db::no_cancellation,
         [self, &manager](operation const &) mutable {
             auto &db = manager.database();
 
@@ -1540,7 +1540,7 @@ using namespace yas;
             XCTAssertEqual(select_result.value().size(), 1);
         });
 
-    manager.revert([]() { return false; }, []() { return 0; },
+    manager.revert(db::no_cancellation, []() { return 0; },
                    [self, &a_object](auto result) mutable {
                        XCTAssertTrue(result);
 
@@ -1552,7 +1552,7 @@ using namespace yas;
                    });
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
-    manager.execute([]() { return false; }, [exp](auto const &op) { [exp fulfill]; });
+    manager.execute(db::no_cancellation, [exp](auto const &op) { [exp fulfill]; });
     [self waitForExpectationsWithTimeout:10.0 handler:nil];
 }
 
@@ -1567,7 +1567,7 @@ using namespace yas;
             XCTAssertEqual(manager.last_save_id(), db::value{0});
         });
 
-        manager.insert_objects([]() { return false; },
+        manager.insert_objects(db::no_cancellation,
                                []() {
                                    return db::entity_count_map_t{{"sample_a", 1}, {"sample_b", 2}};
                                },
@@ -1583,7 +1583,7 @@ using namespace yas;
                                    objects.at("sample_b").at(1).set_attribute_value("name", db::value{"name_value_3"});
                                });
 
-        manager.save([]() { return false; },
+        manager.save(db::no_cancellation,
                      [self, &manager, &objects](db::manager_map_result_t result) mutable {
                          XCTAssertTrue(result);
                          XCTAssertEqual(manager.current_save_id(), db::value{2});
@@ -1595,7 +1595,7 @@ using namespace yas;
                          XCTAssertEqual(objects.at("sample_b").at(0).object_id().stable_value(), db::value{1});
                      });
 
-        manager.save([]() { return false; },
+        manager.save(db::no_cancellation,
                      [self, &manager, &objects](db::manager_map_result_t result) mutable {
                          XCTAssertTrue(result);
                          XCTAssertEqual(manager.current_save_id(), db::value{3});
@@ -1606,14 +1606,14 @@ using namespace yas;
                          objects.at("sample_a").at(0).set_relation_objects("child", {objects.at("sample_b").at(1)});
                      });
 
-        manager.save([]() { return false; },
+        manager.save(db::no_cancellation,
                      [self, &manager](db::manager_map_result_t result) mutable {
                          XCTAssertTrue(result);
                          XCTAssertEqual(manager.current_save_id(), db::value{4});
                          XCTAssertEqual(manager.last_save_id(), db::value{4});
                      });
 
-        manager.revert([]() { return false; }, []() { return 3; },
+        manager.revert(db::no_cancellation, []() { return 3; },
                        [self, &manager](auto result) mutable {
                            XCTAssertTrue(result);
                            XCTAssertEqual(manager.current_save_id(), db::value{3});
@@ -1621,7 +1621,7 @@ using namespace yas;
                        });
 
         XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
-        manager.execute([]() { return false; }, [exp](auto const &op) { [exp fulfill]; });
+        manager.execute(db::no_cancellation, [exp](auto const &op) { [exp fulfill]; });
         [self waitForExpectationsWithTimeout:10.0 handler:nil];
     } else {
         XCTAssert(0);
@@ -1637,7 +1637,7 @@ using namespace yas;
         });
 
         manager.fetch_objects(
-            []() { return false; }, []() { return db::to_fetch_option(db::select_option{.table = "sample_a"}); },
+            db::no_cancellation, []() { return db::to_fetch_option(db::select_option{.table = "sample_a"}); },
             [self, &objects](auto result) mutable {
                 XCTAssertTrue(result);
 
@@ -1649,7 +1649,7 @@ using namespace yas;
             });
 
         manager.fetch_objects(
-            []() { return false; }, [&objects]() { return db::relation_ids(objects); },
+            db::no_cancellation, [&objects]() { return db::relation_ids(objects); },
             [self, &objects](auto result) mutable {
                 XCTAssertTrue(result);
 
@@ -1667,7 +1667,7 @@ using namespace yas;
             });
 
         XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
-        manager.execute([]() { return false; }, [exp](auto const &op) { [exp fulfill]; });
+        manager.execute(db::no_cancellation, [exp](auto const &op) { [exp fulfill]; });
         [self waitForExpectationsWithTimeout:10.0 handler:nil];
     } else {
         XCTAssert(0);
@@ -1707,7 +1707,7 @@ using namespace yas;
 
     manager.setup([self, &manager](auto result) { XCTAssertTrue(result); });
 
-    manager.insert_objects([]() { return false; },
+    manager.insert_objects(db::no_cancellation,
                            []() {
                                return db::entity_count_map_t{{"sample_a", 1}};
                            },
@@ -1721,7 +1721,7 @@ using namespace yas;
                                object.set_attribute_value("name", db::value{"test_clear_value"});
                            });
 
-    manager.save([]() { return false; },
+    manager.save(db::no_cancellation,
                  [self, &manager, &object](db::manager_map_result_t result) {
                      XCTAssertTrue(result);
 
@@ -1732,7 +1732,7 @@ using namespace yas;
                      XCTAssertTrue(manager.cached_or_created_object("sample_a", db::make_stable_id(db::value{1})));
                  });
 
-    manager.clear([]() { return false; },
+    manager.clear(db::no_cancellation,
                   [self, &manager, &object](auto result) {
                       XCTAssertTrue(result);
 
@@ -1743,7 +1743,7 @@ using namespace yas;
                   });
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
-    manager.execute([]() { return false; }, [exp](auto const &op) { [exp fulfill]; });
+    manager.execute(db::no_cancellation, [exp](auto const &op) { [exp fulfill]; });
     [self waitForExpectationsWithTimeout:10.0 handler:nil];
 }
 
@@ -1775,7 +1775,7 @@ using namespace yas;
                   [self, &manager, &object, &is_called](auto result) mutable { is_called = true; });
 
     XCTestExpectation *exp = [self expectationWithDescription:@"end"];
-    manager.execute([]() { return false; }, [&exp](auto const &op) { [exp fulfill]; });
+    manager.execute(db::no_cancellation, [&exp](auto const &op) { [exp fulfill]; });
     [self waitForExpectationsWithTimeout:10.0 handler:nil];
 
     XCTAssertFalse(is_called);
@@ -1789,7 +1789,7 @@ using namespace yas;
 
     db::object_vector_map_t objects;
 
-    manager.insert_objects([]() { return false; },
+    manager.insert_objects(db::no_cancellation,
                            []() {
                                return db::entity_count_map_t{{"sample_a", 1}, {"sample_b", 2}};
                            },
@@ -1809,7 +1809,7 @@ using namespace yas;
                                obj_a.set_relation_objects("child", {obj_b0});
                            });
 
-    manager.save([]() { return false; },
+    manager.save(db::no_cancellation,
                  [self, &manager, &objects](db::manager_map_result_t result) {
                      XCTAssertTrue(result);
                      XCTAssertEqual(manager.current_save_id(), db::value{2});
@@ -1825,7 +1825,7 @@ using namespace yas;
                      obj_a.set_relation_objects("child", {obj_b0, obj_b1});
                  });
 
-    manager.save([]() { return false; },
+    manager.save(db::no_cancellation,
                  [self, &manager, &objects](db::manager_map_result_t result) {
                      XCTAssertTrue(result);
                      XCTAssertEqual(manager.current_save_id(), db::value{3});
@@ -1841,20 +1841,20 @@ using namespace yas;
                      obj_a.set_relation_objects("child", {obj_b1});
                  });
 
-    manager.save([]() { return false; },
+    manager.save(db::no_cancellation,
                  [self, &manager](db::manager_map_result_t result) {
                      XCTAssertTrue(result);
                      XCTAssertEqual(manager.current_save_id(), db::value{4});
                  });
 
-    manager.revert([]() { return false; }, []() { return 3; },
+    manager.revert(db::no_cancellation, []() { return 3; },
                    [self, &manager](auto result) {
                        XCTAssertTrue(result);
                        XCTAssertEqual(manager.current_save_id(), db::value{3});
                        XCTAssertEqual(manager.last_save_id(), db::value{4});
                    });
 
-    manager.purge([]() { return false; },
+    manager.purge(db::no_cancellation,
                   [self, &manager, &objects](auto result) {
                       XCTAssertTrue(result);
                       XCTAssertEqual(manager.current_save_id(), db::value{1});
@@ -1874,7 +1874,7 @@ using namespace yas;
                   });
 
     manager.execute(
-        []() { return false; },
+        db::no_cancellation,
         [self, &manager](auto const &op) {
             auto &db = manager.database();
             auto const &rel_table_name = manager.model().entities().at("sample_a").relations.at("child").table_name;
@@ -1919,7 +1919,7 @@ using namespace yas;
         });
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
-    manager.execute([]() { return false; }, [exp](auto const &op) { [exp fulfill]; });
+    manager.execute(db::no_cancellation, [exp](auto const &op) { [exp fulfill]; });
     [self waitForExpectationsWithTimeout:10.0 handler:nil];
 }
 
@@ -1950,7 +1950,7 @@ using namespace yas;
     manager.purge([]() { return true; }, [&is_called](auto result) { is_called = true; });
 
     XCTestExpectation *exp = [self expectationWithDescription:@"end"];
-    manager.execute([]() { return false; }, [&exp](auto const &op) { [exp fulfill]; });
+    manager.execute(db::no_cancellation, [&exp](auto const &op) { [exp fulfill]; });
     [self waitForExpectationsWithTimeout:10.0 handler:nil];
 
     XCTAssertFalse(is_called);
@@ -1970,7 +1970,7 @@ using namespace yas;
         XCTAssertTrue(manager.has_created_objects());
     });
 
-    manager.save([]() { return false; },
+    manager.save(db::no_cancellation,
                  [self, &manager](db::manager_map_result_t result) {
                      XCTAssertTrue(result);
 
@@ -1978,7 +1978,7 @@ using namespace yas;
                  });
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
-    manager.execute([]() { return false; }, [exp](auto const &op) { [exp fulfill]; });
+    manager.execute(db::no_cancellation, [exp](auto const &op) { [exp fulfill]; });
     [self waitForExpectationsWithTimeout:10.0 handler:nil];
 }
 
@@ -1988,7 +1988,7 @@ using namespace yas;
 
     manager.setup([self, &manager](auto result) { XCTAssertTrue(result); });
 
-    manager.insert_objects([]() { return false; },
+    manager.insert_objects(db::no_cancellation,
                            []() {
                                return db::entity_count_map_t{{"sample_a", 1}};
                            },
@@ -2001,11 +2001,11 @@ using namespace yas;
                                XCTAssertTrue(manager.has_changed_objects());
                            });
 
-    manager.save([]() { return false; },
+    manager.save(db::no_cancellation,
                  [self, &manager](db::manager_map_result_t result) { XCTAssertFalse(manager.has_changed_objects()); });
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
-    manager.execute([]() { return false; }, [exp](auto const &op) { [exp fulfill]; });
+    manager.execute(db::no_cancellation, [exp](auto const &op) { [exp fulfill]; });
     [self waitForExpectationsWithTimeout:10.0 handler:nil];
 }
 
@@ -2027,7 +2027,7 @@ using namespace yas;
         XCTAssertEqual(manager.created_object_count("sample_a"), 2);
     });
 
-    manager.save([]() { return false; },
+    manager.save(db::no_cancellation,
                  [self, &manager](db::manager_map_result_t result) {
                      XCTAssertTrue(result);
 
@@ -2035,7 +2035,7 @@ using namespace yas;
                  });
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
-    manager.execute([]() { return false; }, [exp](auto const &op) { [exp fulfill]; });
+    manager.execute(db::no_cancellation, [exp](auto const &op) { [exp fulfill]; });
     [self waitForExpectationsWithTimeout:10.0 handler:nil];
 }
 
@@ -2045,7 +2045,7 @@ using namespace yas;
 
     manager.setup([self, &manager](auto result) { XCTAssertTrue(result); });
 
-    manager.insert_objects([]() { return false; },
+    manager.insert_objects(db::no_cancellation,
                            []() {
                                return db::entity_count_map_t{{"sample_a", 2}};
                            },
@@ -2063,7 +2063,7 @@ using namespace yas;
                                XCTAssertEqual(manager.changed_object_count("sample_a"), 2);
                            });
 
-    manager.save([]() { return false; },
+    manager.save(db::no_cancellation,
                  [self, &manager](db::manager_map_result_t result) {
                      XCTAssertTrue(result);
 
@@ -2071,7 +2071,7 @@ using namespace yas;
                  });
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
-    manager.execute([]() { return false; }, [exp](auto const &op) { [exp fulfill]; });
+    manager.execute(db::no_cancellation, [exp](auto const &op) { [exp fulfill]; });
     [self waitForExpectationsWithTimeout:10.0 handler:nil];
 }
 
@@ -2095,7 +2095,7 @@ using namespace yas;
 
     XCTestExpectation *saveExp = [self expectationWithDescription:@"save"];
 
-    manager.save([]() { return false; }, [saveExp](db::manager_map_result_t result) { [saveExp fulfill]; });
+    manager.save(db::no_cancellation, [saveExp](db::manager_map_result_t result) { [saveExp fulfill]; });
 
     [self waitForExpectations:@[saveExp] timeout:10.0];
 
@@ -2110,7 +2110,7 @@ using namespace yas;
 
     db::object_vector_map_t objects;
 
-    manager.insert_objects([]() { return false; },
+    manager.insert_objects(db::no_cancellation,
                            []() {
                                return db::entity_count_map_t{{"sample_a", 1}, {"sample_b", 2}};
                            },
@@ -2128,7 +2128,7 @@ using namespace yas;
                                obj_a.set_relation_objects("child", {obj_b0});
                            });
 
-    manager.save([]() { return false; },
+    manager.save(db::no_cancellation,
                  [self, &manager, &objects](db::manager_map_result_t result) {
                      XCTAssertTrue(result);
                      auto &obj_a = objects.at("sample_a").at(0);
@@ -2147,7 +2147,7 @@ using namespace yas;
                      XCTAssertTrue(manager.has_changed_objects());
                  });
 
-    manager.reset([]() { return false; },
+    manager.reset(db::no_cancellation,
                   [self, &manager, &objects](auto result) {
                       XCTAssertTrue(result);
                       XCTAssertFalse(manager.has_changed_objects());
@@ -2168,7 +2168,7 @@ using namespace yas;
                   });
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
-    manager.execute([]() { return false; }, [exp](auto const &op) { [exp fulfill]; });
+    manager.execute(db::no_cancellation, [exp](auto const &op) { [exp fulfill]; });
     [self waitForExpectationsWithTimeout:10.0 handler:nil];
 }
 
@@ -2193,7 +2193,7 @@ using namespace yas;
 
         XCTestExpectation *exp = [self expectationWithDescription:@"insert"];
 
-        manager.insert_objects([]() { return false; },
+        manager.insert_objects(db::no_cancellation,
                                []() {
                                    return db::entity_count_map_t{{"sample_a", 1}, {"sample_b", 1}};
                                },
@@ -2219,7 +2219,7 @@ using namespace yas;
     {
         XCTestExpectation *exp = [self expectationWithDescription:@"save"];
 
-        manager.save([]() { return false; }, [exp](db::manager_map_result_t result) { [exp fulfill]; });
+        manager.save(db::no_cancellation, [exp](db::manager_map_result_t result) { [exp fulfill]; });
 
         [self waitForExpectations:@[exp] timeout:10.0];
     }
@@ -2238,7 +2238,7 @@ using namespace yas;
     {
         XCTestExpectation *exp = [self expectationWithDescription:@"save"];
 
-        manager.save([]() { return false; }, [exp](db::manager_map_result_t result) { [exp fulfill]; });
+        manager.save(db::no_cancellation, [exp](db::manager_map_result_t result) { [exp fulfill]; });
 
         [self waitForExpectations:@[exp] timeout:10.0];
     }
@@ -2254,7 +2254,7 @@ using namespace yas;
         db::object_vector_map_t fetched_objects;
 
         manager.fetch_objects(
-            []() { return false; },
+            db::no_cancellation,
             []() {
                 return db::to_fetch_option(db::select_option{
                     .table = "sample_a", .field_orders = {{db::object_id_field, db::order::ascending}}});
@@ -2296,7 +2296,7 @@ using namespace yas;
 
         XCTestExpectation *exp = [self expectationWithDescription:@"insert"];
 
-        manager.insert_objects([]() { return false; },
+        manager.insert_objects(db::no_cancellation,
                                []() {
                                    return db::entity_count_map_t{{"sample_a", 3}, {"sample_b", 3}};
                                },
@@ -2344,7 +2344,7 @@ using namespace yas;
     {
         XCTestExpectation *exp = [self expectationWithDescription:@"save1"];
 
-        manager.save([]() { return false; }, [exp](db::manager_map_result_t result) { [exp fulfill]; });
+        manager.save(db::no_cancellation, [exp](db::manager_map_result_t result) { [exp fulfill]; });
 
         [self waitForExpectations:@[exp] timeout:10.0];
 
@@ -2363,7 +2363,7 @@ using namespace yas;
     {
         XCTestExpectation *exp = [self expectationWithDescription:@"save2"];
 
-        manager.save([]() { return false; }, [exp](db::manager_map_result_t result) { [exp fulfill]; });
+        manager.save(db::no_cancellation, [exp](db::manager_map_result_t result) { [exp fulfill]; });
 
         [self waitForExpectations:@[exp] timeout:10.0];
 
@@ -2383,7 +2383,7 @@ using namespace yas;
     {
         XCTestExpectation *exp = [self expectationWithDescription:@"save3"];
 
-        manager.save([]() { return false; }, [exp](db::manager_map_result_t result) { [exp fulfill]; });
+        manager.save(db::no_cancellation, [exp](db::manager_map_result_t result) { [exp fulfill]; });
 
         [self waitForExpectations:@[exp] timeout:10.0];
 
@@ -2424,7 +2424,7 @@ using namespace yas;
         db::object_vector_map_t fetched_objects;
 
         manager.fetch_objects(
-            []() { return false; },
+            db::no_cancellation,
             []() {
                 return db::to_fetch_option(db::select_option{
                     .table = "sample_a", .field_orders = {{db::object_id_field, db::order::ascending}}});
@@ -2467,7 +2467,7 @@ using namespace yas;
     {
         XCTestExpectation *exp = [self expectationWithDescription:@"save4"];
 
-        manager.save([]() { return false; }, [exp](db::manager_map_result_t result) { [exp fulfill]; });
+        manager.save(db::no_cancellation, [exp](db::manager_map_result_t result) { [exp fulfill]; });
 
         [self waitForExpectations:@[exp] timeout:10.0];
 
@@ -2484,7 +2484,7 @@ using namespace yas;
         db::object_vector_map_t fetched_objects;
 
         manager.fetch_objects(
-            []() { return false; },
+            db::no_cancellation,
             []() {
                 return db::to_fetch_option(db::select_option{
                     .table = "sample_a", .field_orders = {{db::object_id_field, db::order::ascending}}});
@@ -2526,7 +2526,7 @@ using namespace yas;
     {
         XCTestExpectation *exp = [self expectationWithDescription:@"save5"];
 
-        manager.save([]() { return false; }, [exp](db::manager_map_result_t result) { [exp fulfill]; });
+        manager.save(db::no_cancellation, [exp](db::manager_map_result_t result) { [exp fulfill]; });
 
         [self waitForExpectations:@[exp] timeout:10.0];
 
@@ -2543,7 +2543,7 @@ using namespace yas;
         db::object_vector_map_t fetched_objects;
 
         manager.fetch_objects(
-            []() { return false; },
+            db::no_cancellation,
             []() {
                 return db::to_fetch_option(db::select_option{
                     .table = "sample_a", .field_orders = {{db::object_id_field, db::order::ascending}}});
@@ -2584,7 +2584,7 @@ using namespace yas;
     {
         XCTestExpectation *exp = [self expectationWithDescription:@"save6"];
 
-        manager.save([]() { return false; }, [exp](db::manager_map_result_t result) { [exp fulfill]; });
+        manager.save(db::no_cancellation, [exp](db::manager_map_result_t result) { [exp fulfill]; });
 
         [self waitForExpectations:@[exp] timeout:10.0];
 
@@ -2617,7 +2617,7 @@ using namespace yas;
         db::object_vector_map_t fetched_objects;
 
         manager.fetch_objects(
-            []() { return false; },
+            db::no_cancellation,
             []() {
                 return db::to_fetch_option(db::select_option{
                     .table = "sample_a", .field_orders = {{db::object_id_field, db::order::ascending}}});
@@ -2646,7 +2646,7 @@ using namespace yas;
 
     manager.setup([self, &manager](auto result) { XCTAssertTrue(result); });
 
-    manager.insert_objects([]() { return false; },
+    manager.insert_objects(db::no_cancellation,
                            []() {
                                return db::entity_count_map_t{{"sample_a", 1}};
                            },
@@ -2666,7 +2666,7 @@ using namespace yas;
                            });
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
-    manager.execute([]() { return false; }, [exp](auto const &op) { [exp fulfill]; });
+    manager.execute(db::no_cancellation, [exp](auto const &op) { [exp fulfill]; });
     [self waitForExpectationsWithTimeout:10.0 handler:nil];
 }
 
@@ -2684,7 +2684,7 @@ using namespace yas;
         XCTAssertEqual(observing_count, 1);
     });
 
-    manager.insert_objects([]() { return false; },
+    manager.insert_objects(db::no_cancellation,
                            []() {
                                return db::entity_count_map_t{{"sample_a", 1}};
                            },
@@ -2695,11 +2695,11 @@ using namespace yas;
                                object.set_attribute_value("name", db::value{"test_name"});
                            });
 
-    manager.save([]() { return false; },
+    manager.save(db::no_cancellation,
                  [self, &observing_count](db::manager_map_result_t result) { XCTAssertEqual(observing_count, 3); });
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
-    manager.execute([]() { return false; }, [exp](auto const &op) { [exp fulfill]; });
+    manager.execute(db::no_cancellation, [exp](auto const &op) { [exp fulfill]; });
     [self waitForExpectationsWithTimeout:10.0 handler:nil];
 }
 
@@ -2713,7 +2713,7 @@ using namespace yas;
 
     manager.setup([self](auto result) { XCTAssertFalse([NSThread isMainThread]); });
 
-    manager.insert_objects([]() { return false; },
+    manager.insert_objects(db::no_cancellation,
                            [self]() {
                                XCTAssertFalse([NSThread isMainThread]);
                                return db::entity_count_map_t{{"sample_a", 1}};
@@ -2724,11 +2724,11 @@ using namespace yas;
                                object.set_attribute_value("name", db::value{"x"});
                            });
 
-    manager.save([]() { return false; },
+    manager.save(db::no_cancellation,
                  [self](db::manager_map_result_t result) { XCTAssertFalse([NSThread isMainThread]); });
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
-    manager.execute([]() { return false; }, [exp](auto const &op) { [exp fulfill]; });
+    manager.execute(db::no_cancellation, [exp](auto const &op) { [exp fulfill]; });
     [self waitForExpectationsWithTimeout:10.0 handler:nil];
 }
 
