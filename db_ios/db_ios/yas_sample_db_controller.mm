@@ -64,26 +64,6 @@ void db_controller::setup(db::manager::completion_f completion) {
 
     this->_manager = db::manager{to_string((__bridge CFStringRef)path.object()), model};
 
-    this->_manager.setup([weak = to_weak(shared_from_this()), completion = std::move(completion)](auto setup_result) {
-        if (auto shared = weak.lock()) {
-            if (setup_result) {
-                shared->_update_objects([
-                    weak = weak, setup_result = std::move(setup_result), completion = std::move(completion)
-                ](auto update_result) {
-                    if (auto shared = weak.lock()) {
-                        if (update_result) {
-                            shared->_end_processing();
-                            shared->_subject.notify(method::objects_updated);
-                        }
-                        completion(std::move(update_result));
-                    }
-                });
-            } else {
-                completion(std::move(setup_result));
-            }
-        }
-    });
-
     auto weak_manager = to_weak(_manager);
 
     this->_observer = this->_manager.subject().make_wild_card_observer([&controller = *this](auto const &context) {
@@ -107,6 +87,24 @@ void db_controller::setup(db::manager::completion_f completion) {
             controller._subject.notify(method::db_info_changed);
         }
     });
+
+    auto continuous_result = std::make_shared<db::manager_result_t>(nullptr);
+
+    this->_manager.suspend();
+
+    this->_manager.setup(
+        [continuous_result](db::manager_result_t setup_result) { *continuous_result = std::move(setup_result); });
+
+    this->_update_objects(continuous_result, [weak = to_weak(shared_from_this()),
+                                              completion = std::move(completion)](db::manager_result_t update_result) {
+        if (auto shared = weak.lock()) {
+            shared->_end_processing();
+            shared->_subject.notify(method::objects_updated);
+            completion(std::move(update_result));
+        }
+    });
+
+    this->_manager.resume();
 }
 
 void db_controller::add_temporary(entity const &entity) {
@@ -122,7 +120,7 @@ void db_controller::add_temporary(entity const &entity) {
     this->_subject.notify(method::object_created, {object, db::value{static_cast<db::integer::type>(idx)}});
 }
 
-void db_controller::insert(entity const &entity) {
+void db_controller::insert(entity const &entity, db::manager::completion_f completion) {
     if (this->_processing) {
         return;
     }
@@ -135,11 +133,17 @@ void db_controller::insert(entity const &entity) {
 
     this->_manager.suspend();
 
-    this->_manager.save(db::no_cancellation, [](db::manager_map_result_t result) {});
+    auto continuous_result = std::make_shared<db::manager_result_t>(nullptr);
+
+    this->_manager.save(db::no_cancellation, [continuous_result](db::manager_map_result_t result) {
+        if (!result) {
+            *continuous_result = db::manager_result_t{result.error()};
+        }
+    });
 
     auto inserted_object = std::make_shared<db::object>(db::null_object());
 
-    this->_manager.insert_objects(db::no_cancellation,
+    this->_manager.insert_objects([continuous_result]() { return continuous_result->is_error(); },
                                   [entity]() {
                                       auto uuid = make_cf_ref(CFUUIDCreate(nullptr));
                                       auto uuid_str = make_cf_ref(CFUUIDCreateString(nullptr, uuid.object()));
@@ -147,18 +151,20 @@ void db_controller::insert(entity const &entity) {
 
                                       return db::value_map_vector_map_t{{to_entity_name(entity), {std::move(obj)}}};
                                   },
-                                  [inserted_object, entity](auto result) mutable {
+                                  [inserted_object, entity, continuous_result](auto result) mutable {
                                       if (result) {
                                           auto objects = result.value().at(to_entity_name(entity));
                                           if (objects.size() > 0) {
                                               *inserted_object = objects.at(0);
                                           }
                                       } else {
-                                          std::runtime_error(to_string(result.error()));
+                                          *continuous_result = db::manager_result_t{std::move(result.error())};
                                       }
                                   });
 
-    this->_update_objects([weak = to_weak(shared_from_this()), inserted_object, entity](auto update_result) {
+    this->_update_objects(continuous_result, [
+        weak = to_weak(shared_from_this()), inserted_object, entity, completion = std::move(completion)
+    ](auto update_result) {
         if (auto shared = weak.lock()) {
             auto idx_value = db::null_value();
             auto object = *inserted_object;
@@ -172,7 +178,12 @@ void db_controller::insert(entity const &entity) {
             }
 
             shared->_end_processing();
-            shared->_subject.notify(method::object_created, {object, idx_value});
+
+            if (update_result) {
+                shared->_subject.notify(method::object_created, {object, idx_value});
+            }
+
+            completion(update_result);
         }
     });
 
@@ -191,7 +202,7 @@ void db_controller::remove(entity const &entity, std::size_t const &idx) {
     }
 }
 
-void db_controller::undo() {
+void db_controller::undo(db::manager::completion_f completion) {
     if (this->_processing) {
         return;
     }
@@ -206,34 +217,39 @@ void db_controller::undo() {
 
     this->_manager.suspend();
 
-    this->_manager.reset(db::no_cancellation, [](auto result) {
+    auto continuous_result = std::make_shared<db::manager_result_t>(nullptr);
+
+    this->_manager.reset(db::no_cancellation, [continuous_result](db::manager_result_t result) {
         if (!result) {
-            std::runtime_error(to_string(result.error()));
+            *continuous_result = std::move(result);
         }
     });
 
-    this->_manager.revert(db::no_cancellation, [undo_id]() { return undo_id; },
-                          [](auto result) {
+    this->_manager.revert([continuous_result]() { return continuous_result->is_error(); },
+                          [undo_id]() { return undo_id; },
+                          [continuous_result](auto result) {
                               if (!result) {
-                                  std::runtime_error(to_string(result.error()));
+                                  *continuous_result = db::manager_result_t{std::move(result.error())};
                               }
                           });
 
-    this->_update_objects([weak = to_weak(shared_from_this())](auto result) {
-        if (!result) {
-            std::runtime_error(to_string(result.error()));
-        }
-
+    this->_update_objects(continuous_result, [weak = to_weak(shared_from_this()),
+                                              completion = std::move(completion)](db::manager_result_t result) {
         if (auto shared = weak.lock()) {
             shared->_end_processing();
-            shared->_subject.notify(method::objects_updated);
+
+            if (result) {
+                shared->_subject.notify(method::objects_updated);
+            }
+
+            completion(std::move(result));
         }
     });
 
     _manager.resume();
 }
 
-void db_controller::redo() {
+void db_controller::redo(db::manager::completion_f completion) {
     if (this->_processing) {
         return;
     }
@@ -248,34 +264,39 @@ void db_controller::redo() {
 
     this->_manager.suspend();
 
-    this->_manager.reset(db::no_cancellation, [](auto result) {
+    auto continuous_result = std::make_shared<db::manager_result_t>(nullptr);
+
+    this->_manager.reset(db::no_cancellation, [continuous_result](db::manager_result_t result) {
         if (!result) {
-            std::runtime_error(to_string(result.error()));
+            *continuous_result = std::move(result);
         }
     });
 
-    this->_manager.revert(db::no_cancellation, [redo_id]() { return redo_id; },
-                          [](auto result) {
+    this->_manager.revert([continuous_result]() { return continuous_result->is_error(); },
+                          [redo_id]() { return redo_id; },
+                          [continuous_result](auto result) {
                               if (!result) {
-                                  std::runtime_error(to_string(result.error()));
+                                  *continuous_result = db::manager_result_t{std::move(result.error())};
                               }
                           });
 
-    this->_update_objects([weak = to_weak(shared_from_this())](auto result) {
-        if (!result) {
-            std::runtime_error(to_string(result.error()));
-        }
-
+    this->_update_objects(continuous_result, [weak = to_weak(shared_from_this()),
+                                              completion = std::move(completion)](db::manager_result_t result) {
         if (auto shared = weak.lock()) {
             shared->_end_processing();
-            shared->_subject.notify(method::objects_updated);
+
+            if (result) {
+                shared->_subject.notify(method::objects_updated);
+            }
+
+            completion(std::move(result));
         }
     });
 
     this->_manager.resume();
 }
 
-void db_controller::clear() {
+void db_controller::clear(db::manager::completion_f completion) {
     if (this->_processing) {
         return;
     }
@@ -288,23 +309,31 @@ void db_controller::clear() {
 
     this->_manager.suspend();
 
-    this->_manager.clear(db::no_cancellation, [](db::manager_result_t result) {
+    auto continuous_result = std::make_shared<db::manager_result_t>(nullptr);
+
+    this->_manager.clear(db::no_cancellation, [continuous_result](db::manager_result_t result) {
         if (!result) {
-            std::runtime_error(to_string(result.error()));
+            *continuous_result = std::move(result);
         }
     });
 
-    this->_update_objects([weak = to_weak(shared_from_this())](auto update_result) {
+    this->_update_objects(continuous_result, [weak = to_weak(shared_from_this()),
+                                              completion = std::move(completion)](db::manager_result_t result) {
         if (auto shared = weak.lock()) {
             shared->_end_processing();
-            shared->_subject.notify(method::objects_updated);
+
+            if (result) {
+                shared->_subject.notify(method::objects_updated);
+            }
+
+            completion(std::move(result));
         }
     });
 
     this->_manager.resume();
 }
 
-void db_controller::purge() {
+void db_controller::purge(db::manager::completion_f completion) {
     if (this->_processing) {
         return;
     }
@@ -317,29 +346,38 @@ void db_controller::purge() {
 
     this->_manager.suspend();
 
-    this->_manager.save(db::no_cancellation, [](db::manager_map_result_t result) {
+    auto continuous_result = std::make_shared<db::manager_result_t>(nullptr);
+
+    this->_manager.save(db::no_cancellation, [continuous_result](db::manager_map_result_t result) {
         if (!result) {
-            std::runtime_error(to_string(result.error()));
+            *continuous_result = db::manager_result_t{std::move(result.error())};
         }
     });
 
-    this->_manager.purge(db::no_cancellation, [](db::manager_result_t result) {
-        if (!result) {
-            std::runtime_error(to_string(result.error()));
-        }
-    });
+    this->_manager.purge([continuous_result]() { return continuous_result->is_error(); },
+                         [continuous_result](db::manager_result_t result) {
+                             if (!result) {
+                                 *continuous_result = std::move(result);
+                             }
+                         });
 
-    this->_update_objects([weak = to_weak(shared_from_this())](auto update_result) {
+    this->_update_objects(continuous_result, [weak = to_weak(shared_from_this()),
+                                              completion = std::move(completion)](db::manager_result_t result) {
         if (auto shared = weak.lock()) {
             shared->_end_processing();
-            shared->_subject.notify(method::objects_updated);
+
+            if (result) {
+                shared->_subject.notify(method::objects_updated);
+            }
+
+            completion(std::move(result));
         }
     });
 
     this->_manager.resume();
 }
 
-void db_controller::save_changed() {
+void db_controller::save_changed(db::manager::completion_f completion) {
     if (this->_processing) {
         return;
     }
@@ -352,23 +390,31 @@ void db_controller::save_changed() {
 
     this->_manager.suspend();
 
-    this->_manager.save(db::no_cancellation, [](db::manager_map_result_t result) {
+    auto continuous_result = std::make_shared<db::manager_result_t>(nullptr);
+
+    this->_manager.save(db::no_cancellation, [continuous_result](db::manager_map_result_t result) {
         if (!result) {
-            std::runtime_error(to_string(result.error()));
+            *continuous_result = db::manager_result_t{std::move(result.error())};
         }
     });
 
-    this->_update_objects([weak = to_weak(shared_from_this())](auto update_result) {
+    this->_update_objects(continuous_result, [weak = to_weak(shared_from_this()),
+                                              completion = std::move(completion)](db::manager_result_t result) {
         if (auto shared = weak.lock()) {
             shared->_end_processing();
-            shared->_subject.notify(method::objects_updated);
+
+            if (result) {
+                shared->_subject.notify(method::objects_updated);
+            }
+
+            completion(std::move(result));
         }
     });
 
     this->_manager.resume();
 }
 
-void db_controller::cancel_changed() {
+void db_controller::cancel_changed(db::manager::completion_f completion) {
     if (this->_processing) {
         return;
     }
@@ -381,16 +427,24 @@ void db_controller::cancel_changed() {
 
     this->_manager.suspend();
 
-    this->_manager.reset(db::no_cancellation, [](auto result) mutable {
+    auto continuous_result = std::make_shared<db::manager_result_t>(nullptr);
+
+    this->_manager.reset(db::no_cancellation, [continuous_result](auto result) mutable {
         if (!result) {
-            std::runtime_error(to_string(result.error()));
+            *continuous_result = std::move(result);
         }
     });
 
-    this->_update_objects([weak = to_weak(shared_from_this())](auto update_result) {
+    this->_update_objects(continuous_result, [weak = to_weak(shared_from_this()),
+                                              completion = std::move(completion)](db::manager_result_t result) {
         if (auto shared = weak.lock()) {
             shared->_end_processing();
-            shared->_subject.notify(method::objects_updated);
+
+            if (result) {
+                shared->_subject.notify(method::objects_updated);
+            }
+
+            completion(std::move(result));
         }
     });
 
@@ -459,42 +513,39 @@ db::object_vector_t &db_controller::_objects_at(db_controller::entity const &ent
     return this->_objects.at(to_entity_name(entity));
 }
 
-void db_controller::_update_objects(std::function<void(db::manager_result_t)> &&completion) {
+void db_controller::_update_objects(std::shared_ptr<db::manager_result_t> continuous_result,
+                                    std::function<void(db::manager_result_t)> &&completion) {
     this->_manager.suspend();
-
-    auto results = std::make_shared<std::vector<db::manager_result_t>>();
 
     for (auto const &entity_pair : this->_manager.model().entities()) {
         auto const entity = this->entity_for_name(entity_pair.second.name);
-        this->_update_objects(entity, [results](auto result) { results->emplace_back(std::move(result)); });
+        this->_update_objects(continuous_result, entity);
     }
 
-    this->_manager.execute(db::no_cancellation, [completion = std::move(completion), results](operation const &) {
-        for (auto const &result : *results) {
-            if (!result) {
-                completion(result);
-                return;
-            }
-        }
-        completion(db::manager_result_t{nullptr});
-    });
+    this->_manager.execute(db::no_cancellation,
+                           [continuous_result, completion = std::move(completion)](operation const &) {
+                               auto lambda = [continuous_result, completion = std::move(completion)]() {
+                                   completion(*continuous_result);
+                               };
+
+                               dispatch_sync(dispatch_get_main_queue(), lambda);
+                           });
 
     this->_manager.resume();
 }
 
-void db_controller::_update_objects(entity const &entity, std::function<void(db::manager_result_t)> &&completion) {
+void db_controller::_update_objects(std::shared_ptr<db::manager_result_t> continuous_result, entity const &entity) {
     this->_manager.suspend();
 
     auto const entity_name = to_entity_name(entity);
 
     this->_manager.fetch_objects(
-        db::no_cancellation,
+        [continuous_result]() { return continuous_result->is_error(); },
         [entity_name]() {
             return db::to_fetch_option(
                 db::select_option{.table = entity_name, .field_orders = {{db::object_id_field, db::order::ascending}}});
         },
-        [&controller = *this, completion = std::move(completion),
-         entity_name](db::manager_vector_result_t fetch_result) {
+        [&controller = *this, entity_name, continuous_result](db::manager_vector_result_t fetch_result) {
             db::manager_result_t result{nullptr};
 
             if (fetch_result) {
@@ -505,10 +556,8 @@ void db_controller::_update_objects(entity const &entity, std::function<void(db:
                     controller._objects.at(entity_name).clear();
                 }
             } else {
-                result = db::manager_result_t{std::move(fetch_result.error())};
+                *continuous_result = db::manager_result_t{std::move(fetch_result.error())};
             }
-
-            completion(std::move(result));
         });
 
     this->_manager.resume();
