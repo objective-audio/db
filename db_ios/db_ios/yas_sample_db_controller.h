@@ -26,17 +26,17 @@ namespace sample {
 
         db_controller();
 
-        void setup(db::manager::completion_f completion);
+        void setup(db::manager::completion_f);
 
         void add_temporary(entity const &);
-        void insert(entity const &);
+        void insert(entity const &, db::manager::completion_f);
         void remove(entity const &, std::size_t const &idx);
-        void undo();
-        void redo();
-        void clear();
-        void purge();
-        void save_changed();
-        void cancel_changed();
+        void undo(db::manager::completion_f);
+        void redo(db::manager::completion_f);
+        void clear(db::manager::completion_f);
+        void purge(db::manager::completion_f);
+        void save_changed(db::manager::completion_f);
+        void cancel_changed(db::manager::completion_f);
 
         bool can_add() const;
         bool can_undo() const;
@@ -65,8 +65,8 @@ namespace sample {
         bool _processing;
 
         db::object_vector_t &_objects_at(entity const &);
-        void _update_objects(std::function<void(db::manager_result_t)> &&);
-        void _update_objects(entity const &entity, std::function<void(db::manager_result_t)> &&);
+        void _update_objects(std::shared_ptr<db::manager_result_t>, std::function<void(db::manager_result_t)> &&);
+        void _update_objects(std::shared_ptr<db::manager_result_t>, entity const &entity);
         void _begin_processing();
         void _end_processing();
     };

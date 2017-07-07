@@ -103,7 +103,7 @@ top_info_row_type_t to_idx(sample::top_info_row const &row) {
             [controller setupObserversAfterSetup];
             [controller updateTable];
         } else {
-            CFStringRef cf_string = to_cf_object(to_string(result.error().type()));
+            CFStringRef cf_string = to_cf_object(to_string(result.error()));
             [controller showErrorAlertWithTitle:@"Setup Error" message:(__bridge NSString *)cf_string];
         }
     });
@@ -412,6 +412,15 @@ top_info_row_type_t to_idx(sample::top_info_row const &row) {
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     if (indexPath.section == to_idx(top_section::actions)) {
+        auto unowned_self = make_objc_ptr([[YASUnownedObject<DBSampleTopViewController *> alloc] initWithObject:self]);
+        db::manager::completion_f completion = [unowned_self](db::manager_result_t result) {
+            if (!result) {
+                auto controller = [unowned_self.object() object];
+                CFStringRef cf_string = to_cf_object(to_string(result.error()));
+                [controller showErrorAlertWithTitle:@"Setup Error" message:(__bridge NSString *)cf_string];
+            }
+        };
+
         switch (top_action_row(indexPath.row)) {
             case top_action_row::create_a:
                 _db_controller->add_temporary(db_controller::entity::a);
@@ -420,28 +429,28 @@ top_info_row_type_t to_idx(sample::top_info_row const &row) {
                 _db_controller->add_temporary(db_controller::entity::b);
                 break;
             case top_action_row::insert_a:
-                _db_controller->insert(db_controller::entity::a);
+                _db_controller->insert(db_controller::entity::a, std::move(completion));
                 break;
             case top_action_row::insert_b:
-                _db_controller->insert(db_controller::entity::b);
+                _db_controller->insert(db_controller::entity::b, std::move(completion));
                 break;
             case top_action_row::undo:
-                _db_controller->undo();
+                _db_controller->undo(std::move(completion));
                 break;
             case top_action_row::redo:
-                _db_controller->redo();
+                _db_controller->redo(std::move(completion));
                 break;
             case top_action_row::clear:
-                _db_controller->clear();
+                _db_controller->clear(std::move(completion));
                 break;
             case top_action_row::purge:
-                _db_controller->purge();
+                _db_controller->purge(std::move(completion));
                 break;
             case top_action_row::save_changed:
-                _db_controller->save_changed();
+                _db_controller->save_changed(std::move(completion));
                 break;
             case top_action_row::cancel_changed:
-                _db_controller->cancel_changed();
+                _db_controller->cancel_changed(std::move(completion));
                 break;
         }
     }
