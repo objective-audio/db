@@ -107,7 +107,7 @@ void db_controller::setup(db::manager::completion_f completion) {
     this->_manager.resume();
 }
 
-void db_controller::add_temporary(entity const &entity) {
+void db_controller::create_object(entity const &entity) {
     if (this->_processing) {
         return;
     }

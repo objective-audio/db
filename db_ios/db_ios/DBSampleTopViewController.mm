@@ -423,10 +423,10 @@ top_info_row_type_t to_idx(sample::top_info_row const &row) {
 
         switch (top_action_row(indexPath.row)) {
             case top_action_row::create_a:
-                _db_controller->add_temporary(db_controller::entity::a);
+                _db_controller->create_object(db_controller::entity::a);
                 break;
             case top_action_row::create_b:
-                _db_controller->add_temporary(db_controller::entity::b);
+                _db_controller->create_object(db_controller::entity::b);
                 break;
             case top_action_row::insert_a:
                 _db_controller->insert(db_controller::entity::a, std::move(completion));
