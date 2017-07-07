@@ -54,7 +54,7 @@ namespace sample {
         subject_t &subject();
 
         bool is_processing() const;
-        
+
         static entity entity_for_name(std::string const &);
 
        private:
