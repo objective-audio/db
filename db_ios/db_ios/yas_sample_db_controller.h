@@ -11,7 +11,14 @@ namespace sample {
     class db_controller : public std::enable_shared_from_this<db_controller> {
        public:
         enum class entity { a, b };
-        enum class method { objects_updated, object_created, processing_changed, object_changed, db_info_changed };
+        enum class method {
+            all_objects_updated,
+            object_created,
+            processing_changed,
+            object_changed,
+            object_removed,
+            db_info_changed
+        };
 
         struct change_info {
             db::object const object;
@@ -28,7 +35,7 @@ namespace sample {
 
         void setup(db::manager::completion_f);
 
-        void add_temporary(entity const &);
+        void create_object(entity const &);
         void insert(entity const &, db::manager::completion_f);
         void remove(entity const &, std::size_t const &idx);
         void undo(db::manager::completion_f);
@@ -38,7 +45,7 @@ namespace sample {
         void save_changed(db::manager::completion_f);
         void cancel_changed(db::manager::completion_f);
 
-        bool can_add() const;
+        bool can_insert() const;
         bool can_undo() const;
         bool can_redo() const;
         bool can_clear() const;
@@ -54,7 +61,7 @@ namespace sample {
         subject_t &subject();
 
         bool is_processing() const;
-        
+
         static entity entity_for_name(std::string const &);
 
        private:

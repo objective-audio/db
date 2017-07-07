@@ -118,30 +118,47 @@ top_info_row_type_t to_idx(sample::top_info_row const &row) {
 
         auto controller = [unowned_self.object() object];
 
-        if (key == db_controller::method::db_info_changed) {
-            [controller updateTableForInfo:top_info_row::save_id];
-        } else if (key == db_controller::method::objects_updated) {
-            [controller updateTable];
-        } else if (key == db_controller::method::object_created) {
-            auto const &object = info.object;
-            auto const entity = db_controller::entity_for_name(object.entity_name());
-            [controller updateTableForInsertedRow:NSInteger(info.value.get<db::integer>()) entity:entity];
-        } else if (key == db_controller::method::object_changed) {
-            auto const &index = info.value.get<db::integer>();
-            auto const &object = info.object;
-            if (object.is_removed()) {
+        switch (key) {
+            case db_controller::method::db_info_changed: {
+                [controller updateTableForInfo:top_info_row::save_id];
+            } break;
+                
+            case db_controller::method::all_objects_updated: {
+                [controller updateTable];
+            } break;
+                
+            case db_controller::method::object_created: {
+                auto const &object = info.object;
                 auto const entity = db_controller::entity_for_name(object.entity_name());
-                [controller updateTableForDeletedRow:NSInteger(info.value.get<db::integer>()) entity:entity];
-            } else {
+                [controller updateTableForInsertedRow:NSInteger(info.value.get<db::integer>()) entity:entity];
+            } break;
+            
+            case db_controller::method::object_changed: {
+                auto const &index = info.value.get<db::integer>();
+                auto const &object = info.object;
+                
                 if (info.value) {
                     auto const entity = db_controller::entity_for_name(object.entity_name());
                     [controller updateTableObjectCellAtIndex:NSInteger(index) entity:entity];
                 } else {
                     [controller updateTableObjects];
                 }
-            }
-
-            [controller updateTableActions];
+                
+                [controller updateTableActions];
+            } break;
+            
+            case db_controller::method::object_removed: {
+                auto const &index = info.value.get<db::integer>();
+                auto const &object = info.object;
+                
+                auto const entity = db_controller::entity_for_name(object.entity_name());
+                [controller updateTableForDeletedRow:NSInteger(index) entity:entity];
+                
+                [controller updateTableActions];
+            } break;
+            
+            default:
+                break;
         }
     });
 
@@ -327,11 +344,11 @@ top_info_row_type_t to_idx(sample::top_info_row const &row) {
             break;
         case top_action_row::insert_a:
             cell.textLabel.text = @"Insert A";
-            enabled = _db_controller->can_add();
+            enabled = _db_controller->can_insert();
             break;
         case top_action_row::insert_b:
             cell.textLabel.text = @"Insert B";
-            enabled = _db_controller->can_add();
+            enabled = _db_controller->can_insert();
             break;
         case top_action_row::undo:
             cell.textLabel.text = @"Undo";
@@ -423,10 +440,10 @@ top_info_row_type_t to_idx(sample::top_info_row const &row) {
 
         switch (top_action_row(indexPath.row)) {
             case top_action_row::create_a:
-                _db_controller->add_temporary(db_controller::entity::a);
+                _db_controller->create_object(db_controller::entity::a);
                 break;
             case top_action_row::create_b:
-                _db_controller->add_temporary(db_controller::entity::b);
+                _db_controller->create_object(db_controller::entity::b);
                 break;
             case top_action_row::insert_a:
                 _db_controller->insert(db_controller::entity::a, std::move(completion));

@@ -75,11 +75,13 @@ void db_controller::setup(db::manager::completion_f completion) {
             auto const &entity_name = object.entity_name();
             auto &objects = controller._objects.at(entity_name);
             if (auto idx_opt = index(objects, object)) {
+                db::value idx_value{static_cast<db::integer::type>(*idx_opt)};
                 if (object.is_removed()) {
                     erase_if(objects, [&object](auto const &vec_obj) { return object == vec_obj; });
+                    controller._subject.notify(method::object_removed, {change_info.object, idx_value});
+                } else {
+                    controller._subject.notify(method::object_changed, {change_info.object, idx_value});
                 }
-                controller._subject.notify(method::object_changed,
-                                           {change_info.object, db::value{static_cast<db::integer::type>(*idx_opt)}});
             } else {
                 controller._subject.notify(method::object_changed);
             }
@@ -99,7 +101,7 @@ void db_controller::setup(db::manager::completion_f completion) {
                                               completion = std::move(completion)](db::manager_result_t update_result) {
         if (auto shared = weak.lock()) {
             shared->_end_processing();
-            shared->_subject.notify(method::objects_updated);
+            shared->_subject.notify(method::all_objects_updated);
             completion(std::move(update_result));
         }
     });
@@ -107,7 +109,7 @@ void db_controller::setup(db::manager::completion_f completion) {
     this->_manager.resume();
 }
 
-void db_controller::add_temporary(entity const &entity) {
+void db_controller::create_object(entity const &entity) {
     if (this->_processing) {
         return;
     }
@@ -125,7 +127,7 @@ void db_controller::insert(entity const &entity, db::manager::completion_f compl
         return;
     }
 
-    if (!this->can_add()) {
+    if (!this->can_insert()) {
         return;
     }
 
@@ -237,11 +239,7 @@ void db_controller::undo(db::manager::completion_f completion) {
                                               completion = std::move(completion)](db::manager_result_t result) {
         if (auto shared = weak.lock()) {
             shared->_end_processing();
-
-            if (result) {
-                shared->_subject.notify(method::objects_updated);
-            }
-
+            shared->_subject.notify(method::all_objects_updated);
             completion(std::move(result));
         }
     });
@@ -284,11 +282,7 @@ void db_controller::redo(db::manager::completion_f completion) {
                                               completion = std::move(completion)](db::manager_result_t result) {
         if (auto shared = weak.lock()) {
             shared->_end_processing();
-
-            if (result) {
-                shared->_subject.notify(method::objects_updated);
-            }
-
+            shared->_subject.notify(method::all_objects_updated);
             completion(std::move(result));
         }
     });
@@ -321,11 +315,7 @@ void db_controller::clear(db::manager::completion_f completion) {
                                               completion = std::move(completion)](db::manager_result_t result) {
         if (auto shared = weak.lock()) {
             shared->_end_processing();
-
-            if (result) {
-                shared->_subject.notify(method::objects_updated);
-            }
-
+            shared->_subject.notify(method::all_objects_updated);
             completion(std::move(result));
         }
     });
@@ -365,11 +355,7 @@ void db_controller::purge(db::manager::completion_f completion) {
                                               completion = std::move(completion)](db::manager_result_t result) {
         if (auto shared = weak.lock()) {
             shared->_end_processing();
-
-            if (result) {
-                shared->_subject.notify(method::objects_updated);
-            }
-
+            shared->_subject.notify(method::all_objects_updated);
             completion(std::move(result));
         }
     });
@@ -402,11 +388,7 @@ void db_controller::save_changed(db::manager::completion_f completion) {
                                               completion = std::move(completion)](db::manager_result_t result) {
         if (auto shared = weak.lock()) {
             shared->_end_processing();
-
-            if (result) {
-                shared->_subject.notify(method::objects_updated);
-            }
-
+            shared->_subject.notify(method::all_objects_updated);
             completion(std::move(result));
         }
     });
@@ -439,11 +421,7 @@ void db_controller::cancel_changed(db::manager::completion_f completion) {
                                               completion = std::move(completion)](db::manager_result_t result) {
         if (auto shared = weak.lock()) {
             shared->_end_processing();
-
-            if (result) {
-                shared->_subject.notify(method::objects_updated);
-            }
-
+            shared->_subject.notify(method::all_objects_updated);
             completion(std::move(result));
         }
     });
@@ -451,7 +429,7 @@ void db_controller::cancel_changed(db::manager::completion_f completion) {
     this->_manager.resume();
 }
 
-bool db_controller::can_add() const {
+bool db_controller::can_insert() const {
     return !this->has_changed();
 }
 
