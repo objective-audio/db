@@ -38,7 +38,7 @@ namespace sample {
         void save_changed(db::manager::completion_f);
         void cancel_changed(db::manager::completion_f);
 
-        bool can_add() const;
+        bool can_insert() const;
         bool can_undo() const;
         bool can_redo() const;
         bool can_clear() const;

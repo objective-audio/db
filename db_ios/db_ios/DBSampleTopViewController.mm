@@ -327,11 +327,11 @@ top_info_row_type_t to_idx(sample::top_info_row const &row) {
             break;
         case top_action_row::insert_a:
             cell.textLabel.text = @"Insert A";
-            enabled = _db_controller->can_add();
+            enabled = _db_controller->can_insert();
             break;
         case top_action_row::insert_b:
             cell.textLabel.text = @"Insert B";
-            enabled = _db_controller->can_add();
+            enabled = _db_controller->can_insert();
             break;
         case top_action_row::undo:
             cell.textLabel.text = @"Undo";

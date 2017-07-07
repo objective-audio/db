@@ -125,7 +125,7 @@ void db_controller::insert(entity const &entity, db::manager::completion_f compl
         return;
     }
 
-    if (!this->can_add()) {
+    if (!this->can_insert()) {
         return;
     }
 
@@ -451,7 +451,7 @@ void db_controller::cancel_changed(db::manager::completion_f completion) {
     this->_manager.resume();
 }
 
-bool db_controller::can_add() const {
+bool db_controller::can_insert() const {
     return !this->has_changed();
 }
 
