@@ -75,11 +75,13 @@ void db_controller::setup(db::manager::completion_f completion) {
             auto const &entity_name = object.entity_name();
             auto &objects = controller._objects.at(entity_name);
             if (auto idx_opt = index(objects, object)) {
+                db::value idx_value{static_cast<db::integer::type>(*idx_opt)};
                 if (object.is_removed()) {
                     erase_if(objects, [&object](auto const &vec_obj) { return object == vec_obj; });
+                    controller._subject.notify(method::object_removed, {change_info.object, idx_value});
+                } else {
+                    controller._subject.notify(method::object_changed, {change_info.object, idx_value});
                 }
-                controller._subject.notify(method::object_changed,
-                                           {change_info.object, db::value{static_cast<db::integer::type>(*idx_opt)}});
             } else {
                 controller._subject.notify(method::object_changed);
             }

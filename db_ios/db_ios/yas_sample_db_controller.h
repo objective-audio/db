@@ -11,7 +11,14 @@ namespace sample {
     class db_controller : public std::enable_shared_from_this<db_controller> {
        public:
         enum class entity { a, b };
-        enum class method { all_objects_updated, object_created, processing_changed, object_changed, db_info_changed };
+        enum class method {
+            all_objects_updated,
+            object_created,
+            processing_changed,
+            object_changed,
+            object_removed,
+            db_info_changed
+        };
 
         struct change_info {
             db::object const object;
