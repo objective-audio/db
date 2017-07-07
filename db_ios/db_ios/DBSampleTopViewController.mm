@@ -120,7 +120,7 @@ top_info_row_type_t to_idx(sample::top_info_row const &row) {
 
         if (key == db_controller::method::db_info_changed) {
             [controller updateTableForInfo:top_info_row::save_id];
-        } else if (key == db_controller::method::objects_updated) {
+        } else if (key == db_controller::method::all_objects_updated) {
             [controller updateTable];
         } else if (key == db_controller::method::object_created) {
             auto const &object = info.object;
