@@ -86,6 +86,10 @@ struct db::const_object::impl : public base::impl {
         return db::null_value();
     }
 
+    db::id_vector_map_t const &all_relation_ids() const {
+        return this->_relations;
+    }
+
     db::id_vector_t relation_ids(std::string const &rel_name) {
         this->validate_relation_name(rel_name);
 
@@ -228,6 +232,10 @@ std::string const &db::const_object::entity_name() const {
 
 db::value const &db::const_object::attribute_value(std::string const &attr_name) const {
     return impl_ptr<impl>()->attribute_value(attr_name);
+}
+
+db::id_vector_map_t const &db::const_object::all_relation_ids() const {
+    return impl_ptr<impl>()->all_relation_ids();
 }
 
 db::id_vector_t db::const_object::relation_ids(std::string const &rel_name) const {
