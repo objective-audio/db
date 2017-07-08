@@ -21,6 +21,7 @@ namespace db {
     class index;
     class manager_error;
     class info;
+    class fetch_option;
 
     // for object
     using integer_set_t = std::set<db::integer::type>;
@@ -60,6 +61,15 @@ namespace db {
     using manager_const_map_result_t = result<db::const_object_map_map_t, db::manager_error>;
     using manager_info_result_t = result<db::info, db::manager_error>;
     using manager_fetch_result_t = result<db::object_data_vector_map_t, db::manager_error>;
+
+    using entity_count_map_t = std::unordered_map<std::string, std::size_t>;
+
+    using insert_preparation_count_f = std::function<db::entity_count_map_t(void)>;
+    using insert_preparation_values_f = std::function<db::value_map_vector_map_t(void)>;
+    using fetch_preparation_option_f = std::function<db::fetch_option(void)>;
+    using fetch_preparation_ids_f = std::function<db::integer_set_map_t(void)>;
+    using fetch_preparation_objects_f = std::function<db::object_vector_t(void)>;
+    using revert_preparation_f = std::function<db::integer::type(void)>;
 
     static std::function<bool(void)> const no_cancellation = []() { return false; };
 
