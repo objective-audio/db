@@ -376,6 +376,30 @@ db::fetch_option db::to_fetch_option(db::integer_set_map_t const &obj_ids) {
     return fetch_option;
 }
 
+db::fetch_preparation_ids_f db::to_ids_preparation(db::fetch_preparation_objects_f &&preparation) {
+    return [preparation = std::move(preparation)]() {
+        db::integer_set_map_t result_ids;
+        db::object_vector_t objects = preparation();
+        for (db::object const &object : objects) {
+            for (auto const &rel_pair : object.entity().relations) {
+                db::relation const &rel = rel_pair.second;
+                std::string const &entity_name = rel.target_entity_name;
+                if (result_ids.count(entity_name) == 0) {
+                    result_ids.emplace(entity_name, db::integer_set_t{});
+                }
+                auto &result_entity_ids = result_ids.at(entity_name);
+                auto const &rel_ids = object.relation_ids(rel_pair.first);
+                for (db::object_id const &rel_id : rel_ids) {
+                    if (rel_id.is_stable()) {
+                        result_entity_ids.emplace(rel_id.stable());
+                    }
+                }
+            }
+        }
+        return result_ids;
+    };
+}
+
 #pragma mark - make
 
 db::manager_result_t db::make_error_result(db::manager_error_type const &error_type, db::error db_error) {
