@@ -85,6 +85,8 @@ namespace db {
         void fetch_objects(cancellation_f, fetch_preparation_ids_f, map_completion_f);
         void fetch_const_objects(cancellation_f, fetch_preparation_option_f, const_vector_completion_f);
         void fetch_const_objects(cancellation_f, fetch_preparation_ids_f, const_map_completion_f);
+        void fetch_relation_objects(cancellation_f, fetch_preparation_objects_f, map_completion_f);
+        void fetch_const_relation_objects(cancellation_f, fetch_preparation_objects_f, const_map_completion_f);
         void save(cancellation_f, map_completion_f);
         void revert(cancellation_f, revert_preparation_f, vector_completion_f);
 
