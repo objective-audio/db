@@ -1016,7 +1016,7 @@ using namespace yas;
     [self waitForExpectationsWithTimeout:10.0 handler:nil];
 }
 
-- (void)test_fetch_relation_objects {
+- (void)test_fetch_objects_of_relations {
     db::model model_0_0_2{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_2]};
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_2)];
 
