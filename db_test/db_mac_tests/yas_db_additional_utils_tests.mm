@@ -583,10 +583,10 @@ using namespace yas;
 
     XCTestExpectation *saveExp = [self expectationWithDescription:@"save"];
 
-    db::object_map_map_t result_objects;
+    db::object_map_map_t saved_objects;
 
-    manager.save(db::no_cancellation, [saveExp, &result_objects](db::manager_map_result_t result) {
-        result_objects = std::move(result.value());
+    manager.save(db::no_cancellation, [saveExp, &saved_objects](db::manager_map_result_t result) {
+        saved_objects = std::move(result.value());
 
         [saveExp fulfill];
     });
