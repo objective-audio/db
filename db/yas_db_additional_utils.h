@@ -84,6 +84,9 @@ namespace db {
 
     // オブジェクトIDに一致するデータを取得するfetch_optionを取得
     db::fetch_option to_fetch_option(db::integer_set_map_t const &obj_ids);
+
+    // オブジェクトを返すfunctionからrelationのidを返すfunctionに変換する
+    db::fetch_preparation_ids_f to_ids_preparation(db::fetch_preparation_objects_f &&);
 }
 
 // make
