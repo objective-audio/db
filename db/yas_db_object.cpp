@@ -13,7 +13,7 @@
 #include "yas_observing.h"
 #include "yas_stl_utils.h"
 #include "yas_fast_each.h"
-#include "yas_db_additional_utils.h"
+#include "yas_db_manager_utils.h"
 
 using namespace yas;
 

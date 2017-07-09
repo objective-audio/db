@@ -1,17 +1,17 @@
 //
-//  yas_db_additional_utils_tests.mm
+//  yas_db_manager_utils_tests.mm
 //
 
 #import "yas_db_test_utils.h"
-#import "yas_db_additional_utils.h"
+#import "yas_db_manager_utils.h"
 
 using namespace yas;
 
-@interface yas_db_additional_utils_tests : XCTestCase
+@interface yas_db_manager_utils_tests : XCTestCase
 
 @end
 
-@implementation yas_db_additional_utils_tests
+@implementation yas_db_manager_utils_tests
 
 - (void)setUp {
     [super setUp];

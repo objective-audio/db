@@ -1,8 +1,8 @@
 //
-//  yas_db_additional_utils.cpp
+//  yas_db_manager_utils.cpp
 //
 
-#include "yas_db_additional_utils.h"
+#include "yas_db_manager_utils.h"
 #include "yas_result.h"
 #include "yas_db_sql_utils.h"
 #include "yas_stl_utils.h"

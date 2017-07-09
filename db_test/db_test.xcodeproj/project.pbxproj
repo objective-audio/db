@@ -44,7 +44,7 @@
 		B69543B11C1E5844009DF7F9 /* yas_db_row_set.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B69543AF1C1E5844009DF7F9 /* yas_db_row_set.cpp */; };
 		B69543B41C1E5945009DF7F9 /* yas_db_statement.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B69543B21C1E5945009DF7F9 /* yas_db_statement.cpp */; };
 		B69543B61C1EFC6E009DF7F9 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = B69543B51C1EFC6E009DF7F9 /* libsqlite3.tbd */; };
-		B69BF63D1EC6005100A90E79 /* yas_db_additional_utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B69BF63B1EC6005100A90E79 /* yas_db_additional_utils.cpp */; };
+		B69BF63D1EC6005100A90E79 /* yas_db_manager_utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B69BF63B1EC6005100A90E79 /* yas_db_manager_utils.cpp */; };
 		B69BF6431EC87D2500A90E79 /* yas_db_additional_utils_tests.mm in Sources */ = {isa = PBXBuildFile; fileRef = B69BF6421EC87D2500A90E79 /* yas_db_additional_utils_tests.mm */; };
 		B6A215FF1ED31DD200AEEFC1 /* yas_db_error.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6A215FD1ED31DD200AEEFC1 /* yas_db_error.cpp */; };
 		B6A216031ED31DE900AEEFC1 /* yas_db_manager_error.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6A216011ED31DE900AEEFC1 /* yas_db_manager_error.cpp */; };
@@ -165,8 +165,8 @@
 		B69543B21C1E5945009DF7F9 /* yas_db_statement.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = yas_db_statement.cpp; sourceTree = "<group>"; };
 		B69543B31C1E5945009DF7F9 /* yas_db_statement.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_db_statement.h; sourceTree = "<group>"; };
 		B69543B51C1EFC6E009DF7F9 /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
-		B69BF63B1EC6005100A90E79 /* yas_db_additional_utils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = yas_db_additional_utils.cpp; sourceTree = "<group>"; };
-		B69BF63C1EC6005100A90E79 /* yas_db_additional_utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_db_additional_utils.h; sourceTree = "<group>"; };
+		B69BF63B1EC6005100A90E79 /* yas_db_manager_utils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = yas_db_manager_utils.cpp; sourceTree = "<group>"; };
+		B69BF63C1EC6005100A90E79 /* yas_db_manager_utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_db_manager_utils.h; sourceTree = "<group>"; };
 		B69BF6421EC87D2500A90E79 /* yas_db_additional_utils_tests.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = yas_db_additional_utils_tests.mm; sourceTree = "<group>"; };
 		B6A215FD1ED31DD200AEEFC1 /* yas_db_error.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = yas_db_error.cpp; sourceTree = "<group>"; };
 		B6A215FE1ED31DD200AEEFC1 /* yas_db_error.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_db_error.h; sourceTree = "<group>"; };
@@ -373,8 +373,8 @@
 			children = (
 				B629500D1C491A6F0024034B /* yas_db_additional_protocol.h */,
 				B6A2160D1ED31E6100AEEFC1 /* yas_db_additional_types.h */,
-				B69BF63B1EC6005100A90E79 /* yas_db_additional_utils.cpp */,
-				B69BF63C1EC6005100A90E79 /* yas_db_additional_utils.h */,
+				B69BF63B1EC6005100A90E79 /* yas_db_manager_utils.cpp */,
+				B69BF63C1EC6005100A90E79 /* yas_db_manager_utils.h */,
 				B6B281DF1C34CD72009053E1 /* yas_db_attribute.cpp */,
 				B6B281E01C34CD72009053E1 /* yas_db_attribute.h */,
 				B6B281E51C34D321009053E1 /* yas_db_cf_utils.cpp */,
@@ -536,7 +536,7 @@
 				B627DF221C8A761100E8BAE5 /* yas_db_object_utils.cpp in Sources */,
 				B6A215FF1ED31DD200AEEFC1 /* yas_db_error.cpp in Sources */,
 				B63A0C411C33D0C9009EB0B3 /* yas_db_manager.mm in Sources */,
-				B69BF63D1EC6005100A90E79 /* yas_db_additional_utils.cpp in Sources */,
+				B69BF63D1EC6005100A90E79 /* yas_db_manager_utils.cpp in Sources */,
 				B6B281D61C34CB2E009053E1 /* yas_db_model.cpp in Sources */,
 				B66ACF481DB7975E0031CB88 /* yas_operation.cpp in Sources */,
 				B69543B41C1E5945009DF7F9 /* yas_db_statement.cpp in Sources */,
