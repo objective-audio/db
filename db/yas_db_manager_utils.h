@@ -87,6 +87,8 @@ namespace db {
 
     // オブジェクトを返すfunctionからrelationのidを返すfunctionに変換する
     db::fetch_preparation_ids_f to_ids_preparation(db::fetch_preparation_objects_f &&);
+    db::fetch_preparation_ids_f to_ids_preparation(db::fetch_preparation_object_map_f &&);
+    db::fetch_preparation_ids_f to_ids_preparation(db::fetch_preparation_object_vector_f &&);
 }
 
 // make
