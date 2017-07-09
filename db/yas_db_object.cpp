@@ -120,28 +120,6 @@ struct db::const_object::impl : public base::impl {
         return 0;
     }
 
-    db::integer_set_map_t relation_ids_for_fetch() {
-        db::integer_set_map_t relation_ids;
-
-        for (auto const &pair : this->_entity.relations) {
-            std::string const &rel_name = pair.first;
-            if (this->_relations.count(rel_name) > 0) {
-                std::string const &tgt_entity_name = pair.second.target_entity_name;
-                if (relation_ids.count(tgt_entity_name) == 0) {
-                    relation_ids.emplace(tgt_entity_name, db::integer_set_t{});
-                }
-
-                auto &rel_id_set = relation_ids.at(tgt_entity_name);
-                db::id_vector_t const &rel_tgt_ids = this->_relations.at(rel_name);
-                for (db::object_id const &tgt_obj_id : rel_tgt_ids) {
-                    rel_id_set.emplace(tgt_obj_id.stable());
-                }
-            }
-        }
-
-        return relation_ids;
-    }
-
     void validate_attribute_name(std::string const &attr_name) {
         if (!this->_entity.all_attributes.count(attr_name)) {
             throw "attribute name (" + attr_name + ") not found in " + this->_entity.name + ".";
@@ -272,10 +250,6 @@ bool db::const_object::is_updated() const {
 
 bool db::const_object::is_removed() const {
     return impl_ptr<impl>()->is_equal_to_action(db::remove_action);
-}
-
-db::integer_set_map_t db::const_object::relation_ids_for_fetch() const {
-    return impl_ptr<impl>()->relation_ids_for_fetch();
 }
 
 #pragma mark - db::object::impl

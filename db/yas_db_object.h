@@ -47,8 +47,6 @@ namespace db {
         bool is_updated() const;
         bool is_removed() const;
 
-        db::integer_set_map_t relation_ids_for_fetch() const;
-
        protected:
         const_object(std::shared_ptr<impl> const &);
         const_object(std::shared_ptr<impl> &&);
