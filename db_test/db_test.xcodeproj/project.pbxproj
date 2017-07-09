@@ -45,7 +45,7 @@
 		B69543B41C1E5945009DF7F9 /* yas_db_statement.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B69543B21C1E5945009DF7F9 /* yas_db_statement.cpp */; };
 		B69543B61C1EFC6E009DF7F9 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = B69543B51C1EFC6E009DF7F9 /* libsqlite3.tbd */; };
 		B69BF63D1EC6005100A90E79 /* yas_db_manager_utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B69BF63B1EC6005100A90E79 /* yas_db_manager_utils.cpp */; };
-		B69BF6431EC87D2500A90E79 /* yas_db_additional_utils_tests.mm in Sources */ = {isa = PBXBuildFile; fileRef = B69BF6421EC87D2500A90E79 /* yas_db_additional_utils_tests.mm */; };
+		B69BF6431EC87D2500A90E79 /* yas_db_manager_utils_tests.mm in Sources */ = {isa = PBXBuildFile; fileRef = B69BF6421EC87D2500A90E79 /* yas_db_manager_utils_tests.mm */; };
 		B6A215FF1ED31DD200AEEFC1 /* yas_db_error.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6A215FD1ED31DD200AEEFC1 /* yas_db_error.cpp */; };
 		B6A216031ED31DE900AEEFC1 /* yas_db_manager_error.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6A216011ED31DE900AEEFC1 /* yas_db_manager_error.cpp */; };
 		B6A285E81C2A475500EC7945 /* yas_db_database_tests.mm in Sources */ = {isa = PBXBuildFile; fileRef = B6A285E71C2A475500EC7945 /* yas_db_database_tests.mm */; };
@@ -167,7 +167,7 @@
 		B69543B51C1EFC6E009DF7F9 /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
 		B69BF63B1EC6005100A90E79 /* yas_db_manager_utils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = yas_db_manager_utils.cpp; sourceTree = "<group>"; };
 		B69BF63C1EC6005100A90E79 /* yas_db_manager_utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_db_manager_utils.h; sourceTree = "<group>"; };
-		B69BF6421EC87D2500A90E79 /* yas_db_additional_utils_tests.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = yas_db_additional_utils_tests.mm; sourceTree = "<group>"; };
+		B69BF6421EC87D2500A90E79 /* yas_db_manager_utils_tests.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = yas_db_manager_utils_tests.mm; sourceTree = "<group>"; };
 		B6A215FD1ED31DD200AEEFC1 /* yas_db_error.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = yas_db_error.cpp; sourceTree = "<group>"; };
 		B6A215FE1ED31DD200AEEFC1 /* yas_db_error.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_db_error.h; sourceTree = "<group>"; };
 		B6A216001ED31DDD00AEEFC1 /* yas_db_types.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = yas_db_types.h; sourceTree = "<group>"; };
@@ -330,26 +330,26 @@
 				B6A285E71C2A475500EC7945 /* yas_db_database_tests.mm */,
 				B6D89B851C37592A007100A7 /* yas_db_entity_tests.mm */,
 				B63A0C351C326D38009EB0B3 /* yas_db_execute_sql_tests.mm */,
+				B66AF5381EE45D78004AF0B6 /* yas_db_fetch_option_tests.mm */,
 				B66711DB1C6C5EC500B8E501 /* yas_db_index_tests.mm */,
+				B6DD30B51ED9BDFC00E5D1E6 /* yas_db_info_tests.mm */,
 				B63A0C451C3414BD009EB0B3 /* yas_db_manager_tests.mm */,
+				B69BF6421EC87D2500A90E79 /* yas_db_manager_utils_tests.mm */,
 				B6EA3F951C35931F0053F3B4 /* yas_db_model_tests.mm */,
+				B652E0711EE995B6005508C4 /* yas_db_object_id_tests.mm */,
 				B64BBFFE1C41408000B32664 /* yas_db_object_tests.mm */,
 				B63A0C301C3222A4009EB0B3 /* yas_db_order_tests.mm */,
 				B63A0C3A1C32B864009EB0B3 /* yas_db_range_tests.mm */,
 				B6D89B6D1C361A84007100A7 /* yas_db_relation_tests.mm */,
 				B6F3DAA01C2FEDA800F9EFEC /* yas_db_result_code_tests.mm */,
 				B6A285F01C2A9D3D00EC7945 /* yas_db_row_set_tests.mm */,
+				B6DD30B71EDAC7B200E5D1E6 /* yas_db_select_option_tests.mm */,
 				B6C5A2CF1C31453600E100EC /* yas_db_sql_utils_tests.mm */,
 				B62CED8F1C2A33640047B6DE /* yas_db_statement_tests.mm */,
 				B6A285ED1C2A9C8C00EC7945 /* yas_db_test_utils.h */,
 				B6A285EE1C2A9C8C00EC7945 /* yas_db_test_utils.mm */,
 				B6F648361C40B35800265C93 /* yas_db_utils_tests.mm */,
 				B608C85F1C20F61800F594D8 /* yas_db_value_tests.mm */,
-				B69BF6421EC87D2500A90E79 /* yas_db_additional_utils_tests.mm */,
-				B6DD30B51ED9BDFC00E5D1E6 /* yas_db_info_tests.mm */,
-				B6DD30B71EDAC7B200E5D1E6 /* yas_db_select_option_tests.mm */,
-				B66AF5381EE45D78004AF0B6 /* yas_db_fetch_option_tests.mm */,
-				B652E0711EE995B6005508C4 /* yas_db_object_id_tests.mm */,
 				B6AF99A61EFCAD34000EA849 /* yas_db_weak_pool_tests.mm */,
 			);
 			path = db_mac_tests;
@@ -373,8 +373,6 @@
 			children = (
 				B629500D1C491A6F0024034B /* yas_db_additional_protocol.h */,
 				B6A2160D1ED31E6100AEEFC1 /* yas_db_additional_types.h */,
-				B69BF63B1EC6005100A90E79 /* yas_db_manager_utils.cpp */,
-				B69BF63C1EC6005100A90E79 /* yas_db_manager_utils.h */,
 				B6B281DF1C34CD72009053E1 /* yas_db_attribute.cpp */,
 				B6B281E01C34CD72009053E1 /* yas_db_attribute.h */,
 				B6B281E51C34D321009053E1 /* yas_db_cf_utils.cpp */,
@@ -389,6 +387,8 @@
 				B62C5D1D1ECFCE560091432C /* yas_db_info.h */,
 				B6A216011ED31DE900AEEFC1 /* yas_db_manager_error.cpp */,
 				B6A216021ED31DE900AEEFC1 /* yas_db_manager_error.h */,
+				B69BF63B1EC6005100A90E79 /* yas_db_manager_utils.cpp */,
+				B69BF63C1EC6005100A90E79 /* yas_db_manager_utils.h */,
 				B63A0C401C33D0C9009EB0B3 /* yas_db_manager.h */,
 				B63A0C3F1C33D0C9009EB0B3 /* yas_db_manager.mm */,
 				B6B281D41C34CB2E009053E1 /* yas_db_model.cpp */,
@@ -399,14 +399,14 @@
 				B627DF211C8A761100E8BAE5 /* yas_db_object_utils.h */,
 				B64BBFFB1C4119B500B32664 /* yas_db_object.cpp */,
 				B64BBFFC1C4119B500B32664 /* yas_db_object.h */,
-				B641DF561EED628200BD8E29 /* yas_db_weak_pool_private.h */,
-				B641DF541EED627400BD8E29 /* yas_db_weak_pool.h */,
 				B6B281E21C34CD83009053E1 /* yas_db_relation.cpp */,
 				B6B281E31C34CD83009053E1 /* yas_db_relation.h */,
 				B629500E1C4B7E780024034B /* yas_db_select_option.cpp */,
 				B629500F1C4B7E780024034B /* yas_db_select_option.h */,
 				B6C5A2CC1C30D96800E100EC /* yas_db_sql_utils.cpp */,
 				B6C5A2CD1C30D96800E100EC /* yas_db_sql_utils.h */,
+				B641DF561EED628200BD8E29 /* yas_db_weak_pool_private.h */,
+				B641DF541EED627400BD8E29 /* yas_db_weak_pool.h */,
 			);
 			name = additions;
 			sourceTree = "<group>";
@@ -512,7 +512,7 @@
 				B6DD30B81EDAC7B200E5D1E6 /* yas_db_select_option_tests.mm in Sources */,
 				B652E0721EE995B6005508C4 /* yas_db_object_id_tests.mm in Sources */,
 				B69543AE1C1E5831009DF7F9 /* yas_db_database.cpp in Sources */,
-				B69BF6431EC87D2500A90E79 /* yas_db_additional_utils_tests.mm in Sources */,
+				B69BF6431EC87D2500A90E79 /* yas_db_manager_utils_tests.mm in Sources */,
 				B63A0C311C3222A4009EB0B3 /* yas_db_order_tests.mm in Sources */,
 				B608C85E1C20F17300F594D8 /* yas_db_value.cpp in Sources */,
 				B66ACF4B1DB7975E0031CB88 /* yas_version.cpp in Sources */,
