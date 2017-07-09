@@ -69,6 +69,8 @@ namespace db {
     using fetch_preparation_option_f = std::function<db::fetch_option(void)>;
     using fetch_preparation_ids_f = std::function<db::integer_set_map_t(void)>;
     using fetch_preparation_objects_f = std::function<db::object_vector_t(void)>;
+    using fetch_preparation_object_map_f = std::function<db::object_map_map_t(void)>;
+    using fetch_preparation_object_vector_f = std::function<db::object_vector_map_t(void)>;
     using revert_preparation_f = std::function<db::integer::type(void)>;
 
     static std::function<bool(void)> const no_cancellation = []() { return false; };
