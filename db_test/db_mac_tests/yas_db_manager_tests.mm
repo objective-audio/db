@@ -1223,12 +1223,12 @@ using namespace yas;
 
     XCTestExpectation *fetchExp = [self expectationWithDescription:@"fetch"];
 
-    manager.fetch_relation_objects(db::no_cancellation, [objects]() { return objects; },
-                                   [&fetched_objects, fetchExp](db::manager_map_result_t result) {
-                                       fetched_objects = std::move(result.value());
+    manager.fetch_objects(db::no_cancellation, db::to_ids_preparation([objects]() { return objects; }),
+                          [&fetched_objects, fetchExp](db::manager_map_result_t result) {
+                              fetched_objects = std::move(result.value());
 
-                                       [fetchExp fulfill];
-                                   });
+                              [fetchExp fulfill];
+                          });
 
     [self waitForExpectations:@[fetchExp] timeout:10.0];
 
@@ -1289,12 +1289,12 @@ using namespace yas;
 
     XCTestExpectation *fetchExp = [self expectationWithDescription:@"fetch"];
 
-    manager.fetch_const_relation_objects(db::no_cancellation, [objects]() { return objects; },
-                                         [&fetched_objects, fetchExp](db::manager_const_map_result_t result) {
-                                             fetched_objects = std::move(result.value());
+    manager.fetch_const_objects(db::no_cancellation, db::to_ids_preparation([objects]() { return objects; }),
+                                [&fetched_objects, fetchExp](db::manager_const_map_result_t result) {
+                                    fetched_objects = std::move(result.value());
 
-                                             [fetchExp fulfill];
-                                         });
+                                    [fetchExp fulfill];
+                                });
 
     [self waitForExpectations:@[fetchExp] timeout:10.0];
 

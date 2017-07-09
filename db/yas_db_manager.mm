@@ -896,19 +896,6 @@ void db::manager::fetch_const_objects(db::manager::cancellation_f cancellation, 
                                                  std::move(impl_completion));
 }
 
-void db::manager::fetch_relation_objects(db::manager::cancellation_f cancellation,
-                                         db::fetch_preparation_objects_f preparation,
-                                         db::manager::map_completion_f completion) {
-    this->fetch_objects(std::move(cancellation), db::to_ids_preparation(std::move(preparation)), std::move(completion));
-}
-
-void db::manager::fetch_const_relation_objects(db::manager::cancellation_f cancellation,
-                                               db::fetch_preparation_objects_f preparation,
-                                               db::manager::const_map_completion_f completion) {
-    this->fetch_const_objects(std::move(cancellation), db::to_ids_preparation(std::move(preparation)),
-                              std::move(completion));
-}
-
 void db::manager::save(cancellation_f cancellation, db::manager::map_completion_f completion) {
     auto execution = [completion = std::move(completion), manager = *this](operation const &) mutable {
         db::object_data_vector_map_t changed_datas;

@@ -92,6 +92,23 @@ namespace db {
 
         return db::value_vector_map_result_t{std::move(relations)};
     }
+
+    static void get_relation_ids(db::integer_set_map_t &out_ids, db::object const &object) {
+        for (auto const &rel_pair : object.entity().relations) {
+            db::relation const &rel = rel_pair.second;
+            std::string const &entity_name = rel.target_entity_name;
+            if (out_ids.count(entity_name) == 0) {
+                out_ids.emplace(entity_name, db::integer_set_t{});
+            }
+            auto &result_entity_ids = out_ids.at(entity_name);
+            auto const &rel_ids = object.relation_ids(rel_pair.first);
+            for (db::object_id const &rel_id : rel_ids) {
+                if (rel_id.is_stable()) {
+                    result_entity_ids.emplace(rel_id.stable());
+                }
+            }
+        }
+    }
 }
 }
 
@@ -381,19 +398,33 @@ db::fetch_preparation_ids_f db::to_ids_preparation(db::fetch_preparation_objects
         db::integer_set_map_t result_ids;
         db::object_vector_t objects = preparation();
         for (db::object const &object : objects) {
-            for (auto const &rel_pair : object.entity().relations) {
-                db::relation const &rel = rel_pair.second;
-                std::string const &entity_name = rel.target_entity_name;
-                if (result_ids.count(entity_name) == 0) {
-                    result_ids.emplace(entity_name, db::integer_set_t{});
-                }
-                auto &result_entity_ids = result_ids.at(entity_name);
-                auto const &rel_ids = object.relation_ids(rel_pair.first);
-                for (db::object_id const &rel_id : rel_ids) {
-                    if (rel_id.is_stable()) {
-                        result_entity_ids.emplace(rel_id.stable());
-                    }
-                }
+            db::get_relation_ids(result_ids, object);
+        }
+        return result_ids;
+    };
+}
+
+db::fetch_preparation_ids_f db::to_ids_preparation(db::fetch_preparation_object_map_f &&preparation) {
+    return [preparation = std::move(preparation)]() {
+        db::integer_set_map_t result_ids;
+        db::object_map_map_t objects = preparation();
+        for (auto const &entity_pair : objects) {
+            for (auto const &object_pair : entity_pair.second) {
+                db::object const &object = object_pair.second;
+                db::get_relation_ids(result_ids, object);
+            }
+        }
+        return result_ids;
+    };
+}
+
+db::fetch_preparation_ids_f db::to_ids_preparation(db::fetch_preparation_object_vector_f &&preparation) {
+    return [preparation = std::move(preparation)]() {
+        db::integer_set_map_t result_ids;
+        db::object_vector_map_t objects = preparation();
+        for (auto const &entity_pair : objects) {
+            for (db::object const &object : entity_pair.second) {
+                db::get_relation_ids(result_ids, object);
             }
         }
         return result_ids;
