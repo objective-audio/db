@@ -341,8 +341,6 @@
 			children = (
 				B68217A41C75F7C000689F27 /* yas_db_additional_protocol.h */,
 				B6A2160C1ED31E5800AEEFC1 /* yas_db_additional_types.h */,
-				B69BF6381EC5FAC800A90E79 /* yas_db_manager_utils.cpp */,
-				B69BF6391EC5FAC800A90E79 /* yas_db_manager_utils.h */,
 				B68217A51C75F7C000689F27 /* yas_db_additions.h */,
 				B68217A61C75F7C000689F27 /* yas_db_attribute.cpp */,
 				B68217A71C75F7C000689F27 /* yas_db_attribute.h */,
@@ -363,6 +361,8 @@
 				B6EDCB391ED16E7800D18E6D /* yas_db_info.h */,
 				B6A216081ED31E3200AEEFC1 /* yas_db_manager_error.cpp */,
 				B6A216091ED31E3200AEEFC1 /* yas_db_manager_error.h */,
+				B69BF6381EC5FAC800A90E79 /* yas_db_manager_utils.cpp */,
+				B69BF6391EC5FAC800A90E79 /* yas_db_manager_utils.h */,
 				B68217B11C75F7C000689F27 /* yas_db_manager.h */,
 				B68217B21C75F7C000689F27 /* yas_db_manager.mm */,
 				B68217B31C75F7C000689F27 /* yas_db_model.cpp */,
