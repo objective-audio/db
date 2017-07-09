@@ -5,7 +5,7 @@
 #import "yas_db_test_utils.h"
 #import "yas_db_utils.h"
 #import "yas_objc_ptr.h"
-#import "yas_db_additional_utils.h"
+#import "yas_db_manager_utils.h"
 #import "yas_fast_each.h"
 
 using namespace yas;

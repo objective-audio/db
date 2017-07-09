@@ -8,7 +8,7 @@
 #include "yas_db_cf_utils.h"
 #include "yas_db_entity.h"
 #include "yas_db_manager.h"
-#include "yas_db_additional_utils.h"
+#include "yas_db_manager_utils.h"
 #include "yas_db_object_utils.h"
 #include "yas_db_model.h"
 #include "yas_db_object.h"

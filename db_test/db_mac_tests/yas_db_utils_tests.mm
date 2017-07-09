@@ -4,7 +4,7 @@
 
 #import "yas_db_test_utils.h"
 #import "yas_db_utils.h"
-#import "yas_db_additional_utils.h"
+#import "yas_db_manager_utils.h"
 
 using namespace yas;
 
