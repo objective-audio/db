@@ -511,51 +511,6 @@ using namespace yas;
     XCTAssertEqual(obj.status(), db::object_status::updating);
 }
 
-- (void)test_relation_ids_for_fetch {
-    NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
-    db::model model((__bridge CFDictionaryRef)model_dict);
-    db::object obj{nullptr, model.entity("sample_a")};
-
-    obj.set_relation_ids("child", db::id_vector_t{db::make_stable_id(db::value{1}), db::make_stable_id(db::value{2}),
-                                                  db::make_stable_id(db::value{3}), db::make_stable_id(db::value{2})});
-
-    XCTAssertEqual(obj.relation_size("child"), 4);
-
-    auto rel_ids = obj.relation_ids_for_fetch();
-
-    XCTAssertEqual(rel_ids.count("sample_b"), 1);
-
-    auto const &sample_b_rel_ids = rel_ids.at("sample_b");
-
-    XCTAssertEqual(sample_b_rel_ids.size(), 3);
-    XCTAssertEqual(sample_b_rel_ids.count(1), 1);
-    XCTAssertEqual(sample_b_rel_ids.count(2), 1);
-    XCTAssertEqual(sample_b_rel_ids.count(3), 1);
-    XCTAssertEqual(sample_b_rel_ids.count(4), 0);
-}
-
-- (void)test_relation_ids_from_many_objects {
-    NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
-    db::model model((__bridge CFDictionaryRef)model_dict);
-
-    db::object obj1{nullptr, model.entity("sample_a")};
-    obj1.set_relation_ids("child", db::id_vector_t{db::make_stable_id(db::value{1}), db::make_stable_id(db::value{2}),
-                                                   db::make_stable_id(db::value{3})});
-
-    db::object obj2{nullptr, model.entity("sample_a")};
-    obj2.set_relation_ids("child", db::id_vector_t{db::make_stable_id(db::value{5}), db::make_stable_id(db::value{4}),
-                                                   db::make_stable_id(db::value{3})});
-
-    auto rel_ids =
-        db::relation_ids(db::object_vector_map_t{std::make_pair("sample_a", db::object_vector_t{obj1, obj2})});
-
-    XCTAssertEqual(rel_ids.count("sample_b"), 1);
-
-    auto const &sample_b_ids = rel_ids.at("sample_b");
-
-    XCTAssertEqual(sample_b_ids.size(), 5);
-}
-
 - (void)test_observe_attribute {
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);

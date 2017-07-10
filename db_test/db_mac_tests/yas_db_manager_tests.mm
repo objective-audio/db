@@ -1104,28 +1104,26 @@ using namespace yas;
 
     [self waitForExpectationsWithTimeout:10.0 handler:nil];
 
-    manager.fetch_objects(
-        db::no_cancellation,
-        [object_a]() {
-            return db::relation_ids(db::object_vector_map_t{std::make_pair("sample_a", db::object_vector_t{object_a})});
-        },
-        [self, object_a](auto const &fetch_result) {
-            XCTAssertTrue(fetch_result);
+    manager.fetch_objects(db::no_cancellation, db::to_ids_preparation([object_a]() {
+                              return db::object_vector_map_t{std::make_pair("sample_a", db::object_vector_t{object_a})};
+                          }),
+                          [self, object_a](auto const &fetch_result) {
+                              XCTAssertTrue(fetch_result);
 
-            auto const &objects = fetch_result.value();
+                              auto const &objects = fetch_result.value();
 
-            XCTAssertEqual(objects.size(), 2);
-            XCTAssertEqual(objects.count("sample_b"), 1);
-            XCTAssertEqual(objects.count("sample_c"), 1);
+                              XCTAssertEqual(objects.size(), 2);
+                              XCTAssertEqual(objects.count("sample_b"), 1);
+                              XCTAssertEqual(objects.count("sample_c"), 1);
 
-            XCTAssertEqual(objects.at("sample_b").size(), 1);
-            XCTAssertEqual(object_a.relation_object_at("child", 0), objects.at("sample_b").at(1));
-            XCTAssertEqual(objects.at("sample_b").at(1).relation_object_at("parent", 0), object_a);
+                              XCTAssertEqual(objects.at("sample_b").size(), 1);
+                              XCTAssertEqual(object_a.relation_object_at("child", 0), objects.at("sample_b").at(1));
+                              XCTAssertEqual(objects.at("sample_b").at(1).relation_object_at("parent", 0), object_a);
 
-            XCTAssertEqual(objects.at("sample_c").size(), 1);
-            XCTAssertEqual(object_a.relation_object_at("friend", 0), objects.at("sample_c").at(1));
-            XCTAssertEqual(objects.at("sample_c").at(1).relation_object_at("friend", 0), object_a);
-        });
+                              XCTAssertEqual(objects.at("sample_c").size(), 1);
+                              XCTAssertEqual(object_a.relation_object_at("friend", 0), objects.at("sample_c").at(1));
+                              XCTAssertEqual(objects.at("sample_c").at(1).relation_object_at("friend", 0), object_a);
+                          });
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
     manager.execute(db::no_cancellation, [exp](auto const &op) { [exp fulfill]; });
@@ -1745,7 +1743,7 @@ using namespace yas;
             });
 
         manager.fetch_objects(
-            db::no_cancellation, [&objects]() { return db::relation_ids(objects); },
+            db::no_cancellation, db::to_ids_preparation([&objects]() { return objects; }),
             [self, &objects](auto result) mutable {
                 XCTAssertTrue(result);
 
