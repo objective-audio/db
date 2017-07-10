@@ -97,11 +97,14 @@ namespace db {
         for (auto const &rel_pair : object.entity().relations) {
             db::relation const &rel = rel_pair.second;
             std::string const &entity_name = rel.target_entity_name;
+            auto const &rel_ids = object.relation_ids(rel_pair.first);
+            if (rel_ids.size() == 0) {
+                continue;
+            }
             if (out_ids.count(entity_name) == 0) {
                 out_ids.emplace(entity_name, db::integer_set_t{});
             }
             auto &result_entity_ids = out_ids.at(entity_name);
-            auto const &rel_ids = object.relation_ids(rel_pair.first);
             for (db::object_id const &rel_id : rel_ids) {
                 if (rel_id.is_stable()) {
                     result_entity_ids.emplace(rel_id.stable());
