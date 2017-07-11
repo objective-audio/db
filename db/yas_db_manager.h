@@ -39,8 +39,7 @@ namespace db {
 
         enum class method { object_changed, db_info_changed };
 
-        using cancellation_f = std::function<bool(void)>;
-        using execution_f = std::function<void(operation const &)>;
+        
 
         using completion_f = std::function<void(db::manager_result_t)>;
         using vector_completion_f = std::function<void(db::manager_vector_result_t)>;

@@ -11,6 +11,8 @@
 #include <unordered_set>
 
 namespace yas {
+class operation;
+
 namespace db {
     class object;
     class const_object;
@@ -61,6 +63,9 @@ namespace db {
     using manager_const_map_result_t = result<db::const_object_map_map_t, db::manager_error>;
     using manager_info_result_t = result<db::info, db::manager_error>;
     using manager_fetch_result_t = result<db::object_data_vector_map_t, db::manager_error>;
+
+    using cancellation_f = std::function<bool(void)>;
+    using execution_f = std::function<void(operation const &)>;
 
     using entity_count_map_t = std::unordered_map<std::string, std::size_t>;
 
