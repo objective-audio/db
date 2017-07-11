@@ -122,41 +122,41 @@ top_info_row_type_t to_idx(sample::top_info_row const &row) {
             case db_controller::method::db_info_changed: {
                 [controller updateTableForInfo:top_info_row::save_id];
             } break;
-                
+
             case db_controller::method::all_objects_updated: {
                 [controller updateTable];
             } break;
-                
+
             case db_controller::method::object_created: {
                 auto const &object = info.object;
                 auto const entity = db_controller::entity_for_name(object.entity_name());
                 [controller updateTableForInsertedRow:NSInteger(info.value.get<db::integer>()) entity:entity];
             } break;
-            
+
             case db_controller::method::object_changed: {
                 auto const &index = info.value.get<db::integer>();
                 auto const &object = info.object;
-                
+
                 if (info.value) {
                     auto const entity = db_controller::entity_for_name(object.entity_name());
                     [controller updateTableObjectCellAtIndex:NSInteger(index) entity:entity];
                 } else {
                     [controller updateTableObjects];
                 }
-                
+
                 [controller updateTableActions];
             } break;
-            
+
             case db_controller::method::object_removed: {
                 auto const &index = info.value.get<db::integer>();
                 auto const &object = info.object;
-                
+
                 auto const entity = db_controller::entity_for_name(object.entity_name());
                 [controller updateTableForDeletedRow:NSInteger(index) entity:entity];
-                
+
                 [controller updateTableActions];
             } break;
-            
+
             default:
                 break;
         }
@@ -430,7 +430,7 @@ top_info_row_type_t to_idx(sample::top_info_row const &row) {
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     if (indexPath.section == to_idx(top_section::actions)) {
         auto unowned_self = make_objc_ptr([[YASUnownedObject<DBSampleTopViewController *> alloc] initWithObject:self]);
-        db::manager::completion_f completion = [unowned_self](db::manager_result_t result) {
+        db::completion_f completion = [unowned_self](db::manager_result_t result) {
             if (!result) {
                 auto controller = [unowned_self.object() object];
                 CFStringRef cf_string = to_cf_object(to_string(result.error()));

@@ -33,17 +33,17 @@ namespace sample {
 
         db_controller();
 
-        void setup(db::manager::completion_f);
+        void setup(db::completion_f);
 
         void create_object(entity const &);
-        void insert(entity const &, db::manager::completion_f);
+        void insert(entity const &, db::completion_f);
         void remove(entity const &, std::size_t const &idx);
-        void undo(db::manager::completion_f);
-        void redo(db::manager::completion_f);
-        void clear(db::manager::completion_f);
-        void purge(db::manager::completion_f);
-        void save_changed(db::manager::completion_f);
-        void cancel_changed(db::manager::completion_f);
+        void undo(db::completion_f);
+        void redo(db::completion_f);
+        void clear(db::completion_f);
+        void purge(db::completion_f);
+        void save_changed(db::completion_f);
+        void cancel_changed(db::completion_f);
 
         bool can_insert() const;
         bool can_undo() const;

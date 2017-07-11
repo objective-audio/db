@@ -32,7 +32,7 @@ db_controller::change_info::change_info(db::object object, db::value value)
 db_controller::db_controller() : _manager(nullptr), _objects() {
 }
 
-void db_controller::setup(db::manager::completion_f completion) {
+void db_controller::setup(db::completion_f completion) {
     this->_begin_processing();
 
     auto model_dict = make_objc_ptr<NSDictionary *>([]() {
@@ -122,7 +122,7 @@ void db_controller::create_object(entity const &entity) {
     this->_subject.notify(method::object_created, {object, db::value{static_cast<db::integer::type>(idx)}});
 }
 
-void db_controller::insert(entity const &entity, db::manager::completion_f completion) {
+void db_controller::insert(entity const &entity, db::completion_f completion) {
     if (this->_processing) {
         return;
     }
@@ -204,7 +204,7 @@ void db_controller::remove(entity const &entity, std::size_t const &idx) {
     }
 }
 
-void db_controller::undo(db::manager::completion_f completion) {
+void db_controller::undo(db::completion_f completion) {
     if (this->_processing) {
         return;
     }
@@ -247,7 +247,7 @@ void db_controller::undo(db::manager::completion_f completion) {
     _manager.resume();
 }
 
-void db_controller::redo(db::manager::completion_f completion) {
+void db_controller::redo(db::completion_f completion) {
     if (this->_processing) {
         return;
     }
@@ -290,7 +290,7 @@ void db_controller::redo(db::manager::completion_f completion) {
     this->_manager.resume();
 }
 
-void db_controller::clear(db::manager::completion_f completion) {
+void db_controller::clear(db::completion_f completion) {
     if (this->_processing) {
         return;
     }
@@ -323,7 +323,7 @@ void db_controller::clear(db::manager::completion_f completion) {
     this->_manager.resume();
 }
 
-void db_controller::purge(db::manager::completion_f completion) {
+void db_controller::purge(db::completion_f completion) {
     if (this->_processing) {
         return;
     }
@@ -363,7 +363,7 @@ void db_controller::purge(db::manager::completion_f completion) {
     this->_manager.resume();
 }
 
-void db_controller::save_changed(db::manager::completion_f completion) {
+void db_controller::save_changed(db::completion_f completion) {
     if (this->_processing) {
         return;
     }
@@ -396,7 +396,7 @@ void db_controller::save_changed(db::manager::completion_f completion) {
     this->_manager.resume();
 }
 
-void db_controller::cancel_changed(db::manager::completion_f completion) {
+void db_controller::cancel_changed(db::completion_f completion) {
     if (this->_processing) {
         return;
     }

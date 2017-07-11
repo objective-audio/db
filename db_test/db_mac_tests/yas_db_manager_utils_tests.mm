@@ -596,7 +596,7 @@ using namespace yas;
 
     db::object_vector_t objects{obj_a_1, obj_a_2, obj_c_1};
 
-    db::fetch_preparation_ids_f ids_preparation = db::to_ids_preparation([objects]() { return objects; });
+    db::fetch_ids_preparation_f ids_preparation = db::to_ids_preparation([objects]() { return objects; });
 
     db::integer_set_map_t const ids = ids_preparation();
 
@@ -662,7 +662,7 @@ using namespace yas;
     db::object_map_t entity_c_objects{{obj_c_1.object_id().stable(), obj_c_1}};
     db::object_map_map_t objects{{"sample_a", std::move(entity_a_objects)}, {"sample_c", std::move(entity_c_objects)}};
 
-    db::fetch_preparation_ids_f ids_preparation = db::to_ids_preparation([objects]() { return objects; });
+    db::fetch_ids_preparation_f ids_preparation = db::to_ids_preparation([objects]() { return objects; });
 
     db::integer_set_map_t const ids = ids_preparation();
 
@@ -729,7 +729,7 @@ using namespace yas;
     db::object_vector_map_t objects{{"sample_a", std::move(entity_a_objects)},
                                     {"sample_c", std::move(entity_c_objects)}};
 
-    db::fetch_preparation_ids_f ids_preparation = db::to_ids_preparation([objects]() { return objects; });
+    db::fetch_ids_preparation_f ids_preparation = db::to_ids_preparation([objects]() { return objects; });
 
     db::integer_set_map_t const ids = ids_preparation();
 
