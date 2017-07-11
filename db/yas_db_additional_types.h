@@ -78,6 +78,12 @@ namespace db {
     using fetch_object_vector_preparation_f = std::function<db::object_vector_map_t(void)>;
     using revert_preparation_f = std::function<db::integer::type(void)>;
 
+    using completion_f = std::function<void(db::manager_result_t)>;
+    using vector_completion_f = std::function<void(db::manager_vector_result_t)>;
+    using map_completion_f = std::function<void(db::manager_map_result_t)>;
+    using const_vector_completion_f = std::function<void(db::manager_const_vector_result_t)>;
+    using const_map_completion_f = std::function<void(db::manager_const_map_result_t)>;
+
     static std::function<bool(void)> const no_cancellation = []() { return false; };
 
     // for entity
