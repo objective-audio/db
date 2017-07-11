@@ -39,8 +39,6 @@ namespace db {
 
         enum class method { object_changed, db_info_changed };
 
-        
-
         using completion_f = std::function<void(db::manager_result_t)>;
         using vector_completion_f = std::function<void(db::manager_vector_result_t)>;
         using map_completion_f = std::function<void(db::manager_map_result_t)>;
