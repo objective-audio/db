@@ -64,13 +64,13 @@ namespace db {
 
     using entity_count_map_t = std::unordered_map<std::string, std::size_t>;
 
-    using insert_preparation_count_f = std::function<db::entity_count_map_t(void)>;
-    using insert_preparation_values_f = std::function<db::value_map_vector_map_t(void)>;
-    using fetch_preparation_option_f = std::function<db::fetch_option(void)>;
-    using fetch_preparation_ids_f = std::function<db::integer_set_map_t(void)>;
-    using fetch_preparation_objects_f = std::function<db::object_vector_t(void)>;
-    using fetch_preparation_object_map_f = std::function<db::object_map_map_t(void)>;
-    using fetch_preparation_object_vector_f = std::function<db::object_vector_map_t(void)>;
+    using insert_count_preparation_f = std::function<db::entity_count_map_t(void)>;
+    using insert_values_preparation_f = std::function<db::value_map_vector_map_t(void)>;
+    using fetch_option_preparation_f = std::function<db::fetch_option(void)>;
+    using fetch_ids_preparation_f = std::function<db::integer_set_map_t(void)>;
+    using fetch_objects_preparation_f = std::function<db::object_vector_t(void)>;
+    using fetch_object_map_preparation_f = std::function<db::object_map_map_t(void)>;
+    using fetch_object_vector_preparation_f = std::function<db::object_vector_map_t(void)>;
     using revert_preparation_f = std::function<db::integer::type(void)>;
 
     static std::function<bool(void)> const no_cancellation = []() { return false; };

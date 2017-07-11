@@ -396,7 +396,7 @@ db::fetch_option db::to_fetch_option(db::integer_set_map_t const &obj_ids) {
     return fetch_option;
 }
 
-db::fetch_preparation_ids_f db::to_ids_preparation(db::fetch_preparation_objects_f &&preparation) {
+db::fetch_ids_preparation_f db::to_ids_preparation(db::fetch_objects_preparation_f &&preparation) {
     return [preparation = std::move(preparation)]() {
         db::integer_set_map_t result_ids;
         db::object_vector_t objects = preparation();
@@ -407,7 +407,7 @@ db::fetch_preparation_ids_f db::to_ids_preparation(db::fetch_preparation_objects
     };
 }
 
-db::fetch_preparation_ids_f db::to_ids_preparation(db::fetch_preparation_object_map_f &&preparation) {
+db::fetch_ids_preparation_f db::to_ids_preparation(db::fetch_object_map_preparation_f &&preparation) {
     return [preparation = std::move(preparation)]() {
         db::integer_set_map_t result_ids;
         db::object_map_map_t objects = preparation();
@@ -421,7 +421,7 @@ db::fetch_preparation_ids_f db::to_ids_preparation(db::fetch_preparation_object_
     };
 }
 
-db::fetch_preparation_ids_f db::to_ids_preparation(db::fetch_preparation_object_vector_f &&preparation) {
+db::fetch_ids_preparation_f db::to_ids_preparation(db::fetch_object_vector_preparation_f &&preparation) {
     return [preparation = std::move(preparation)]() {
         db::integer_set_map_t result_ids;
         db::object_vector_map_t objects = preparation();

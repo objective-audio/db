@@ -86,9 +86,9 @@ namespace db {
     db::fetch_option to_fetch_option(db::integer_set_map_t const &obj_ids);
 
     // オブジェクトを返すfunctionからrelationのidを返すfunctionに変換する
-    db::fetch_preparation_ids_f to_ids_preparation(db::fetch_preparation_objects_f &&);
-    db::fetch_preparation_ids_f to_ids_preparation(db::fetch_preparation_object_map_f &&);
-    db::fetch_preparation_ids_f to_ids_preparation(db::fetch_preparation_object_vector_f &&);
+    db::fetch_ids_preparation_f to_ids_preparation(db::fetch_objects_preparation_f &&);
+    db::fetch_ids_preparation_f to_ids_preparation(db::fetch_object_map_preparation_f &&);
+    db::fetch_ids_preparation_f to_ids_preparation(db::fetch_object_vector_preparation_f &&);
 }
 
 // make
