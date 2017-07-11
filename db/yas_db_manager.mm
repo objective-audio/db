@@ -708,7 +708,7 @@ void db::manager::reset(db::cancellation_f cancellation, db::manager::completion
                                                  std::move(impl_completion));
 }
 
-void db::manager::execute(db::cancellation_f cancellation, db::manager::execution_f &&execution) {
+void db::manager::execute(db::cancellation_f cancellation, db::execution_f &&execution) {
     impl_ptr<impl>()->execute(std::move(cancellation), std::move(execution));
 }
 
