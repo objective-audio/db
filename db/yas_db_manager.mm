@@ -572,7 +572,7 @@ void db::manager::setup(db::manager::completion_f completion) {
     this->execute(db::no_cancellation, std::move(execution));
 }
 
-void db::manager::clear(db::manager::cancellation_f cancellation, db::manager::completion_f completion) {
+void db::manager::clear(db::cancellation_f cancellation, db::manager::completion_f completion) {
     auto execution = [completion = std::move(completion), manager = *this](operation const &op) mutable {
         auto &db = manager.database();
         auto const &model = manager.model();
@@ -680,7 +680,7 @@ void db::manager::purge(cancellation_f cancellation, db::manager::completion_f c
     this->execute(std::move(cancellation), std::move(execution));
 }
 
-void db::manager::reset(db::manager::cancellation_f cancellation, db::manager::completion_f completion) {
+void db::manager::reset(db::cancellation_f cancellation, db::manager::completion_f completion) {
     auto preparation = [manager = *this]() {
         return manager.impl_ptr<impl>()->changed_object_ids_for_reset();
     };
@@ -708,11 +708,11 @@ void db::manager::reset(db::manager::cancellation_f cancellation, db::manager::c
                                                  std::move(impl_completion));
 }
 
-void db::manager::execute(db::manager::cancellation_f cancellation, db::manager::execution_f &&execution) {
+void db::manager::execute(db::cancellation_f cancellation, db::manager::execution_f &&execution) {
     impl_ptr<impl>()->execute(std::move(cancellation), std::move(execution));
 }
 
-void db::manager::insert_objects(db::manager::cancellation_f cancellation, db::insert_count_preparation_f preparation,
+void db::manager::insert_objects(db::cancellation_f cancellation, db::insert_count_preparation_f preparation,
                                  db::manager::vector_completion_f completion) {
     // エンティティごとの数を指定してデータベースにオブジェクトを挿入する
     auto impl_preparation = [preparation = std::move(preparation)]() {
@@ -729,7 +729,7 @@ void db::manager::insert_objects(db::manager::cancellation_f cancellation, db::i
     this->insert_objects(std::move(cancellation), std::move(impl_preparation), std::move(completion));
 }
 
-void db::manager::insert_objects(db::manager::cancellation_f cancellation, db::insert_values_preparation_f preparation,
+void db::manager::insert_objects(db::cancellation_f cancellation, db::insert_values_preparation_f preparation,
                                  db::manager::vector_completion_f completion) {
     auto execution = [preparation = std::move(preparation), completion = std::move(completion),
                       manager = *this](operation const &op) mutable {
@@ -803,7 +803,7 @@ void db::manager::insert_objects(db::manager::cancellation_f cancellation, db::i
     this->execute(std::move(cancellation), std::move(execution));
 }
 
-void db::manager::fetch_objects(db::manager::cancellation_f cancellation, db::fetch_option_preparation_f preparation,
+void db::manager::fetch_objects(db::cancellation_f cancellation, db::fetch_option_preparation_f preparation,
                                 db::manager::vector_completion_f completion) {
     auto impl_completion = [completion = std::move(completion), manager = *this](
         db::manager_result_t && state, db::object_data_vector_map_t && fetched_datas) {
@@ -827,8 +827,7 @@ void db::manager::fetch_objects(db::manager::cancellation_f cancellation, db::fe
                                                  std::move(impl_completion));
 }
 
-void db::manager::fetch_const_objects(db::manager::cancellation_f cancellation,
-                                      db::fetch_option_preparation_f preparation,
+void db::manager::fetch_const_objects(db::cancellation_f cancellation, db::fetch_option_preparation_f preparation,
                                       db::manager::const_vector_completion_f completion) {
     auto impl_completion = [completion = std::move(completion), manager = *this](
         db::manager_result_t && state, db::object_data_vector_map_t && fetched_datas) {
@@ -851,7 +850,7 @@ void db::manager::fetch_const_objects(db::manager::cancellation_f cancellation,
                                                  std::move(impl_completion));
 }
 
-void db::manager::fetch_objects(db::manager::cancellation_f cancellation, db::fetch_ids_preparation_f preparation,
+void db::manager::fetch_objects(db::cancellation_f cancellation, db::fetch_ids_preparation_f preparation,
                                 db::manager::map_completion_f completion) {
     auto impl_completion = [completion = std::move(completion), manager = *this](
         db::manager_result_t && state, db::object_data_vector_map_t && fetched_datas) {
@@ -874,7 +873,7 @@ void db::manager::fetch_objects(db::manager::cancellation_f cancellation, db::fe
                                                  std::move(impl_completion));
 }
 
-void db::manager::fetch_const_objects(db::manager::cancellation_f cancellation, db::fetch_ids_preparation_f preparation,
+void db::manager::fetch_const_objects(db::cancellation_f cancellation, db::fetch_ids_preparation_f preparation,
                                       db::manager::const_map_completion_f completion) {
     auto impl_completion = [completion = std::move(completion), manager = *this](
         db::manager_result_t && state, db::object_data_vector_map_t && fetched_datas) {
