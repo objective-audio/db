@@ -367,7 +367,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
     }
 
     // バックグラウンドでデータベースの処理をする
-    void execute(cancellation_f &&cancellation, execution_f &&execution) {
+    void execute(db::cancellation_f &&cancellation, db::execution_f &&execution) {
         auto op_lambda =
             [cancellation = std::move(cancellation), execution = std::move(execution),
              manager = cast<manager>()](operation const &op) mutable {
@@ -384,7 +384,7 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
 
     // バックグラウンドでデータベースからオブジェクトデータを取得する。条件はselect_optionで指定。単独のエンティティのみ
     void execute_fetch_object_datas(
-        cancellation_f &&cancellation, fetch_option_preparation_f &&preparation,
+        db::cancellation_f &&cancellation, db::fetch_option_preparation_f &&preparation,
         std::function<void(db::manager_result_t &&state, db::object_data_vector_map_t &&fetched_datas)> &&completion) {
         auto execution =
             [preparation = std::move(preparation), completion = std::move(completion),
@@ -428,9 +428,9 @@ struct db::manager::impl : public base::impl, public object_observable::impl {
 
     // バックグラウンドでデータベースからオブジェクトデータを取得する。条件はobject_idで指定。単独のエンティティのみ
     void execute_fetch_object_datas(
-        cancellation_f &&cancellation, fetch_ids_preparation_f &&ids_preparation,
+        db::cancellation_f &&cancellation, fetch_ids_preparation_f &&ids_preparation,
         std::function<void(db::manager_result_t &&state, db::object_data_vector_map_t &&fetched_datas)> &&completion) {
-        fetch_option_preparation_f opt_preparation = [ids_preparation = std::move(ids_preparation)]() {
+        db::fetch_option_preparation_f opt_preparation = [ids_preparation = std::move(ids_preparation)]() {
             return db::to_fetch_option(ids_preparation());
         };
 
@@ -623,7 +623,7 @@ void db::manager::clear(db::cancellation_f cancellation, db::completion_f comple
     this->execute(std::move(cancellation), std::move(execution));
 }
 
-void db::manager::purge(cancellation_f cancellation, db::completion_f completion) {
+void db::manager::purge(db::cancellation_f cancellation, db::completion_f completion) {
     auto execution = [completion = std::move(completion), manager = *this](operation const &op) mutable {
         auto &db = manager.database();
         auto const &model = manager.model();
@@ -895,7 +895,7 @@ void db::manager::fetch_const_objects(db::cancellation_f cancellation, db::fetch
                                                  std::move(impl_completion));
 }
 
-void db::manager::save(cancellation_f cancellation, db::map_completion_f completion) {
+void db::manager::save(db::cancellation_f cancellation, db::map_completion_f completion) {
     auto execution = [completion = std::move(completion), manager = *this](operation const &) mutable {
         db::object_data_vector_map_t changed_datas;
         // 変更のあったデータをメインスレッドで取得する
@@ -975,7 +975,7 @@ void db::manager::save(cancellation_f cancellation, db::map_completion_f complet
     this->execute(std::move(cancellation), std::move(execution));
 }
 
-void db::manager::revert(cancellation_f cancellation, db::revert_preparation_f preparation,
+void db::manager::revert(db::cancellation_f cancellation, db::revert_preparation_f preparation,
                          db::vector_completion_f completion) {
     auto execution = [preparation = std::move(preparation), completion = std::move(completion),
                       manager = *this](operation const &) mutable {
