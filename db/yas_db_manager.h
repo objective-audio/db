@@ -64,20 +64,20 @@ namespace db {
         void resume();
         bool is_suspended() const;
 
-        void execute(cancellation_f, execution_f &&);
+        void execute(db::cancellation_f, db::execution_f &&);
 
-        void setup(completion_f);
-        void clear(cancellation_f, completion_f);
-        void purge(cancellation_f, completion_f);
-        void reset(cancellation_f, completion_f);
-        void insert_objects(cancellation_f, insert_count_preparation_f, vector_completion_f);
-        void insert_objects(cancellation_f, insert_values_preparation_f, vector_completion_f);
-        void fetch_objects(cancellation_f, fetch_option_preparation_f, vector_completion_f);
-        void fetch_objects(cancellation_f, fetch_ids_preparation_f, map_completion_f);
-        void fetch_const_objects(cancellation_f, fetch_option_preparation_f, const_vector_completion_f);
-        void fetch_const_objects(cancellation_f, fetch_ids_preparation_f, const_map_completion_f);
-        void save(cancellation_f, map_completion_f);
-        void revert(cancellation_f, revert_preparation_f, vector_completion_f);
+        void setup(db::completion_f);
+        void clear(db::cancellation_f, db::completion_f);
+        void purge(db::cancellation_f, db::completion_f);
+        void reset(db::cancellation_f, db::completion_f);
+        void insert_objects(db::cancellation_f, db::insert_count_preparation_f, db::vector_completion_f);
+        void insert_objects(db::cancellation_f, db::insert_values_preparation_f, db::vector_completion_f);
+        void fetch_objects(db::cancellation_f, db::fetch_option_preparation_f, db::vector_completion_f);
+        void fetch_objects(db::cancellation_f, db::fetch_ids_preparation_f, db::map_completion_f);
+        void fetch_const_objects(db::cancellation_f, db::fetch_option_preparation_f, db::const_vector_completion_f);
+        void fetch_const_objects(db::cancellation_f, db::fetch_ids_preparation_f, db::const_map_completion_f);
+        void save(db::cancellation_f, db::map_completion_f);
+        void revert(db::cancellation_f, db::revert_preparation_f, db::vector_completion_f);
 
         db::object cached_or_created_object(std::string const &entity_name, db::object_id const &object_id) const;
 
