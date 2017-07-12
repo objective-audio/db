@@ -566,7 +566,7 @@ void db::manager::setup(db::completion_f completion) {
             completion(std::move(state));
         };
 
-        dispatch_sync(manager.dispatch_queue(), completion_on_main);
+        dispatch_sync(manager.dispatch_queue(), std::move(completion_on_main));
     };
 
     this->execute(db::no_cancellation, std::move(execution));
@@ -687,7 +687,7 @@ void db::manager::reset(db::cancellation_f cancellation, db::completion_f comple
 
     auto impl_completion = [completion = std::move(completion), manager = *this](
         db::manager_result_t && state, db::object_data_vector_map_t && fetched_datas) {
-        auto lambda = [
+        auto completion_on_main = [
             manager, completion = std::move(completion), state = std::move(state),
             fetched_datas = std::move(fetched_datas)
         ]() mutable {
@@ -701,7 +701,7 @@ void db::manager::reset(db::cancellation_f cancellation, db::completion_f comple
             }
         };
 
-        dispatch_sync(manager.dispatch_queue(), std::move(lambda));
+        dispatch_sync(manager.dispatch_queue(), std::move(completion_on_main));
     };
 
     impl_ptr<impl>()->execute_fetch_object_datas(std::move(cancellation), std::move(preparation),
@@ -735,7 +735,9 @@ void db::manager::insert_objects(db::cancellation_f cancellation, db::insert_val
                       manager = *this](operation const &op) mutable {
         // 挿入するオブジェクトのデータをメインスレッドで準備する
         db::value_map_vector_map_t values;
-        dispatch_sync(manager.dispatch_queue(), [&values, &preparation]() { values = preparation(); });
+
+        auto preparation_on_main = [&values, &preparation]() { values = preparation(); };
+        dispatch_sync(manager.dispatch_queue(), std::move(preparation_on_main));
 
         auto &db = manager.database();
         auto const &model = manager.model();
@@ -785,7 +787,7 @@ void db::manager::insert_objects(db::cancellation_f cancellation, db::insert_val
                                           std::move(begin_result.error()));
         }
 
-        dispatch_sync(manager.dispatch_queue(), [
+        auto completion_on_main = [
             state = std::move(state), inserted_datas = std::move(inserted_datas), manager,
             completion = std::move(completion), db_info = std::move(ret_db_info)
         ]() mutable {
@@ -797,7 +799,9 @@ void db::manager::insert_objects(db::cancellation_f cancellation, db::insert_val
             } else {
                 completion(db::manager_vector_result_t{std::move(state.error())});
             }
-        });
+        };
+
+        dispatch_sync(manager.dispatch_queue(), std::move(completion_on_main));
     };
 
     this->execute(std::move(cancellation), std::move(execution));
@@ -807,7 +811,7 @@ void db::manager::fetch_objects(db::cancellation_f cancellation, db::fetch_optio
                                 db::vector_completion_f completion) {
     auto impl_completion = [completion = std::move(completion), manager = *this](
         db::manager_result_t && state, db::object_data_vector_map_t && fetched_datas) {
-        auto lambda = [
+        auto completion_on_main = [
             state = std::move(state), completion = std::move(completion), fetched_datas = std::move(fetched_datas),
             manager
         ]() mutable {
@@ -820,7 +824,7 @@ void db::manager::fetch_objects(db::cancellation_f cancellation, db::fetch_optio
             }
         };
 
-        dispatch_sync(manager.dispatch_queue(), std::move(lambda));
+        dispatch_sync(manager.dispatch_queue(), std::move(completion_on_main));
     };
 
     impl_ptr<impl>()->execute_fetch_object_datas(std::move(cancellation), std::move(preparation),
@@ -831,7 +835,7 @@ void db::manager::fetch_const_objects(db::cancellation_f cancellation, db::fetch
                                       db::const_vector_completion_f completion) {
     auto impl_completion = [completion = std::move(completion), manager = *this](
         db::manager_result_t && state, db::object_data_vector_map_t && fetched_datas) {
-        auto lambda = [
+        auto completion_on_main = [
             state = std::move(state), completion = std::move(completion), fetched_datas = std::move(fetched_datas),
             manager
         ]() mutable {
@@ -843,7 +847,7 @@ void db::manager::fetch_const_objects(db::cancellation_f cancellation, db::fetch
             }
         };
 
-        dispatch_sync(manager.dispatch_queue(), std::move(lambda));
+        dispatch_sync(manager.dispatch_queue(), std::move(completion_on_main));
     };
 
     impl_ptr<impl>()->execute_fetch_object_datas(std::move(cancellation), std::move(preparation),
@@ -854,7 +858,7 @@ void db::manager::fetch_objects(db::cancellation_f cancellation, db::fetch_ids_p
                                 db::map_completion_f completion) {
     auto impl_completion = [completion = std::move(completion), manager = *this](
         db::manager_result_t && state, db::object_data_vector_map_t && fetched_datas) {
-        auto lambda = [
+        auto completion_on_main = [
             manager, completion = std::move(completion), state = std::move(state),
             fetched_datas = std::move(fetched_datas)
         ]() mutable {
@@ -866,7 +870,7 @@ void db::manager::fetch_objects(db::cancellation_f cancellation, db::fetch_ids_p
             }
         };
 
-        dispatch_sync(manager.dispatch_queue(), std::move(lambda));
+        dispatch_sync(manager.dispatch_queue(), std::move(completion_on_main));
     };
 
     impl_ptr<impl>()->execute_fetch_object_datas(std::move(cancellation), std::move(preparation),
@@ -877,7 +881,7 @@ void db::manager::fetch_const_objects(db::cancellation_f cancellation, db::fetch
                                       db::const_map_completion_f completion) {
     auto impl_completion = [completion = std::move(completion), manager = *this](
         db::manager_result_t && state, db::object_data_vector_map_t && fetched_datas) {
-        auto lambda = [
+        auto completion_on_main = [
             manager, completion = std::move(completion), state = std::move(state),
             fetched_datas = std::move(fetched_datas)
         ]() mutable {
@@ -888,7 +892,7 @@ void db::manager::fetch_const_objects(db::cancellation_f cancellation, db::fetch
             }
         };
 
-        dispatch_sync(manager.dispatch_queue(), std::move(lambda));
+        dispatch_sync(manager.dispatch_queue(), std::move(completion_on_main));
     };
 
     impl_ptr<impl>()->execute_fetch_object_datas(std::move(cancellation), std::move(preparation),
@@ -900,8 +904,11 @@ void db::manager::save(db::cancellation_f cancellation, db::map_completion_f com
         db::object_data_vector_map_t changed_datas;
         // 変更のあったデータをメインスレッドで取得する
         auto manager_impl = manager.impl_ptr<impl>();
-        dispatch_sync(manager.dispatch_queue(),
-                      [&manager_impl, &changed_datas]() { changed_datas = manager_impl->changed_datas_for_save(); });
+
+        auto get_changed_on_main = [&manager_impl, &changed_datas]() {
+            changed_datas = manager_impl->changed_datas_for_save();
+        };
+        dispatch_sync(manager.dispatch_queue(), std::move(get_changed_on_main));
 
         auto &db = manager.database();
         auto const &model = manager.model();
