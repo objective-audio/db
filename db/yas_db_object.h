@@ -77,8 +77,8 @@ namespace db {
             std::experimental::optional<db::object::relation_change_info> const _rel_change_info;
         };
 
-        using subject_t = subject<change_info, method>;
-        using observer_t = observer<change_info, method>;
+        using subject_t = subject<method, change_info>;
+        using observer_t = observer<method, change_info>;
 
         object(db::manager const &manager, db::entity const &entity);
         object(std::nullptr_t);
