@@ -39,8 +39,8 @@ namespace db {
 
         enum class method { object_changed, db_info_changed };
 
-        using subject_t = subject<change_info, method>;
-        using observer_t = observer<change_info, method>;
+        using subject_t = subject<method, change_info>;
+        using observer_t = observer<method, change_info>;
 
         manager(std::string const &db_path, db::model const &model, std::size_t const priority_count = 1,
                 dispatch_queue_t const dispatch_queue = dispatch_get_main_queue());
