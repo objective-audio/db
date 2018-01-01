@@ -18,7 +18,7 @@ namespace db {
     class statement;
     class value;
 
-    struct next_result_code : public result_code {
+    struct next_result_code : result_code {
         next_result_code(int const &value);
 
         explicit operator bool() const;

@@ -22,8 +22,7 @@ namespace db {
 
 #pragma mark - impl
 
-class db::database::impl : public base::impl, public row_set_observable::impl {
-   public:
+struct db::database::impl : base::impl, row_set_observable::impl {
     uint8_t _db_key;
     std::string _database_path;
     sqlite3 *_sqlite_handle = nullptr;

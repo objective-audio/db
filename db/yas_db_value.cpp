@@ -58,12 +58,12 @@ std::size_t db::blob::size() const {
 
 #pragma mark - value::impl
 
-struct db::value::impl_base : public base::impl {
+struct db::value::impl_base : base::impl {
     virtual std::type_info const &type() const = 0;
 };
 
 template <typename T>
-struct db::value::impl : public impl_base {
+struct db::value::impl : impl_base {
     typename T::type _value;
 
     impl(typename T::type const &val) : _value(val) {

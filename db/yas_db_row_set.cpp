@@ -24,8 +24,7 @@ db::next_result_code::operator bool() const {
 
 #pragma mark - impl
 
-class db::row_set::impl : public base::impl, public closable::impl, public db_settable::impl {
-   public:
+struct db::row_set::impl : base::impl, closable::impl, db_settable::impl {
     impl(db::statement const &statement, database const &database) : _statement(statement), _database(database) {
         this->_statement.set_in_use(true);
     }
