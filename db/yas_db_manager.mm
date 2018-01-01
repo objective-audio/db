@@ -37,7 +37,7 @@ db::manager::change_info::change_info(db::object const &object) : object(object)
 
 #pragma mark - impl
 
-struct db::manager::impl : public base::impl, public object_observable::impl {
+struct db::manager::impl : base::impl, public object_observable::impl {
     db::database _database;
     db::model _model;
     operation_queue _op_queue;

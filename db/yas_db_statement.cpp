@@ -8,8 +8,7 @@ using namespace yas;
 
 #pragma mark - statement::impl
 
-class db::statement::impl : public base::impl, public closable::impl {
-   public:
+struct db::statement::impl : base::impl, closable::impl {
     ~impl() {
         this->close();
     }

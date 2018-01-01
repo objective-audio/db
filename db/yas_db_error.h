@@ -9,7 +9,7 @@
 
 namespace yas {
 namespace db {
-    struct sqlite_result_code : public result_code {
+    struct sqlite_result_code : result_code {
         sqlite_result_code(int const &code = SQLITE_OK);
 
         explicit operator bool() const;

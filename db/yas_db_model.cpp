@@ -26,7 +26,7 @@ namespace db {
 }
 }
 
-struct db::model::impl : public base::impl {
+struct db::model::impl : base::impl {
     yas::version _version;
     db::entity_map_t _entities;
     db::index_map_t _indices;

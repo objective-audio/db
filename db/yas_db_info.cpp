@@ -8,7 +8,7 @@
 
 using namespace yas;
 
-struct db::info::impl : public base::impl {
+struct db::info::impl : base::impl {
     yas::version _version;
     db::value _current_save_id;
     db::value _last_save_id;

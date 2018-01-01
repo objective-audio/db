@@ -28,8 +28,8 @@ namespace sample {
             change_info(db::object object, db::value value);
         };
 
-        using subject_t = subject<change_info, method>;
-        using observer_t = observer<change_info, method>;
+        using subject_t = subject<method, change_info>;
+        using observer_t = subject_t::observer_t;
 
         db_controller();
 

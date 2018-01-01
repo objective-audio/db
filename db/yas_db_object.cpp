@@ -19,7 +19,7 @@ using namespace yas;
 
 #pragma mark - db::const_object::impl
 
-struct db::const_object::impl : public base::impl {
+struct db::const_object::impl : base::impl {
     db::entity _entity;
     db::value_map_t _attributes;
     db::id_vector_map_t _relations;
@@ -254,7 +254,7 @@ bool db::const_object::is_removed() const {
 
 #pragma mark - db::object::impl
 
-struct db::object::impl : public const_object::impl, public manageable_object::impl {
+struct db::object::impl : const_object::impl, manageable_object::impl {
     enum db::object_status _status = db::object_status::invalid;
     db::manager _manager;
     db::object::subject_t _subject;
