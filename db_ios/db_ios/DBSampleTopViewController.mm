@@ -13,44 +13,44 @@
 using namespace yas;
 using namespace yas::sample;
 
-namespace yas {
-namespace sample {
-    enum class top_section : std::size_t {
-        actions,
-        infos,
-        objects_a,
-        objects_b,
+namespace yas::sample {
+enum class top_section : std::size_t {
+    actions,
+    infos,
+    objects_a,
+    objects_b,
 
-        last = objects_b,
-    };
+    last = objects_b,
+};
 
-    enum class top_action_row : std::size_t {
-        create_a,
-        create_b,
-        insert_a,
-        insert_b,
-        undo,
-        redo,
-        clear,
-        purge,
-        save_changed,
-        cancel_changed,
+enum class top_action_row : std::size_t {
+    create_a,
+    create_b,
+    insert_a,
+    insert_b,
+    undo,
+    redo,
+    clear,
+    purge,
+    save_changed,
+    cancel_changed,
 
-        last = cancel_changed,
-    };
+    last = cancel_changed,
+};
 
-    enum class top_info_row : std::size_t {
-        save_id,
-        object_count,
+enum class top_info_row : std::size_t {
+    save_id,
+    object_count,
 
-        last = object_count,
-    };
+    last = object_count,
+};
 
-    using top_section_type_t = std::underlying_type_t<top_section>;
-    using top_action_row_type_t = std::underlying_type_t<top_action_row>;
-    using top_info_row_type_t = std::underlying_type_t<top_info_row>;
+using top_section_type_t = std::underlying_type_t<top_section>;
+using top_action_row_type_t = std::underlying_type_t<top_action_row>;
+using top_info_row_type_t = std::underlying_type_t<top_info_row>;
 }
 
+namespace yas {
 top_section_type_t to_idx(sample::top_section const &section) {
     return sample::top_section_type_t(section);
 }

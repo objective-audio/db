@@ -10,10 +10,8 @@
 using namespace yas;
 using namespace yas::sample;
 
-namespace yas {
-namespace sample {
-    static NSString *const selection_normal_cell_id = @"NormalCell";
-}
+namespace yas::sample {
+static NSString *const selection_normal_cell_id = @"NormalCell";
 }
 
 @implementation DBSampleObjectSelectionViewController {

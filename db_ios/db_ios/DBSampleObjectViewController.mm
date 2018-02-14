@@ -15,30 +15,30 @@
 using namespace yas;
 using namespace yas::sample;
 
-namespace yas {
-namespace sample {
-    enum class object_section : std::size_t {
-        info,
-        attributes,
-        relations,
+namespace yas::sample {
+enum class object_section : std::size_t {
+    info,
+    attributes,
+    relations,
 
-        last = relations,
-    };
+    last = relations,
+};
 
-    enum class object_info_row : std::size_t {
-        object_id,
+enum class object_info_row : std::size_t {
+    object_id,
 
-        last = object_id,
-    };
+    last = object_id,
+};
 
-    using object_section_type_t = std::underlying_type_t<object_section>;
-    using object_info_row_type_t = std::underlying_type_t<object_info_row>;
+using object_section_type_t = std::underlying_type_t<object_section>;
+using object_info_row_type_t = std::underlying_type_t<object_info_row>;
 
-    static NSString *const object_normal_cell_id = @"NormalCell";
-    static NSString *const object_text_field_cell_id = @"TextFieldCell";
-    static NSString *const object_relation_cell_id = @"RelationCell";
+static NSString *const object_normal_cell_id = @"NormalCell";
+static NSString *const object_text_field_cell_id = @"TextFieldCell";
+static NSString *const object_relation_cell_id = @"RelationCell";
 }
 
+namespace yas {
 sample::object_section_type_t to_idx(object_section const &section) {
     return object_section_type_t(section);
 }
@@ -150,13 +150,13 @@ sample::object_info_row_type_t to_idx(object_info_row const &row) {
                     auto const &attribute = _attributes.at(indexPath.row);
                     auto const &attr_name = attribute.name;
                     if (attribute.type == db::integer::name) {
-                        [textFieldCell
-                            setupWithTitle:attr_name
-                                      text:to_string(self.db_object.attribute_value(attr_name))
-                                   handler:[unowned, attr_name](std::string const &text) {
-                                       auto &obj = [unowned.object().object db_object];
-                                       obj.set_attribute_value(attr_name, db::value{to_integer<db::integer::type>(text)});
-                                   }];
+                        [textFieldCell setupWithTitle:attr_name
+                                                 text:to_string(self.db_object.attribute_value(attr_name))
+                                              handler:[unowned, attr_name](std::string const &text) {
+                                                  auto &obj = [unowned.object().object db_object];
+                                                  obj.set_attribute_value(
+                                                      attr_name, db::value{to_integer<db::integer::type>(text)});
+                                              }];
                     } else if (attribute.type == db::text::name) {
                         [textFieldCell setupWithTitle:attr_name
                                                  text:to_string(self.db_object.attribute_value(attr_name))

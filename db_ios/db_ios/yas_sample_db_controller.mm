@@ -11,11 +11,9 @@
 using namespace yas;
 using namespace yas::sample;
 
-namespace yas {
-namespace sample {
-    std::string const entity_name_a = "entity_a";
-    std::string const entity_name_b = "entity_b";
-}
+namespace yas::sample {
+std::string const entity_name_a = "entity_a";
+std::string const entity_name_b = "entity_b";
 }
 
 #pragma mark - change_info
