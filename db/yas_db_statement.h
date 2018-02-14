@@ -10,39 +10,37 @@
 #include "yas_base.h"
 #include "yas_db_protocol.h"
 
-namespace yas {
-namespace db {
-    class statement : public base {
-        class impl;
+namespace yas::db {
+class statement : public base {
+    class impl;
 
-       public:
-        statement();
-        statement(std::nullptr_t);
+   public:
+    statement();
+    statement(std::nullptr_t);
 
-        ~statement();
+    ~statement();
 
-        statement(statement const &) = default;
-        statement(statement &&) = default;
-        statement &operator=(statement const &) = default;
-        statement &operator=(statement &&) = default;
+    statement(statement const &) = default;
+    statement(statement &&) = default;
+    statement &operator=(statement const &) = default;
+    statement &operator=(statement &&) = default;
 
-        void set_stmt(sqlite3_stmt *const);
-        sqlite3_stmt *stmt() const;
+    void set_stmt(sqlite3_stmt *const);
+    sqlite3_stmt *stmt() const;
 
-        void set_query(std::string);
-        std::string const &query() const;
+    void set_query(std::string);
+    std::string const &query() const;
 
-        void set_in_use(bool const);
-        bool in_use() const;
+    void set_in_use(bool const);
+    bool in_use() const;
 
-        void reset();
+    void reset();
 
-        db::closable &closable();
+    db::closable &closable();
 
-       private:
-        db::closable _closable = nullptr;
-    };
-}
+   private:
+    db::closable _closable = nullptr;
+};
 }
 
 template <>

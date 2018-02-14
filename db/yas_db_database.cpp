@@ -14,10 +14,8 @@
 
 using namespace yas;
 
-namespace yas {
-namespace db {
+namespace yas::db {
     static std::map<uint8_t, weak<database>> _databases;
-}
 }
 
 #pragma mark - impl
