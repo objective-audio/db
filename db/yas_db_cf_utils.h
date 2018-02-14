@@ -7,10 +7,11 @@
 #include <CoreFoundation/CoreFoundation.h>
 #include <string>
 
-namespace yas {
-namespace db {
-    class value;
+namespace yas::db {
+class value;
 }
+
+namespace yas {
 db::value to_value(CFTypeRef const &cf_obj);
 
 template <typename T>

@@ -12,13 +12,12 @@
 
 using namespace yas;
 
-namespace yas {
-namespace db {
-    static std::string const target_key = "target";
-    static std::string const many_key = "many";
-}
+namespace yas::db {
+static std::string const target_key = "target";
+static std::string const many_key = "many";
 }
 
+namespace yas {
 db::relation::relation(std::string const &src_entity_name, std::string const &attr_name, CFDictionaryRef const &dict)
     : source_entity_name(src_entity_name),
       name(attr_name),
@@ -42,4 +41,5 @@ std::string db::relation::sql_for_create() const {
 std::string db::relation::sql_for_insert() const {
     return db::insert_sql(this->table_name,
                           {db::src_pk_id_field, db::src_obj_id_field, db::tgt_obj_id_field, db::save_id_field});
+}
 }

@@ -11,12 +11,10 @@
 
 using namespace yas;
 
-namespace yas {
-namespace db {
-    static std::string const type_key = "type";
-    static std::string const default_key = "default";
-    static std::string const not_null_key = "not_null";
-}
+namespace yas::db {
+static std::string const type_key = "type";
+static std::string const default_key = "default";
+static std::string const not_null_key = "not_null";
 }
 
 db::attribute::attribute(args args)

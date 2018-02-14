@@ -7,40 +7,38 @@
 #include <string>
 #include "yas_db_value.h"
 
-namespace yas {
-namespace db {
-    enum class order {
-        ascending,
-        descending,
-    };
+namespace yas::db {
+enum class order {
+    ascending,
+    descending,
+};
 
-    struct field_order {
-        std::string field = "";
-        db::order order = db::order::ascending;
+struct field_order {
+    std::string field = "";
+    db::order order = db::order::ascending;
 
-        std::string sql() const;
-    };
+    std::string sql() const;
+};
 
-    struct range {
-        uint64_t location = 0;
-        uint64_t length = 0;
+struct range {
+    uint64_t location = 0;
+    uint64_t length = 0;
 
-        bool is_empty() const;
+    bool is_empty() const;
 
-        std::string sql() const;
-    };
+    std::string sql() const;
+};
 
-    db::range const &empty_range();
+db::range const &empty_range();
 
-    struct select_option {
-        std::string table = "";
-        std::vector<std::string> fields = {"*"};
-        std::string where_exprs = "";
-        db::value_map_t arguments = {};
-        std::vector<db::field_order> field_orders = {};
-        db::range limit_range = db::empty_range();
-        std::string group_by = "";
-        bool distinct = false;
-    };
-}
+struct select_option {
+    std::string table = "";
+    std::vector<std::string> fields = {"*"};
+    std::string where_exprs = "";
+    db::value_map_t arguments = {};
+    std::vector<db::field_order> field_orders = {};
+    db::range limit_range = db::empty_range();
+    std::string group_by = "";
+    bool distinct = false;
+};
 }
