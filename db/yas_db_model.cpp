@@ -16,14 +16,12 @@
 
 using namespace yas;
 
-namespace yas {
-namespace db {
-    static std::string const version_key = "version";
-    static std::string const entities_key = "entities";
-    static std::string const indices_key = "indices";
-    static std::string const attributes_key = "attributes";
-    static std::string const relations_key = "relations";
-}
+namespace yas::db {
+static std::string const version_key = "version";
+static std::string const entities_key = "entities";
+static std::string const indices_key = "indices";
+static std::string const attributes_key = "attributes";
+static std::string const relations_key = "relations";
 }
 
 struct db::model::impl : base::impl {

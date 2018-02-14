@@ -6,39 +6,40 @@
 
 #include "yas_db_value.h"
 
-namespace yas {
-namespace db {
-    class value;
+namespace yas::db {
+class value;
 
-    class object_id : public base {
-        class impl;
+class object_id : public base {
+    class impl;
 
-       public:
-        object_id(db::value stable, db::value temporary);
-        object_id(std::nullptr_t);
+   public:
+    object_id(db::value stable, db::value temporary);
+    object_id(std::nullptr_t);
 
-        void set_stable(db::integer::type const);
-        void set_stable(db::value);
+    void set_stable(db::integer::type const);
+    void set_stable(db::value);
 
-        db::value const &stable_value() const;
-        db::value const &temporary_value() const;
-        db::integer::type const &stable() const;
-        std::string const &temporary() const;
+    db::value const &stable_value() const;
+    db::value const &temporary_value() const;
+    db::integer::type const &stable() const;
+    std::string const &temporary() const;
 
-        bool is_stable() const;
-        bool is_temporary() const;
+    bool is_stable() const;
+    bool is_temporary() const;
 
-        db::object_id copy() const;
+    db::object_id copy() const;
 
-        std::size_t hash() const;
-    };
+    std::size_t hash() const;
+};
 
-    db::object_id make_stable_id(db::value);
-    db::object_id make_stable_id(db::integer::type const);
-    db::object_id make_temporary_id();
+db::object_id make_stable_id(db::value);
+db::object_id make_stable_id(db::integer::type const);
+db::object_id make_temporary_id();
 
-    db::object_id const &null_id();
+db::object_id const &null_id();
 }
+
+namespace yas {
 std::string to_string(db::object_id const &);
 }
 

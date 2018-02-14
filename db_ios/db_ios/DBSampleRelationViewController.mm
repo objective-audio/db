@@ -13,28 +13,28 @@
 using namespace yas;
 using namespace yas::sample;
 
-namespace yas {
-namespace sample {
-    enum class rel_section : std::size_t {
-        control,
-        objects,
+namespace yas::sample {
+enum class rel_section : std::size_t {
+    control,
+    objects,
 
-        last = objects,
-    };
+    last = objects,
+};
 
-    enum class rel_control_row : std::size_t {
-        add,
+enum class rel_control_row : std::size_t {
+    add,
 
-        last = add,
-    };
+    last = add,
+};
 
-    using rel_section_type_t = std::underlying_type<rel_section>::type;
-    using rel_control_row_type_t = std::underlying_type<rel_control_row>::type;
+using rel_section_type_t = std::underlying_type<rel_section>::type;
+using rel_control_row_type_t = std::underlying_type<rel_control_row>::type;
 
-    static NSString *const rel_normal_cell_id = @"NormalCell";
-    static NSString *const rel_control_cell_id = @"ControlCell";
+static NSString *const rel_normal_cell_id = @"NormalCell";
+static NSString *const rel_control_cell_id = @"ControlCell";
 }
 
+namespace yas {
 rel_section_type_t to_idx(rel_section const &section) {
     return rel_section_type_t(section);
 }

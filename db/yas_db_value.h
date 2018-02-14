@@ -11,108 +11,108 @@
 #include "yas_db_types.h"
 #include "yas_db_protocol.h"
 
-namespace yas {
-namespace db {
-    struct copy_tag_t {};
-    struct no_copy_tag_t {};
-    constexpr static copy_tag_t copy_tag{};
-    constexpr static no_copy_tag_t no_copy_tag{};
+namespace yas::db {
+struct copy_tag_t {};
+struct no_copy_tag_t {};
+constexpr static copy_tag_t copy_tag{};
+constexpr static no_copy_tag_t no_copy_tag{};
 
-    struct integer {
-        using type = sqlite3_int64;
-        static constexpr auto name = "INTEGER";
-    };
+struct integer {
+    using type = sqlite3_int64;
+    static constexpr auto name = "INTEGER";
+};
 
-    struct real {
-        using type = double;
-        static constexpr auto name = "REAL";
-    };
+struct real {
+    using type = double;
+    static constexpr auto name = "REAL";
+};
 
-    struct text {
-        using type = std::string;
-        static constexpr auto name = "TEXT";
-    };
+struct text {
+    using type = std::string;
+    static constexpr auto name = "TEXT";
+};
 
-    struct blob {
-        using type = blob;
-        static constexpr auto name = "BLOB";
+struct blob {
+    using type = blob;
+    static constexpr auto name = "BLOB";
 
-        blob();
+    blob();
 
-        template <typename T = copy_tag_t>
-        blob(const void *const data, std::size_t const size, T const tag = copy_tag);
+    template <typename T = copy_tag_t>
+    blob(const void *const data, std::size_t const size, T const tag = copy_tag);
 
-        blob(blob &&) = default;
-        blob &operator=(blob &&) = default;
+    blob(blob &&) = default;
+    blob &operator=(blob &&) = default;
 
-        bool operator==(blob const &) const;
-        bool operator!=(blob const &) const;
+    bool operator==(blob const &) const;
+    bool operator!=(blob const &) const;
 
-        const void *data() const;
-        std::size_t size() const;
+    const void *data() const;
+    std::size_t size() const;
 
-       private:
-        std::vector<uint8_t> _vector;
-        const void *_data;
-        std::size_t _size;
+   private:
+    std::vector<uint8_t> _vector;
+    const void *_data;
+    std::size_t _size;
 
-        blob(const blob &) = delete;
-        blob &operator=(const blob &) = delete;
-    };
+    blob(const blob &) = delete;
+    blob &operator=(const blob &) = delete;
+};
 
-    struct null {
-        using type = std::nullptr_t;
-        static constexpr auto name = "NULL";
-    };
+struct null {
+    using type = std::nullptr_t;
+    static constexpr auto name = "NULL";
+};
 
-    class value : public base {
-        template <typename T>
-        class impl;
+class value : public base {
+    template <typename T>
+    class impl;
 
-       public:
-        class impl_base;
+   public:
+    class impl_base;
 
-        explicit value(uint8_t const &);
-        explicit value(int8_t const &);
-        explicit value(uint16_t const &);
-        explicit value(int16_t const &);
-        explicit value(uint32_t const &);
-        explicit value(int32_t const &);
-        explicit value(uint64_t const &);
-        explicit value(int64_t const &);
-        explicit value(float const &);
-        explicit value(double const &);
-        explicit value(std::string const &);
-        explicit value(std::string &&);
-        explicit value(blob::type &&);
-        value(null::type);
+    explicit value(uint8_t const &);
+    explicit value(int8_t const &);
+    explicit value(uint16_t const &);
+    explicit value(int16_t const &);
+    explicit value(uint32_t const &);
+    explicit value(int32_t const &);
+    explicit value(uint64_t const &);
+    explicit value(int64_t const &);
+    explicit value(float const &);
+    explicit value(double const &);
+    explicit value(std::string const &);
+    explicit value(std::string &&);
+    explicit value(blob::type &&);
+    value(null::type);
 
-        template <typename T = db::copy_tag_t>
-        value(const void *const data, std::size_t const size, T const tag = db::copy_tag);
+    template <typename T = db::copy_tag_t>
+    value(const void *const data, std::size_t const size, T const tag = db::copy_tag);
 
-        value(value const &);
-        value(value &&);
-        value &operator=(value const &);
-        value &operator=(value &&);
+    value(value const &);
+    value(value &&);
+    value &operator=(value const &);
+    value &operator=(value &&);
 
-        ~value();
+    ~value();
 
-        explicit operator bool() const;
+    explicit operator bool() const;
 
-        std::type_info const &type() const;
+    std::type_info const &type() const;
 
-        template <typename T>
-        typename T::type const &get() const;
+    template <typename T>
+    typename T::type const &get() const;
 
-        std::string sql() const;
+    std::string sql() const;
 
-       private:
-        static std::shared_ptr<db::value::impl<null>> const &null_value_impl_ptr();
-    };
+   private:
+    static std::shared_ptr<db::value::impl<null>> const &null_value_impl_ptr();
+};
 
-    db::value const &null_value();
+db::value const &null_value();
 }
 
+namespace yas {
 std::string to_string(db::value const &);
 std::string to_string(db::value_vector_t const &);
 std::string to_string(db::value_map_t const &);

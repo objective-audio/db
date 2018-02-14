@@ -6,19 +6,19 @@
 
 #include <string>
 
-namespace yas {
-namespace db {
-    class result_code {
-       public:
-        explicit result_code(int const &);
-        ~result_code();
+namespace yas::db {
+class result_code {
+   public:
+    explicit result_code(int const &);
+    ~result_code();
 
-        int raw_value() const;
+    int raw_value() const;
 
-       private:
-        int _raw_value;
-    };
+   private:
+    int _raw_value;
+};
 }
 
+namespace yas {
 std::string to_string(db::result_code const &);
 }

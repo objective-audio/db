@@ -8,21 +8,19 @@
 #include <unordered_map>
 #include "yas_db_additional_protocol.h"
 
-namespace yas {
-namespace db {
-    struct entity {
-        std::string const name;
-        db::attribute_map_t const all_attributes;
-        db::attribute_map_t const custom_attributes;
-        db::relation_map_t const relations;
-        db::string_set_map_t const inverse_relation_names;
+namespace yas::db {
+struct entity {
+    std::string const name;
+    db::attribute_map_t const all_attributes;
+    db::attribute_map_t const custom_attributes;
+    db::relation_map_t const relations;
+    db::string_set_map_t const inverse_relation_names;
 
-        entity(std::string const &name, db::attribute_map_t &&attributes, db::relation_map_t &&relations,
-               db::string_set_map_t &&inv_rel_names);
+    entity(std::string const &name, db::attribute_map_t &&attributes, db::relation_map_t &&relations,
+           db::string_set_map_t &&inv_rel_names);
 
-        std::string sql_for_create() const;
-        std::string sql_for_update() const;
-        std::string sql_for_insert() const;
-    };
-}
+    std::string sql_for_create() const;
+    std::string sql_for_update() const;
+    std::string sql_for_insert() const;
+};
 }
