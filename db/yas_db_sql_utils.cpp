@@ -8,10 +8,8 @@
 
 using namespace yas;
 
-namespace yas {
-namespace db {
-    static std::string const field_separator = ", ";
-}
+namespace yas::db {
+static std::string const field_separator = ", ";
 }
 
 std::string yas::db::create_table_sql(std::string const &table, std::vector<std::string> const &fields) {
@@ -138,7 +136,7 @@ std::string yas::db::select_sql(std::string const &table_name, std::vector<std::
     if (!limit_range.is_empty()) {
         stream << " LIMIT " << limit_range.sql();
     }
-    
+
     if (group_by.size() > 0) {
         stream << " GROUP BY " << group_by;
     }
