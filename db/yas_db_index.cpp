@@ -9,11 +9,9 @@
 
 using namespace yas;
 
-namespace yas {
-namespace db {
-    static std::string const entity_key = "entity";
-    static std::string const attributes_key = "attributes";
-}
+namespace yas::db {
+static std::string const entity_key = "entity";
+static std::string const attributes_key = "attributes";
 }
 
 db::index::index(std::string const &name, std::string const &table_name, std::vector<std::string> const &attr_names)

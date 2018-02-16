@@ -23,92 +23,90 @@
 
 using namespace yas;
 
-namespace yas {
-namespace db {
-    // 指定したsave_id以前で、object_idが同じなら最後のものをselectする条件
-    std::string last_where_exprs(std::string const &table, std::string const &where_exprs,
-                                 db::value const &last_save_id, bool const include_removed) {
-        std::vector<std::string> components;
+namespace yas::db {
+// 指定したsave_id以前で、object_idが同じなら最後のものをselectする条件
+std::string last_where_exprs(std::string const &table, std::string const &where_exprs, db::value const &last_save_id,
+                             bool const include_removed) {
+    std::vector<std::string> components;
 
-        if (last_save_id) {
-            components.emplace_back(db::expr(db::save_id_field, "<=", last_save_id.sql()));
-        }
-
-        if (where_exprs.size() > 0) {
-            components.push_back(where_exprs);
-        }
-
-        db::select_option option{.table = table,
-                                 .fields = {"MAX(" + db::rowid_field + ")"},
-                                 .where_exprs = joined(components, " AND "),
-                                 .group_by = db::object_id_field};
-        std::string result_exprs = db::in_expr(db::rowid_field, option);
-
-        if (!include_removed) {
-            static std::string const exclude_removed_expr = db::action_field + " != '" + db::remove_action + "'";
-            result_exprs = joined({result_exprs, exclude_removed_expr}, " AND ");
-        }
-
-        return result_exprs;
+    if (last_save_id) {
+        components.emplace_back(db::expr(db::save_id_field, "<=", last_save_id.sql()));
     }
 
-    // 単独の関連の関連先のidの配列をDBから取得する
-    db::value_vector_result_t select_relation_target_ids(db::database &db, std::string const &rel_table,
-                                                         db::value const &save_id, db::value const &src_obj_id) {
-        std::string where_exprs =
-            joined({db::equal_field_expr(db::save_id_field), db::equal_field_expr(db::src_obj_id_field)}, " and ");
-        db::select_option option{.table = rel_table,
-                                 .where_exprs = std::move(where_exprs),
-                                 .arguments = {{db::save_id_field, save_id}, {db::src_obj_id_field, src_obj_id}}};
+    if (where_exprs.size() > 0) {
+        components.push_back(where_exprs);
+    }
 
-        if (db::select_result_t select_result = db::select(db, option)) {
-            auto const &result_rels = select_result.value();
-            db::value_vector_t rel_tgts;
-            rel_tgts.reserve(result_rels.size());
-            for (auto const &result_rel : result_rels) {
-                rel_tgts.push_back(result_rel.at(db::tgt_obj_id_field));
-            }
-            return db::value_vector_result_t{std::move(rel_tgts)};
+    db::select_option option{.table = table,
+                             .fields = {"MAX(" + db::rowid_field + ")"},
+                             .where_exprs = joined(components, " AND "),
+                             .group_by = db::object_id_field};
+    std::string result_exprs = db::in_expr(db::rowid_field, option);
+
+    if (!include_removed) {
+        static std::string const exclude_removed_expr = db::action_field + " != '" + db::remove_action + "'";
+        result_exprs = joined({result_exprs, exclude_removed_expr}, " AND ");
+    }
+
+    return result_exprs;
+}
+
+// 単独の関連の関連先のidの配列をDBから取得する
+db::value_vector_result_t select_relation_target_ids(db::database &db, std::string const &rel_table,
+                                                     db::value const &save_id, db::value const &src_obj_id) {
+    std::string where_exprs =
+        joined({db::equal_field_expr(db::save_id_field), db::equal_field_expr(db::src_obj_id_field)}, " and ");
+    db::select_option option{.table = rel_table,
+                             .where_exprs = std::move(where_exprs),
+                             .arguments = {{db::save_id_field, save_id}, {db::src_obj_id_field, src_obj_id}}};
+
+    if (db::select_result_t select_result = db::select(db, option)) {
+        auto const &result_rels = select_result.value();
+        db::value_vector_t rel_tgts;
+        rel_tgts.reserve(result_rels.size());
+        for (auto const &result_rel : result_rels) {
+            rel_tgts.push_back(result_rel.at(db::tgt_obj_id_field));
+        }
+        return db::value_vector_result_t{std::move(rel_tgts)};
+    } else {
+        return db::value_vector_result_t{std::move(select_result.error())};
+    }
+}
+
+// 単独のオブジェクトの全ての関連の関連先のidの配列をDBから取得する
+db::value_vector_map_result_t select_relation_data(db::database &db, db::relation_map_t const &rel_models,
+                                                   db::value const &save_id, db::value const &src_obj_id) {
+    db::value_vector_map_t relations;
+
+    for (auto const &rel_model_pair : rel_models) {
+        std::string const &rel_name = rel_model_pair.first;
+        std::string const &rel_table = rel_model_pair.second.table_name;
+
+        if (db::value_vector_result_t result = db::select_relation_target_ids(db, rel_table, save_id, src_obj_id)) {
+            relations.emplace(rel_name, std::move(result.value()));
         } else {
-            return db::value_vector_result_t{std::move(select_result.error())};
+            return db::value_vector_map_result_t{std::move(result.error())};
         }
     }
 
-    // 単独のオブジェクトの全ての関連の関連先のidの配列をDBから取得する
-    db::value_vector_map_result_t select_relation_data(db::database &db, db::relation_map_t const &rel_models,
-                                                       db::value const &save_id, db::value const &src_obj_id) {
-        db::value_vector_map_t relations;
+    return db::value_vector_map_result_t{std::move(relations)};
+}
 
-        for (auto const &rel_model_pair : rel_models) {
-            std::string const &rel_name = rel_model_pair.first;
-            std::string const &rel_table = rel_model_pair.second.table_name;
-
-            if (db::value_vector_result_t result = db::select_relation_target_ids(db, rel_table, save_id, src_obj_id)) {
-                relations.emplace(rel_name, std::move(result.value()));
-            } else {
-                return db::value_vector_map_result_t{std::move(result.error())};
-            }
+static void get_relation_ids(db::integer_set_map_t &out_ids, db::object const &object) {
+    for (auto const &rel_pair : object.entity().relations) {
+        db::relation const &rel = rel_pair.second;
+        std::string const &entity_name = rel.target_entity_name;
+        auto const &rel_ids = object.relation_ids(rel_pair.first);
+        if (rel_ids.size() == 0) {
+            continue;
         }
-
-        return db::value_vector_map_result_t{std::move(relations)};
-    }
-
-    static void get_relation_ids(db::integer_set_map_t &out_ids, db::object const &object) {
-        for (auto const &rel_pair : object.entity().relations) {
-            db::relation const &rel = rel_pair.second;
-            std::string const &entity_name = rel.target_entity_name;
-            auto const &rel_ids = object.relation_ids(rel_pair.first);
-            if (rel_ids.size() == 0) {
-                continue;
-            }
-            if (out_ids.count(entity_name) == 0) {
-                out_ids.emplace(entity_name, db::integer_set_t{});
-            }
-            auto &result_entity_ids = out_ids.at(entity_name);
-            for (db::object_id const &rel_id : rel_ids) {
-                if (rel_id.is_stable()) {
-                    result_entity_ids.emplace(rel_id.stable());
-                }
+        if (out_ids.count(entity_name) == 0) {
+            out_ids.emplace(entity_name, db::integer_set_t{});
+        }
+        auto &result_entity_ids = out_ids.at(entity_name);
+        for (db::object_id const &rel_id : rel_ids) {
+            if (rel_id.is_stable()) {
+                result_entity_ids.emplace(rel_id.stable());
             }
         }
     }

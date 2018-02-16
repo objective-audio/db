@@ -7,18 +7,16 @@
 
 using namespace yas;
 
-namespace yas {
-namespace db {
-    static void validate_temporary(db::value const &value) {
-        if (value && value.type() != typeid(db::text)) {
-            throw std::runtime_error("temporary value is not db::text type.");
-        }
+namespace yas::db {
+static void validate_temporary(db::value const &value) {
+    if (value && value.type() != typeid(db::text)) {
+        throw std::runtime_error("temporary value is not db::text type.");
     }
+}
 
-    static void validate_stable(db::value const &value) {
-        if (value && value.type() != typeid(db::integer)) {
-            throw std::runtime_error("stable value is not db::integer type");
-        }
+static void validate_stable(db::value const &value) {
+    if (value && value.type() != typeid(db::integer)) {
+        throw std::runtime_error("stable value is not db::integer type");
     }
 }
 }

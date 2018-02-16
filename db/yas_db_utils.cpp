@@ -57,11 +57,9 @@ db::update_result_t db::rollback(db::database &db) {
 
 #if SQLITE_VERSION_NUMBER >= 3007000
 
-namespace yas {
-namespace db {
-    static std::string escape_save_point_name(std::string const &name) {
-        return replaced(name, "'", "''");
-    }
+namespace yas::db {
+static std::string escape_save_point_name(std::string const &name) {
+    return replaced(name, "'", "''");
 }
 }
 
