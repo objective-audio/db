@@ -15,8 +15,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "B6E0F1561C1D66A80033AC60"
-               BuildableName = "db_mac_tests.xctest"
-               BlueprintName = "db_mac_tests"
+               BuildableName = "db_mac_arc_tests.xctest"
+               BlueprintName = "db_mac_arc_tests"
                ReferencedContainer = "container:db_test.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -35,8 +35,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "B6E0F1561C1D66A80033AC60"
-               BuildableName = "db_mac_tests.xctest"
-               BlueprintName = "db_mac_tests"
+               BuildableName = "db_mac_arc_tests.xctest"
+               BlueprintName = "db_mac_arc_tests"
                ReferencedContainer = "container:db_test.xcodeproj">
             </BuildableReference>
          </TestableReference>
@@ -45,8 +45,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "B6E0F1561C1D66A80033AC60"
-            BuildableName = "db_mac_tests.xctest"
-            BlueprintName = "db_mac_tests"
+            BuildableName = "db_mac_arc_tests.xctest"
+            BlueprintName = "db_mac_arc_tests"
             ReferencedContainer = "container:db_test.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -68,8 +68,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "B6E0F1561C1D66A80033AC60"
-            BuildableName = "db_mac_tests.xctest"
-            BlueprintName = "db_mac_tests"
+            BuildableName = "db_mac_arc_tests.xctest"
+            BlueprintName = "db_mac_arc_tests"
             ReferencedContainer = "container:db_test.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -86,8 +86,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "B6E0F1561C1D66A80033AC60"
-            BuildableName = "db_mac_tests.xctest"
-            BlueprintName = "db_mac_tests"
+            BuildableName = "db_mac_arc_tests.xctest"
+            BlueprintName = "db_mac_arc_tests"
             ReferencedContainer = "container:db_test.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
