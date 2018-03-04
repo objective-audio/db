@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "0900"
+   LastUpgradeVersion = "0920"
    version = "1.3">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "B6E0F1561C1D66A80033AC60"
-               BuildableName = "db_mac_tests.xctest"
-               BlueprintName = "db_mac_tests"
+               BlueprintIdentifier = "B607FBC9204A8EB700FA2BB9"
+               BuildableName = "db_mac_non_arc_tests.xctest"
+               BlueprintName = "db_mac_non_arc_tests"
                ReferencedContainer = "container:db_test.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -34,9 +34,9 @@
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "B6E0F1561C1D66A80033AC60"
-               BuildableName = "db_mac_tests.xctest"
-               BlueprintName = "db_mac_tests"
+               BlueprintIdentifier = "B607FBC9204A8EB700FA2BB9"
+               BuildableName = "db_mac_non_arc_tests.xctest"
+               BlueprintName = "db_mac_non_arc_tests"
                ReferencedContainer = "container:db_test.xcodeproj">
             </BuildableReference>
          </TestableReference>
@@ -44,9 +44,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "B6E0F1561C1D66A80033AC60"
-            BuildableName = "db_mac_tests.xctest"
-            BlueprintName = "db_mac_tests"
+            BlueprintIdentifier = "B607FBC9204A8EB700FA2BB9"
+            BuildableName = "db_mac_non_arc_tests.xctest"
+            BlueprintName = "db_mac_non_arc_tests"
             ReferencedContainer = "container:db_test.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -67,9 +67,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "B6E0F1561C1D66A80033AC60"
-            BuildableName = "db_mac_tests.xctest"
-            BlueprintName = "db_mac_tests"
+            BlueprintIdentifier = "B607FBC9204A8EB700FA2BB9"
+            BuildableName = "db_mac_non_arc_tests.xctest"
+            BlueprintName = "db_mac_non_arc_tests"
             ReferencedContainer = "container:db_test.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -82,15 +82,6 @@
       savedToolIdentifier = ""
       useCustomWorkingDirectory = "NO"
       debugDocumentVersioning = "YES">
-      <MacroExpansion>
-         <BuildableReference
-            BuildableIdentifier = "primary"
-            BlueprintIdentifier = "B6E0F1561C1D66A80033AC60"
-            BuildableName = "db_mac_tests.xctest"
-            BlueprintName = "db_mac_tests"
-            ReferencedContainer = "container:db_test.xcodeproj">
-         </BuildableReference>
-      </MacroExpansion>
    </ProfileAction>
    <AnalyzeAction
       buildConfiguration = "Debug">

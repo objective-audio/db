@@ -56,7 +56,7 @@ struct db::manager::impl : base::impl, public object_observable::impl {
     }
 
     ~impl() {
-        yas_dispatch_queue_release(dispatch_queue);
+        yas_dispatch_queue_release(_dispatch_queue);
     }
 
     // データベースに保存せず仮にオブジェクトを生成する
