@@ -124,7 +124,7 @@ using namespace yas;
     XCTAssertTrue(db::create_table(db, "test_table", {"field_a", "field_b"}));
 
     db::value_map_t args{std::make_pair("field_a", db::value{"value_a"}),
-                       std::make_pair("field_b", db::value{"value_b"})};
+                         std::make_pair("field_b", db::value{"value_b"})};
     XCTAssertTrue(db.execute_update("insert into test_table(field_a, field_b) values(:field_a, :field_b)", args));
 
     auto query_result = db.execute_query("select * from test_table");
@@ -139,7 +139,7 @@ using namespace yas;
     XCTAssertFalse(row_set.next());
 
     db::value_map_t update_args{std::make_pair("field_a", db::value{"value_a_2"}),
-                              std::make_pair("field_b", db::value{"value_b_2"})};
+                                std::make_pair("field_b", db::value{"value_b_2"})};
     XCTAssertTrue(db.execute_update("update test_table set field_a = :field_a, field_b = :field_b", update_args));
 
     query_result = db.execute_query("select * from test_table");
@@ -173,21 +173,19 @@ using namespace yas;
 
     XCTAssertTrue(db.execute_statements(joined_insert_sql));
 
-    XCTAssertTrue(db.execute_statements({"select * from test_table_a;"},
-                                        [self](db::value_map_t const &value_map) {
-                                            XCTAssertEqual(value_map.size(), 2);
-                                            XCTAssertEqual(value_map.at("field_a").get<db::text>(), "value_1");
-                                            XCTAssertEqual(value_map.at("field_b").get<db::text>(), "1");
-                                            return 0;
-                                        }));
+    XCTAssertTrue(db.execute_statements({"select * from test_table_a;"}, [self](db::value_map_t const &value_map) {
+        XCTAssertEqual(value_map.size(), 2);
+        XCTAssertEqual(value_map.at("field_a").get<db::text>(), "value_1");
+        XCTAssertEqual(value_map.at("field_b").get<db::text>(), "1");
+        return 0;
+    }));
 
-    XCTAssertTrue(db.execute_statements({"select * from test_table_b;"},
-                                        [self](db::value_map_t const &value_map) {
-                                            XCTAssertEqual(value_map.size(), 2);
-                                            XCTAssertEqual(value_map.at("field_a").get<db::text>(), "value_2");
-                                            XCTAssertTrue(value_map.at("field_b").type() == typeid(db::null));
-                                            return 0;
-                                        }));
+    XCTAssertTrue(db.execute_statements({"select * from test_table_b;"}, [self](db::value_map_t const &value_map) {
+        XCTAssertEqual(value_map.size(), 2);
+        XCTAssertEqual(value_map.at("field_a").get<db::text>(), "value_2");
+        XCTAssertTrue(value_map.at("field_b").type() == typeid(db::null));
+        return 0;
+    }));
 }
 
 - (void)test_execute_query_with_vector {
@@ -365,6 +363,14 @@ using namespace yas;
     query_result = db.execute_query("select * from address;");
     row_set = query_result.value();
     XCTAssertFalse(row_set.next());
+}
+
+- (void)test_integrity_check {
+    db::database db = [yas_db_test_utils create_test_database];
+    db.open();
+
+    auto result = db.integrity_check();
+    XCTAssertTrue(result.is_success());
 }
 
 - (void)test_error_type_to_string {

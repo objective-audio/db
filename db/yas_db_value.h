@@ -5,7 +5,6 @@
 #pragma once
 
 #include <memory>
-#include <string>
 #include <vector>
 #include "yas_base.h"
 #include "yas_db_types.h"
