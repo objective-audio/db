@@ -15,7 +15,7 @@
 using namespace yas;
 
 namespace yas::db {
-    static std::map<uint8_t, weak<database>> _databases;
+static std::map<uint8_t, weak<database>> _databases;
 }
 
 #pragma mark - impl
@@ -560,7 +560,7 @@ void db::database::close() {
     impl_ptr<impl>()->close();
 }
 
-bool db::database::good_connection() {
+bool db::database::good_connection() const {
     if (!impl_ptr<impl>()->_sqlite_handle) {
         return false;
     }
@@ -574,6 +574,24 @@ bool db::database::good_connection() {
     }
 
     return false;
+}
+
+db::integrity_result_t db::database::integrity_check() const {
+    auto query_result = this->execute_query("pragma integrity_check;");
+    if (query_result) {
+        auto &row_set = query_result.value();
+        if (row_set.next()) {
+            if (db::value value = row_set.column_value("integrity_check")) {
+                std::string str_value = value.get<db::text>();
+                if (to_lower(str_value) == "ok") {
+                    return db::integrity_result_t{nullptr};
+                }
+            }
+        }
+        return db::integrity_result_t{""};
+    } else {
+        return db::integrity_result_t{query_result.error().message()};
+    }
 }
 
 db::update_result_t db::database::execute_update(std::string const &sql) {

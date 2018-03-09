@@ -46,7 +46,8 @@ class database : public base {
     bool open(int flags);
 #endif
     void close();
-    bool good_connection();
+    bool good_connection() const;
+    db::integrity_result_t integrity_check() const;
 
     db::update_result_t execute_update(std::string const &sql);
     db::update_result_t execute_update(std::string const &sql, db::value_vector_t const &arguments);
