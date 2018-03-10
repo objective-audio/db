@@ -22,8 +22,8 @@ static std::string const indices_key = "indices";
 static std::string const attributes_key = "attributes";
 static std::string const relations_key = "relations";
 
-static yas::version get_version(CFDictionaryRef const &cf_dict) {
-    std::string version_str = get<std::string>(cf_dict, db::version_key);
+static yas::version get_version(CFDictionaryRef const &dict) {
+    std::string version_str = get<std::string>(dict, db::version_key);
     if (version_str.size() > 0) {
         return yas::version{version_str};
     } else {
@@ -31,22 +31,22 @@ static yas::version get_version(CFDictionaryRef const &cf_dict) {
     }
 }
 
-static db::entity_map_t get_entities(CFDictionaryRef const &cf_dict) {
-    CFDictionaryRef cf_entities_dict = get<CFDictionaryRef>(cf_dict, db::entities_key);
-    if (!cf_entities_dict) {
+static db::entity_map_t get_entities(CFDictionaryRef const &dict) {
+    CFDictionaryRef entities_dict = get<CFDictionaryRef>(dict, db::entities_key);
+    if (!entities_dict) {
         throw std::invalid_argument("entities not found");
     }
 
     std::unordered_map<std::string, std::pair<db::attribute_map_t, db::relation_map_t>> entity_params;
     std::unordered_map<std::string, db::string_set_map_t> entity_inv_rel_names;
 
-    for (auto &cf_entities_pair : each_dictionary(cf_entities_dict)) {
+    for (auto &cf_entities_pair : each_dictionary(entities_dict)) {
         std::string entity_name = to_string((CFStringRef)cf_entities_pair.first);
         if (entity_name.size() == 0) {
             throw std::invalid_argument("invalid entity name");
         }
 
-        CFDictionaryRef cf_entity_dict = get<CFDictionaryRef>(cf_entities_dict, entity_name);
+        CFDictionaryRef cf_entity_dict = get<CFDictionaryRef>(entities_dict, entity_name);
         if (!cf_entity_dict) {
             throw std::invalid_argument("invalid entity dictionary");
         }
@@ -120,21 +120,21 @@ static db::entity_map_t get_entities(CFDictionaryRef const &cf_dict) {
     return entities;
 }
 
-static db::index_map_t get_indices(CFDictionaryRef const &cf_dict) {
-    CFDictionaryRef cf_indices_dict = get<CFDictionaryRef>(cf_dict, db::indices_key);
-    if (!cf_indices_dict) {
+static db::index_map_t get_indices(CFDictionaryRef const &dict) {
+    CFDictionaryRef indices_dict = get<CFDictionaryRef>(dict, db::indices_key);
+    if (!indices_dict) {
         return db::index_map_t{};
     }
 
     db::index_map_t indices;
 
-    for (auto &cf_index_pair : each_dictionary(cf_indices_dict)) {
+    for (auto &cf_index_pair : each_dictionary(indices_dict)) {
         std::string index_name = to_string((CFStringRef)cf_index_pair.first);
         if (index_name.size() == 0) {
             throw std::invalid_argument("invalid index name");
         }
 
-        CFDictionaryRef cf_index_dict = get<CFDictionaryRef>(cf_indices_dict, index_name);
+        CFDictionaryRef cf_index_dict = get<CFDictionaryRef>(indices_dict, index_name);
         if (!cf_index_dict) {
             throw std::invalid_argument("invalid index dictionary");
         }
