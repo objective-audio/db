@@ -9,6 +9,7 @@
 #include <string>
 #include "yas_db_additional_protocol.h"
 #include "yas_base.h"
+#include "yas_version.h"
 
 namespace yas {
 class version;
@@ -19,7 +20,15 @@ class model : public base {
     class impl;
 
    public:
-    model(CFDictionaryRef const &dict);
+    struct args {
+        yas::version const version;
+        db::entity_map_t const entities;
+        db::index_map_t const indices;
+    };
+
+    explicit model(args);
+    explicit model(CFDictionaryRef const &dict);
+    model(std::nullptr_t);
 
     yas::version const &version() const;
     db::entity_map_t const &entities() const;
