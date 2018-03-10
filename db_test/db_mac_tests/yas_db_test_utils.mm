@@ -52,6 +52,22 @@ using namespace yas;
     }
 }
 
++ (db::model)model_0_0_1 {
+    yas::version version{"0.0.1"};
+
+    db::entity_map_t entities;
+
+    return db::model{{.version = std::move(version), .entities = std::move(entities)}};
+}
+
++ (db::model)model_0_0_2 {
+    yas::version version{"0.0.2"};
+
+    db::entity_map_t entities;
+
+    return db::model{{.version = std::move(version), .entities = std::move(entities)}};
+}
+
 + (NSDictionary *)model_dictionary_0_0_1 {
     return @{
         @"version": @"0.0.1",
