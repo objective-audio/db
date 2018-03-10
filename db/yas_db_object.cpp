@@ -336,6 +336,10 @@ struct db::object::impl : const_object::impl, manageable_object::impl {
 
         this->validate_attribute_name(attr_name);
 
+        if (this->_attributes.count(attr_name) && this->_attributes.at(attr_name) == value) {
+            return;
+        }
+
         replace(this->_attributes, attr_name, value);
 
         if (!loading) {
@@ -353,6 +357,10 @@ struct db::object::impl : const_object::impl, manageable_object::impl {
 
     void set_relation_ids(std::string const &rel_name, db::id_vector_t const &relation_ids,
                           bool const loading = false) {
+        if (this->_relations.count(rel_name) && this->_relations.at(rel_name) == relation_ids) {
+            return;
+        }
+
         this->validate_relation_name(rel_name);
         this->validate_relation_ids(relation_ids);
 

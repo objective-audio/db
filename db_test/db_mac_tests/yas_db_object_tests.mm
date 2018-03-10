@@ -539,6 +539,23 @@ using namespace yas;
     XCTAssertTrue(called);
 }
 
+- (void)test_no_observe_attribute_with_same_value {
+    NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
+    db::model model((__bridge CFDictionaryRef)model_dict);
+
+    db::object obj{nullptr, model.entity("sample_a")};
+
+    bool called = false;
+
+    obj.set_attribute_value("name", db::value{"test_value"});
+
+    auto observer = obj.subject().make_wild_card_observer([&called, self](auto const &context) { called = true; });
+
+    obj.set_attribute_value("name", db::value{"test_value"});
+
+    XCTAssertFalse(called);
+}
+
 - (void)test_observe_relation {
     NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
     db::model model((__bridge CFDictionaryRef)model_dict);
@@ -601,6 +618,23 @@ using namespace yas;
     obj.remove_all_relations("child");
 
     XCTAssertEqual(called_count, 4);
+}
+
+- (void)test_no_observe_relation_ids_with_same_value {
+    NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
+    db::model model((__bridge CFDictionaryRef)model_dict);
+
+    db::object obj{nullptr, model.entity("sample_a")};
+
+    obj.set_relation_ids("child", {db::make_stable_id(db::value{55})});
+
+    bool called = false;
+
+    auto observer = obj.subject().make_wild_card_observer([&called, self](auto const &context) { called = true; });
+
+    obj.set_relation_ids("child", {db::make_stable_id(db::value{55})});
+
+    XCTAssertFalse(called);
 }
 
 - (void)test_observe_loading {
