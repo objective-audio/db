@@ -269,3 +269,28 @@ db::time_point_t yas::to_time_point(db::value const &value) {
 db::value yas::to_value(db::time_point_t const &time_point) {
     return db::value{time_point.time_since_epoch().count()};
 }
+
+std::ostream &operator<<(std::ostream &os, db::value const &value) {
+    os << to_string(value);
+    return os;
+}
+
+std::ostream &operator<<(std::ostream &os, db::value_vector_t const &value) {
+    os << to_string(value);
+    return os;
+}
+
+std::ostream &operator<<(std::ostream &os, db::value_map_t const &value) {
+    os << to_string(value);
+    return os;
+}
+
+std::ostream &operator<<(std::ostream &os, db::value_map_vector_t const &value) {
+    os << to_string(value, false);
+    return os;
+}
+
+std::ostream &operator<<(std::ostream &os, db::value_map_vector_map_t const &value) {
+    os << to_string(value, false);
+    return os;
+}
