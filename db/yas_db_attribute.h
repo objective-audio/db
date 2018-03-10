@@ -8,7 +8,7 @@
 #include "yas_db_value.h"
 
 namespace yas::db {
-enum class attr_type {
+enum class attribute_type {
     integer,
     real,
     text,
@@ -18,7 +18,7 @@ enum class attr_type {
 struct attribute {
     struct args {
         std::string name;
-        attr_type type;
+        attribute_type type;
         db::value default_value = nullptr;
         bool not_null = false;
         bool primary = false;
