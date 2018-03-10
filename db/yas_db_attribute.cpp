@@ -11,6 +11,35 @@
 
 using namespace yas;
 
+namespace yas {
+static std::string to_string(db::attr_type const &type) {
+    switch (type) {
+        case db::attr_type::integer:
+            return db::integer::name;
+        case db::attr_type::real:
+            return db::real::name;
+        case db::attr_type::text:
+            return db::text::name;
+        case db::attr_type::blob:
+            return db::blob::name;
+    }
+}
+
+static db::attr_type to_attr_type(std::string const &str) {
+    if (str == db::integer::name) {
+        return db::attr_type::integer;
+    } else if (str == db::real::name) {
+        return db::attr_type::real;
+    } else if (str == db::text::name) {
+        return db::attr_type::text;
+    } else if (str == db::blob::name) {
+        return db::attr_type::blob;
+    } else {
+        throw std::invalid_argument("invalid attribute type.");
+    }
+}
+}
+
 namespace yas::db {
 static std::string const type_key = "type";
 static std::string const default_key = "default";
@@ -19,7 +48,7 @@ static std::string const not_null_key = "not_null";
 
 db::attribute::attribute(args args)
     : name(args.name),
-      type(args.type),
+      type(to_string(args.type)),
       default_value(args.default_value),
       not_null(args.not_null),
       primary(args.primary),
@@ -67,26 +96,27 @@ std::string db::attribute::sql() const {
 }
 
 db::attribute const &db::attribute::id_attribute() {
-    static db::attribute const attr{{db::pk_id_field, db::integer::name, nullptr, false, true}};
+    static db::attribute const attr{{db::pk_id_field, db::attr_type::integer, nullptr, false, true}};
     return attr;
 }
 
 db::attribute const &db::attribute::object_id_attribute() {
-    static db::attribute const attr{{db::object_id_field, db::integer::name, db::value{db::integer::type{0}}, true}};
+    static db::attribute const attr{
+        {db::object_id_field, db::attr_type::integer, db::value{db::integer::type{0}}, true}};
     return attr;
 }
 
 db::attribute const &db::attribute::save_id_attribute() {
-    static db::attribute const attr{{db::save_id_field, db::integer::name, db::value{db::integer::type{0}}, true}};
+    static db::attribute const attr{{db::save_id_field, db::attr_type::integer, db::value{db::integer::type{0}}, true}};
     return attr;
 }
 
 db::attribute const &db::attribute::action_attribute() {
-    static db::attribute const attr{{db::action_field, db::text::name, db::insert_action_value(), true}};
+    static db::attribute const attr{{db::action_field, db::attr_type::text, db::insert_action_value(), true}};
     return attr;
 }
 
 db::attribute db::make_attribute(std::string const &name, CFDictionaryRef const dict) {
-    return db::attribute{{name, get<std::string>(dict, db::type_key), get<db::value>(dict, db::default_key),
-                          get<bool>(dict, db::not_null_key), false}};
+    return db::attribute{{name, to_attr_type(get<std::string>(dict, db::type_key)),
+                          get<db::value>(dict, db::default_key), get<bool>(dict, db::not_null_key), false}};
 }

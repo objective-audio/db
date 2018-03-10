@@ -8,10 +8,17 @@
 #include "yas_db_value.h"
 
 namespace yas::db {
+enum class attr_type {
+    integer,
+    real,
+    text,
+    blob,
+};
+
 struct attribute {
     struct args {
         std::string name;
-        std::string type;
+        attr_type type;
         db::value default_value = nullptr;
         bool not_null = false;
         bool primary = false;
