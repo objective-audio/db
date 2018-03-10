@@ -122,6 +122,12 @@ db::time_point_t to_time_point(db::value const &);
 db::value to_value(db::time_point_t const &);
 }
 
+std::ostream &operator<<(std::ostream &os, yas::db::value const &value);
+std::ostream &operator<<(std::ostream &os, yas::db::value_vector_t const &value);
+std::ostream &operator<<(std::ostream &os, yas::db::value_map_t const &value);
+std::ostream &operator<<(std::ostream &os, yas::db::value_map_vector_t const &value);
+std::ostream &operator<<(std::ostream &os, yas::db::value_map_vector_map_t const &value);
+
 template <>
 struct std::hash<yas::db::value> {
     std::size_t operator()(yas::db::value const &value) const {

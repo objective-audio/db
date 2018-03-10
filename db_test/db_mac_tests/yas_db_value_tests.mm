@@ -5,6 +5,8 @@
 #import <chrono>
 #import "yas_db_test_utils.h"
 
+#include <iostream>
+
 using namespace yas;
 
 @interface yas_db_value_tests : XCTestCase
@@ -192,6 +194,50 @@ using namespace yas;
     XCTAssertEqual(yas::to_string(text_value), "'text_value'");
     XCTAssertEqual(yas::to_string(blob_value), "");
     XCTAssertEqual(yas::to_string(null_value), "null");
+
+    XCTAssertEqual(yas::to_string(db::value_vector_t{db::value{1}, db::value{2}}), "[1,2]");
+    XCTAssertEqual(yas::to_string(db::value_map_t{{"a", db::value{3}}}), "{a:3}");
+    XCTAssertEqual(yas::to_string(db::value_map_vector_t{{{{"a", db::value{4}}}, {{"b", db::value{5}}}}}),
+                   "[{a:4},{b:5}]");
+    XCTAssertEqual(yas::to_string(db::value_map_vector_map_t{{"c", {{{{"a", db::value{4}}}, {{"b", db::value{5}}}}}}}),
+                   "{c:[{a:4},{b:5}]}");
+}
+
+- (void)test_ostream {
+    {
+        db::value value{db::integer::type{11}};
+        std::ostringstream stream;
+        stream << value;
+        XCTAssertEqual(stream.str(), to_string(value));
+    }
+
+    {
+        db::value_vector_t values{db::value{db::integer::type{11}}, db::value{db::integer::type{12}}};
+        std::ostringstream stream;
+        stream << values;
+        XCTAssertEqual(stream.str(), to_string(values));
+    }
+
+    {
+        db::value_map_t values{{"a", db::value{db::integer::type{33}}}};
+        std::ostringstream stream;
+        stream << values;
+        XCTAssertEqual(stream.str(), to_string(values));
+    }
+
+    {
+        db::value_map_vector_t values{{{{"a", db::value{4}}}, {{"b", db::value{5}}}}};
+        std::ostringstream stream;
+        stream << values;
+        XCTAssertEqual(stream.str(), to_string(values));
+    }
+
+    {
+        db::value_map_vector_map_t values{{"c", {{{{"a", db::value{4}}}, {{"b", db::value{5}}}}}}};
+        std::ostringstream stream;
+        stream << values;
+        XCTAssertEqual(stream.str(), to_string(values));
+    }
 }
 
 - (void)test_is_equal_blobs {
