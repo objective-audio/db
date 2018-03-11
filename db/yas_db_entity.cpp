@@ -58,7 +58,8 @@ static db::relation_map_t make_relations(std::vector<db::relation_args> &&args_v
     relations.reserve(args_vec.size());
 
     for (db::relation_args &args : args_vec) {
-        relations.emplace(args.name, db::relation{std::move(args)});
+        std::string name = args.name;
+        relations.emplace(name, db::relation{std::move(args)});
     }
 
     return relations;
