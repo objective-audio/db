@@ -404,8 +404,7 @@ using namespace yas;
 }
 
 - (void)test_to_object_map {
-    NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
-    db::model model((__bridge CFDictionaryRef)model_dict);
+    db::model model = [yas_db_test_utils model_0_0_1];
 
     db::object obj_a0{nullptr, model.entity("sample_a")};
     db::object obj_a1{nullptr, model.entity("sample_a")};
@@ -436,8 +435,7 @@ using namespace yas;
 }
 
 - (void)test_to_object_map_map {
-    NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
-    db::model model((__bridge CFDictionaryRef)model_dict);
+    db::model model = [yas_db_test_utils model_0_0_1];
 
     db::object obj_a0{nullptr, model.entity("sample_a")};
     db::object obj_a1{nullptr, model.entity("sample_a")};

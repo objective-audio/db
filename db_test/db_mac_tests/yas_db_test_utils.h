@@ -23,7 +23,5 @@
 
 + (yas::db::model)model_0_0_1;
 + (yas::db::model)model_0_0_2;
-+ (NSDictionary *)model_dictionary_0_0_1;
-+ (NSDictionary *)model_dictionary_0_0_2;
 
 @end

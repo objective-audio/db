@@ -341,7 +341,7 @@ using namespace yas;
 }
 
 - (void)test_purge_attributes {
-    db::model model_0_0_2{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_2]};
+    db::model model_0_0_2 = [yas_db_test_utils model_0_0_2];
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_2)];
 
     manager.setup([self, &manager](auto result) mutable { XCTAssertTrue(result); });
@@ -409,7 +409,7 @@ using namespace yas;
 }
 
 - (void)test_purge_relations {
-    db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
+    db::model model_0_0_1 = [yas_db_test_utils model_0_0_1];
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
 
     manager.setup([self, &manager](auto result) { XCTAssertTrue(result); });
@@ -557,7 +557,7 @@ using namespace yas;
 }
 
 - (void)test_to_preparation_ids_from_objects {
-    db::model model_0_0_2{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_2]};
+    db::model model_0_0_2 = [yas_db_test_utils model_0_0_2];
     db::manager manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_2)];
 
     XCTestExpectation *setupExp = [self expectationWithDescription:@"setup"];
@@ -621,7 +621,7 @@ using namespace yas;
 }
 
 - (void)test_to_preparation_ids_from_object_map {
-    db::model model_0_0_2{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_2]};
+    db::model model_0_0_2 = [yas_db_test_utils model_0_0_2];
     db::manager manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_2)];
 
     XCTestExpectation *setupExp = [self expectationWithDescription:@"setup"];
@@ -687,7 +687,7 @@ using namespace yas;
 }
 
 - (void)test_to_preparation_ids_from_object_vector {
-    db::model model_0_0_2{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_2]};
+    db::model model_0_0_2 = [yas_db_test_utils model_0_0_2];
     db::manager manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_2)];
 
     XCTestExpectation *setupExp = [self expectationWithDescription:@"setup"];
