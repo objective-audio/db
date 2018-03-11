@@ -201,7 +201,7 @@ static db::model::args to_args(model_args &&args) {
 
     for (db::index_args &index_args : args.indices) {
         std::string name = index_args.name;
-        indices.emplace(name, db::index{std::move(index_args)});
+        indices.emplace(std::move(name), db::index{std::move(index_args)});
     }
 
     return {.version = std::move(args.version), .entities = std::move(entities), .indices = std::move(indices)};
