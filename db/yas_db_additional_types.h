@@ -126,6 +126,8 @@ struct attribute_args {
     bool unique = false;
 };
 
+using attribute_args_vector_t = std::vector<attribute_args>;
+
 // for relation
 static std::string const src_pk_id_field = "src_pk_id";
 static std::string const src_obj_id_field = "src_obj_id";
@@ -138,6 +140,8 @@ struct relation_args {
     bool const many = false;
 };
 
+using relation_args_vector_t = std::vector<relation_args>;
+
 // for entity
 using attribute_map_t = std::unordered_map<std::string, db::attribute>;
 using relation_map_t = std::unordered_map<std::string, db::relation>;
@@ -146,10 +150,12 @@ using string_set_map_t = std::unordered_map<std::string, db::string_set_t>;
 
 struct entity_args {
     std::string name;
-    std::vector<db::attribute_args> attributes;
-    std::vector<db::relation_args> relations;
+    db::attribute_args_vector_t attributes;
+    db::relation_args_vector_t relations;
     db::string_set_map_t inverse_relation_names;
 };
+
+using entity_args_vector_t = std::vector<entity_args>;
 
 // for index
 
@@ -158,6 +164,8 @@ struct index_args {
     std::string table_name;
     std::vector<std::string> attribute_names;
 };
+
+using index_args_vector_t = std::vector<index_args>;
 
 // for model
 using entity_map_t = std::unordered_map<std::string, db::entity>;
@@ -168,6 +176,8 @@ struct model_entity_args {
     std::vector<db::attribute_args> attributes;
     std::vector<db::relation_args> relations;
 };
+
+using model_entity_args_vector_t = std::vector<model_entity_args>;
 
 struct model_args {
     yas::version version;
