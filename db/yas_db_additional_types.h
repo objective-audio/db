@@ -163,9 +163,15 @@ struct index_args {
 using entity_map_t = std::unordered_map<std::string, db::entity>;
 using index_map_t = std::unordered_map<std::string, db::index>;
 
+struct model_entity_args {
+    std::string name;
+    std::vector<db::attribute_args> attributes;
+    std::vector<db::relation_args> relations;
+};
+
 struct model_args {
     yas::version version;
-    std::vector<db::entity_args> entities;
+    std::vector<db::model_entity_args> entities;
     std::vector<db::index_args> indices;
 };
 }
