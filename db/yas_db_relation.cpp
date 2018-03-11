@@ -17,19 +17,19 @@ static std::string const target_key = "target";
 static std::string const many_key = "many";
 }
 
-db::relation::relation(relation_args args)
+db::relation::relation(relation_args args, std::string source_entity_name)
     : name(std::move(args.name)),
-      source_entity_name(std::move(args.source_entity_name)),
+      source_entity_name(std::move(source_entity_name)),
       target_entity_name(std::move(args.target_entity_name)),
       many(args.many),
       table_name("rel_" + this->source_entity_name + "_" + this->name) {
 }
 
 db::relation::relation(std::string const &src_entity_name, std::string const &attr_name, CFDictionaryRef const &dict)
-    : relation({.source_entity_name = src_entity_name,
-                .name = attr_name,
+    : relation({.name = attr_name,
                 .target_entity_name = get<std::string>(dict, db::target_key),
-                .many = get<bool>(dict, db::many_key)}) {
+                .many = get<bool>(dict, db::many_key)},
+               src_entity_name) {
 }
 
 std::string db::relation::sql_for_create() const {

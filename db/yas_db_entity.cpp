@@ -53,13 +53,14 @@ static db::attribute_map_t filter_custom_attributes(db::attribute_map_t const &a
     });
 }
 
-static db::relation_map_t make_relations(std::vector<db::relation_args> &&args_vec) {
+static db::relation_map_t make_relations(std::vector<db::relation_args> &&args_vec,
+                                         std::string const &src_entity_name) {
     db::relation_map_t relations;
     relations.reserve(args_vec.size());
 
     for (db::relation_args &args : args_vec) {
         std::string name = args.name;
-        relations.emplace(name, db::relation{std::move(args)});
+        relations.emplace(name, db::relation{std::move(args), src_entity_name});
     }
 
     return relations;
@@ -70,7 +71,7 @@ db::entity::entity(entity_args args, db::string_set_map_t inv_rel_names)
     : name(std::move(args.name)),
       all_attributes(make_all_attributes(args.attributes)),
       custom_attributes(make_attributes(args.attributes)),
-      relations(make_relations(std::move(args.relations))),
+      relations(make_relations(std::move(args.relations), this->name)),
       inverse_relation_names(std::move(inv_rel_names)) {
 }
 
