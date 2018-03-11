@@ -17,13 +17,19 @@ static std::string const target_key = "target";
 static std::string const many_key = "many";
 }
 
-namespace yas {
+db::relation::relation(args args)
+    : name(std::move(args.name)),
+      source_entity_name(std::move(args.source_entity_name)),
+      target_entity_name(std::move(args.target_entity_name)),
+      many(args.many),
+      table_name("rel_" + this->source_entity_name + "_" + this->name) {
+}
+
 db::relation::relation(std::string const &src_entity_name, std::string const &attr_name, CFDictionaryRef const &dict)
-    : source_entity_name(src_entity_name),
-      name(attr_name),
-      target_entity_name(get<std::string>(dict, db::target_key)),
-      many(get<bool>(dict, db::many_key)),
-      table_name("rel_" + src_entity_name + "_" + this->name) {
+    : relation({.source_entity_name = src_entity_name,
+                .name = attr_name,
+                .target_entity_name = get<std::string>(dict, db::target_key),
+                .many = get<bool>(dict, db::many_key)}) {
 }
 
 std::string db::relation::sql_for_create() const {
@@ -41,5 +47,4 @@ std::string db::relation::sql_for_create() const {
 std::string db::relation::sql_for_insert() const {
     return db::insert_sql(this->table_name,
                           {db::src_pk_id_field, db::src_obj_id_field, db::tgt_obj_id_field, db::save_id_field});
-}
 }

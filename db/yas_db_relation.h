@@ -10,13 +10,21 @@
 namespace yas::db {
 struct relation {
    public:
-    std::string const source_entity_name;
+    struct args {
+        std::string name;
+        std::string source_entity_name;
+        std::string target_entity_name;
+        bool const many = false;
+    };
+
     std::string const name;
+    std::string const source_entity_name;
     std::string const target_entity_name;
     bool const many;
 
     std::string const table_name;
 
+    explicit relation(args);
     relation(std::string const &src_entity_name, std::string const &name, CFDictionaryRef const &dict);
 
     std::string sql_for_create() const;
