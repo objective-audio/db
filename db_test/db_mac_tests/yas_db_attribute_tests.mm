@@ -148,7 +148,7 @@ using namespace yas;
 }
 
 - (void)test_full_sql {
-    db::attribute attr{{"test_name", db::integer::name, db::value{5}, true, true, true}};
+    db::attribute attr{{"test_name", db::attribute_type::integer, db::value{5}, true, true, true}};
 
     XCTAssertEqual(attr.sql(), "test_name INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE NOT NULL DEFAULT 5");
 }
