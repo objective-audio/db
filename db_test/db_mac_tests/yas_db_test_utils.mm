@@ -127,7 +127,7 @@ using namespace yas;
 
     db::entity_args sample_c{.name = "sample_c",
                              .attributes = {{.name = "name", .type = db::attribute_type::text}},
-                             .relations = {{.name = "parent", .target_entity_name = "sample_a"}}};
+                             .relations = {{.name = "friend", .target_entity_name = "sample_a"}}};
 
     db::entity_args_vector_t entities{std::move(sample_a), std::move(sample_b), std::move(sample_c)};
 

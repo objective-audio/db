@@ -485,7 +485,7 @@ using namespace yas;
 
     manager = nullptr;
 
-    db::model model_0_0_2{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_2]};
+    db::model model_0_0_2 = [yas_db_test_utils model_0_0_2];
     manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_2)];
 
     manager.setup([self, &manager](auto result) { XCTAssertTrue(result); });
@@ -681,7 +681,7 @@ using namespace yas;
 }
 
 - (void)test_insert_many_entity_objects {
-    db::model model_0_0_2{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_2]};
+    db::model model_0_0_2 = [yas_db_test_utils model_0_0_2];
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_2)];
 
     manager.setup([self, &manager](auto result) { XCTAssertTrue(result); });
@@ -997,7 +997,7 @@ using namespace yas;
 }
 
 - (void)test_fetch_objects_of_relations {
-    db::model model_0_0_2{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_2]};
+    db::model model_0_0_2 = [yas_db_test_utils model_0_0_2];
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_2)];
 
     manager.setup([self, &manager](auto result) { XCTAssertTrue(result); });
@@ -1178,7 +1178,7 @@ using namespace yas;
 }
 
 - (void)test_fetch_relation_objects {
-    db::model model_0_0_2{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_2]};
+    db::model model_0_0_2 = [yas_db_test_utils model_0_0_2];
     db::manager manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_2)];
 
     XCTestExpectation *setupExp = [self expectationWithDescription:@"setup"];
@@ -1244,7 +1244,7 @@ using namespace yas;
 }
 
 - (void)test_fetch_const_relation_objects {
-    db::model model_0_0_2{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_2]};
+    db::model model_0_0_2 = [yas_db_test_utils model_0_0_2];
     db::manager manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_2)];
 
     XCTestExpectation *setupExp = [self expectationWithDescription:@"setup"];
