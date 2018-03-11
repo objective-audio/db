@@ -14,7 +14,6 @@
 #include "yas_db_relation.h"
 #include "yas_db_database.h"
 #include "yas_db_info.h"
-#include "yas_version.h"
 #include "yas_db_attribute.h"
 #include "yas_db_index.h"
 #include "yas_db_fetch_option.h"
