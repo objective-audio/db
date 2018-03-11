@@ -22,7 +22,7 @@ static std::string const indices_key = "indices";
 static std::string const attributes_key = "attributes";
 static std::string const relations_key = "relations";
 
-static yas::version get_version(CFDictionaryRef const &dict) {
+static yas::version make_version(CFDictionaryRef const &dict) {
     std::string version_str = get<std::string>(dict, db::version_key);
     if (version_str.size() > 0) {
         return yas::version{version_str};
@@ -31,7 +31,7 @@ static yas::version get_version(CFDictionaryRef const &dict) {
     }
 }
 
-static db::entity_map_t get_entities(CFDictionaryRef const &dict) {
+static db::entity_map_t make_entities(CFDictionaryRef const &dict) {
     CFDictionaryRef entities_dict = get<CFDictionaryRef>(dict, db::entities_key);
     if (!entities_dict) {
         throw std::invalid_argument("entities not found");
@@ -120,7 +120,7 @@ static db::entity_map_t get_entities(CFDictionaryRef const &dict) {
     return entities;
 }
 
-static db::index_map_t get_indices(CFDictionaryRef const &dict) {
+static db::index_map_t make_indices(CFDictionaryRef const &dict) {
     CFDictionaryRef indices_dict = get<CFDictionaryRef>(dict, db::indices_key);
     if (!indices_dict) {
         return db::index_map_t{};
@@ -150,7 +150,7 @@ static db::model::args to_args(CFDictionaryRef const &dict) {
         throw std::invalid_argument("dictionary is null.");
     }
 
-    return {.version = get_version(dict), .entities = get_entities(dict), .indices = get_indices(dict)};
+    return {.version = make_version(dict), .entities = make_entities(dict), .indices = make_indices(dict)};
 }
 }
 
