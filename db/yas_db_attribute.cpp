@@ -46,7 +46,7 @@ static std::string const default_key = "default";
 static std::string const not_null_key = "not_null";
 }
 
-db::attribute::attribute(args args)
+db::attribute::attribute(attribute_args args)
     : name(args.name),
       type(to_string(args.type)),
       default_value(args.default_value),

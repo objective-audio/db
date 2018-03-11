@@ -110,6 +110,15 @@ enum class attribute_type {
     blob,
 };
 
+struct attribute_args {
+    std::string name;
+    attribute_type type;
+    db::value default_value = nullptr;
+    bool not_null = false;
+    bool primary = false;
+    bool unique = false;
+};
+
 // for relation
 static std::string const src_pk_id_field = "src_pk_id";
 static std::string const src_obj_id_field = "src_obj_id";
