@@ -6,9 +6,10 @@
 
 #include <CoreFoundation/CoreFoundation.h>
 #include "yas_db_value.h"
-#include "yas_db_additional_types.h"
 
 namespace yas::db {
+class attribute_args;
+
 struct attribute {
     std::string const name;
     std::string const type;

@@ -8,6 +8,8 @@
 #include <string>
 
 namespace yas::db {
+class relation_args;
+
 struct relation {
    public:
     std::string const name;
