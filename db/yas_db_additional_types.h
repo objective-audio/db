@@ -43,6 +43,22 @@ using const_object_vector_map_t = std::unordered_map<std::string, db::const_obje
 using object_data_vector_t = std::vector<db::object_data>;
 using object_data_vector_map_t = std::unordered_map<std::string, db::object_data_vector_t>;
 
+enum class object_status {
+    invalid,
+    created,
+    saved,
+    changed,
+    updating,
+};
+
+struct object_data {
+    db::object_id object_id;
+    db::value_map_t attributes;
+    db::id_vector_map_t relations;
+};
+
+using object_id_pool_t = db::weak_pool<db::object_id, db::object_id>;
+
 // for model
 using entity_map_t = std::unordered_map<std::string, db::entity>;
 using index_map_t = std::unordered_map<std::string, db::index>;
@@ -131,19 +147,11 @@ struct relation_args {
     bool const many = false;
 };
 
-enum class object_status {
-    invalid,
-    created,
-    saved,
-    changed,
-    updating,
-};
+// for index
 
-struct object_data {
-    db::object_id object_id;
-    db::value_map_t attributes;
-    db::id_vector_map_t relations;
+struct index_args {
+    std::string name;
+    std::string table_name;
+    std::vector<std::string> attribute_names;
 };
-
-using object_id_pool_t = db::weak_pool<db::object_id, db::object_id>;
 }
