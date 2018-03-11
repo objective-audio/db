@@ -9,7 +9,6 @@
 #include <string>
 #include "yas_db_additional_protocol.h"
 #include "yas_base.h"
-#include "yas_version.h"
 
 namespace yas {
 class version;
@@ -26,6 +25,7 @@ class model : public base {
         db::index_map_t const indices;
     };
 
+    explicit model(model_args);
     explicit model(args);
     explicit model(CFDictionaryRef const &dict);
     model(std::nullptr_t);

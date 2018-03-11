@@ -152,6 +152,10 @@ static db::model::args to_args(CFDictionaryRef const &dict) {
 
     return {.version = make_version(dict), .entities = make_entities(dict), .indices = make_indices(dict)};
 }
+
+static db::model::args to_args(model_args &&args) {
+    return {.version = std::move(args.version)};
+}
 }
 
 struct db::model::impl : base::impl {
@@ -160,6 +164,9 @@ struct db::model::impl : base::impl {
     impl(args &&args) : _args(std::move(args)) {
     }
 };
+
+db::model::model(model_args args) : base(std::make_shared<impl>(to_args(std::move(args)))) {
+}
 
 db::model::model(args args) : base(std::make_shared<impl>(std::move(args))) {
 }

@@ -7,6 +7,7 @@
 #include "yas_db_value.h"
 #include "yas_db_object_id.h"
 #include "yas_db_weak_pool.h"
+#include "yas_version.h"
 #include <set>
 #include <unordered_set>
 
@@ -58,10 +59,6 @@ struct object_data {
 };
 
 using object_id_pool_t = db::weak_pool<db::object_id, db::object_id>;
-
-// for model
-using entity_map_t = std::unordered_map<std::string, db::entity>;
-using index_map_t = std::unordered_map<std::string, db::index>;
 
 // for manager
 static std::string const info_table = "db_info";
@@ -160,5 +157,15 @@ struct index_args {
     std::string name;
     std::string table_name;
     std::vector<std::string> attribute_names;
+};
+
+// for model
+using entity_map_t = std::unordered_map<std::string, db::entity>;
+using index_map_t = std::unordered_map<std::string, db::index>;
+
+struct model_args {
+    yas::version version;
+    std::vector<db::entity_args> entities;
+    std::vector<db::index_args> indices;
 };
 }
