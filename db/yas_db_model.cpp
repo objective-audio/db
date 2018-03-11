@@ -190,10 +190,11 @@ static db::model::args to_args(model_args &&args) {
             inv_rel_names = std::move(entity_inv_rel_names.at(entity_args.name));
         }
 
-        entities.emplace(entity_args.name, db::entity{{.name = std::move(entity_args.name),
-                                                       .attributes = std::move(entity_args.attributes),
-                                                       .relations = std::move(entity_args.relations)},
-                                                      std::move(inv_rel_names)});
+        std::string name = entity_args.name;
+        entities.emplace(std::move(name), db::entity{{.name = std::move(entity_args.name),
+                                                      .attributes = std::move(entity_args.attributes),
+                                                      .relations = std::move(entity_args.relations)},
+                                                     std::move(inv_rel_names)});
     }
 
     db::index_map_t indices;
