@@ -6,6 +6,7 @@
 #include "yas_db_index.h"
 #include "yas_db_sql_utils.h"
 #include "yas_stl_utils.h"
+#include "yas_db_additional_types.h"
 
 using namespace yas;
 
@@ -14,7 +15,7 @@ static std::string const entity_key = "entity";
 static std::string const attributes_key = "attributes";
 }
 
-db::index::index(args args)
+db::index::index(index_args args)
     : name(std::move(args.name)),
       table_name(std::move(args.table_name)),
       attribute_names(std::move(args.attribute_names)) {
