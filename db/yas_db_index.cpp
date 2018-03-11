@@ -14,6 +14,12 @@ static std::string const entity_key = "entity";
 static std::string const attributes_key = "attributes";
 }
 
+db::index::index(args args)
+    : name(std::move(args.name)),
+      table_name(std::move(args.table_name)),
+      attribute_names(std::move(args.attribute_names)) {
+}
+
 db::index::index(std::string const &name, std::string const &table_name, std::vector<std::string> const &attr_names)
     : name(name), table_name(table_name), attribute_names(attr_names) {
 }
