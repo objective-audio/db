@@ -154,10 +154,10 @@ static db::model::args to_args(CFDictionaryRef const &dict) {
 }
 
 static std::unordered_map<std::string, db::string_set_map_t> make_inverse_relation_names(
-    std::vector<db::model_entity_args> const &enitity_args_vec) {
+    std::vector<db::entity_args> const &enitity_args_vec) {
     std::unordered_map<std::string, db::string_set_map_t> entity_inv_rel_names;
 
-    for (db::model_entity_args const &entity : enitity_args_vec) {
+    for (db::entity_args const &entity : enitity_args_vec) {
         std::string const &entity_name = entity.name;
         for (db::relation_args const &relation : entity.relations) {
             std::string const &tgt_entity_name = relation.target_entity_name;
@@ -184,16 +184,16 @@ static db::model::args to_args(model_args &&args) {
     db::entity_map_t entities;
     entities.reserve(args.entities.size());
 
-    for (db::model_entity_args &entity_args : args.entities) {
-        db::string_set_map_t env_rel_names;
+    for (db::entity_args &entity_args : args.entities) {
+        db::string_set_map_t inv_rel_names;
         if (entity_inv_rel_names.count(entity_args.name)) {
-            env_rel_names = std::move(entity_inv_rel_names.at(entity_args.name));
+            inv_rel_names = std::move(entity_inv_rel_names.at(entity_args.name));
         }
 
         entities.emplace(entity_args.name, db::entity{{.name = std::move(entity_args.name),
                                                        .attributes = std::move(entity_args.attributes),
-                                                       .relations = std::move(entity_args.relations),
-                                                       .inverse_relation_names = std::move(env_rel_names)}});
+                                                       .relations = std::move(entity_args.relations)},
+                                                      std::move(inv_rel_names)});
     }
 
     db::index_map_t indices;

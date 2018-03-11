@@ -55,7 +55,7 @@ using namespace yas;
 + (db::model)model_0_0_1 {
     yas::version version{"0.0.1"};
 
-    db::model_entity_args sample_a{
+    db::entity_args sample_a{
         .name = "sample_a",
         .attributes = {{.name = "age",
                         .type = db::attribute_type::integer,
@@ -68,10 +68,9 @@ using namespace yas;
                        {.name = "data", .type = db::attribute_type::blob}},
         .relations = {{.name = "child", .target_entity_name = "sample_b"}}};
 
-    db::model_entity_args sample_b{.name = "sample_b",
-                                   .attributes = {{.name = "name", .type = db::attribute_type::text}}};
+    db::entity_args sample_b{.name = "sample_b", .attributes = {{.name = "name", .type = db::attribute_type::text}}};
 
-    db::model_entity_args_vector_t entities{std::move(sample_a), std::move(sample_b)};
+    db::entity_args_vector_t entities{std::move(sample_a), std::move(sample_b)};
 
     db::index_args sample_a_name_index{.name = "sample_a_name", .table_name = "sample_a", .attribute_names = {"name"}};
     db::index_args sample_a_others_index{

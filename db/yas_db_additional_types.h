@@ -152,7 +152,6 @@ struct entity_args {
     std::string name;
     db::attribute_args_vector_t attributes;
     db::relation_args_vector_t relations;
-    db::string_set_map_t inverse_relation_names;
 };
 
 using entity_args_vector_t = std::vector<entity_args>;
@@ -171,17 +170,9 @@ using index_args_vector_t = std::vector<index_args>;
 using entity_map_t = std::unordered_map<std::string, db::entity>;
 using index_map_t = std::unordered_map<std::string, db::index>;
 
-struct model_entity_args {
-    std::string name;
-    std::vector<db::attribute_args> attributes;
-    std::vector<db::relation_args> relations;
-};
-
-using model_entity_args_vector_t = std::vector<model_entity_args>;
-
 struct model_args {
     yas::version version;
-    std::vector<db::model_entity_args> entities;
+    std::vector<db::entity_args> entities;
     std::vector<db::index_args> indices;
 };
 }

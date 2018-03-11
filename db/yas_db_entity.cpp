@@ -65,12 +65,12 @@ static db::relation_map_t make_relations(std::vector<db::relation_args> &&args_v
 }
 }
 
-db::entity::entity(entity_args args)
+db::entity::entity(entity_args args, db::string_set_map_t inv_rel_names)
     : name(std::move(args.name)),
       all_attributes(make_all_attributes(args.attributes)),
       custom_attributes(make_attributes(args.attributes)),
       relations(make_relations(std::move(args.relations))),
-      inverse_relation_names(std::move(args.inverse_relation_names)) {
+      inverse_relation_names(std::move(inv_rel_names)) {
 }
 
 db::entity::entity(std::string const &name, db::attribute_map_t &&attributes, db::relation_map_t &&relations,
