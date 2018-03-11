@@ -103,12 +103,6 @@ using const_map_completion_f = std::function<void(db::manager_const_map_result_t
 
 static std::function<bool(void)> const no_cancellation = []() { return false; };
 
-// for entity
-using attribute_map_t = std::unordered_map<std::string, db::attribute>;
-using relation_map_t = std::unordered_map<std::string, db::relation>;
-using string_set_t = std::unordered_set<std::string>;
-using string_set_map_t = std::unordered_map<std::string, db::string_set_t>;
-
 // for attribute
 static std::string const pk_id_field = "pk_id";
 static std::string const object_id_field = "obj_id";
@@ -145,6 +139,19 @@ struct relation_args {
     std::string source_entity_name;
     std::string target_entity_name;
     bool const many = false;
+};
+
+// for entity
+using attribute_map_t = std::unordered_map<std::string, db::attribute>;
+using relation_map_t = std::unordered_map<std::string, db::relation>;
+using string_set_t = std::unordered_set<std::string>;
+using string_set_map_t = std::unordered_map<std::string, db::string_set_t>;
+
+struct entity_args {
+    std::string name;
+    std::vector<db::attribute_args> attributes;
+    std::vector<db::relation_args> relations;
+    db::string_set_map_t inverse_relation_names;
 };
 
 // for index
