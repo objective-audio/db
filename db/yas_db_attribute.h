@@ -6,15 +6,9 @@
 
 #include <CoreFoundation/CoreFoundation.h>
 #include "yas_db_value.h"
+#include "yas_db_additional_types.h"
 
 namespace yas::db {
-enum class attribute_type {
-    integer,
-    real,
-    text,
-    blob,
-};
-
 struct attribute {
     struct args {
         std::string name;

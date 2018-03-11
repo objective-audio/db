@@ -103,6 +103,13 @@ static std::string const insert_action = "insert";
 static std::string const update_action = "update";
 static std::string const remove_action = "remove";
 
+enum class attribute_type {
+    integer,
+    real,
+    text,
+    blob,
+};
+
 // for relation
 static std::string const src_pk_id_field = "src_pk_id";
 static std::string const src_obj_id_field = "src_obj_id";
