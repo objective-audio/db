@@ -104,7 +104,6 @@ using namespace yas;
         XCTAssertTrue(db::index_exists(db, "sample_a_name"));
         XCTAssertTrue(db::index_exists(db, "sample_a_others"));
         XCTAssertFalse(db::index_exists(db, "sample_b_name"));
-
     });
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
