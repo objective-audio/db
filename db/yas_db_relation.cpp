@@ -17,7 +17,7 @@ static std::string const target_key = "target";
 static std::string const many_key = "many";
 }
 
-db::relation::relation(args args)
+db::relation::relation(relation_args args)
     : name(std::move(args.name)),
       source_entity_name(std::move(args.source_entity_name)),
       target_entity_name(std::move(args.target_entity_name)),
