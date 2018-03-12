@@ -28,7 +28,7 @@ using namespace yas;
                      .attribute_names = std::vector<std::string>{"test_attr_name_0", "test_attr_name_1"}}};
 
     XCTAssertEqual(index.name, "test_name");
-    XCTAssertEqual(index.table_name, "test_table_name");
+    XCTAssertEqual(index.entity, "test_table_name");
     XCTAssertEqual(index.attribute_names.size(), 2);
     XCTAssertEqual(index.attribute_names.at(0), "test_attr_name_0");
     XCTAssertEqual(index.attribute_names.at(1), "test_attr_name_1");

@@ -17,7 +17,7 @@ static std::string const attributes_key = "attributes";
 
 db::index::index(index_args args)
     : name(std::move(args.name)),
-      table_name(std::move(args.table_name)),
+      entity(std::move(args.table_name)),
       attribute_names(std::move(args.attribute_names)) {
 }
 
@@ -27,5 +27,5 @@ db::index::index(std::string const &name, CFDictionaryRef const dict)
 }
 
 std::string db::index::sql_for_create() const {
-    return create_index_sql(this->name, this->table_name, this->attribute_names);
+    return create_index_sql(this->name, this->entity, this->attribute_names);
 }

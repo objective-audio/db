@@ -14,7 +14,7 @@ class index_args;
 class index {
    public:
     std::string const name;
-    std::string const table_name;
+    std::string const entity;
     std::vector<std::string> const attribute_names;
 
     explicit index(index_args);
