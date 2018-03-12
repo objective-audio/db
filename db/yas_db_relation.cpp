@@ -25,11 +25,6 @@ db::relation::relation(relation_args args, std::string source)
       table("rel_" + this->source + "_" + this->name) {
 }
 
-db::relation::relation(std::string const &source, std::string const &name, CFDictionaryRef const &dict)
-    : relation({.name = name, .target = get<std::string>(dict, db::target_key), .many = get<bool>(dict, db::many_key)},
-               source) {
-}
-
 std::string db::relation::sql_for_create() const {
     std::string id_sql = db::attribute::id_attribute().sql();
     std::string src_pk_id_sql = db::attribute{{db::src_pk_id_field, db::attribute_type::integer}}.sql();

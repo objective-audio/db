@@ -22,10 +22,8 @@ using namespace yas;
 }
 
 - (void)test_create {
-    NSDictionary *attr_dict = @{ @"type": @"INTEGER", @"default": @1 };
-    db::attribute attr = db::make_attribute("attr_name", (__bridge CFDictionaryRef)attr_dict);
-    NSDictionary *rel_dict = @{ @"target": @"test_target" };
-    db::relation rel{"entity_name", "rel_name", (__bridge CFDictionaryRef)rel_dict};
+    db::attribute attr{{.name = "attr_name", .type = db::attribute_type::integer, .default_value = db::value{1}}};
+    db::relation rel{{.name = "rel_name", .target = "test_target"}, "entity_name"};
     db::string_set_map_t inv_rels{{"inv_entity_name", {"inv_rel_name_1", "inv_rel_name_2"}}};
 
     db::entity entity{"entity_name", {{attr.name, std::move(attr)}}, {{rel.name, std::move(rel)}}, std::move(inv_rels)};

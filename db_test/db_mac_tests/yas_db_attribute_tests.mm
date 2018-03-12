@@ -24,9 +24,8 @@ using namespace yas;
 }
 
 - (void)test_create_integer {
-    NSDictionary *dict = @{ @"type": @"INTEGER", @"default": @(1), @"not_null": @YES };
-
-    db::attribute attr = db::make_attribute("integer_attr", (__bridge CFDictionaryRef)dict);
+    db::attribute attr{
+        {.name = "integer_attr", .type = db::attribute_type::integer, .default_value = db::value{1}, .not_null = true}};
 
     XCTAssertEqual(attr.name, "integer_attr");
     XCTAssertEqual(attr.type, "INTEGER");
@@ -38,9 +37,7 @@ using namespace yas;
 }
 
 - (void)test_create_real {
-    NSDictionary *dict = @{ @"type": @"REAL", @"default": @(2.5) };
-
-    db::attribute attr = db::make_attribute("real_attr", (__bridge CFDictionaryRef)dict);
+    db::attribute attr{{.name = "real_attr", .type = db::attribute_type::real, .default_value = db::value{2.5}}};
 
     XCTAssertEqual(attr.name, "real_attr");
     XCTAssertEqual(attr.type, "REAL");
@@ -52,9 +49,8 @@ using namespace yas;
 }
 
 - (void)test_create_text {
-    NSDictionary *dict = @{ @"type": @"TEXT", @"default": @"test_string" };
-
-    db::attribute attr = db::make_attribute("text_attr", (__bridge CFDictionaryRef)dict);
+    db::attribute attr{
+        {.name = "text_attr", .type = db::attribute_type::text, .default_value = db::value{"test_string"}}};
 
     XCTAssertEqual(attr.name, "text_attr");
     XCTAssertEqual(attr.type, "TEXT");
@@ -67,9 +63,8 @@ using namespace yas;
 
 - (void)test_create_blob {
     std::vector<uint8_t> vec{2, 4};
-    NSDictionary *dict = @{ @"type": @"BLOB", @"default": [NSData dataWithBytes:vec.data() length:vec.size()] };
-
-    db::attribute attr = db::make_attribute("blob_attr", (__bridge CFDictionaryRef)dict);
+    db::attribute attr{
+        {.name = "blob_attr", .type = db::attribute_type::blob, .default_value = db::value{vec.data(), vec.size()}}};
 
     XCTAssertEqual(attr.name, "blob_attr");
     XCTAssertEqual(attr.type, "BLOB");
@@ -97,47 +92,29 @@ using namespace yas;
 }
 
 - (void)test_create_invalid_name {
-    NSDictionary *dict = @{ @"type": @"text", @"default": @"test_string" };
-    XCTAssertThrows(db::make_attribute(std::string(), (__bridge CFDictionaryRef)dict));
-}
-
-- (void)test_create_invalid_type {
-    NSDictionary *dict = @{ @"type": @"hoge", @"default": @"test_string" };
-    XCTAssertThrows(db::make_attribute("test_name", (__bridge CFDictionaryRef)dict));
-}
-
-- (void)test_create_invalid_not_null {
-    NSDictionary *dict = @{ @"type": @"integer", @"default": [NSNull null], @"not_null": @YES };
-
-    XCTAssertThrows(db::make_attribute("integer_attr", (__bridge CFDictionaryRef)dict));
+    XCTAssertThrows(
+        (db::attribute{{.name = "", .type = db::attribute_type::text, .default_value = db::value{"test_string"}}}));
 }
 
 - (void)test_create_invalid_value_type {
-    NSDictionary *dict;
-
-    dict = @{ @"type": @"INTEGER", @"default": @"test_value" };
-    XCTAssertThrows(db::make_attribute("test_name", (__bridge CFDictionaryRef)dict));
-
-    dict = @{ @"type": @"REAL", @"default": @"test_value" };
-    XCTAssertThrows(db::make_attribute("test_name", (__bridge CFDictionaryRef)dict));
-
-    dict = @{ @"type": @"TEXT", @"default": @(2) };
-    XCTAssertThrows(db::make_attribute("test_name", (__bridge CFDictionaryRef)dict));
-
-    dict = @{ @"type": @"BLOB", @"default": @(3) };
-    XCTAssertThrows(db::make_attribute("test_name", (__bridge CFDictionaryRef)dict));
+    XCTAssertThrows(
+        (db::attribute{{.name = "test_name", .type = db::attribute_type::integer, db::value{"test_value"}}}));
+    XCTAssertThrows((db::attribute{{.name = "test_name", .type = db::attribute_type::real, db::value{"test_value"}}}));
+    XCTAssertThrows((db::attribute{{.name = "test_name", .type = db::attribute_type::text, db::value{2}}}));
+    XCTAssertThrows((db::attribute{{.name = "test_name", .type = db::attribute_type::blob, db::value{3}}}));
 }
 
 - (void)test_sql {
-    NSDictionary *dict = @{ @"type": @"TEXT", @"default": @"test_string", @"not_null": @YES };
-    db::attribute attr = db::make_attribute("test_name", (__bridge CFDictionaryRef)dict);
+    db::attribute attr{{.name = "test_name",
+                        .type = db::attribute_type::text,
+                        .default_value = db::value{"test_string"},
+                        .not_null = true}};
 
     XCTAssertEqual(attr.sql(), "test_name TEXT NOT NULL DEFAULT 'test_string'");
 }
 
 - (void)test_sql_without_options {
-    NSDictionary *dict = @{ @"type": @"TEXT", @"not_null": @NO };
-    db::attribute attr = db::make_attribute("test_name", (__bridge CFDictionaryRef)dict);
+    db::attribute attr{{.name = "test_name", .type = db::attribute_type::text, .not_null = false}};
 
     XCTAssertEqual(attr.sql(), "test_name TEXT");
 }

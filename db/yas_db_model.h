@@ -27,7 +27,6 @@ class model : public base {
 
     explicit model(model_args);
     explicit model(args);
-    explicit model(CFDictionaryRef const &dict);
     model(std::nullptr_t);
 
     yas::version const &version() const;

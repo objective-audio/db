@@ -19,11 +19,6 @@ db::index::index(index_args args)
     : name(std::move(args.name)), entity(std::move(args.entity)), attributes(std::move(args.attributes)) {
 }
 
-db::index::index(std::string const &name, CFDictionaryRef const dict)
-    : index(index_args{name, get<std::string>(dict, db::entity_key),
-                       get<std::vector<std::string>>(dict, db::attributes_key)}) {
-}
-
 std::string db::index::sql_for_create() const {
     return create_index_sql(this->name, this->entity, this->attributes);
 }

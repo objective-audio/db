@@ -116,8 +116,3 @@ db::attribute const &db::attribute::action_attribute() {
     static db::attribute const attr{{db::action_field, db::attribute_type::text, db::insert_action_value(), true}};
     return attr;
 }
-
-db::attribute db::make_attribute(std::string const &name, CFDictionaryRef const dict) {
-    return db::attribute{{name, to_attribute_type(get<std::string>(dict, db::type_key)),
-                          get<db::value>(dict, db::default_key), get<bool>(dict, db::not_null_key), false}};
-}

@@ -27,6 +27,4 @@ struct attribute {
     static db::attribute const &save_id_attribute();
     static db::attribute const &action_attribute();
 };
-
-db::attribute make_attribute(std::string const &name, CFDictionaryRef const dict);
 }
