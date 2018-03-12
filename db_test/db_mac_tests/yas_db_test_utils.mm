@@ -66,7 +66,7 @@ using namespace yas;
                         .type = db::attribute_type::real,
                         .default_value = db::value{db::real::type{65.4}}},
                        {.name = "data", .type = db::attribute_type::blob}},
-        .relations = {{.name = "child", .target_entity_name = "sample_b"}}};
+        .relations = {{.name = "child", .target = "sample_b"}}};
 
     db::entity_args sample_b{.name = "sample_b", .attributes = {{.name = "name", .type = db::attribute_type::text}}};
 
@@ -96,16 +96,15 @@ using namespace yas;
              {.name = "weight", .type = db::attribute_type::real, .default_value = db::value{db::real::type{65.4}}},
              {.name = "tall", .type = db::attribute_type::real, .default_value = db::value{db::real::type{172.4}}},
              {.name = "data", .type = db::attribute_type::blob}},
-        .relations = {{.name = "child", .target_entity_name = "sample_b"},
-                      {.name = "friend", .target_entity_name = "sample_c"}}};
+        .relations = {{.name = "child", .target = "sample_b"}, {.name = "friend", .target = "sample_c"}}};
 
     db::entity_args sample_b{.name = "sample_b",
                              .attributes = {{.name = "name", .type = db::attribute_type::text}},
-                             .relations = {{.name = "parent", .target_entity_name = "sample_a"}}};
+                             .relations = {{.name = "parent", .target = "sample_a"}}};
 
     db::entity_args sample_c{.name = "sample_c",
                              .attributes = {{.name = "name", .type = db::attribute_type::text}},
-                             .relations = {{.name = "friend", .target_entity_name = "sample_a"}}};
+                             .relations = {{.name = "friend", .target = "sample_a"}}};
 
     db::entity_args_vector_t entities{std::move(sample_a), std::move(sample_b), std::move(sample_c)};
 

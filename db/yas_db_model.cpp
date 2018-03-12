@@ -160,7 +160,7 @@ static std::unordered_map<std::string, db::string_set_map_t> make_inverse_relati
     for (db::entity_args const &entity : enitity_args_vec) {
         std::string const &entity_name = entity.name;
         for (db::relation_args const &relation : entity.relations) {
-            std::string const &tgt_entity_name = relation.target_entity_name;
+            std::string const &tgt_entity_name = relation.target;
 
             if (entity_inv_rel_names.count(tgt_entity_name) == 0) {
                 entity_inv_rel_names.insert(std::make_pair(tgt_entity_name, db::string_set_map_t{}));

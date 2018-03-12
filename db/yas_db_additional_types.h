@@ -135,7 +135,7 @@ static std::string const tgt_obj_id_field = "tgt_obj_id";
 
 struct relation_args {
     std::string name;
-    std::string target_entity_name;
+    std::string target;
     bool const many = false;
 };
 
