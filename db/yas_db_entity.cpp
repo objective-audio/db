@@ -53,14 +53,13 @@ static db::attribute_map_t filter_custom_attributes(db::attribute_map_t const &a
     });
 }
 
-static db::relation_map_t make_relations(std::vector<db::relation_args> &&args_vec,
-                                         std::string const &src_entity_name) {
+static db::relation_map_t make_relations(std::vector<db::relation_args> &&args_vec, std::string const &source) {
     db::relation_map_t relations;
     relations.reserve(args_vec.size());
 
     for (db::relation_args &args : args_vec) {
         std::string name = args.name;
-        relations.emplace(std::move(name), db::relation{std::move(args), src_entity_name});
+        relations.emplace(std::move(name), db::relation{std::move(args), source});
     }
 
     return relations;

@@ -25,10 +25,10 @@ db::relation::relation(relation_args args, std::string source)
       table("rel_" + this->source + "_" + this->name) {
 }
 
-db::relation::relation(std::string const &src_entity_name, std::string const &attr_name, CFDictionaryRef const &dict)
+db::relation::relation(std::string const &source, std::string const &attr_name, CFDictionaryRef const &dict)
     : relation(
           {.name = attr_name, .target = get<std::string>(dict, db::target_key), .many = get<bool>(dict, db::many_key)},
-          src_entity_name) {
+          source) {
 }
 
 std::string db::relation::sql_for_create() const {

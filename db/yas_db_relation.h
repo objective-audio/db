@@ -20,7 +20,7 @@ struct relation {
     std::string const table;
 
     explicit relation(relation_args, std::string source);
-    relation(std::string const &src_entity_name, std::string const &name, CFDictionaryRef const &dict);
+    relation(std::string const &source, std::string const &name, CFDictionaryRef const &dict);
 
     std::string sql_for_create() const;
     std::string sql_for_insert() const;
