@@ -3,10 +3,8 @@
 //
 
 #include <sstream>
-#include "yas_cf_utils.h"
 #include "yas_db_additional_protocol.h"
 #include "yas_db_attribute.h"
-#include "yas_db_cf_utils.h"
 #include "yas_db_object.h"
 
 using namespace yas;
@@ -22,20 +20,6 @@ static std::string to_string(db::attribute_type const &type) {
             return db::text::name;
         case db::attribute_type::blob:
             return db::blob::name;
-    }
-}
-
-static db::attribute_type to_attribute_type(std::string const &str) {
-    if (str == db::integer::name) {
-        return db::attribute_type::integer;
-    } else if (str == db::real::name) {
-        return db::attribute_type::real;
-    } else if (str == db::text::name) {
-        return db::attribute_type::text;
-    } else if (str == db::blob::name) {
-        return db::attribute_type::blob;
-    } else {
-        throw std::invalid_argument("invalid attribute type.");
     }
 }
 }

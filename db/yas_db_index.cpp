@@ -2,11 +2,8 @@
 //  yas_db_index.cpp
 //
 
-#include "yas_db_cf_utils.h"
 #include "yas_db_index.h"
 #include "yas_db_sql_utils.h"
-#include "yas_stl_utils.h"
-#include "yas_db_additional_types.h"
 
 using namespace yas;
 
