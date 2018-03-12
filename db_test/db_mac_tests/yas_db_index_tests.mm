@@ -24,8 +24,8 @@ using namespace yas;
 
 - (void)test_create {
     db::index index{{.name = "test_name",
-                     .table_name = "test_table_name",
-                     .attribute_names = std::vector<std::string>{"test_attr_name_0", "test_attr_name_1"}}};
+                     .entity = "test_table_name",
+                     .attributes = std::vector<std::string>{"test_attr_name_0", "test_attr_name_1"}}};
 
     XCTAssertEqual(index.name, "test_name");
     XCTAssertEqual(index.entity, "test_table_name");
@@ -35,9 +35,8 @@ using namespace yas;
 }
 
 - (void)test_sql_for_create {
-    db::index index{{.name = "idx_name",
-                     .table_name = "tbl_name",
-                     .attribute_names = std::vector<std::string>{"attr_0", "attr_1"}}};
+    db::index index{
+        {.name = "idx_name", .entity = "tbl_name", .attributes = std::vector<std::string>{"attr_0", "attr_1"}}};
 
     XCTAssertEqual(index.sql_for_create(), "CREATE INDEX IF NOT EXISTS idx_name ON tbl_name(attr_0,attr_1);");
 }

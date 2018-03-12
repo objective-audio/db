@@ -72,9 +72,9 @@ using namespace yas;
 
     db::entity_args_vector_t entities{std::move(sample_a), std::move(sample_b)};
 
-    db::index_args sample_a_name_index{.name = "sample_a_name", .table_name = "sample_a", .attribute_names = {"name"}};
+    db::index_args sample_a_name_index{.name = "sample_a_name", .entity = "sample_a", .attributes = {"name"}};
     db::index_args sample_a_others_index{
-        .name = "sample_a_others", .table_name = "sample_a", .attribute_names = {"age", "weight"}};
+        .name = "sample_a_others", .entity = "sample_a", .attributes = {"age", "weight"}};
 
     db::index_args_vector_t indices{std::move(sample_a_name_index), std::move(sample_a_others_index)};
 
@@ -108,10 +108,10 @@ using namespace yas;
 
     db::entity_args_vector_t entities{std::move(sample_a), std::move(sample_b), std::move(sample_c)};
 
-    db::index_args sample_a_name_index{.name = "sample_a_name", .table_name = "sample_a", .attribute_names = {"name"}};
+    db::index_args sample_a_name_index{.name = "sample_a_name", .entity = "sample_a", .attributes = {"name"}};
     db::index_args sample_a_others_index{
-        .name = "sample_a_others", .table_name = "sample_a", .attribute_names = {"age", "weight"}};
-    db::index_args sample_b_name_index{.name = "sample_b_name", .table_name = "sample_b", .attribute_names = {"name"}};
+        .name = "sample_a_others", .entity = "sample_a", .attributes = {"age", "weight"}};
+    db::index_args sample_b_name_index{.name = "sample_b_name", .entity = "sample_b", .attributes = {"name"}};
 
     db::index_args_vector_t indices{std::move(sample_a_name_index), std::move(sample_a_others_index),
                                     std::move(sample_b_name_index)};

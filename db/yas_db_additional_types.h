@@ -159,8 +159,8 @@ using entity_args_vector_t = std::vector<entity_args>;
 
 struct index_args {
     std::string name;
-    std::string table_name;
-    std::vector<std::string> attribute_names;
+    std::string entity;
+    std::vector<std::string> attributes;
 };
 
 using index_args_vector_t = std::vector<index_args>;
