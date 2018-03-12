@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include <CoreFoundation/CoreFoundation.h>
 #include "yas_db_value.h"
 
 namespace yas::db {

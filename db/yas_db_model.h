@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include <CoreFoundation/CoreFoundation.h>
 #include <memory>
 #include <string>
 #include "yas_db_additional_protocol.h"
