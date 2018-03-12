@@ -15,7 +15,7 @@ class index {
    public:
     std::string const name;
     std::string const entity;
-    std::vector<std::string> const attribute_names;
+    std::vector<std::string> const attributes;
 
     explicit index(index_args);
     index(std::string const &name, CFDictionaryRef const dict);
