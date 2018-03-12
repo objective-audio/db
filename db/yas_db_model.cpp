@@ -240,50 +240,50 @@ db::index_map_t const &db::model::indices() const {
     return impl_ptr<impl>()->_args.indices;
 }
 
-db::entity const &db::model::entity(std::string const &entity_name) const {
-    return this->entities().at(entity_name);
+db::entity const &db::model::entity(std::string const &entity) const {
+    return this->entities().at(entity);
 }
 
-db::attribute_map_t const &db::model::attributes(std::string const &entity_name) const {
-    return this->entities().at(entity_name).all_attributes;
+db::attribute_map_t const &db::model::attributes(std::string const &entity) const {
+    return this->entities().at(entity).all_attributes;
 }
 
-db::attribute_map_t const &db::model::custom_attributes(std::string const &entity_name) const {
-    return this->entities().at(entity_name).custom_attributes;
+db::attribute_map_t const &db::model::custom_attributes(std::string const &entity) const {
+    return this->entities().at(entity).custom_attributes;
 }
 
-db::relation_map_t const &db::model::relations(std::string const &entity_name) const {
-    return this->entities().at(entity_name).relations;
+db::relation_map_t const &db::model::relations(std::string const &entity) const {
+    return this->entities().at(entity).relations;
 }
 
-db::attribute const &db::model::attribute(std::string const &entity_name, std::string const &attr_name) const {
-    return this->entities().at(entity_name).all_attributes.at(attr_name);
+db::attribute const &db::model::attribute(std::string const &entity, std::string const &attr_name) const {
+    return this->entities().at(entity).all_attributes.at(attr_name);
 }
 
-db::relation const &db::model::relation(std::string const &entity_name, std::string const &rel_name) const {
-    return this->entities().at(entity_name).relations.at(rel_name);
+db::relation const &db::model::relation(std::string const &entity, std::string const &rel_name) const {
+    return this->entities().at(entity).relations.at(rel_name);
 }
 
 db::index const &db::model::index(std::string const &index_name) const {
     return this->indices().at(index_name);
 }
 
-bool db::model::entity_exists(std::string const &entity_name) const {
-    return this->entities().count(entity_name) > 0;
+bool db::model::entity_exists(std::string const &entity) const {
+    return this->entities().count(entity) > 0;
 }
 
-bool db::model::attribute_exists(std::string const &entity_name, std::string const &attr_name) const {
-    if (this->entity_exists(entity_name)) {
-        if (this->entities().at(entity_name).all_attributes.count(attr_name) > 0) {
+bool db::model::attribute_exists(std::string const &entity, std::string const &attr_name) const {
+    if (this->entity_exists(entity)) {
+        if (this->entities().at(entity).all_attributes.count(attr_name) > 0) {
             return true;
         }
     }
     return false;
 }
 
-bool db::model::relation_exists(std::string const &entity_name, std::string const &rel_name) const {
-    if (this->entity_exists(entity_name)) {
-        if (this->entities().at(entity_name).relations.count(rel_name) > 0) {
+bool db::model::relation_exists(std::string const &entity, std::string const &rel_name) const {
+    if (this->entity_exists(entity)) {
+        if (this->entities().at(entity).relations.count(rel_name) > 0) {
             return true;
         }
     }
