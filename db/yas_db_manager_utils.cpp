@@ -79,7 +79,7 @@ db::value_vector_map_result_t select_relation_data(db::database &db, db::relatio
 
     for (auto const &rel_model_pair : rel_models) {
         std::string const &rel_name = rel_model_pair.first;
-        std::string const &rel_table = rel_model_pair.second.table_name;
+        std::string const &rel_table = rel_model_pair.second.table;
 
         if (db::value_vector_result_t result = db::select_relation_target_ids(db, rel_table, save_id, src_obj_id)) {
             relations.emplace(rel_name, std::move(result.value()));
@@ -581,7 +581,7 @@ db::manager_result_t db::clear_db(db::database &db, db::model const &model) {
         }
 
         for (auto const &rel_pair : entity.relations) {
-            std::string const rel_table_name = rel_pair.second.table_name;
+            std::string const rel_table_name = rel_pair.second.table;
 
             // 関連のテーブルのデータを全てデータベースから削除
             if (auto ul = unless(db.execute_update(db::delete_sql(rel_table_name)))) {
@@ -748,7 +748,7 @@ db::manager_result_t db::purge_db(db::database &db, db::model const &model) {
             if (db::update_result_t update_result = db.execute_update(update_entity_sql, one_value_args)) {
                 for (auto const &rel_pair : entity.relations) {
                     db::relation const &relation = rel_pair.second;
-                    std::string const &rel_table_name = relation.table_name;
+                    std::string const &rel_table_name = relation.table;
 
                     // 関連のデータをパージする（同じソースIDのデータは最後のものだけ生かす）
                     if (db::update_result_t purge_rel_result = db::purge_relations(db, rel_table_name, entity_name)) {
@@ -918,7 +918,7 @@ db::manager_result_t db::remove_relations_at_save(db::database &db, db::model co
             for (auto const &rel_name : rel_names) {
                 db::relation const &rel = model.relation(inv_entity_name, rel_name);
                 if (db::select_result_t select_result =
-                        db::select_for_save(db, inv_entity_name, rel.table_name, tgt_obj_ids)) {
+                        db::select_for_save(db, inv_entity_name, rel.table, tgt_obj_ids)) {
                     for (auto const &attr : select_result.value()) {
                         std::string obj_id_str = to_string(attr.at(db::object_id_field));
                         if (entity_attrs_map.count(obj_id_str) == 0) {
@@ -1009,7 +1009,7 @@ db::manager_result_t db::delete_next_to_last(db::database &db, db::model const &
 
         if (db::update_result_t delete_result = db.execute_update(db::delete_sql(entity_name, delete_exprs))) {
             for (auto const &rel_pair : entity_pair.second.relations) {
-                std::string const table = rel_pair.second.table_name;
+                std::string const table = rel_pair.second.table;
 
                 if (auto ul = unless(db.execute_update(db::delete_sql(table, delete_exprs)))) {
                     return db::make_error_result(db::manager_error_type::delete_failed, std::move(ul.value.error()));

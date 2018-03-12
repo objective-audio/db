@@ -477,7 +477,7 @@ using namespace yas;
         auto purge_result = db::purge_attributes(db, "sample_a");
         XCTAssertTrue(purge_result);
 
-        auto const &rel_table_name = manager.model().entities().at("sample_a").relations.at("child").table_name;
+        auto const &rel_table_name = manager.model().entities().at("sample_a").relations.at("child").table;
 
         auto purge_relation_result = db::purge_relations(db, rel_table_name, "sample_a");
         XCTAssertTrue(purge_relation_result);

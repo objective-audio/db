@@ -34,7 +34,7 @@ using namespace yas;
     NSDictionary *dict = @{ @"target": @"test_target" };
     db::relation relation{"test_entity", "test_name", (__bridge CFDictionaryRef)dict};
 
-    XCTAssertEqual(relation.table_name, "rel_test_entity_test_name");
+    XCTAssertEqual(relation.table, "rel_test_entity_test_name");
 }
 
 - (void)test_sql {

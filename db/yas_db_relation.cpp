@@ -22,7 +22,7 @@ db::relation::relation(relation_args args, std::string source)
       source(std::move(source)),
       target(std::move(args.target)),
       many(args.many),
-      table_name("rel_" + this->source + "_" + this->name) {
+      table("rel_" + this->source + "_" + this->name) {
 }
 
 db::relation::relation(std::string const &src_entity_name, std::string const &attr_name, CFDictionaryRef const &dict)
@@ -38,12 +38,11 @@ std::string db::relation::sql_for_create() const {
     std::string tgt_obj_id_sql = db::attribute{{db::tgt_obj_id_field, db::attribute_type::integer}}.sql();
     std::string save_id_sql = db::attribute{{db::save_id_field, db::attribute_type::integer}}.sql();
 
-    return db::create_table_sql(this->table_name,
-                                {std::move(id_sql), std::move(src_pk_id_sql), std::move(src_obj_id_sql),
-                                 std::move(tgt_obj_id_sql), std::move(save_id_sql)});
+    return db::create_table_sql(this->table, {std::move(id_sql), std::move(src_pk_id_sql), std::move(src_obj_id_sql),
+                                              std::move(tgt_obj_id_sql), std::move(save_id_sql)});
 }
 
 std::string db::relation::sql_for_insert() const {
-    return db::insert_sql(this->table_name,
+    return db::insert_sql(this->table,
                           {db::src_pk_id_field, db::src_obj_id_field, db::tgt_obj_id_field, db::save_id_field});
 }

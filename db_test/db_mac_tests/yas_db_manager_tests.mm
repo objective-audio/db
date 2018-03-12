@@ -1409,7 +1409,7 @@ using namespace yas;
         XCTAssertEqual(selected_values.at(1).at(db::action_field), db::update_action_value());
 
         auto relation_result =
-            db::select(db, db::select_option{.table = manager.model().relation("sample_a", "child").table_name});
+            db::select(db, db::select_option{.table = manager.model().relation("sample_a", "child").table});
         auto const &selected_relations = relation_result.value();
 
         XCTAssertEqual(selected_relations.size(), 2);
@@ -1962,7 +1962,7 @@ using namespace yas;
 
     manager.execute(db::no_cancellation, [self, &manager](auto const &op) {
         auto &db = manager.database();
-        auto const &rel_table_name = manager.model().entities().at("sample_a").relations.at("child").table_name;
+        auto const &rel_table_name = manager.model().entities().at("sample_a").relations.at("child").table;
 
         auto select_a_result = db::select(db, db::select_option{.table = "sample_a"});
         XCTAssertTrue(select_a_result);
