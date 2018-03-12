@@ -26,7 +26,7 @@ using namespace yas;
 
     XCTAssertEqual(relation.source, "test_entity");
     XCTAssertEqual(relation.name, "test_name");
-    XCTAssertEqual(relation.target_entity_name, "test_target");
+    XCTAssertEqual(relation.target, "test_target");
     XCTAssertEqual(relation.many, true);
 }
 

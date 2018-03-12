@@ -94,7 +94,7 @@ db::value_vector_map_result_t select_relation_data(db::database &db, db::relatio
 static void get_relation_ids(db::integer_set_map_t &out_ids, db::object const &object) {
     for (auto const &rel_pair : object.entity().relations) {
         db::relation const &rel = rel_pair.second;
-        std::string const &entity_name = rel.target_entity_name;
+        std::string const &entity_name = rel.target;
         auto const &rel_ids = object.relation_ids(rel_pair.first);
         if (rel_ids.size() == 0) {
             continue;

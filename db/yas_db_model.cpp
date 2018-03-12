@@ -86,7 +86,7 @@ static db::entity_map_t make_entities(CFDictionaryRef const &dict) {
                 if (cf_relation_dict) {
                     db::relation relation{entity_name, relation_name, cf_relation_dict};
 
-                    std::string const &tgt_entity_name = relation.target_entity_name;
+                    std::string const &tgt_entity_name = relation.target;
                     if (entity_inv_rel_names.count(tgt_entity_name) == 0) {
                         entity_inv_rel_names.insert(std::make_pair(tgt_entity_name, db::string_set_map_t{}));
                     }

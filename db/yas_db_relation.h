@@ -14,7 +14,7 @@ struct relation {
    public:
     std::string const name;
     std::string const source;
-    std::string const target_entity_name;
+    std::string const target;
     bool const many;
 
     std::string const table_name;

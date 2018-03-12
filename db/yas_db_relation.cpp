@@ -20,7 +20,7 @@ static std::string const many_key = "many";
 db::relation::relation(relation_args args, std::string source)
     : name(std::move(args.name)),
       source(std::move(source)),
-      target_entity_name(std::move(args.target)),
+      target(std::move(args.target)),
       many(args.many),
       table_name("rel_" + this->source + "_" + this->name) {
 }

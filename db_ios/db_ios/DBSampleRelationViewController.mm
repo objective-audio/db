@@ -70,7 +70,7 @@ rel_control_row_type_t to_idx(rel_control_row const &row) {
         };
 
         [viewController set_db_controller:_db_controller
-                                   entity:db_controller::entity_for_name(relation.target_entity_name)
+                                   entity:db_controller::entity_for_name(relation.target)
                          selected_handler:std::move(selected_handler)];
     }
 }

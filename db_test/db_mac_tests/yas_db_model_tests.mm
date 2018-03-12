@@ -174,7 +174,7 @@ using namespace yas;
     auto &child = relations.at("child");
     XCTAssertEqual(child.source, "sample_a");
     XCTAssertEqual(child.name, "child");
-    XCTAssertEqual(child.target_entity_name, "sample_b");
+    XCTAssertEqual(child.target, "sample_b");
 
     auto const &inv_rel_names_a = entity_a.inverse_relation_names;
     XCTAssertEqual(inv_rel_names_a.size(), 0);
