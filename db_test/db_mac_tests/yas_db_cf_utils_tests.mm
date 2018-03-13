@@ -3,6 +3,8 @@
 //
 
 #import "yas_db_test_utils.h"
+#import "yas_db_cf_utils.h"
+#import <CoreFoundation/CoreFoundation.h>
 
 using namespace yas;
 

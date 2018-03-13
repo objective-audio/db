@@ -11,19 +11,74 @@
 
 using namespace yas;
 
+namespace yas {
+static db::attribute_map_t make_attributes(std::vector<db::attribute_args> const &args_vec) {
+    db::attribute_map_t attributes;
+
+    for (db::attribute_args const &args : args_vec) {
+        attributes.emplace(args.name, db::attribute{args});
+    }
+
+    return attributes;
+}
+
+static db::attribute_map_t make_all_attributes(std::vector<db::attribute_args> const &args_vec) {
+    db::attribute_map_t attributes = make_attributes(args_vec);
+
+    attributes.reserve(args_vec.size() + 4);
+
+    db::attribute const &id_attr = db::attribute::id_attribute();
+    attributes.emplace(id_attr.name, id_attr);
+
+    db::attribute const &obj_id_attr = db::attribute::object_id_attribute();
+    attributes.emplace(obj_id_attr.name, obj_id_attr);
+
+    db::attribute const &save_id_attr = db::attribute::save_id_attribute();
+    attributes.emplace(save_id_attr.name, save_id_attr);
+
+    db::attribute const &action_attr = db::attribute::action_attribute();
+    attributes.emplace(action_attr.name, action_attr);
+
+    return attributes;
+}
+
+static db::attribute_map_t filter_custom_attributes(db::attribute_map_t const &attributes) {
+    return filter(attributes, [](auto const &pair) {
+        std::string const &attr_name = pair.first;
+        if (attr_name == db::pk_id_field || attr_name == db::object_id_field || attr_name == db::save_id_field ||
+            attr_name == db::action_field) {
+            return false;
+        }
+        return true;
+    });
+}
+
+static db::relation_map_t make_relations(std::vector<db::relation_args> &&args_vec, std::string const &source) {
+    db::relation_map_t relations;
+    relations.reserve(args_vec.size());
+
+    for (db::relation_args &args : args_vec) {
+        std::string name = args.name;
+        relations.emplace(std::move(name), db::relation{std::move(args), source});
+    }
+
+    return relations;
+}
+}
+
+db::entity::entity(entity_args args, db::string_set_map_t inv_rel_names)
+    : name(std::move(args.name)),
+      all_attributes(make_all_attributes(args.attributes)),
+      custom_attributes(make_attributes(args.attributes)),
+      relations(make_relations(std::move(args.relations), this->name)),
+      inverse_relation_names(std::move(inv_rel_names)) {
+}
+
 db::entity::entity(std::string const &name, db::attribute_map_t &&attributes, db::relation_map_t &&relations,
                    db::string_set_map_t &&inv_rel_names)
     : name(name),
       all_attributes(std::move(attributes)),
-      custom_attributes(filter(this->all_attributes,
-                               [](auto const &pair) {
-                                   std::string const &attr_name = pair.first;
-                                   if (attr_name == db::pk_id_field || attr_name == db::object_id_field ||
-                                       attr_name == db::save_id_field || attr_name == db::action_field) {
-                                       return false;
-                                   }
-                                   return true;
-                               })),
+      custom_attributes(filter_custom_attributes(this->all_attributes)),
       relations(std::move(relations)),
       inverse_relation_names(std::move(inv_rel_names)) {
 }

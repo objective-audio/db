@@ -534,7 +534,7 @@ struct db::object::impl : const_object::impl, manageable_object::impl {
         for (auto const &pair : this->_entity.relations) {
             std::string const &rel_name = pair.first;
             if (this->_relations.count(rel_name) > 0) {
-                std::string const &rel_entity_name = pair.second.target_entity_name;
+                std::string const &rel_entity_name = pair.second.target;
                 auto const &rel_ids = this->_relations.at(rel_name);
                 db::id_vector_t rel_save_ids;
                 rel_save_ids.reserve(rel_ids.size());
@@ -624,14 +624,14 @@ void db::object::set_attribute_value(std::string const &attr_name, db::value con
 
 db::object_vector_t db::object::relation_objects(std::string const &rel_name) const {
     auto const &rel_ids = impl_ptr<impl>()->relation_ids(rel_name);
-    std::string const &tgt_entity_name = this->entity().relations.at(rel_name).target_entity_name;
+    std::string const &tgt_entity_name = this->entity().relations.at(rel_name).target;
     return to_vector<db::object>(rel_ids, [manager = manager(), &tgt_entity_name](db::object_id const &rel_id) {
         return manager.cached_or_created_object(tgt_entity_name, rel_id);
     });
 }
 
 db::object db::object::relation_object_at(std::string const &rel_name, std::size_t const idx) const {
-    std::string const &tgt_entity_name = this->entity().relations.at(rel_name).target_entity_name;
+    std::string const &tgt_entity_name = this->entity().relations.at(rel_name).target;
     return this->manager().cached_or_created_object(tgt_entity_name, relation_id(rel_name, idx));
 }
 

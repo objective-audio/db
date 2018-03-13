@@ -21,9 +21,7 @@ using namespace yas;
 }
 
 - (void)test_load_model {
-    NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
-
-    db::model model((__bridge CFDictionaryRef)model_dict);
+    db::model model = [yas_db_test_utils model_0_0_1];
 
     XCTAssertEqual(model.version().str(), "0.0.1");
 
@@ -174,9 +172,9 @@ using namespace yas;
     XCTAssertEqual(relations.size(), 1);
 
     auto &child = relations.at("child");
-    XCTAssertEqual(child.source_entity_name, "sample_a");
+    XCTAssertEqual(child.source, "sample_a");
     XCTAssertEqual(child.name, "child");
-    XCTAssertEqual(child.target_entity_name, "sample_b");
+    XCTAssertEqual(child.target, "sample_b");
 
     auto const &inv_rel_names_a = entity_a.inverse_relation_names;
     XCTAssertEqual(inv_rel_names_a.size(), 0);
@@ -190,16 +188,14 @@ using namespace yas;
 }
 
 - (void)test_get_entity {
-    NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
-    db::model model((__bridge CFDictionaryRef)model_dict);
+    db::model model = [yas_db_test_utils model_0_0_1];
 
     XCTAssertEqual(model.entity("sample_a").all_attributes.size(), 8);
     XCTAssertEqual(model.entity("sample_a").relations.size(), 1);
 }
 
 - (void)test_get_attributes_by_entity_name {
-    NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
-    db::model model((__bridge CFDictionaryRef)model_dict);
+    db::model model = [yas_db_test_utils model_0_0_1];
 
     XCTAssertEqual(model.attributes("sample_a").size(), 8);
     XCTAssertEqual(model.attributes("sample_a").count("pk_id"), 1);
@@ -213,16 +209,14 @@ using namespace yas;
 }
 
 - (void)test_get_attribute {
-    NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
-    db::model model((__bridge CFDictionaryRef)model_dict);
+    db::model model = [yas_db_test_utils model_0_0_1];
 
     XCTAssertEqual(model.attribute("sample_a", "age").name, "age");
 }
 
 - (void)test_get_custom_attributes {
-    NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
-    db::model model((__bridge CFDictionaryRef)model_dict);
-    
+    db::model model = [yas_db_test_utils model_0_0_1];
+
     auto const &attributes = model.custom_attributes("sample_a");
     XCTAssertEqual(attributes.size(), 4);
     XCTAssertEqual(attributes.count("name"), 1);
@@ -232,30 +226,26 @@ using namespace yas;
 }
 
 - (void)test_get_relations_by_entity_name {
-    NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
-    db::model model((__bridge CFDictionaryRef)model_dict);
+    db::model model = [yas_db_test_utils model_0_0_1];
 
     XCTAssertEqual(model.relations("sample_a").size(), 1);
     XCTAssertEqual(model.relations("sample_a").count("child"), 1);
 }
 
 - (void)test_get_relation {
-    NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
-    db::model model((__bridge CFDictionaryRef)model_dict);
+    db::model model = [yas_db_test_utils model_0_0_1];
 
     XCTAssertEqual(model.relation("sample_a", "child").name, "child");
 }
 
 - (void)test_get_index {
-    NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
-    db::model model((__bridge CFDictionaryRef)model_dict);
+    db::model model = [yas_db_test_utils model_0_0_1];
 
     XCTAssertEqual(model.index("sample_a_name").name, "sample_a_name");
 }
 
 - (void)test_entity_exists {
-    NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
-    db::model model((__bridge CFDictionaryRef)model_dict);
+    db::model model = [yas_db_test_utils model_0_0_1];
 
     XCTAssertTrue(model.entity_exists("sample_a"));
     XCTAssertTrue(model.entity_exists("sample_b"));
@@ -264,8 +254,7 @@ using namespace yas;
 }
 
 - (void)test_attribute_exists {
-    NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
-    db::model model((__bridge CFDictionaryRef)model_dict);
+    db::model model = [yas_db_test_utils model_0_0_1];
 
     XCTAssertTrue(model.attribute_exists("sample_a", "age"));
     XCTAssertTrue(model.attribute_exists("sample_b", "name"));
@@ -274,8 +263,7 @@ using namespace yas;
 }
 
 - (void)test_relation_exists {
-    NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
-    db::model model((__bridge CFDictionaryRef)model_dict);
+    db::model model = [yas_db_test_utils model_0_0_1];
 
     XCTAssertTrue(model.relation_exists("sample_a", "child"));
 
@@ -283,8 +271,7 @@ using namespace yas;
 }
 
 - (void)test_index_exists {
-    NSDictionary *model_dict = [yas_db_test_utils model_dictionary_0_0_1];
-    db::model model((__bridge CFDictionaryRef)model_dict);
+    db::model model = [yas_db_test_utils model_0_0_1];
 
     XCTAssertTrue(model.index_exists("sample_a_name"));
     XCTAssertFalse(model.index_exists("sample_b_name"));

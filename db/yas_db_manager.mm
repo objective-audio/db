@@ -21,7 +21,6 @@
 #include "yas_result.h"
 #include "yas_stl_utils.h"
 #include "yas_unless.h"
-#include "yas_version.h"
 #include "yas_db_info.h"
 #include "yas_db_fetch_option.h"
 

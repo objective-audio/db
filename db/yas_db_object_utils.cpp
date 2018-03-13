@@ -14,7 +14,7 @@ std::vector<db::const_object> db::get_const_relation_objects(db::const_object co
                                                              db::const_object_map_map_t const &objects,
                                                              std::string const &rel_name) {
     auto const rel_ids = object.relation_ids(rel_name);
-    std::string const &tgt_entity_name = object.entity().relations.at(rel_name).target_entity_name;
+    std::string const &tgt_entity_name = object.entity().relations.at(rel_name).target;
 
     if (objects.count(tgt_entity_name) > 0) {
         auto const &entity_objects = objects.at(tgt_entity_name);
@@ -31,10 +31,11 @@ std::vector<db::const_object> db::get_const_relation_objects(db::const_object co
     return {};
 }
 
-db::const_object db::get_const_relation_object(db::const_object const &object, db::const_object_map_map_t const &objects,
-                                               std::string const &rel_name, std::size_t const idx) {
+db::const_object db::get_const_relation_object(db::const_object const &object,
+                                               db::const_object_map_map_t const &objects, std::string const &rel_name,
+                                               std::size_t const idx) {
     db::integer::type const &rel_id = object.relation_ids(rel_name).at(idx).stable();
-    std::string const &tgt_entity_name = object.entity().relations.at(rel_name).target_entity_name;
+    std::string const &tgt_entity_name = object.entity().relations.at(rel_name).target;
 
     if (objects.count(tgt_entity_name) > 0) {
         auto const &entity_objects = objects.at(tgt_entity_name);

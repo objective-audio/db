@@ -77,7 +77,7 @@ using namespace yas;
 }
 
 - (void)test_setup {
-    db::model model{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
+    db::model model = [yas_db_test_utils model_0_0_1];
     auto manager = [yas_db_test_utils create_test_manager:std::move(model)];
 
     manager.setup([self, &manager](auto result) { XCTAssertTrue(result); });
@@ -104,7 +104,6 @@ using namespace yas;
         XCTAssertTrue(db::index_exists(db, "sample_a_name"));
         XCTAssertTrue(db::index_exists(db, "sample_a_others"));
         XCTAssertFalse(db::index_exists(db, "sample_b_name"));
-
     });
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
@@ -113,7 +112,7 @@ using namespace yas;
 }
 
 - (void)test_create_object {
-    db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
+    db::model model_0_0_1 = [yas_db_test_utils model_0_0_1];
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
 
     db::object_vector_t objects;
@@ -188,7 +187,7 @@ using namespace yas;
 }
 
 - (void)test_create_and_save_objects {
-    db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
+    db::model model_0_0_1 = [yas_db_test_utils model_0_0_1];
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
 
     db::object_vector_t objects{};
@@ -284,7 +283,7 @@ using namespace yas;
 - (void)test_set_relation_to_temporary_object {
     // temporaryなオブジェクトのrelationにtemporaryなオブジェクトをセットして保存するテスト
 
-    db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
+    db::model model_0_0_1 = [yas_db_test_utils model_0_0_1];
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
 
     XCTestExpectation *setupExp = [self expectationWithDescription:@"setup"];
@@ -341,7 +340,7 @@ using namespace yas;
 - (void)test_set_temporary_relation_to_saved_object {
     // stableなオブジェクトのrelationにtemporaryなオブジェクトをセットして保存するテスト
 
-    db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
+    db::model model_0_0_1 = [yas_db_test_utils model_0_0_1];
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
 
     {
@@ -393,7 +392,7 @@ using namespace yas;
 }
 
 - (void)test_object_relation_objects {
-    db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
+    db::model model_0_0_1 = [yas_db_test_utils model_0_0_1];
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
 
     XCTestExpectation *setup_exp = [self expectationWithDescription:@"setup manager"];
@@ -431,7 +430,7 @@ using namespace yas;
 }
 
 - (void)test_setup_migration {
-    db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
+    db::model model_0_0_1 = [yas_db_test_utils model_0_0_1];
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
 
     manager.setup([self, &manager](auto result) { XCTAssertTrue(result); });
@@ -486,7 +485,7 @@ using namespace yas;
 
     manager = nullptr;
 
-    db::model model_0_0_2{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_2]};
+    db::model model_0_0_2 = [yas_db_test_utils model_0_0_2];
     manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_2)];
 
     manager.setup([self, &manager](auto result) { XCTAssertTrue(result); });
@@ -547,7 +546,7 @@ using namespace yas;
 }
 
 - (void)test_insert_objects_by_count {
-    db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
+    db::model model_0_0_1 = [yas_db_test_utils model_0_0_1];
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
 
     XCTestExpectation *exp1 = [self expectationWithDescription:@"insert_1"];
@@ -642,7 +641,7 @@ using namespace yas;
 }
 
 - (void)test_insert_objects_by_values {
-    db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
+    db::model model_0_0_1 = [yas_db_test_utils model_0_0_1];
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
 
     manager.setup([self, &manager](auto result) {
@@ -682,7 +681,7 @@ using namespace yas;
 }
 
 - (void)test_insert_many_entity_objects {
-    db::model model_0_0_2{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_2]};
+    db::model model_0_0_2 = [yas_db_test_utils model_0_0_2];
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_2)];
 
     manager.setup([self, &manager](auto result) { XCTAssertTrue(result); });
@@ -712,7 +711,7 @@ using namespace yas;
 }
 
 - (void)test_insert_with_delete {
-    db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
+    db::model model_0_0_1 = [yas_db_test_utils model_0_0_1];
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
 
     manager.setup([self, &manager](auto result) {
@@ -799,7 +798,7 @@ using namespace yas;
 }
 
 - (void)test_fetch_objects {
-    db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
+    db::model model_0_0_1 = [yas_db_test_utils model_0_0_1];
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
 
     manager.setup([self, &manager](auto result) { XCTAssertTrue(result); });
@@ -944,7 +943,7 @@ using namespace yas;
 }
 
 - (void)test_fetch_const_objects {
-    db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
+    db::model model_0_0_1 = [yas_db_test_utils model_0_0_1];
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
 
     manager.setup([self, &manager](auto result) mutable {
@@ -998,7 +997,7 @@ using namespace yas;
 }
 
 - (void)test_fetch_objects_of_relations {
-    db::model model_0_0_2{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_2]};
+    db::model model_0_0_2 = [yas_db_test_utils model_0_0_2];
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_2)];
 
     manager.setup([self, &manager](auto result) { XCTAssertTrue(result); });
@@ -1131,7 +1130,7 @@ using namespace yas;
 }
 
 - (void)test_fetch_const_objects_by_ids {
-    db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
+    db::model model_0_0_1 = [yas_db_test_utils model_0_0_1];
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
 
     manager.setup([self, &manager](auto result) mutable { XCTAssertTrue(result); });
@@ -1179,7 +1178,7 @@ using namespace yas;
 }
 
 - (void)test_fetch_relation_objects {
-    db::model model_0_0_2{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_2]};
+    db::model model_0_0_2 = [yas_db_test_utils model_0_0_2];
     db::manager manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_2)];
 
     XCTestExpectation *setupExp = [self expectationWithDescription:@"setup"];
@@ -1245,7 +1244,7 @@ using namespace yas;
 }
 
 - (void)test_fetch_const_relation_objects {
-    db::model model_0_0_2{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_2]};
+    db::model model_0_0_2 = [yas_db_test_utils model_0_0_2];
     db::manager manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_2)];
 
     XCTestExpectation *setupExp = [self expectationWithDescription:@"setup"];
@@ -1311,7 +1310,7 @@ using namespace yas;
 }
 
 - (void)test_save_objects {
-    db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
+    db::model model_0_0_1 = [yas_db_test_utils model_0_0_1];
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
 
     manager.setup([self, &manager](auto result) {
@@ -1410,7 +1409,7 @@ using namespace yas;
         XCTAssertEqual(selected_values.at(1).at(db::action_field), db::update_action_value());
 
         auto relation_result =
-            db::select(db, db::select_option{.table = manager.model().relation("sample_a", "child").table_name});
+            db::select(db, db::select_option{.table = manager.model().relation("sample_a", "child").table});
         auto const &selected_relations = relation_result.value();
 
         XCTAssertEqual(selected_relations.size(), 2);
@@ -1482,7 +1481,7 @@ using namespace yas;
 }
 
 - (void)test_save_with_delete {
-    db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
+    db::model model_0_0_1 = [yas_db_test_utils model_0_0_1];
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
 
     manager.setup([self, &manager](auto result) {
@@ -1559,7 +1558,7 @@ using namespace yas;
 }
 
 - (void)test_revert_objects {
-    db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
+    db::model model_0_0_1 = [yas_db_test_utils model_0_0_1];
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
 
     auto a_object = db::null_object();
@@ -1654,7 +1653,7 @@ using namespace yas;
 }
 
 - (void)test_restore_reverted_db {
-    db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
+    db::model model_0_0_1 = [yas_db_test_utils model_0_0_1];
     if (auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)]) {
         db::object_vector_map_t objects;
 
@@ -1769,7 +1768,7 @@ using namespace yas;
 }
 
 - (void)test_suspend_count {
-    db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
+    db::model model_0_0_1 = [yas_db_test_utils model_0_0_1];
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1) priority_count:2];
 
     XCTAssertFalse(manager.is_suspended());
@@ -1794,7 +1793,7 @@ using namespace yas;
 }
 
 - (void)test_clear {
-    db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
+    db::model model_0_0_1 = [yas_db_test_utils model_0_0_1];
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
 
     auto object = db::null_object();
@@ -1840,7 +1839,7 @@ using namespace yas;
 }
 
 - (void)test_cancel_clear {
-    db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
+    db::model model_0_0_1 = [yas_db_test_utils model_0_0_1];
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
 
     auto object = db::null_object();
@@ -1874,7 +1873,7 @@ using namespace yas;
 }
 
 - (void)test_purge {
-    db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
+    db::model model_0_0_1 = [yas_db_test_utils model_0_0_1];
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
 
     manager.setup([self, &manager](auto result) { XCTAssertTrue(result); });
@@ -1963,7 +1962,7 @@ using namespace yas;
 
     manager.execute(db::no_cancellation, [self, &manager](auto const &op) {
         auto &db = manager.database();
-        auto const &rel_table_name = manager.model().entities().at("sample_a").relations.at("child").table_name;
+        auto const &rel_table_name = manager.model().entities().at("sample_a").relations.at("child").table;
 
         auto select_a_result = db::select(db, db::select_option{.table = "sample_a"});
         XCTAssertTrue(select_a_result);
@@ -2010,7 +2009,7 @@ using namespace yas;
 }
 
 - (void)test_cancel_purge {
-    db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
+    db::model model_0_0_1 = [yas_db_test_utils model_0_0_1];
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
 
     auto object = db::null_object();
@@ -2043,7 +2042,7 @@ using namespace yas;
 }
 
 - (void)test_has_inserted {
-    db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
+    db::model model_0_0_1 = [yas_db_test_utils model_0_0_1];
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
 
     manager.setup([self, &manager](auto result) {
@@ -2068,7 +2067,7 @@ using namespace yas;
 }
 
 - (void)test_has_changed {
-    db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
+    db::model model_0_0_1 = [yas_db_test_utils model_0_0_1];
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
 
     manager.setup([self, &manager](auto result) { XCTAssertTrue(result); });
@@ -2095,7 +2094,7 @@ using namespace yas;
 }
 
 - (void)test_created_object_count {
-    db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
+    db::model model_0_0_1 = [yas_db_test_utils model_0_0_1];
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
 
     manager.setup([self, &manager](auto result) {
@@ -2124,7 +2123,7 @@ using namespace yas;
 }
 
 - (void)test_changed_object_count {
-    db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
+    db::model model_0_0_1 = [yas_db_test_utils model_0_0_1];
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
 
     manager.setup([self, &manager](auto result) { XCTAssertTrue(result); });
@@ -2159,7 +2158,7 @@ using namespace yas;
 }
 
 - (void)test_is_temporary {
-    db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
+    db::model model_0_0_1 = [yas_db_test_utils model_0_0_1];
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
 
     XCTestExpectation *setupExp = [self expectationWithDescription:@"setup"];
@@ -2186,7 +2185,7 @@ using namespace yas;
 }
 
 - (void)test_reset {
-    db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
+    db::model model_0_0_1 = [yas_db_test_utils model_0_0_1];
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
 
     manager.setup([self, &manager](auto result) { XCTAssertTrue(result); });
@@ -2256,7 +2255,7 @@ using namespace yas;
 - (void)test_invert_relation_removed_in_cache {
     // フェッチされていないオブジェクトに逆関連があった場合に、キャッシュ上のオブジェクトから削除されているかテスト
 
-    db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
+    db::model model_0_0_1 = [yas_db_test_utils model_0_0_1];
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
 
     {
@@ -2359,7 +2358,7 @@ using namespace yas;
 - (void)test_invert_relation_removed_in_db {
     // フェッチされていないオブジェクトに逆関連があった場合に、DB上で関連を削除されているかテスト
 
-    db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
+    db::model model_0_0_1 = [yas_db_test_utils model_0_0_1];
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
 
     {
@@ -2722,7 +2721,7 @@ using namespace yas;
 }
 
 - (void)test_observing_object_changed {
-    db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
+    db::model model_0_0_1 = [yas_db_test_utils model_0_0_1];
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
 
     manager.setup([self, &manager](auto result) { XCTAssertTrue(result); });
@@ -2752,7 +2751,7 @@ using namespace yas;
 }
 
 - (void)test_observing_db_info_changed {
-    db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
+    db::model model_0_0_1 = [yas_db_test_utils model_0_0_1];
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
 
     std::size_t observing_count = 0;
@@ -2787,7 +2786,7 @@ using namespace yas;
 - (void)test_dispatch_queue {
     dispatch_queue_t queue = dispatch_queue_create("test", DISPATCH_QUEUE_SERIAL);
 
-    db::model model_0_0_1{(__bridge CFDictionaryRef)[yas_db_test_utils model_dictionary_0_0_1]};
+    db::model model_0_0_1 = [yas_db_test_utils model_0_0_1];
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1) priority_count:1 dispatch_queue:queue];
 
     XCTAssertEqualObjects(manager.dispatch_queue(), queue);

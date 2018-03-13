@@ -52,57 +52,72 @@ using namespace yas;
     }
 }
 
-+ (NSDictionary *)model_dictionary_0_0_1 {
-    return @{
-        @"version": @"0.0.1",
-        @"entities": @{
-            @"sample_a": @{
-                @"attributes": @{
-                    @"age": @{@"type": @"INTEGER", @"default": @10, @"not_null": @YES},
-                    @"name": @{@"type": @"TEXT", @"default": @"default_value"},
-                    @"weight": @{@"type": @"REAL", @"default": @65.4},
-                    @"data": @{@"type": @"BLOB"}
-                },
-                @"relations": @{@"child": @{@"target": @"sample_b"}}
-            },
-            @"sample_b": @{@"attributes": @{@"name": @{@"type": @"TEXT"}}, @"relations": @{}}
-        },
-        @"indices": @{
-            @"sample_a_name": @{@"entity": @"sample_a", @"attributes": @[@"name"]},
-            @"sample_a_others": @{@"entity": @"sample_a", @"attributes": @[@"age", @"weight"]}
-        }
-    };
++ (db::model)model_0_0_1 {
+    yas::version version{"0.0.1"};
+
+    db::entity_args sample_a{
+        .name = "sample_a",
+        .attributes = {{.name = "age",
+                        .type = db::attribute_type::integer,
+                        .default_value = db::value{db::integer::type{10}},
+                        .not_null = true},
+                       {.name = "name", .type = db::attribute_type::text, .default_value = db::value{"default_value"}},
+                       {.name = "weight",
+                        .type = db::attribute_type::real,
+                        .default_value = db::value{db::real::type{65.4}}},
+                       {.name = "data", .type = db::attribute_type::blob}},
+        .relations = {{.name = "child", .target = "sample_b"}}};
+
+    db::entity_args sample_b{.name = "sample_b", .attributes = {{.name = "name", .type = db::attribute_type::text}}};
+
+    db::entity_args_vector_t entities{std::move(sample_a), std::move(sample_b)};
+
+    db::index_args sample_a_name_index{.name = "sample_a_name", .entity = "sample_a", .attributes = {"name"}};
+    db::index_args sample_a_others_index{
+        .name = "sample_a_others", .entity = "sample_a", .attributes = {"age", "weight"}};
+
+    db::index_args_vector_t indices{std::move(sample_a_name_index), std::move(sample_a_others_index)};
+
+    return db::model{
+        db::model_args{.version = std::move(version), .entities = std::move(entities), .indices = std::move(indices)}};
 }
 
-+ (NSDictionary *)model_dictionary_0_0_2 {
-    return @{
-        @"version": @"0.0.2",
-        @"entities": @{
-            @"sample_a": @{
-                @"attributes": @{
-                    @"age": @{@"type": @"INTEGER", @"default": @10, @"not_null": @YES},
-                    @"name": @{@"type": @"TEXT", @"default": @"default_value"},
-                    @"weight": @{@"type": @"REAL", @"default": @65.4},
-                    @"tall": @{@"type": @"REAL", @"default": @172.4},
-                    @"data": @{@"type": @"BLOB"}
-                },
-                @"relations": @{@"child": @{@"target": @"sample_b"}, @"friend": @{@"target": @"sample_c"}}
-            },
-            @"sample_b": @{
-                @"attributes": @{@"name": @{@"type": @"TEXT"}},
-                @"relations": @{@"parent": @{@"target": @"sample_a"}}
-            },
-            @"sample_c": @{
-                @"attributes": @{@"name": @{@"type": @"TEXT"}},
-                @"relations": @{@"friend": @{@"target": @"sample_a"}}
-            }
-        },
-        @"indices": @{
-            @"sample_a_name": @{@"entity": @"sample_a", @"attributes": @[@"name"]},
-            @"sample_a_others": @{@"entity": @"sample_a", @"attributes": @[@"age", @"weight"]},
-            @"sample_b_name": @{@"entity": @"sample_b", @"attributes": @[@"name"]}
-        }
-    };
++ (db::model)model_0_0_2 {
+    yas::version version{"0.0.2"};
+
+    db::entity_args sample_a{
+        .name = "sample_a",
+        .attributes =
+            {{.name = "age",
+              .type = db::attribute_type::integer,
+              .default_value = db::value{db::integer::type{10}},
+              .not_null = true},
+             {.name = "name", .type = db::attribute_type::text, .default_value = db::value{"default_value"}},
+             {.name = "weight", .type = db::attribute_type::real, .default_value = db::value{db::real::type{65.4}}},
+             {.name = "tall", .type = db::attribute_type::real, .default_value = db::value{db::real::type{172.4}}},
+             {.name = "data", .type = db::attribute_type::blob}},
+        .relations = {{.name = "child", .target = "sample_b"}, {.name = "friend", .target = "sample_c"}}};
+
+    db::entity_args sample_b{.name = "sample_b",
+                             .attributes = {{.name = "name", .type = db::attribute_type::text}},
+                             .relations = {{.name = "parent", .target = "sample_a"}}};
+
+    db::entity_args sample_c{.name = "sample_c",
+                             .attributes = {{.name = "name", .type = db::attribute_type::text}},
+                             .relations = {{.name = "friend", .target = "sample_a"}}};
+
+    db::entity_args_vector_t entities{std::move(sample_a), std::move(sample_b), std::move(sample_c)};
+
+    db::index_args sample_a_name_index{.name = "sample_a_name", .entity = "sample_a", .attributes = {"name"}};
+    db::index_args sample_a_others_index{
+        .name = "sample_a_others", .entity = "sample_a", .attributes = {"age", "weight"}};
+    db::index_args sample_b_name_index{.name = "sample_b_name", .entity = "sample_b", .attributes = {"name"}};
+
+    db::index_args_vector_t indices{std::move(sample_a_name_index), std::move(sample_a_others_index),
+                                    std::move(sample_b_name_index)};
+
+    return db::model{
+        db::model_args{.version = std::move(version), .entities = std::move(entities), .indices = std::move(indices)}};
 }
 
 @end

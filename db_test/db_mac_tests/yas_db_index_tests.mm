@@ -4,6 +4,7 @@
 
 #import <XCTest/XCTest.h>
 #import "yas_db_index.h"
+#import "yas_db_additional_types.h"
 
 using namespace yas;
 
@@ -22,17 +23,20 @@ using namespace yas;
 }
 
 - (void)test_create {
-    db::index index{"test_name", "test_table_name", std::vector<std::string>{"test_attr_name_0", "test_attr_name_1"}};
+    db::index index{{.name = "test_name",
+                     .entity = "test_table_name",
+                     .attributes = std::vector<std::string>{"test_attr_name_0", "test_attr_name_1"}}};
 
     XCTAssertEqual(index.name, "test_name");
-    XCTAssertEqual(index.table_name, "test_table_name");
-    XCTAssertEqual(index.attribute_names.size(), 2);
-    XCTAssertEqual(index.attribute_names.at(0), "test_attr_name_0");
-    XCTAssertEqual(index.attribute_names.at(1), "test_attr_name_1");
+    XCTAssertEqual(index.entity, "test_table_name");
+    XCTAssertEqual(index.attributes.size(), 2);
+    XCTAssertEqual(index.attributes.at(0), "test_attr_name_0");
+    XCTAssertEqual(index.attributes.at(1), "test_attr_name_1");
 }
 
 - (void)test_sql_for_create {
-    db::index index{"idx_name", "tbl_name", std::vector<std::string>{"attr_0", "attr_1"}};
+    db::index index{
+        {.name = "idx_name", .entity = "tbl_name", .attributes = std::vector<std::string>{"attr_0", "attr_1"}}};
 
     XCTAssertEqual(index.sql_for_create(), "CREATE INDEX IF NOT EXISTS idx_name ON tbl_name(attr_0,attr_1);");
 }

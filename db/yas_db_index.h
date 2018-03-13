@@ -4,19 +4,19 @@
 
 #pragma once
 
-#include <CoreFoundation/CoreFoundation.h>
 #include <string>
 #include <vector>
 
 namespace yas::db {
+class index_args;
+
 class index {
    public:
     std::string const name;
-    std::string const table_name;
-    std::vector<std::string> const attribute_names;
+    std::string const entity;
+    std::vector<std::string> const attributes;
 
-    index(std::string const &name, std::string const &table_name, std::vector<std::string> const &attr_names);
-    index(std::string const &name, CFDictionaryRef const dict);
+    explicit index(index_args);
 
     std::string sql_for_create() const;
 };
