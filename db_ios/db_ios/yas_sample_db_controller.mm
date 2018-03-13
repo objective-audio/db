@@ -33,23 +33,20 @@ db_controller::db_controller() : _manager(nullptr), _objects() {
 void db_controller::setup(db::completion_f completion) {
     this->_begin_processing();
 
-    auto model_dict = make_objc_ptr<NSDictionary *>([]() {
-        return @{
-            @"entities": @{
-                @"entity_a": @{
-                    @"attributes": @{
-                        @"age": @{@"type": @"INTEGER", @"default": @1},
-                        @"name": @{@"type": @"TEXT", @"default": @"empty_name"}
-                    },
-                    @"relations": @{@"b": @{@"target": @"entity_b", @"many": @YES}}
-                },
-                @"entity_b": @{@"attributes": @{@"name": @{@"type": @"TEXT", @"default": @"empty_name"}}}
-            },
-            @"version": @"1.0.1"
-        };
-    });
+    yas::version version{"1.0.1"};
 
-    db::model model{(__bridge CFDictionaryRef)model_dict.object()};
+    db::entity_args entity_a{
+        .name = "entity_a",
+        .attributes = {{.name = "age", .type = db::attribute_type::integer, .default_value = db::value{1}},
+                       {.name = "name", .type = db::attribute_type::text, .default_value = db::value{"empty_name"}}},
+        .relations = {{.name = "b", .target = "entity_b", .many = true}}};
+
+    db::entity_args entity_b{
+        .name = "entity_b",
+        .attributes = {{.name = "name", .type = db::attribute_type::text, .default_value = db::value{"empty_name"}}}};
+
+    db::model model{db::model_args{
+        .version = std::move(version), .entities = {std::move(entity_a), std::move(entity_b)}, .indices = {}}};
 
     for (auto const &pair : model.entities()) {
         this->_objects.emplace(pair.first, db::object_vector_t{});
