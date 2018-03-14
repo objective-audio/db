@@ -74,15 +74,6 @@ db::entity::entity(entity_args args, db::string_set_map_t inv_rel_names)
       inverse_relation_names(std::move(inv_rel_names)) {
 }
 
-db::entity::entity(std::string const &name, db::attribute_map_t &&attributes, db::relation_map_t &&relations,
-                   db::string_set_map_t &&inv_rel_names)
-    : name(name),
-      all_attributes(std::move(attributes)),
-      custom_attributes(filter_custom_attributes(this->all_attributes)),
-      relations(std::move(relations)),
-      inverse_relation_names(std::move(inv_rel_names)) {
-}
-
 std::string db::entity::sql_for_create() const {
     auto mapped_attrs =
         to_vector<std::string>(this->all_attributes, [](auto const &pair) { return pair.second.sql(); });

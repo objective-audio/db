@@ -17,8 +17,6 @@ struct entity {
     db::string_set_map_t const inverse_relation_names;
 
     explicit entity(entity_args, db::string_set_map_t inv_rel_names);
-    entity(std::string const &name, db::attribute_map_t &&attributes, db::relation_map_t &&relations,
-           db::string_set_map_t &&inv_rel_names);
 
     std::string sql_for_create() const;
     std::string sql_for_update() const;
