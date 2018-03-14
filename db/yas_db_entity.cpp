@@ -42,17 +42,6 @@ static db::attribute_map_t make_all_attributes(std::vector<db::attribute_args> c
     return attributes;
 }
 
-static db::attribute_map_t filter_custom_attributes(db::attribute_map_t const &attributes) {
-    return filter(attributes, [](auto const &pair) {
-        std::string const &attr_name = pair.first;
-        if (attr_name == db::pk_id_field || attr_name == db::object_id_field || attr_name == db::save_id_field ||
-            attr_name == db::action_field) {
-            return false;
-        }
-        return true;
-    });
-}
-
 static db::relation_map_t make_relations(std::vector<db::relation_args> &&args_vec, std::string const &source) {
     db::relation_map_t relations;
     relations.reserve(args_vec.size());
