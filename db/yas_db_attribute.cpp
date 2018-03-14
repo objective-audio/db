@@ -41,10 +41,6 @@ db::attribute::attribute(attribute_args args)
         throw std::invalid_argument("invalid name");
     }
 
-    if (type != db::integer::name && type != db::real::name && type != db::text::name && type != db::blob::name) {
-        throw std::invalid_argument("invalid type");
-    }
-
     if (default_value) {
         std::type_info const &default_type = default_value.type();
         if (type == db::integer::name && default_type != typeid(db::integer)) {
