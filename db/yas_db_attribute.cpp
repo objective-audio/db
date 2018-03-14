@@ -31,19 +31,19 @@ static std::string const not_null_key = "not_null";
 }
 
 db::attribute::attribute(attribute_args args)
-    : name(args.name),
+    : name(std::move(args.name)),
       type(to_string(args.type)),
-      default_value(args.default_value),
+      default_value(std::move(args.default_value)),
       not_null(args.not_null),
       primary(args.primary),
       unique(args.unique) {
-    if (name.size() == 0) {
+    if (this->name.size() == 0) {
         throw std::invalid_argument("invalid name");
     }
 
-    if (default_value) {
-        std::type_info const &default_type = default_value.type();
-        if (type == db::integer::name && default_type != typeid(db::integer)) {
+    if (this->default_value) {
+        std::type_info const &default_type = this->default_value.type();
+        if (this->type == db::integer::name && default_type != typeid(db::integer)) {
             throw std::invalid_argument("invalid default_value type");
         } else if (type == db::real::name && default_type != typeid(db::real)) {
             throw std::invalid_argument("invalid default_value type");
@@ -52,7 +52,7 @@ db::attribute::attribute(attribute_args args)
         } else if (type == db::blob::name && default_type != typeid(db::blob)) {
             throw std::invalid_argument("invalid default_value type");
         }
-    } else if (not_null) {
+    } else if (this->not_null) {
         throw std::invalid_argument("invalid default_value not null");
     }
 }
