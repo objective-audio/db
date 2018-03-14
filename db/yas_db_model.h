@@ -18,14 +18,7 @@ class model : public base {
     class impl;
 
    public:
-    struct args {
-        yas::version const version;
-        db::entity_map_t const entities;
-        db::index_map_t const indices;
-    };
-
     explicit model(model_args);
-    explicit model(args);
     model(std::nullptr_t);
 
     yas::version const &version() const;
