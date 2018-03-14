@@ -8,17 +8,15 @@
 
 using namespace yas;
 
-namespace yas::db {
-static std::string const target_key = "target";
-static std::string const many_key = "many";
-}
-
 db::relation::relation(relation_args args, std::string source)
     : name(std::move(args.name)),
       source(std::move(source)),
       target(std::move(args.target)),
       many(args.many),
       table("rel_" + this->source + "_" + this->name) {
+    if (this->name.size() == 0) {
+        throw std::invalid_argument("invalid name");
+    }
 }
 
 std::string db::relation::sql_for_create() const {

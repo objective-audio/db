@@ -13,12 +13,6 @@
 using namespace yas;
 
 namespace yas::db {
-static std::string const version_key = "version";
-static std::string const entities_key = "entities";
-static std::string const indices_key = "indices";
-static std::string const attributes_key = "attributes";
-static std::string const relations_key = "relations";
-
 static std::unordered_map<std::string, db::string_set_map_t> make_inverse_relation_names(
     std::vector<db::entity_args> const &enitity_args_vec) {
     std::unordered_map<std::string, db::string_set_map_t> entity_inv_rel_names;
