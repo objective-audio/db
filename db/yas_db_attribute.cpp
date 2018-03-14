@@ -24,12 +24,6 @@ static std::string to_string(db::attribute_type const &type) {
 }
 }
 
-namespace yas::db {
-static std::string const type_key = "type";
-static std::string const default_key = "default";
-static std::string const not_null_key = "not_null";
-}
-
 db::attribute::attribute(attribute_args args)
     : name(std::move(args.name)),
       type(to_string(args.type)),

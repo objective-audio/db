@@ -8,11 +8,6 @@
 
 using namespace yas;
 
-namespace yas::db {
-static std::string const target_key = "target";
-static std::string const many_key = "many";
-}
-
 db::relation::relation(relation_args args, std::string source)
     : name(std::move(args.name)),
       source(std::move(source)),
