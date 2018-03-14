@@ -25,7 +25,6 @@ class model : public base {
     };
 
     explicit model(model_args);
-    explicit model(args);
     model(std::nullptr_t);
 
     yas::version const &version() const;

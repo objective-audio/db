@@ -78,14 +78,11 @@ static db::model::args to_args(model_args &&args) {
 struct db::model::impl : base::impl {
     args _args;
 
-    impl(args &&args) : _args(std::move(args)) {
+    impl(model_args &&args) : _args(to_args(std::move(args))) {
     }
 };
 
-db::model::model(model_args args) : base(std::make_shared<impl>(to_args(std::move(args)))) {
-}
-
-db::model::model(args args) : base(std::make_shared<impl>(std::move(args))) {
+db::model::model(model_args args) : base(std::make_shared<impl>(std::move(args))) {
 }
 
 db::model::model(std::nullptr_t) : base(nullptr) {
