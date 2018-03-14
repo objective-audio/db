@@ -19,6 +19,9 @@ db::relation::relation(relation_args args, std::string source)
       target(std::move(args.target)),
       many(args.many),
       table("rel_" + this->source + "_" + this->name) {
+    if (this->name.size() == 0) {
+        throw std::invalid_argument("invalid name");
+    }
 }
 
 std::string db::relation::sql_for_create() const {
