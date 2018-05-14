@@ -96,29 +96,29 @@ using namespace yas;
 
 - (void)test_is_stable {
     auto stable_id = db::make_stable_id(db::value{1});
-    
+
     XCTAssertTrue(stable_id.is_stable());
-    
+
     auto tmp_id = db::make_temporary_id();
-    
+
     XCTAssertFalse(tmp_id.is_stable());
-    
+
     auto each_id = db::object_id{db::value{2}, db::value{"3"}};
-    
+
     XCTAssertTrue(stable_id.is_stable());
 }
 
 - (void)test_is_temporary {
     auto stable_id = db::make_stable_id(db::value{1});
-    
+
     XCTAssertFalse(stable_id.is_temporary());
-    
+
     auto tmp_id = db::make_temporary_id();
-    
+
     XCTAssertTrue(tmp_id.is_temporary());
-    
+
     auto each_id = db::object_id{db::value{2}, db::value{"3"}};
-    
+
     XCTAssertFalse(stable_id.is_temporary());
 }
 

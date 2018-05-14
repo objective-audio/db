@@ -6,9 +6,9 @@
 #import "DBSampleObjectViewController.h"
 #import "yas_cf_utils.h"
 #import "yas_db.h"
-#import "yas_sample_db_controller.h"
 #import "yas_objc_ptr.h"
 #import "yas_objc_unowned.h"
+#import "yas_sample_db_controller.h"
 
 using namespace yas;
 using namespace yas::sample;

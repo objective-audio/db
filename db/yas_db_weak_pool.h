@@ -4,9 +4,9 @@
 
 #pragma once
 
-#include "yas_base.h"
-#include <unordered_map>
 #include <functional>
+#include <unordered_map>
+#include "yas_base.h"
 
 namespace yas::db {
 class object;
@@ -29,6 +29,6 @@ struct weak_pool {
    private:
     std::unordered_map<std::string, value_map_t> _all_values;
 };
-}
+}  // namespace yas::db
 
 #include "yas_db_weak_pool_private.h"

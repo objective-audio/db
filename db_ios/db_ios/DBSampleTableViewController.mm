@@ -2,8 +2,8 @@
 //  DBSampleTableViewController.mm
 //
 
-#import "DBSampleObjectViewController.h"
 #import "DBSampleTableViewController.h"
+#import "DBSampleObjectViewController.h"
 #import "yas_cf_utils.h"
 #import "yas_db.h"
 #import "yas_db_sample_controller.h"

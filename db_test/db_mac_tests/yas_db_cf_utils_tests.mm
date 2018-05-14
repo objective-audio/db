@@ -2,9 +2,9 @@
 //  yas_db_cf_utils_tests.mm
 //
 
-#import "yas_db_test_utils.h"
-#import "yas_db_cf_utils.h"
 #import <CoreFoundation/CoreFoundation.h>
+#import "yas_db_cf_utils.h"
+#import "yas_db_test_utils.h"
 
 using namespace yas;
 
@@ -129,7 +129,7 @@ using namespace yas;
 }
 
 - (void)test_get_string_from_dictionary {
-    NSDictionary *dict = @{ @"a": @"b" };
+    NSDictionary *dict = @{@"a": @"b"};
     auto string_a = yas::get<std::string>((__bridge CFDictionaryRef)dict, "a");
 
     XCTAssertEqual(string_a, "b");

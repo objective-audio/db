@@ -7,8 +7,8 @@
 #include <memory>
 #include <vector>
 #include "yas_base.h"
-#include "yas_db_types.h"
 #include "yas_db_protocol.h"
+#include "yas_db_types.h"
 
 namespace yas::db {
 struct copy_tag_t {};
@@ -109,7 +109,7 @@ class value : public base {
 };
 
 db::value const &null_value();
-}
+}  // namespace yas::db
 
 namespace yas {
 std::string to_string(db::value const &);
@@ -120,7 +120,7 @@ std::string to_string(db::value_map_vector_map_t const &, bool const formatted =
 
 db::time_point_t to_time_point(db::value const &);
 db::value to_value(db::time_point_t const &);
-}
+}  // namespace yas
 
 std::ostream &operator<<(std::ostream &os, yas::db::value const &value);
 std::ostream &operator<<(std::ostream &os, yas::db::value_vector_t const &value);

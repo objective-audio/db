@@ -56,4 +56,4 @@ struct db_settable : protocol {
         impl_ptr<impl>()->_set_database(db);
     }
 };
-}
+}  // namespace yas::db

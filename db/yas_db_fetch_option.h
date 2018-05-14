@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include "yas_db_select_option.h"
 #include <unordered_map>
+#include "yas_db_select_option.h"
 
 namespace yas::db {
 using select_option_map_t = std::unordered_map<std::string, db::select_option>;
@@ -20,4 +20,4 @@ struct fetch_option {
    private:
     select_option_map_t _sel_options;
 };
-}
+}  // namespace yas::db

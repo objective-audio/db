@@ -2,8 +2,8 @@
 //  yas_db_result_code.cpp
 //
 
-#include <sqlite3.h>
 #include "yas_db_result_code.h"
+#include <sqlite3.h>
 
 using namespace yas;
 using namespace yas::db;

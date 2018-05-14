@@ -41,4 +41,4 @@ struct select_option {
     std::string group_by = "";
     bool distinct = false;
 };
-}
+}  // namespace yas::db

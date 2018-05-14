@@ -3,8 +3,8 @@
 //
 
 #import <XCTest/XCTest.h>
-#import "yas_db_weak_pool.h"
 #import "yas_db.h"
+#import "yas_db_weak_pool.h"
 
 using namespace yas;
 

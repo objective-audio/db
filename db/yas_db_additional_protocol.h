@@ -65,4 +65,4 @@ struct object_observable : protocol {
         impl_ptr<impl>()->_object_did_erase(entity_name, object_id);
     }
 };
-}
+}  // namespace yas::db

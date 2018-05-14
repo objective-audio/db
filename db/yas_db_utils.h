@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "yas_db_protocol.h"
+#include "yas_db_types.h"
 
 namespace yas::db {
 class database;
@@ -47,4 +47,4 @@ db::select_result_t select(db::database const &db, db::select_option const &opti
 db::select_single_result_t select_single(db::database const &db, db::select_option option);
 
 db::value max(db::database const &db, std::string const &table_name, std::string const &field);
-}
+}  // namespace yas::db

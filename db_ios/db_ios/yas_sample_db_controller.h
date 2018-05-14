@@ -76,7 +76,7 @@ class db_controller : public std::enable_shared_from_this<db_controller> {
     void _begin_processing();
     void _end_processing();
 };
-}
+}  // namespace yas::sample
 
 namespace yas {
 std::string to_entity_name(sample::db_controller::entity const &);

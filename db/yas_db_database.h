@@ -83,4 +83,4 @@ class database : public base {
    private:
     db::row_set_observable _row_set_observable = nullptr;
 };
-}
+}  // namespace yas::db

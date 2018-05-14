@@ -4,8 +4,8 @@
 
 #import "DBSampleObjectSelectionViewController.h"
 #import "DBSampleObjectNormalCell.h"
-#import "yas_objc_cast.h"
 #import "yas_cf_utils.h"
+#import "yas_objc_cast.h"
 
 using namespace yas;
 using namespace yas::sample;

@@ -8,6 +8,7 @@
 #include "yas_base.h"
 #include "yas_db_protocol.h"
 #include "yas_db_result_code.h"
+#include "yas_db_types.h"
 
 namespace yas {
 template <typename T, typename U>
@@ -59,7 +60,7 @@ class row_set : public base {
     db::closable _closable = nullptr;
     db::db_settable _db_settable = nullptr;
 };
-}
+}  // namespace yas::db
 
 template <>
 struct std::hash<yas::db::row_set> {

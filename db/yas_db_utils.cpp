@@ -2,15 +2,15 @@
 //  yas_db_utils.cpp
 //
 
+#include "yas_db_utils.h"
 #include "yas_db_additional_protocol.h"
 #include "yas_db_attribute.h"
 #include "yas_db_database.h"
+#include "yas_db_error.h"
 #include "yas_db_model.h"
 #include "yas_db_row_set.h"
 #include "yas_db_select_option.h"
 #include "yas_db_sql_utils.h"
-#include "yas_db_utils.h"
-#include "yas_db_error.h"
 #include "yas_result.h"
 #include "yas_stl_utils.h"
 #include "yas_unless.h"
@@ -61,7 +61,7 @@ namespace yas::db {
 static std::string escape_save_point_name(std::string const &name) {
     return replaced(name, "'", "''");
 }
-}
+}  // namespace yas::db
 
 db::update_result_t db::start_save_point(db::database &db, std::string const &name) {
     if (name.size() == 0) {

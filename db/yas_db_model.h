@@ -6,8 +6,8 @@
 
 #include <memory>
 #include <string>
-#include "yas_db_additional_protocol.h"
 #include "yas_base.h"
+#include "yas_db_additional_protocol.h"
 
 namespace yas {
 class version;
@@ -38,4 +38,4 @@ class model : public base {
     bool relation_exists(std::string const &entity, std::string const &relation) const;
     bool index_exists(std::string const &index_name) const;
 };
-}
+}  // namespace yas::db

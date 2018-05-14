@@ -2,9 +2,9 @@
 //  yas_db_entity.cpp
 //
 
+#include "yas_db_entity.h"
 #include "yas_db_additional_protocol.h"
 #include "yas_db_attribute.h"
-#include "yas_db_entity.h"
 #include "yas_db_relation.h"
 #include "yas_db_sql_utils.h"
 #include "yas_stl_utils.h"
@@ -53,7 +53,7 @@ static db::relation_map_t make_relations(std::vector<db::relation_args> &&args_v
 
     return relations;
 }
-}
+}  // namespace yas
 
 db::entity::entity(entity_args args, db::string_set_map_t inv_rel_names)
     : name(std::move(args.name)),

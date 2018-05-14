@@ -17,7 +17,7 @@ class result_code {
    private:
     int _raw_value;
 };
-}
+}  // namespace yas::db
 
 namespace yas {
 std::string to_string(db::result_code const &);
