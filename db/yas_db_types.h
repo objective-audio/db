@@ -4,11 +4,11 @@
 
 #pragma once
 
-#include "yas_result.h"
-#include <chrono>
 #include <sqlite3.h>
-#include <unordered_map>
+#include <chrono>
 #include <string>
+#include <unordered_map>
+#include "yas_result.h"
 
 namespace yas::db {
 class error;
@@ -36,4 +36,4 @@ using id_vector_t = std::vector<db::object_id>;
 using id_vector_map_t = std::unordered_map<std::string, db::id_vector_t>;
 
 using time_point_t = std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>;
-}
+}  // namespace yas::db

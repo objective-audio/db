@@ -3,22 +3,22 @@
 //
 
 #include "yas_db_manager_utils.h"
-#include "yas_result.h"
-#include "yas_db_sql_utils.h"
-#include "yas_stl_utils.h"
-#include "yas_db_model.h"
-#include "yas_unless.h"
-#include "yas_db_value.h"
-#include "yas_db_object.h"
-#include "yas_db_entity.h"
-#include "yas_db_relation.h"
-#include "yas_db_database.h"
-#include "yas_db_info.h"
 #include "yas_db_attribute.h"
-#include "yas_db_index.h"
+#include "yas_db_database.h"
+#include "yas_db_entity.h"
 #include "yas_db_fetch_option.h"
+#include "yas_db_index.h"
+#include "yas_db_info.h"
+#include "yas_db_model.h"
+#include "yas_db_object.h"
 #include "yas_db_object_id.h"
+#include "yas_db_relation.h"
+#include "yas_db_sql_utils.h"
+#include "yas_db_value.h"
 #include "yas_fast_each.h"
+#include "yas_result.h"
+#include "yas_stl_utils.h"
+#include "yas_unless.h"
 
 using namespace yas;
 
@@ -110,7 +110,7 @@ static void get_relation_ids(db::integer_set_map_t &out_ids, db::object const &o
         }
     }
 }
-}
+}  // namespace yas::db
 
 #pragma mark - select
 
@@ -977,12 +977,14 @@ db::manager_result_t db::remove_relations_at_save(db::database &db, db::model co
                         for (auto const &rel_pair : obj_data.relations) {
                             // データベースに関連のデータを挿入する
                             db::relation const &rel_model = rel_models.at(rel_pair.first);
-                            auto const rel_tgt_obj_ids = filter(rel_pair.second, [&tgt_obj_ids](db::object_id const &obj_id) {
-                                return !contains(tgt_obj_ids, obj_id.stable_value());
-                            });
+                            auto const rel_tgt_obj_ids =
+                                filter(rel_pair.second, [&tgt_obj_ids](db::object_id const &obj_id) {
+                                    return !contains(tgt_obj_ids, obj_id.stable_value());
+                                });
                             if (rel_tgt_obj_ids.size() > 0) {
-                                if (auto ul = unless(db::insert_relations(db, rel_model, src_pk_id, src_obj_id,
-                                                                          db::to_values(rel_tgt_obj_ids), next_save_id))) {
+                                if (auto ul =
+                                        unless(db::insert_relations(db, rel_model, src_pk_id, src_obj_id,
+                                                                    db::to_values(rel_tgt_obj_ids), next_save_id))) {
                                     return std::move(ul.value);
                                 }
                             }

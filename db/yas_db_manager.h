@@ -4,13 +4,13 @@
 
 #pragma once
 
+#include <dispatch/dispatch.h>
 #include "yas_base.h"
 #include "yas_db_additional_protocol.h"
+#include "yas_db_fetch_option.h"
+#include "yas_db_manager_error.h"
 #include "yas_db_object.h"
 #include "yas_operation_protocol.h"
-#include "yas_db_manager_error.h"
-#include "yas_db_fetch_option.h"
-#include <dispatch/dispatch.h>
 
 namespace yas {
 class operation;
@@ -19,7 +19,7 @@ template <typename T, typename K>
 class subject;
 template <typename T, typename K>
 class observer;
-}
+}  // namespace yas
 
 namespace yas::db {
 class select_option;
@@ -92,4 +92,4 @@ class manager : public base {
    private:
     db::object_observable _object_observable = nullptr;
 };
-}
+}  // namespace yas::db

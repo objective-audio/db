@@ -19,7 +19,7 @@ static void validate_stable(db::value const &value) {
         throw std::runtime_error("stable value is not db::integer type");
     }
 }
-}
+}  // namespace yas::db
 
 struct db::object_id::impl : base::impl {
     impl(db::value &&stable, db::value &&temporary) : _stable(std::move(stable)), _temporary(std::move(temporary)) {

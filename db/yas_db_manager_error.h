@@ -59,9 +59,9 @@ struct manager_error {
     db::manager_error_type _type;
     db::error _db_error;
 };
-}
+}  // namespace yas::db
 
 namespace yas {
 std::string to_string(db::manager_error_type const &);
 std::string to_string(db::manager_error const &);
-}
+}  // namespace yas

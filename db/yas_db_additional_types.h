@@ -4,12 +4,12 @@
 
 #pragma once
 
-#include "yas_db_value.h"
-#include "yas_db_object_id.h"
-#include "yas_db_weak_pool.h"
-#include "yas_version.h"
 #include <set>
 #include <unordered_set>
+#include "yas_db_object_id.h"
+#include "yas_db_value.h"
+#include "yas_db_weak_pool.h"
+#include "yas_version.h"
 
 namespace yas {
 class operation;
@@ -174,4 +174,4 @@ struct model_args {
     std::vector<db::entity_args> entities;
     std::vector<db::index_args> indices;
 };
-}
+}  // namespace yas::db

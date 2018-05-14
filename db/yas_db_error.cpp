@@ -69,8 +69,8 @@ std::string yas::to_string(db::error_type const &error_type) {
 
 std::string yas::to_string(db::error const &error) {
     if (error) {
-        return "{type:" + to_string(error.type()) + ", code:" + to_string(error.code()) + ", message:" +
-               error.message() + "}";
+        return "{type:" + to_string(error.type()) + ", code:" + to_string(error.code()) +
+               ", message:" + error.message() + "}";
     } else {
         return "null";
     }

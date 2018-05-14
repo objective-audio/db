@@ -2,18 +2,18 @@
 //  yas_db_object.cpp
 //
 
+#include "yas_db_object.h"
 #include "yas_db_attribute.h"
 #include "yas_db_entity.h"
 #include "yas_db_manager.h"
+#include "yas_db_manager_utils.h"
 #include "yas_db_model.h"
-#include "yas_db_object.h"
+#include "yas_db_object_id.h"
 #include "yas_db_relation.h"
 #include "yas_db_value.h"
-#include "yas_db_object_id.h"
+#include "yas_fast_each.h"
 #include "yas_observing.h"
 #include "yas_stl_utils.h"
-#include "yas_fast_each.h"
-#include "yas_db_manager_utils.h"
 
 using namespace yas;
 

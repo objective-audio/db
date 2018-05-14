@@ -5,9 +5,9 @@
 #pragma once
 
 #include <deque>
+#include <experimental/optional>
 #include <set>
 #include <unordered_map>
-#include <experimental/optional>
 #include "yas_base.h"
 #include "yas_db_additional_protocol.h"
 
@@ -16,7 +16,7 @@ template <typename T, typename K>
 class subject;
 template <typename T, typename K>
 class observer;
-}
+}  // namespace yas
 
 namespace yas::db {
 class manager;
@@ -125,7 +125,7 @@ db::object const &null_object();
 db::value const &insert_action_value();
 db::value const &update_action_value();
 db::value const &remove_action_value();
-}
+}  // namespace yas::db
 
 namespace yas {
 std::string to_string(db::object_status const &);

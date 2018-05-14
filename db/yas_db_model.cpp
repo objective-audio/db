@@ -2,12 +2,12 @@
 //  yas_db_model.cpp
 //
 
+#include "yas_db_model.h"
 #include <unordered_map>
 #include <vector>
-#include "yas_db_model.h"
+#include "yas_db_attribute.h"
 #include "yas_db_entity.h"
 #include "yas_db_index.h"
-#include "yas_db_attribute.h"
 #include "yas_db_relation.h"
 
 using namespace yas;
@@ -37,7 +37,7 @@ static std::unordered_map<std::string, db::string_set_map_t> make_inverse_relati
 
     return entity_inv_rel_names;
 }
-}
+}  // namespace yas::db
 
 struct db::model::impl : base::impl {
     struct args {

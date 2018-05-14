@@ -23,4 +23,4 @@ struct relation {
     std::string sql_for_create() const;
     std::string sql_for_insert() const;
 };
-}
+}  // namespace yas::db

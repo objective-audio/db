@@ -2,11 +2,11 @@
 //  yas_db_manager_tests.mm
 //
 
+#import "yas_db_manager_utils.h"
 #import "yas_db_test_utils.h"
 #import "yas_db_utils.h"
-#import "yas_objc_ptr.h"
-#import "yas_db_manager_utils.h"
 #import "yas_fast_each.h"
+#import "yas_objc_ptr.h"
 
 using namespace yas;
 
@@ -758,7 +758,6 @@ using namespace yas;
     manager.save(db::no_cancellation, [self, &manager](db::manager_map_result_t result) {
         XCTAssertTrue(result);
         XCTAssertEqual(manager.current_save_id(), db::value{4});
-
     });
 
     manager.revert(db::no_cancellation, []() { return 2; },
@@ -946,10 +945,7 @@ using namespace yas;
     db::model model_0_0_1 = [yas_db_test_utils model_0_0_1];
     auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
 
-    manager.setup([self, &manager](auto result) mutable {
-        XCTAssertTrue(result);
-
-    });
+    manager.setup([self, &manager](auto result) mutable { XCTAssertTrue(result); });
 
     manager.insert_objects(db::no_cancellation,
                            []() {
@@ -968,7 +964,6 @@ using namespace yas;
                                objects.at("sample_a").at(0).add_relation_id("child", object_b.object_id());
 
                                XCTAssertEqual(object_b.object_id().stable_value(), db::value{1});
-
                            });
 
     manager.save(db::no_cancellation, [self](db::manager_map_result_t result) { XCTAssertTrue(result); });
@@ -1644,7 +1639,6 @@ using namespace yas;
                        XCTAssertFalse(a_object.save_id());
                        XCTAssertFalse(a_object.action());
                        XCTAssertFalse(a_object.attribute_value("name"));
-
                    });
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];

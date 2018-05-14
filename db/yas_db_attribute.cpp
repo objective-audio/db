@@ -2,9 +2,9 @@
 //  yas_db_attribute.cpp
 //
 
+#include "yas_db_attribute.h"
 #include <sstream>
 #include "yas_db_additional_protocol.h"
-#include "yas_db_attribute.h"
 #include "yas_db_object.h"
 
 using namespace yas;
@@ -22,7 +22,7 @@ static std::string to_string(db::attribute_type const &type) {
             return db::blob::name;
     }
 }
-}
+}  // namespace yas
 
 db::attribute::attribute(attribute_args args)
     : name(std::move(args.name)),

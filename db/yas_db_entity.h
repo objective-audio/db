@@ -22,4 +22,4 @@ struct entity {
     std::string sql_for_update() const;
     std::string sql_for_insert() const;
 };
-}
+}  // namespace yas::db

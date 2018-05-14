@@ -5,8 +5,8 @@
 #pragma once
 
 #include <vector>
-#include "yas_db_select_option.h"
 #include "yas_db_additional_types.h"
+#include "yas_db_select_option.h"
 
 namespace yas::db {
 class field_order;
@@ -45,4 +45,4 @@ std::string foreign_key(std::string const &field, std::string const &ref_table, 
                         std::string const &on_update, std::string const &on_delete);
 
 std::string vacuum_sql();
-}
+}  // namespace yas::db

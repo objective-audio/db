@@ -78,4 +78,4 @@ template <typename K, typename V>
 void weak_pool<K, V>::clear() {
     this->_all_values.clear();
 }
-}
+}  // namespace yas::db

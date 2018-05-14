@@ -3,17 +3,19 @@
 //
 
 #include "yas_db_manager.h"
-#include "yas_db_manager_utils.h"
 #include "yas_db_attribute.h"
+#include "yas_db_database.h"
 #include "yas_db_entity.h"
+#include "yas_db_fetch_option.h"
+#include "yas_db_index.h"
+#include "yas_db_info.h"
+#include "yas_db_manager_utils.h"
 #include "yas_db_model.h"
 #include "yas_db_object_utils.h"
 #include "yas_db_relation.h"
 #include "yas_db_select_option.h"
 #include "yas_db_sql_utils.h"
 #include "yas_db_utils.h"
-#include "yas_db_index.h"
-#include "yas_db_database.h"
 #include "yas_each_index.h"
 #include "yas_objc_macros.h"
 #include "yas_observing.h"
@@ -21,8 +23,6 @@
 #include "yas_result.h"
 #include "yas_stl_utils.h"
 #include "yas_unless.h"
-#include "yas_db_info.h"
-#include "yas_db_fetch_option.h"
 
 using namespace yas;
 
@@ -173,8 +173,10 @@ struct db::manager::impl : base::impl, public object_observable::impl {
     void purge_cached_objects() {
         // キャッシュされたオブジェクトのセーブIDを全て1にする
         db::value one_value{db::integer::type{1}};
-        this->_cached_objects.perform([one_value = std::move(one_value)](
-            std::string const &, db::object_id const &, auto &object) { object.manageable().load_save_id(one_value); });
+        this->_cached_objects.perform(
+            [one_value = std::move(one_value)](std::string const &, db::object_id const &, auto &object) {
+                object.manageable().load_save_id(one_value);
+            });
     }
 
     // データベース情報を置き換える
@@ -367,9 +369,8 @@ struct db::manager::impl : base::impl, public object_observable::impl {
 
     // バックグラウンドでデータベースの処理をする
     void execute(db::cancellation_f &&cancellation, db::execution_f &&execution) {
-        auto op_lambda =
-            [cancellation = std::move(cancellation), execution = std::move(execution),
-             manager = cast<manager>()](operation const &op) mutable {
+        auto op_lambda = [cancellation = std::move(cancellation), execution = std::move(execution),
+                          manager = cast<manager>()](operation const &op) mutable {
             if (!op.is_canceled() && !cancellation()) {
                 auto &db = manager.impl_ptr<impl>()->_database;
                 db.open();
@@ -385,9 +386,8 @@ struct db::manager::impl : base::impl, public object_observable::impl {
     void execute_fetch_object_datas(
         db::cancellation_f &&cancellation, db::fetch_option_preparation_f &&preparation,
         std::function<void(db::manager_result_t &&state, db::object_data_vector_map_t &&fetched_datas)> &&completion) {
-        auto execution =
-            [preparation = std::move(preparation), completion = std::move(completion),
-             manager = cast<db::manager>()](operation const &) mutable {
+        auto execution = [preparation = std::move(preparation), completion = std::move(completion),
+                          manager = cast<db::manager>()](operation const &) mutable {
             // データベースからデータを取得する条件をメインスレッドで準備する
             db::fetch_option fetch_option;
             auto preparation_on_main = [&fetch_option, &preparation]() { fetch_option = preparation(); };
@@ -557,8 +557,8 @@ void db::manager::setup(db::completion_f completion) {
             }
         }
 
-        auto completion_on_main =
-            [manager, state = std::move(state), info = std::move(info), completion = std::move(completion)]() mutable {
+        auto completion_on_main = [manager, state = std::move(state), info = std::move(info),
+                                   completion = std::move(completion)]() mutable {
             if (state) {
                 manager.impl_ptr<impl>()->set_db_info(std::move(info));
             }
@@ -606,9 +606,8 @@ void db::manager::clear(db::cancellation_f cancellation, db::completion_f comple
                                           std::move(begin_result.error()));
         }
 
-        auto completion_on_main = [
-            completion = std::move(completion), manager, state = std::move(state), db_info = std::move(db_info)
-        ]() mutable {
+        auto completion_on_main = [completion = std::move(completion), manager, state = std::move(state),
+                                   db_info = std::move(db_info)]() mutable {
             if (state) {
                 manager.impl_ptr<impl>()->set_db_info(std::move(db_info));
                 manager.impl_ptr<impl>()->clear_cached_objects();
@@ -662,9 +661,8 @@ void db::manager::purge(db::cancellation_f cancellation, db::completion_f comple
             }
         }
 
-        auto completion_on_main = [
-            completion = std::move(completion), manager, state = std::move(state), db_info = std::move(db_info)
-        ]() mutable {
+        auto completion_on_main = [completion = std::move(completion), manager, state = std::move(state),
+                                   db_info = std::move(db_info)]() mutable {
             if (state) {
                 manager.impl_ptr<impl>()->set_db_info(std::move(db_info));
                 manager.impl_ptr<impl>()->purge_cached_objects();
@@ -680,16 +678,12 @@ void db::manager::purge(db::cancellation_f cancellation, db::completion_f comple
 }
 
 void db::manager::reset(db::cancellation_f cancellation, db::completion_f completion) {
-    auto preparation = [manager = *this]() {
-        return manager.impl_ptr<impl>()->changed_object_ids_for_reset();
-    };
+    auto preparation = [manager = *this]() { return manager.impl_ptr<impl>()->changed_object_ids_for_reset(); };
 
     auto impl_completion = [completion = std::move(completion), manager = *this](
-        db::manager_result_t && state, db::object_data_vector_map_t && fetched_datas) {
-        auto completion_on_main = [
-            manager, completion = std::move(completion), state = std::move(state),
-            fetched_datas = std::move(fetched_datas)
-        ]() mutable {
+                               db::manager_result_t &&state, db::object_data_vector_map_t &&fetched_datas) {
+        auto completion_on_main = [manager, completion = std::move(completion), state = std::move(state),
+                                   fetched_datas = std::move(fetched_datas)]() mutable {
             if (state) {
                 manager.impl_ptr<impl>()->load_and_cache_object_map(fetched_datas, true, false);
                 manager.impl_ptr<impl>()->erase_changed_objects(fetched_datas);
@@ -786,10 +780,8 @@ void db::manager::insert_objects(db::cancellation_f cancellation, db::insert_val
                                           std::move(begin_result.error()));
         }
 
-        auto completion_on_main = [
-            state = std::move(state), inserted_datas = std::move(inserted_datas), manager,
-            completion = std::move(completion), db_info = std::move(ret_db_info)
-        ]() mutable {
+        auto completion_on_main = [state = std::move(state), inserted_datas = std::move(inserted_datas), manager,
+                                   completion = std::move(completion), db_info = std::move(ret_db_info)]() mutable {
             if (state) {
                 manager.impl_ptr<impl>()->set_db_info(std::move(db_info));
                 auto loaded_objects =
@@ -809,11 +801,9 @@ void db::manager::insert_objects(db::cancellation_f cancellation, db::insert_val
 void db::manager::fetch_objects(db::cancellation_f cancellation, db::fetch_option_preparation_f preparation,
                                 db::vector_completion_f completion) {
     auto impl_completion = [completion = std::move(completion), manager = *this](
-        db::manager_result_t && state, db::object_data_vector_map_t && fetched_datas) {
-        auto completion_on_main = [
-            state = std::move(state), completion = std::move(completion), fetched_datas = std::move(fetched_datas),
-            manager
-        ]() mutable {
+                               db::manager_result_t &&state, db::object_data_vector_map_t &&fetched_datas) {
+        auto completion_on_main = [state = std::move(state), completion = std::move(completion),
+                                   fetched_datas = std::move(fetched_datas), manager]() mutable {
             if (state) {
                 auto loaded_objects =
                     manager.impl_ptr<impl>()->load_and_cache_object_vector(fetched_datas, false, false);
@@ -833,11 +823,9 @@ void db::manager::fetch_objects(db::cancellation_f cancellation, db::fetch_optio
 void db::manager::fetch_const_objects(db::cancellation_f cancellation, db::fetch_option_preparation_f preparation,
                                       db::const_vector_completion_f completion) {
     auto impl_completion = [completion = std::move(completion), manager = *this](
-        db::manager_result_t && state, db::object_data_vector_map_t && fetched_datas) {
-        auto completion_on_main = [
-            state = std::move(state), completion = std::move(completion), fetched_datas = std::move(fetched_datas),
-            manager
-        ]() mutable {
+                               db::manager_result_t &&state, db::object_data_vector_map_t &&fetched_datas) {
+        auto completion_on_main = [state = std::move(state), completion = std::move(completion),
+                                   fetched_datas = std::move(fetched_datas), manager]() mutable {
             if (state) {
                 completion(
                     db::manager_const_vector_result_t{db::to_const_vector_objects(manager.model(), fetched_datas)});
@@ -856,11 +844,9 @@ void db::manager::fetch_const_objects(db::cancellation_f cancellation, db::fetch
 void db::manager::fetch_objects(db::cancellation_f cancellation, db::fetch_ids_preparation_f preparation,
                                 db::map_completion_f completion) {
     auto impl_completion = [completion = std::move(completion), manager = *this](
-        db::manager_result_t && state, db::object_data_vector_map_t && fetched_datas) {
-        auto completion_on_main = [
-            manager, completion = std::move(completion), state = std::move(state),
-            fetched_datas = std::move(fetched_datas)
-        ]() mutable {
+                               db::manager_result_t &&state, db::object_data_vector_map_t &&fetched_datas) {
+        auto completion_on_main = [manager, completion = std::move(completion), state = std::move(state),
+                                   fetched_datas = std::move(fetched_datas)]() mutable {
             if (state) {
                 auto loaded_objects = manager.impl_ptr<impl>()->load_and_cache_object_map(fetched_datas, false, false);
                 completion(db::manager_map_result_t{std::move(loaded_objects)});
@@ -879,11 +865,9 @@ void db::manager::fetch_objects(db::cancellation_f cancellation, db::fetch_ids_p
 void db::manager::fetch_const_objects(db::cancellation_f cancellation, db::fetch_ids_preparation_f preparation,
                                       db::const_map_completion_f completion) {
     auto impl_completion = [completion = std::move(completion), manager = *this](
-        db::manager_result_t && state, db::object_data_vector_map_t && fetched_datas) {
-        auto completion_on_main = [
-            manager, completion = std::move(completion), state = std::move(state),
-            fetched_datas = std::move(fetched_datas)
-        ]() mutable {
+                               db::manager_result_t &&state, db::object_data_vector_map_t &&fetched_datas) {
+        auto completion_on_main = [manager, completion = std::move(completion), state = std::move(state),
+                                   fetched_datas = std::move(fetched_datas)]() mutable {
             if (state) {
                 completion(db::manager_const_map_result_t{db::to_const_map_objects(manager.model(), fetched_datas)});
             } else {
@@ -961,10 +945,8 @@ void db::manager::save(db::cancellation_f cancellation, db::map_completion_f com
             }
         }
 
-        auto completion_on_main = [
-            manager, state = std::move(state), completion = std::move(completion), saved_datas = std::move(saved_datas),
-            db_info = std::move(db_info)
-        ]() mutable {
+        auto completion_on_main = [manager, state = std::move(state), completion = std::move(completion),
+                                   saved_datas = std::move(saved_datas), db_info = std::move(db_info)]() mutable {
             if (state) {
                 manager.impl_ptr<impl>()->set_db_info(std::move(db_info));
                 auto loaded_objects = manager.impl_ptr<impl>()->load_and_cache_object_map(saved_datas, false, true);
@@ -1062,7 +1044,7 @@ void db::manager::revert(db::cancellation_f cancellation, db::revert_preparation
                     state = db::manager_result_t{std::move(update_result.error())};
                 }
             }
-            
+
             // トランザクション終了
             if (state) {
                 db::commit(db);
@@ -1075,24 +1057,23 @@ void db::manager::revert(db::cancellation_f cancellation, db::revert_preparation
             state = db::make_error_result(db::manager_error_type::begin_transaction_failed,
                                           std::move(begin_result.error()));
         }
-        
-        auto completion_on_main = [manager, state = std::move(state),
-                                   completion = std::move(completion),
+
+        auto completion_on_main = [manager, state = std::move(state), completion = std::move(completion),
                                    reverted_datas = std::move(reverted_datas),
                                    db_info = std::move(ret_db_info)]() mutable {
             if (state) {
                 manager.impl_ptr<impl>()->set_db_info(std::move(db_info));
                 auto loaded_objects =
-                manager.impl_ptr<impl>()->load_and_cache_object_vector(reverted_datas, false, false);
+                    manager.impl_ptr<impl>()->load_and_cache_object_vector(reverted_datas, false, false);
                 completion(db::manager_vector_result_t{std::move(loaded_objects)});
             } else {
                 completion(db::manager_vector_result_t{std::move(state.error())});
             }
         };
-        
+
         dispatch_sync(manager.dispatch_queue(), std::move(completion_on_main));
     };
-    
+
     this->execute(std::move(cancellation), std::move(execution));
 }
 

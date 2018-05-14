@@ -2,11 +2,11 @@
 //  yas_sample_db_controller.mm
 //
 
-#import <Foundation/Foundation.h>
-#include "yas_cf_utils.h"
-#include "yas_cf_ref.h"
-#include "yas_objc_ptr.h"
 #include "yas_sample_db_controller.h"
+#import <Foundation/Foundation.h>
+#include "yas_cf_ref.h"
+#include "yas_cf_utils.h"
+#include "yas_objc_ptr.h"
 
 using namespace yas;
 using namespace yas::sample;
@@ -159,9 +159,8 @@ void db_controller::insert(entity const &entity, db::completion_f completion) {
                                       }
                                   });
 
-    this->_update_objects(continuous_result, [
-        weak = to_weak(shared_from_this()), inserted_object, entity, completion = std::move(completion)
-    ](auto update_result) {
+    this->_update_objects(continuous_result, [weak = to_weak(shared_from_this()), inserted_object, entity,
+                                              completion = std::move(completion)](auto update_result) {
         if (auto shared = weak.lock()) {
             auto idx_value = db::null_value();
             auto object = *inserted_object;
@@ -495,14 +494,12 @@ void db_controller::_update_objects(std::shared_ptr<db::manager_result_t> contin
         this->_update_objects(continuous_result, entity);
     }
 
-    this->_manager.execute(db::no_cancellation,
-                           [continuous_result, completion = std::move(completion)](operation const &) {
-                               auto lambda = [continuous_result, completion = std::move(completion)]() {
-                                   completion(*continuous_result);
-                               };
+    this->_manager.execute(
+        db::no_cancellation, [continuous_result, completion = std::move(completion)](operation const &) {
+            auto lambda = [continuous_result, completion = std::move(completion)]() { completion(*continuous_result); };
 
-                               dispatch_sync(dispatch_get_main_queue(), lambda);
-                           });
+            dispatch_sync(dispatch_get_main_queue(), lambda);
+        });
 
     this->_manager.resume();
 }

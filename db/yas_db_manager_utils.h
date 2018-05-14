@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include "yas_db_manager_error.h"
 #include "yas_db_additional_protocol.h"
+#include "yas_db_manager_error.h"
 #include "yas_db_utils.h"
 
 namespace yas {
@@ -15,7 +15,7 @@ class version;
 namespace yas::db {
 class model;
 class fetch_option;
-}
+}  // namespace yas::db
 
 // select
 
@@ -35,7 +35,7 @@ db::select_result_t select_for_revert(db::database const &db, std::string const 
 // セーブのために、関連先がremoveされたオブジェクトのアトリビュートをDBから取得する
 db::select_result_t select_for_save(db::database const &db, std::string const &entity_table_name,
                                     std::string const &rel_table_name, db::value_vector_t const &tgt_obj_ids);
-}
+}  // namespace yas::db
 
 // info
 
@@ -50,7 +50,7 @@ db::manager_info_result_t update_info(db::database &db, db::value const &cur_sav
 db::manager_info_result_t update_current_save_id(db::database &db, db::value const &cur_save_id);
 // DB上のversionを更新する
 db::manager_result_t update_version(db::database &db, yas::version const &version);
-}
+}  // namespace yas::db
 
 // convert
 
@@ -87,7 +87,7 @@ db::fetch_option to_fetch_option(db::integer_set_map_t const &obj_ids);
 db::fetch_ids_preparation_f to_ids_preparation(db::fetch_objects_preparation_f &&);
 db::fetch_ids_preparation_f to_ids_preparation(db::fetch_object_map_preparation_f &&);
 db::fetch_ids_preparation_f to_ids_preparation(db::fetch_object_vector_preparation_f &&);
-}
+}  // namespace yas::db
 
 // make
 
@@ -100,7 +100,7 @@ db::manager_result_t make_error_result(db::manager_error_type const &error_type,
 db::object_data_vector_result_t make_entity_object_datas(db::database &db, std::string const &entity_name,
                                                          db::relation_map_t const &rel_models,
                                                          db::value_map_vector_t const &entity_attrs);
-}
+}  // namespace yas::db
 
 // setup
 
@@ -113,7 +113,7 @@ db::manager_result_t create_info_and_tables(db::database &db, db::model const &m
 
 // DB上のデータをクリアする
 db::manager_result_t clear_db(db::database &db, db::model const &model);
-}
+}  // namespace yas::db
 
 // editing
 
@@ -147,4 +147,4 @@ db::manager_result_t delete_next_to_last(db::database &db, db::model const &mode
 db::manager_result_t insert_relations(db::database &db, db::relation const &rel_model, db::value const &src_pk_id,
                                       db::value const &src_obj_id, db::value_vector_t const &rel_tgt_obj_ids,
                                       db::value const &save_id);
-}
+}  // namespace yas::db

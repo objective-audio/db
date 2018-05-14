@@ -20,4 +20,4 @@ class index {
 
     std::string sql_for_create() const;
 };
-}
+}  // namespace yas::db

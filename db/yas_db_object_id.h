@@ -37,7 +37,7 @@ db::object_id make_stable_id(db::integer::type const);
 db::object_id make_temporary_id();
 
 db::object_id const &null_id();
-}
+}  // namespace yas::db
 
 namespace yas {
 std::string to_string(db::object_id const &);

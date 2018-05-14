@@ -11,7 +11,7 @@ using namespace yas;
 
 - (void)prepareForReuse {
     [super prepareForReuse];
-    
+
     self.textLabel.text = nil;
 }
 

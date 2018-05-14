@@ -40,9 +40,9 @@ struct error {
     db::sqlite_result_code _code;
     std::string _message;
 };
-}
+}  // namespace yas::db
 
 namespace yas {
 std::string to_string(db::error_type const &);
 std::string to_string(db::error const &);
-}
+}  // namespace yas

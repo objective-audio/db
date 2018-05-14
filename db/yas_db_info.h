@@ -4,9 +4,9 @@
 
 #pragma once
 
+#include <string>
 #include "yas_base.h"
 #include "yas_db_additional_protocol.h"
-#include <string>
 
 namespace yas {
 class version;
@@ -40,4 +40,4 @@ class info : public base {
 };
 
 db::info const &null_info();
-}
+}  // namespace yas::db

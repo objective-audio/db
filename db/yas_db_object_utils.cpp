@@ -2,11 +2,11 @@
 //  yas_db_object_utils.cpp
 //
 
-#include "yas_db_model.h"
 #include "yas_db_object_utils.h"
-#include "yas_stl_utils.h"
 #include "yas_db_entity.h"
+#include "yas_db_model.h"
 #include "yas_db_relation.h"
+#include "yas_stl_utils.h"
 
 using namespace yas;
 

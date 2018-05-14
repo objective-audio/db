@@ -26,4 +26,4 @@ struct attribute {
     static db::attribute const &save_id_attribute();
     static db::attribute const &action_attribute();
 };
-}
+}  // namespace yas::db

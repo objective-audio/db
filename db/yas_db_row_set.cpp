@@ -2,9 +2,9 @@
 //  yas_db_row_set.cpp
 //
 
+#include "yas_db_row_set.h"
 #include <vector>
 #include "yas_db_database.h"
-#include "yas_db_row_set.h"
 #include "yas_db_statement.h"
 #include "yas_db_value.h"
 #include "yas_fast_each.h"

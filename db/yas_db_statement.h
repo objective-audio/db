@@ -41,7 +41,7 @@ class statement : public base {
    private:
     db::closable _closable = nullptr;
 };
-}
+}  // namespace yas::db
 
 template <>
 struct std::hash<yas::db::statement> {
