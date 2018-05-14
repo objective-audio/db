@@ -404,6 +404,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = B682179F1C75F79000689F27 /* Build configuration list for PBXNativeTarget "db_ios" */;
 			buildPhases = (
+				B6302A0B20A9B1CC009A5C2A /* ShellScript */,
 				B68217841C75F79000689F27 /* Sources */,
 				B68217851C75F79000689F27 /* Frameworks */,
 				B68217861C75F79000689F27 /* Resources */,
@@ -461,6 +462,22 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		B6302A0B20A9B1CC009A5C2A /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = ../script/format.sh;
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		B68217841C75F79000689F27 /* Sources */ = {

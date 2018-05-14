@@ -514,6 +514,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = B607FC0C204A8EB700FA2BB9 /* Build configuration list for PBXNativeTarget "db_mac_non_arc_tests" */;
 			buildPhases = (
+				B6302A0A20A9B1AF009A5C2A /* Run Script */,
 				B607FBCA204A8EB700FA2BB9 /* Sources */,
 				B607FC09204A8EB700FA2BB9 /* Frameworks */,
 				B607FC0B204A8EB700FA2BB9 /* Resources */,
@@ -531,6 +532,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = B6E0F15D1C1D66A80033AC60 /* Build configuration list for PBXNativeTarget "db_mac_arc_tests" */;
 			buildPhases = (
+				B6302A0920A9B0C6009A5C2A /* ShellScript */,
 				B6E0F1531C1D66A80033AC60 /* Sources */,
 				B6E0F1541C1D66A80033AC60 /* Frameworks */,
 				B6E0F1551C1D66A80033AC60 /* Resources */,
@@ -591,6 +593,36 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		B6302A0920A9B0C6009A5C2A /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = ../script/format.sh;
+		};
+		B6302A0A20A9B1AF009A5C2A /* Run Script */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Run Script";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = ../script/format.sh;
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		B607FBCA204A8EB700FA2BB9 /* Sources */ = {
