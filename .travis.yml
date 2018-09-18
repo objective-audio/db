@@ -1,5 +1,5 @@
 language: objective-c
-osx_image: xcode9.3
+osx_image: xcode10
 branches:
   only:
     - master
@@ -10,4 +10,3 @@ install:
 script:
   - xcodebuild -project db_test/db_test.xcodeproj -scheme db_mac_arc_tests -configuration Debug OBJROOT=build -sdk macosx clean test
   - xcodebuild -project db_test/db_test.xcodeproj -scheme db_mac_non_arc_tests -configuration Debug OBJROOT=build -sdk macosx clean test
- 
