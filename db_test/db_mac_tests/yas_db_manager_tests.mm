@@ -2729,9 +2729,10 @@ using namespace yas;
 
                                bool observer_called = false;
 
-                               auto observer = manager.subject().make_observer(
-                                   db::manager::method::object_changed,
-                                   [&observer_called](auto const &) { observer_called = true; });
+                               auto observer =
+                                   manager.chain_db_object()
+                                       .perform([&observer_called](db::object const &) { observer_called = true; })
+                                       .end();
 
                                auto &object = result.value().at("sample_a").at(0);
                                object.set_attribute_value("name", db::value{"test_name"});
@@ -2750,8 +2751,7 @@ using namespace yas;
 
     std::size_t observing_count = 0;
 
-    auto observer = manager.subject().make_observer(db::manager::method::db_info_changed,
-                                                    [&observing_count](auto const &) { ++observing_count; });
+    auto observer = manager.chain_db_info().perform([&observing_count](db::info const &) { ++observing_count; }).end();
 
     manager.setup([self, &manager, &observing_count](auto result) {
         XCTAssertTrue(result);

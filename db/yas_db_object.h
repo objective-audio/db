@@ -9,14 +9,8 @@
 #include <set>
 #include <unordered_map>
 #include "yas_base.h"
+#include "yas_chaining.h"
 #include "yas_db_additional_protocol.h"
-
-namespace yas {
-template <typename T, typename K>
-class subject;
-template <typename T, typename K>
-class observer;
-}  // namespace yas
 
 namespace yas::db {
 class manager;
@@ -78,14 +72,12 @@ class object : public const_object {
         std::experimental::optional<db::object::relation_change_info> const _rel_change_info;
     };
 
-    using subject_t = subject<method, change_info>;
-    using observer_t = observer<method, change_info>;
+    using chaining_pair_t = std::pair<method, change_info>;
 
     object(db::manager const &manager, db::entity const &entity);
     object(std::nullptr_t);
 
-    subject_t const &subject() const;
-    subject_t &subject();
+    [[nodiscard]] chaining::chain_unsyncable_t<chaining_pair_t> chain() const;
 
     void set_attribute_value(std::string const &attr_name, db::value const &value);
 

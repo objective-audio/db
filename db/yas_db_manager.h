@@ -31,18 +31,6 @@ class manager : public base {
    public:
     class impl;
 
-    struct change_info {
-        db::object const object;
-
-        change_info(std::nullptr_t);
-        change_info(db::object const &object);
-    };
-
-    enum class method { object_changed, db_info_changed };
-
-    using subject_t = subject<method, change_info>;
-    using observer_t = observer<method, change_info>;
-
     manager(std::string const &db_path, db::model const &model, std::size_t const priority_count = 1,
             dispatch_queue_t const dispatch_queue = dispatch_get_main_queue());
     manager(std::nullptr_t);
@@ -54,8 +42,8 @@ class manager : public base {
     db::value const &current_save_id() const;
     db::value const &last_save_id() const;
 
-    subject_t const &subject() const;
-    subject_t &subject();
+    chaining::chain_syncable_t<db::info> chain_db_info() const;
+    chaining::chain_unsyncable_t<db::object> chain_db_object() const;
 
     dispatch_queue_t dispatch_queue() const;
 

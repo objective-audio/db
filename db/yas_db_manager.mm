@@ -3,6 +3,7 @@
 //
 
 #include "yas_db_manager.h"
+#include "yas_chaining.h"
 #include "yas_db_attribute.h"
 #include "yas_db_database.h"
 #include "yas_db_entity.h"
@@ -18,21 +19,12 @@
 #include "yas_db_utils.h"
 #include "yas_each_index.h"
 #include "yas_objc_macros.h"
-#include "yas_observing.h"
 #include "yas_operation.h"
 #include "yas_result.h"
 #include "yas_stl_utils.h"
 #include "yas_unless.h"
 
 using namespace yas;
-
-#pragma mark - change_info
-
-db::manager::change_info::change_info(std::nullptr_t) : object(nullptr) {
-}
-
-db::manager::change_info::change_info(db::object const &object) : object(object) {
-}
 
 #pragma mark - impl
 
@@ -44,8 +36,8 @@ struct db::manager::impl : base::impl, public object_observable::impl {
     db::weak_pool<db::object_id, db::object> _cached_objects;
     db::tmp_object_map_map_t _created_objects;
     db::object_map_map_t _changed_objects;
-    db::info _db_info = db::null_info();
-    db::manager::subject_t _subject;
+    chaining::holder<db::info> _db_info = db::null_info();
+    chaining::notifier<db::object> _db_object_notifier;
     dispatch_queue_t _dispatch_queue;
 
     impl(std::string const &path, db::model const &model, dispatch_queue_t const dispatch_queue,
@@ -181,11 +173,7 @@ struct db::manager::impl : base::impl, public object_observable::impl {
 
     // データベース情報を置き換える
     void set_db_info(db::info &&info) {
-        this->_db_info = std::move(info);
-
-        if (this->_subject.has_observer()) {
-            this->_subject.notify(db::manager::method::db_info_changed);
-        }
+        this->_db_info.set_value(std::move(info));
     }
 
     // データベースに保存するために、全てのエンティティで変更のあったオブジェクトのobject_dataを取得する
@@ -355,9 +343,7 @@ struct db::manager::impl : base::impl, public object_observable::impl {
         }
 
         // オブジェクトが変更された通知を送信
-        if (this->_subject.has_observer()) {
-            this->_subject.notify(db::manager::method::object_changed, db::manager::change_info{object});
-        }
+        this->_db_object_notifier.notify(object);
     }
 
     // オブジェクトが解放された時の処理
@@ -498,14 +484,14 @@ db::model const &db::manager::model() const {
 }
 
 db::value const &db::manager::current_save_id() const {
-    if (auto info = impl_ptr<impl>()->_db_info) {
+    if (auto info = impl_ptr<impl>()->_db_info.value()) {
         return info.current_save_id_value();
     }
     return db::null_value();
 }
 
 db::value const &db::manager::last_save_id() const {
-    if (auto info = impl_ptr<impl>()->_db_info) {
+    if (auto info = impl_ptr<impl>()->_db_info.value()) {
         return info.last_save_id_value();
     }
     return db::null_value();
@@ -1115,12 +1101,12 @@ std::size_t db::manager::changed_object_count(std::string const &entity_name) co
     return 0;
 }
 
-db::manager::subject_t const &db::manager::subject() const {
-    return impl_ptr<impl>()->_subject;
+chaining::chain_syncable_t<db::info> db::manager::chain_db_info() const {
+    return impl_ptr<impl>()->_db_info.chain();
 }
 
-db::manager::subject_t &db::manager::subject() {
-    return impl_ptr<impl>()->_subject;
+chaining::chain_unsyncable_t<db::object> db::manager::chain_db_object() const {
+    return impl_ptr<impl>()->_db_object_notifier.chain();
 }
 
 db::object_observable &db::manager::object_observable() {

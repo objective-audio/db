@@ -20,7 +20,8 @@ using namespace yas;
 - (void)tearDown {
     [super tearDown];
 }
-
+#warning
+/*
 - (void)test_create_object {
     db::model model = [yas_db_test_utils model_0_0_1];
 
@@ -832,5 +833,5 @@ using namespace yas;
     XCTAssertEqual(db::update_action_value().get<db::text>(), db::update_action);
     XCTAssertEqual(db::remove_action_value().get<db::text>(), db::remove_action);
 }
-
+*/
 @end
