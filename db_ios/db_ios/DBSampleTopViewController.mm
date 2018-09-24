@@ -70,7 +70,7 @@ top_info_row_type_t to_idx(sample::top_info_row const &row) {
 
 @implementation DBSampleTopViewController {
     std::shared_ptr<db_controller> _db_controller;
-    std::vector<db_controller::observer_t> _observers;
+    chaining::observer_pool _pool;
 }
 
 - (void)viewDidLoad {
@@ -82,19 +82,19 @@ top_info_row_type_t to_idx(sample::top_info_row const &row) {
 
     auto unowned_self = make_objc_ptr([[YASUnownedObject<DBSampleTopViewController *> alloc] initWithObject:self]);
 
-    auto proccessing_observer = _db_controller->subject().make_observer(
-        db_controller::method::processing_changed, [unowned_self](auto const &context) {
-            db_controller::change_info const &info = context.value;
+    self->_pool += self->_db_controller->chain()
+                       .guard([](auto const &pair) { return pair.first == db_controller::method::processing_changed; })
+                       .perform([unowned_self](auto const &pair) {
+                           db_controller::change_info const &info = pair.second;
 
-            auto controller = [unowned_self.object() object];
-            if (info.value.get<db::integer>()) {
-                controller.title = @"Processing...";
-            } else {
-                controller.title = nil;
-            }
-        });
-
-    _observers.emplace_back(std::move(proccessing_observer));
+                           auto controller = [unowned_self.object() object];
+                           if (info.value.get<db::integer>()) {
+                               controller.title = @"Processing...";
+                           } else {
+                               controller.title = nil;
+                           }
+                       })
+                       .end();
 
     _db_controller->setup([unowned_self](auto result) {
         auto controller = [unowned_self.object() object];
@@ -112,57 +112,58 @@ top_info_row_type_t to_idx(sample::top_info_row const &row) {
 - (void)setupObserversAfterSetup {
     auto unowned_self = make_objc_ptr([[YASUnownedObject<DBSampleTopViewController *> alloc] initWithObject:self]);
 
-    auto observer = _db_controller->subject().make_wild_card_observer([unowned_self](auto const &context) {
-        auto const &key = context.key;
-        db_controller::change_info const &info = context.value;
+    self->_pool +=
+        self->_db_controller->chain()
+            .perform([unowned_self](auto const &pair) {
+                auto const &key = pair.first;
+                db_controller::change_info const &info = pair.second;
 
-        auto controller = [unowned_self.object() object];
+                auto controller = [unowned_self.object() object];
 
-        switch (key) {
-            case db_controller::method::db_info_changed: {
-                [controller updateTableForInfo:top_info_row::save_id];
-            } break;
+                switch (key) {
+                    case db_controller::method::db_info_changed: {
+                        [controller updateTableForInfo:top_info_row::save_id];
+                    } break;
 
-            case db_controller::method::all_objects_updated: {
-                [controller updateTable];
-            } break;
+                    case db_controller::method::all_objects_updated: {
+                        [controller updateTable];
+                    } break;
 
-            case db_controller::method::object_created: {
-                auto const &object = info.object;
-                auto const entity = db_controller::entity_for_name(object.entity_name());
-                [controller updateTableForInsertedRow:NSInteger(info.value.get<db::integer>()) entity:entity];
-            } break;
+                    case db_controller::method::object_created: {
+                        auto const &object = info.object;
+                        auto const entity = db_controller::entity_for_name(object.entity_name());
+                        [controller updateTableForInsertedRow:NSInteger(info.value.get<db::integer>()) entity:entity];
+                    } break;
 
-            case db_controller::method::object_changed: {
-                auto const &index = info.value.get<db::integer>();
-                auto const &object = info.object;
+                    case db_controller::method::object_changed: {
+                        auto const &index = info.value.get<db::integer>();
+                        auto const &object = info.object;
 
-                if (info.value) {
-                    auto const entity = db_controller::entity_for_name(object.entity_name());
-                    [controller updateTableObjectCellAtIndex:NSInteger(index) entity:entity];
-                } else {
-                    [controller updateTableObjects];
+                        if (info.value) {
+                            auto const entity = db_controller::entity_for_name(object.entity_name());
+                            [controller updateTableObjectCellAtIndex:NSInteger(index) entity:entity];
+                        } else {
+                            [controller updateTableObjects];
+                        }
+
+                        [controller updateTableActions];
+                    } break;
+
+                    case db_controller::method::object_removed: {
+                        auto const &index = info.value.get<db::integer>();
+                        auto const &object = info.object;
+
+                        auto const entity = db_controller::entity_for_name(object.entity_name());
+                        [controller updateTableForDeletedRow:NSInteger(index) entity:entity];
+
+                        [controller updateTableActions];
+                    } break;
+
+                    default:
+                        break;
                 }
-
-                [controller updateTableActions];
-            } break;
-
-            case db_controller::method::object_removed: {
-                auto const &index = info.value.get<db::integer>();
-                auto const &object = info.object;
-
-                auto const entity = db_controller::entity_for_name(object.entity_name());
-                [controller updateTableForDeletedRow:NSInteger(index) entity:entity];
-
-                [controller updateTableActions];
-            } break;
-
-            default:
-                break;
-        }
-    });
-
-    _observers.emplace_back(std::move(observer));
+            })
+            .end();
 }
 
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {

@@ -49,7 +49,7 @@ rel_control_row_type_t to_idx(rel_control_row const &row) {
     std::experimental::optional<db::object> _db_object;
     std::string _rel_name;
 
-    std::vector<base> _observers;
+    chaining::observer_pool _pool;
 }
 
 - (void)viewDidLoad {
@@ -84,36 +84,37 @@ rel_control_row_type_t to_idx(rel_control_row const &row) {
 
     auto unowned_self = make_objc_ptr([[YASUnownedObject<typeof(self)> alloc] initWithObject:self]);
 
-    auto rel_changed_handler = [unowned_self, rel_name = _rel_name](auto const &context) {
-        db::object::change_info const &info = context.value;
-        if (info.name == rel_name) {
-            if (auto self = unowned_self.object().object) {
-                auto const &rel_info = info.relation_change_info();
-                auto indexPaths = [[NSMutableArray<NSIndexPath *> alloc] init];
-                for (auto const &idx : rel_info.indices) {
-                    [indexPaths addObject:[NSIndexPath indexPathForRow:idx inSection:NSInteger(rel_section::objects)]];
+    self->_pool +=
+        self->_db_object->chain()
+            .guard([](auto const &pair) { return pair.first == db::object::method::relation_changed; })
+            .perform([unowned_self, rel_name = self->_rel_name](auto const &pair) {
+                db::object::change_info const &info = pair.second;
+                if (info.name == rel_name) {
+                    if (auto self = unowned_self.object().object) {
+                        auto const &rel_info = info.relation_change_info();
+                        auto indexPaths = [[NSMutableArray<NSIndexPath *> alloc] init];
+                        for (auto const &idx : rel_info.indices) {
+                            [indexPaths
+                                addObject:[NSIndexPath indexPathForRow:idx inSection:NSInteger(rel_section::objects)]];
+                        }
+
+                        switch (rel_info.reason) {
+                            case db::object::change_reason::inserted: {
+                                [self.tableView insertRowsAtIndexPaths:indexPaths
+                                                      withRowAnimation:UITableViewRowAnimationAutomatic];
+                            } break;
+
+                            case db::object::change_reason::removed: {
+                                [self.tableView deleteRowsAtIndexPaths:indexPaths
+                                                      withRowAnimation:UITableViewRowAnimationAutomatic];
+                            } break;
+
+                            default: { [self.tableView reloadData]; } break;
+                        }
+                    }
                 }
-
-                switch (rel_info.reason) {
-                    case db::object::change_reason::inserted: {
-                        [self.tableView insertRowsAtIndexPaths:indexPaths
-                                              withRowAnimation:UITableViewRowAnimationAutomatic];
-                    } break;
-
-                    case db::object::change_reason::removed: {
-                        [self.tableView deleteRowsAtIndexPaths:indexPaths
-                                              withRowAnimation:UITableViewRowAnimationAutomatic];
-                    } break;
-
-                    default: { [self.tableView reloadData]; } break;
-                }
-            }
-        }
-    };
-
-    auto observer = _db_object->subject().make_observer(db::object::method::relation_changed, rel_changed_handler);
-
-    _observers.emplace_back(std::move(observer));
+            })
+            .end();
 }
 
 - (db::object &)db_object {

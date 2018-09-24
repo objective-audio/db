@@ -61,29 +61,31 @@ void db_controller::setup(db::completion_f completion) {
 
     auto weak_manager = to_weak(_manager);
 
-    this->_observer = this->_manager.subject().make_wild_card_observer([&controller = *this](auto const &context) {
-        auto const &key = context.key;
-        auto const &change_info = context.value;
-
-        if (key == db::manager::method::object_changed) {
-            db::object const &object = change_info.object;
-            auto const &entity_name = object.entity_name();
-            auto &objects = controller._objects.at(entity_name);
-            if (auto idx_opt = index(objects, object)) {
-                db::value idx_value{static_cast<db::integer::type>(*idx_opt)};
-                if (object.is_removed()) {
-                    erase_if(objects, [&object](auto const &vec_obj) { return object == vec_obj; });
-                    controller._subject.notify(method::object_removed, {change_info.object, idx_value});
+    this->_pool +=
+        this->_manager.chain_db_object()
+            .perform([&controller = *this](db::object const &object) {
+                auto const &entity_name = object.entity_name();
+                auto &objects = controller._objects.at(entity_name);
+                if (auto idx_opt = index(objects, object)) {
+                    db::value idx_value{static_cast<db::integer::type>(*idx_opt)};
+                    if (object.is_removed()) {
+                        erase_if(objects, [&object](auto const &vec_obj) { return object == vec_obj; });
+                        controller._notifier.notify(
+                            std::make_pair(method::object_removed, change_info{object, idx_value}));
+                    } else {
+                        controller._notifier.notify(
+                            std::make_pair(method::object_changed, change_info{object, idx_value}));
+                    }
                 } else {
-                    controller._subject.notify(method::object_changed, {change_info.object, idx_value});
+                    controller._notifier.notify(std::make_pair(method::object_changed, change_info{nullptr}));
                 }
-            } else {
-                controller._subject.notify(method::object_changed);
-            }
-        } else if (key == db::manager::method::db_info_changed) {
-            controller._subject.notify(method::db_info_changed);
-        }
-    });
+            })
+            .end();
+
+    this->_pool += this->_manager.chain_db_info()
+                       .to_value(std::make_pair(method::db_info_changed, change_info{nullptr}))
+                       .receive(this->_notifier.receiver())
+                       .end();
 
     auto continuous_result = std::make_shared<db::manager_result_t>(nullptr);
 
@@ -96,7 +98,7 @@ void db_controller::setup(db::completion_f completion) {
                                               completion = std::move(completion)](db::manager_result_t update_result) {
         if (auto shared = weak.lock()) {
             shared->_end_processing();
-            shared->_subject.notify(method::all_objects_updated);
+            shared->_notifier.notify(std::make_pair(method::all_objects_updated, change_info{nullptr}));
             completion(std::move(update_result));
         }
     });
@@ -114,7 +116,8 @@ void db_controller::create_object(entity const &entity) {
 
     auto idx = objects.size();
     objects.push_back(object);
-    this->_subject.notify(method::object_created, {object, db::value{static_cast<db::integer::type>(idx)}});
+    this->_notifier.notify(
+        std::make_pair(method::object_created, change_info{object, db::value{static_cast<db::integer::type>(idx)}}));
 }
 
 void db_controller::insert(entity const &entity, db::completion_f completion) {
@@ -176,7 +179,7 @@ void db_controller::insert(entity const &entity, db::completion_f completion) {
             shared->_end_processing();
 
             if (update_result) {
-                shared->_subject.notify(method::object_created, {object, idx_value});
+                shared->_notifier.notify(std::make_pair(method::object_created, change_info{object, idx_value}));
             }
 
             completion(update_result);
@@ -233,7 +236,7 @@ void db_controller::undo(db::completion_f completion) {
                                               completion = std::move(completion)](db::manager_result_t result) {
         if (auto shared = weak.lock()) {
             shared->_end_processing();
-            shared->_subject.notify(method::all_objects_updated);
+            shared->_notifier.notify(std::make_pair(method::all_objects_updated, change_info{nullptr}));
             completion(std::move(result));
         }
     });
@@ -276,7 +279,7 @@ void db_controller::redo(db::completion_f completion) {
                                               completion = std::move(completion)](db::manager_result_t result) {
         if (auto shared = weak.lock()) {
             shared->_end_processing();
-            shared->_subject.notify(method::all_objects_updated);
+            shared->_notifier.notify(std::make_pair(method::all_objects_updated, change_info{nullptr}));
             completion(std::move(result));
         }
     });
@@ -309,7 +312,7 @@ void db_controller::clear(db::completion_f completion) {
                                               completion = std::move(completion)](db::manager_result_t result) {
         if (auto shared = weak.lock()) {
             shared->_end_processing();
-            shared->_subject.notify(method::all_objects_updated);
+            shared->_notifier.notify(std::make_pair(method::all_objects_updated, change_info{nullptr}));
             completion(std::move(result));
         }
     });
@@ -349,7 +352,7 @@ void db_controller::purge(db::completion_f completion) {
                                               completion = std::move(completion)](db::manager_result_t result) {
         if (auto shared = weak.lock()) {
             shared->_end_processing();
-            shared->_subject.notify(method::all_objects_updated);
+            shared->_notifier.notify(std::make_pair(method::all_objects_updated, change_info{nullptr}));
             completion(std::move(result));
         }
     });
@@ -382,7 +385,7 @@ void db_controller::save_changed(db::completion_f completion) {
                                               completion = std::move(completion)](db::manager_result_t result) {
         if (auto shared = weak.lock()) {
             shared->_end_processing();
-            shared->_subject.notify(method::all_objects_updated);
+            shared->_notifier.notify(std::make_pair(method::all_objects_updated, change_info{nullptr}));
             completion(std::move(result));
         }
     });
@@ -415,7 +418,7 @@ void db_controller::cancel_changed(db::completion_f completion) {
                                               completion = std::move(completion)](db::manager_result_t result) {
         if (auto shared = weak.lock()) {
             shared->_end_processing();
-            shared->_subject.notify(method::all_objects_updated);
+            shared->_notifier.notify(std::make_pair(method::all_objects_updated, change_info{nullptr}));
             completion(std::move(result));
         }
     });
@@ -463,8 +466,8 @@ db::integer::type const &db_controller::last_save_id() const {
     return this->_manager.last_save_id().get<db::integer>();
 }
 
-db_controller::subject_t &db_controller::subject() {
-    return this->_subject;
+chaining::chain_unsyncable_t<db_controller::chain_pair_t> db_controller::chain() {
+    return this->_notifier.chain();
 }
 
 bool db_controller::is_processing() const {
@@ -536,13 +539,15 @@ void db_controller::_update_objects(std::shared_ptr<db::manager_result_t> contin
 void db_controller::_begin_processing() {
     this->_processing = true;
 
-    subject().notify(method::processing_changed, {nullptr, db::value{static_cast<db::integer::type>(true)}});
+    this->_notifier.notify(std::make_pair(method::processing_changed,
+                                          change_info{nullptr, db::value{static_cast<db::integer::type>(true)}}));
 }
 
 void db_controller::_end_processing() {
     this->_processing = false;
 
-    subject().notify(method::processing_changed, {nullptr, db::value{static_cast<db::integer::type>(false)}});
+    this->_notifier.notify(std::make_pair(method::processing_changed,
+                                          change_info{nullptr, db::value{static_cast<db::integer::type>(false)}}));
 }
 
 std::string yas::to_entity_name(db_controller::entity const &entity) {
