@@ -27,8 +27,7 @@ class db_controller : public std::enable_shared_from_this<db_controller> {
         change_info(db::object object, db::value value);
     };
 
-    using subject_t = subject<method, change_info>;
-    using observer_t = subject_t::observer_t;
+    using chain_pair_t = std::pair<method, change_info>;
 
     db_controller();
 
@@ -57,7 +56,7 @@ class db_controller : public std::enable_shared_from_this<db_controller> {
     db::integer::type const &current_save_id() const;
     db::integer::type const &last_save_id() const;
 
-    subject_t &subject();
+    chaining::chain_unsyncable_t<chain_pair_t> chain();
 
     bool is_processing() const;
 
@@ -66,8 +65,8 @@ class db_controller : public std::enable_shared_from_this<db_controller> {
    private:
     db::manager _manager;
     db::object_vector_map_t _objects;
-    subject_t _subject;
-    yas::db::manager::observer_t _observer;
+    chaining::notifier<chain_pair_t> _notifier;
+    chaining::observer_pool _pool;
     bool _processing;
 
     db::object_vector_t &_objects_at(entity const &);

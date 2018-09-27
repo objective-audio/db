@@ -3,6 +3,7 @@
 //
 
 #include "yas_db_object.h"
+#include "yas_chaining.h"
 #include "yas_db_attribute.h"
 #include "yas_db_entity.h"
 #include "yas_db_manager.h"
@@ -12,7 +13,6 @@
 #include "yas_db_relation.h"
 #include "yas_db_value.h"
 #include "yas_fast_each.h"
-#include "yas_observing.h"
 #include "yas_stl_utils.h"
 
 using namespace yas;
@@ -257,7 +257,7 @@ bool db::const_object::is_removed() const {
 struct db::object::impl : const_object::impl, manageable_object::impl {
     enum db::object_status _status = db::object_status::invalid;
     db::manager _manager;
-    db::object::subject_t _subject;
+    chaining::notifier<chaining_pair_t> _notifier;
 
     impl(db::manager const &manager, db::entity const &entity, bool const is_temporary)
         : const_object::impl(entity, db::make_temporary_id()), _manager(manager) {
@@ -562,9 +562,7 @@ struct db::object::impl : const_object::impl, manageable_object::impl {
     }
 
     void notify_did_change(db::object::method const &key, std::string const &name, bool const send_to_manager) {
-        if (this->_subject.has_observer()) {
-            this->_subject.notify(key, db::object::change_info{cast<db::object>(), name});
-        }
+        this->_notifier.notify(std::make_pair(key, db::object::change_info{cast<db::object>(), name}));
 
         if (send_to_manager && this->_manager) {
             if (db::object_observable &observable = this->_manager.object_observable()) {
@@ -575,9 +573,8 @@ struct db::object::impl : const_object::impl, manageable_object::impl {
 
     void notify_did_change(db::object::method const &key, std::string const &name,
                            db::object::relation_change_info &&rel_change_info, bool const send_to_manager) {
-        if (this->_subject.has_observer()) {
-            this->_subject.notify(key, db::object::change_info{cast<db::object>(), name, std::move(rel_change_info)});
-        }
+        this->_notifier.notify(
+            std::make_pair(key, db::object::change_info{cast<db::object>(), name, std::move(rel_change_info)}));
 
         if (send_to_manager && this->_manager) {
             if (db::object_observable &observable = this->_manager.object_observable()) {
@@ -610,12 +607,8 @@ db::object::object(db::manager const &manager, db::entity const &entity)
 db::object::object(std::nullptr_t) : const_object(nullptr) {
 }
 
-db::object::subject_t const &db::object::subject() const {
-    return impl_ptr<impl>()->_subject;
-}
-
-db::object::subject_t &db::object::subject() {
-    return impl_ptr<impl>()->_subject;
+chaining::chain_unsyncable_t<db::object::chaining_pair_t> db::object::chain() const {
+    return impl_ptr<impl>()->_notifier.chain();
 }
 
 void db::object::set_attribute_value(std::string const &attr_name, db::value const &value) {
