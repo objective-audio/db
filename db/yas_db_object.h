@@ -30,12 +30,12 @@ enum object_event_type {
 
 struct object_fetched_event {
     static object_event_type const type = object_event_type::fetched;
-    db::object const &object;
+    db::const_object const &object;
 };
 
 struct object_loaded_event {
     static object_event_type const type = object_event_type::loaded;
-    db::object const &object;
+    db::const_object const &object;
 };
 
 struct object_unloaded_event {
