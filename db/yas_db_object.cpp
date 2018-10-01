@@ -17,6 +17,44 @@
 
 using namespace yas;
 
+#pragma mark - db::object_event
+
+struct db::object_event::impl_base : base::impl {
+    virtual object_event_type type() {
+        throw std::runtime_error("type() must be overridden");
+    }
+};
+
+template <typename Event>
+struct db::object_event::impl : db::object_event::impl_base {
+    Event const event;
+
+    impl(Event &&event) : event(std::move(event)) {
+    }
+
+    object_event_type type() override {
+        return Event::type;
+    }
+};
+
+db::object_event::object_event(object_fetched_event &&event)
+    : base(std::make_shared<impl<object_fetched_event>>(std::move(event))) {
+}
+
+db::object_event::object_event(std::nullptr_t) : base(nullptr) {
+}
+
+db::object_event_type db::object_event::type() const {
+    return this->template impl_ptr<impl_base>()->type();
+}
+
+template <typename Event>
+Event const &db::object_event::get() const {
+    if (auto ip = std::dynamic_pointer_cast<impl<Event>>(impl_ptr())) {
+        return ip->event;
+    }
+}
+
 #pragma mark - db::const_object::impl
 
 struct db::const_object::impl : base::impl {

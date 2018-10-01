@@ -17,6 +17,30 @@ class manager;
 class entity;
 class identifier;
 
+enum object_event_type {
+    fetched,
+};
+
+struct object_fetched_event {
+    static object_event_type const type = object_event_type::fetched;
+    db::object const &object;
+};
+
+struct object_event : base {
+    class impl_base;
+
+    template <typename Event>
+    class impl;
+
+    object_event(object_fetched_event &&);
+    object_event(std::nullptr_t);
+
+    object_event_type type() const;
+
+    template <typename Event>
+    Event const &get() const;
+};
+
 class const_object : public base {
    public:
     class impl;
