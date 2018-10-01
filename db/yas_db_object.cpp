@@ -358,6 +358,7 @@ struct db::object::impl : const_object::impl, manageable_object::impl {
     enum db::object_status _status = db::object_status::invalid;
     db::manager _manager;
     chaining::notifier<chaining_pair_t> _notifier;
+    chaining::fetcher<object_event> _fetcher = nullptr;
 
     impl(db::manager const &manager, db::entity const &entity, bool const is_temporary)
         : const_object::impl(entity, db::make_temporary_id()), _manager(manager) {
@@ -369,6 +370,10 @@ struct db::object::impl : const_object::impl, manageable_object::impl {
                 observable.object_did_erase(_entity.name, this->_identifier);
             }
         }
+    }
+
+    void prepare(db::object &object) {
+        this->_fetcher = chaining::fetcher<object_event>{[weak_object = to_weak(object)]() { return nullopt; }};
     }
 
     void clear() {
