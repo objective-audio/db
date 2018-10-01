@@ -409,6 +409,7 @@ struct db::object::impl : const_object::impl, manageable_object::impl {
             }
 
             notify_did_change(method::loading_changed, "", false);
+            this->_fetcher.broadcast(make_object_loaded_event(cast<db::object>()));
         }
     }
 
@@ -418,7 +419,7 @@ struct db::object::impl : const_object::impl, manageable_object::impl {
 
     void load_insertion_data() override {
         this->_status = db::object_status::created;
-        set_attribute_value(db::action_field, db::insert_action_value(), true);
+        this->set_attribute_value(db::action_field, db::insert_action_value(), true);
 
         for (auto const &pair : this->_entity.all_attributes) {
             db::attribute const &attr = pair.second;
@@ -432,6 +433,7 @@ struct db::object::impl : const_object::impl, manageable_object::impl {
         this->clear();
 
         this->notify_did_change(db::object::method::loading_changed, "", false);
+        this->_fetcher.broadcast(make_object_unloaded_event(cast<db::object>()));
     }
 
     void set_attribute_value(std::string const &attr_name, db::value const &value, bool const loading = false) {
@@ -457,6 +459,7 @@ struct db::object::impl : const_object::impl, manageable_object::impl {
             }
 
             this->notify_did_change(db::object::method::attribute_changed, attr_name, true);
+            this->_fetcher.broadcast(make_object_attribute_updated_event(attr_name, value));
         }
     }
 
@@ -480,6 +483,7 @@ struct db::object::impl : const_object::impl, manageable_object::impl {
 
             this->notify_did_change(db::object::method::relation_changed, rel_name, {change_reason::replaced, {}},
                                     true);
+            this->_fetcher.broadcast(make_object_relation_replaced_event(rel_name));
         }
     }
 
@@ -509,6 +513,7 @@ struct db::object::impl : const_object::impl, manageable_object::impl {
         }
 
         this->notify_did_change(db::object::method::relation_changed, rel_name, {change_reason::inserted, {idx}}, true);
+        this->_fetcher.broadcast(make_object_relation_inserted_event(rel_name, {idx}));
     }
 
     void remove_relation_id(std::string const &rel_name, db::object_id const &relation_id) {
@@ -536,6 +541,7 @@ struct db::object::impl : const_object::impl, manageable_object::impl {
 
             this->notify_did_change(db::object::method::relation_changed, rel_name,
                                     {change_reason::removed, std::move(indices)}, true);
+            this->_fetcher.broadcast(make_object_relation_removed_event(rel_name, std::move(indices)));
         }
     }
 
@@ -556,6 +562,7 @@ struct db::object::impl : const_object::impl, manageable_object::impl {
 
             this->notify_did_change(db::object::method::relation_changed, rel_name, {change_reason::removed, {idx}},
                                     true);
+            this->_fetcher.broadcast(make_object_relation_removed_event(rel_name, {idx}));
         }
     }
 
@@ -586,6 +593,7 @@ struct db::object::impl : const_object::impl, manageable_object::impl {
 
             this->notify_did_change(db::object::method::relation_changed, rel_name,
                                     {change_reason::removed, std::move(indices)}, true);
+            this->_fetcher.broadcast(make_object_relation_removed_event(rel_name, std::move(indices)));
         }
     }
 
