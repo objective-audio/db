@@ -19,6 +19,40 @@ using namespace yas;
 
 #pragma mark - db::object_event
 
+namespace yas::db {
+object_event make_object_fetched_event(const_object object) {
+    return object_event{object_fetched_event{.object = std::move(object)}};
+}
+
+object_event make_object_loaded_event(const_object object) {
+    return object_event{object_loaded_event{.object = std::move(object)}};
+}
+
+object_event make_object_unloaded_event(const_object object) {
+    return object_event{object_unloaded_event{.object = std::move(object)}};
+}
+
+object_event make_object_attribute_updated_event(std::string const &name, db::value const &value) {
+    return object_event{object_attribute_updated_event{.name = name, .value = value}};
+}
+
+object_event make_object_relation_inserted_event(std::string const &name, std::vector<std::size_t> &&indices) {
+    return object_event{object_relation_inserted_event{.name = name, .indices = std::move(indices)}};
+}
+
+object_event make_object_relation_removed_event(std::string const &name, std::vector<std::size_t> &&indices) {
+    return object_event{object_relation_removed_event{.name = name, .indices = std::move(indices)}};
+}
+
+object_event make_object_relation_replaced_event(std::string const &name) {
+    return object_event{object_relation_replaced_event{.name = name}};
+}
+
+object_event make_object_erased_event(std::string const &entity_name, db::object_id const &object_id) {
+    return object_event{object_erased_event{.entity_name = entity_name, .object_id = object_id}};
+}
+}  // namespace yas::db
+
 struct db::object_event::impl_base : base::impl {
     virtual object_event_type type() {
         throw std::runtime_error("type() must be overridden");
