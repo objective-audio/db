@@ -19,11 +19,58 @@ class identifier;
 
 enum object_event_type {
     fetched,
+    loaded,
+    unloaded,
+    attribute_updated,
+    relation_inserted,
+    relation_removed,
+    relation_replaced,
+    erased,
 };
 
 struct object_fetched_event {
     static object_event_type const type = object_event_type::fetched;
     db::object const &object;
+};
+
+struct object_loaded_event {
+    static object_event_type const type = object_event_type::loaded;
+    db::object const &object;
+};
+
+struct object_unloaded_event {
+    static object_event_type const type = object_event_type::unloaded;
+    db::const_object const &object;
+};
+
+struct object_attribute_updated_event {
+    static object_event_type const type = object_event_type::attribute_updated;
+    std::string const name;
+    db::value const &value;
+};
+
+struct object_relation_inserted_event {
+    static object_event_type const type = object_event_type::relation_inserted;
+    std::string const name;
+    std::vector<std::size_t> const indices;
+};
+
+struct object_relation_removed_event {
+    static object_event_type const type = object_event_type::relation_removed;
+    std::string const name;
+    std::vector<std::size_t> const indices;
+};
+
+struct object_relation_replaced_event {
+    static object_event_type const type = object_event_type::relation_replaced;
+    std::string const name;
+    std::vector<std::size_t> const indices;
+};
+
+struct object_erased_event {
+    static object_event_type const type = object_event_type::erased;
+    std::string const &entity_name;
+    db::object_id const &object_id;
 };
 
 struct object_event : base {
@@ -33,6 +80,13 @@ struct object_event : base {
     class impl;
 
     object_event(object_fetched_event &&);
+    object_event(object_loaded_event &&);
+    object_event(object_unloaded_event &&);
+    object_event(object_attribute_updated_event &&);
+    object_event(object_relation_inserted_event &&);
+    object_event(object_relation_removed_event &&);
+    object_event(object_relation_replaced_event &&);
+    object_event(object_erased_event &&);
     object_event(std::nullptr_t);
 
     object_event_type type() const;

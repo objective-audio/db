@@ -41,6 +41,34 @@ db::object_event::object_event(object_fetched_event &&event)
     : base(std::make_shared<impl<object_fetched_event>>(std::move(event))) {
 }
 
+db::object_event::object_event(object_loaded_event &&event)
+    : base(std::make_shared<impl<object_loaded_event>>(std::move(event))) {
+}
+
+db::object_event::object_event(object_unloaded_event &&event)
+    : base(std::make_shared<impl<object_unloaded_event>>(std::move(event))) {
+}
+
+db::object_event::object_event(object_attribute_updated_event &&event)
+    : base(std::make_shared<impl<object_attribute_updated_event>>(std::move(event))) {
+}
+
+db::object_event::object_event(object_relation_inserted_event &&event)
+    : base(std::make_shared<impl<object_relation_inserted_event>>(std::move(event))) {
+}
+
+db::object_event::object_event(object_relation_removed_event &&event)
+    : base(std::make_shared<impl<object_relation_removed_event>>(std::move(event))) {
+}
+
+db::object_event::object_event(object_relation_replaced_event &&event)
+    : base(std::make_shared<impl<object_relation_replaced_event>>(std::move(event))) {
+}
+
+db::object_event::object_event(object_erased_event &&event)
+    : base(std::make_shared<impl<object_erased_event>>(std::move(event))) {
+}
+
 db::object_event::object_event(std::nullptr_t) : base(nullptr) {
 }
 
