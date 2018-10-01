@@ -716,6 +716,10 @@ chaining::chain_unsyncable_t<db::object::chaining_pair_t> db::object::chain() co
     return impl_ptr<impl>()->_notifier.chain();
 }
 
+[[nodiscard]] chaining::chain_syncable_t<db::object_event> db::object::chain_event() const {
+    return impl_ptr<impl>()->_fetcher.chain();
+}
+
 void db::object::set_attribute_value(std::string const &attr_name, db::value const &value) {
     impl_ptr<impl>()->set_attribute_value(attr_name, value);
 }

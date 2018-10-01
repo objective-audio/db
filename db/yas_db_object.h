@@ -156,6 +156,7 @@ class object : public const_object {
     object(std::nullptr_t);
 
     [[nodiscard]] chaining::chain_unsyncable_t<chaining_pair_t> chain() const;
+    [[nodiscard]] chaining::chain_syncable_t<object_event> chain_event() const;
 
     void set_attribute_value(std::string const &attr_name, db::value const &value);
 
