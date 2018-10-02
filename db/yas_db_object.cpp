@@ -717,6 +717,7 @@ db::object::relation_change_info const &db::object::change_info::relation_change
 
 db::object::object(db::manager const &manager, db::entity const &entity)
     : const_object(std::make_unique<impl>(manager, entity, true)) {
+    impl_ptr<impl>()->prepare(*this);
 }
 
 db::object::object(std::nullptr_t) : const_object(nullptr) {
