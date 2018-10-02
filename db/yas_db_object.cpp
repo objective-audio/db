@@ -370,6 +370,8 @@ struct db::object::impl : const_object::impl, manageable_object::impl {
                 observable.object_did_erase(_entity.name, this->_identifier);
             }
         }
+
+        this->_fetcher.broadcast(make_object_erased_event(this->_entity.name, this->_identifier));
     }
 
     void prepare(db::object &object) {
