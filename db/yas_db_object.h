@@ -30,17 +30,17 @@ enum object_event_type {
 
 struct object_fetched_event {
     static object_event_type const type = object_event_type::fetched;
-    db::const_object const &object;
+    db::object const &object;
 };
 
 struct object_loaded_event {
     static object_event_type const type = object_event_type::loaded;
-    db::const_object const &object;
+    db::object const &object;
 };
 
 struct object_unloaded_event {
     static object_event_type const type = object_event_type::unloaded;
-    db::const_object const &object;
+    db::object const &object;
 };
 
 struct object_attribute_updated_event {
@@ -64,7 +64,6 @@ struct object_relation_removed_event {
 struct object_relation_replaced_event {
     static object_event_type const type = object_event_type::relation_replaced;
     std::string const name;
-    std::vector<std::size_t> const indices;
 };
 
 struct object_erased_event {

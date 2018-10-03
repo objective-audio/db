@@ -20,15 +20,15 @@ using namespace yas;
 #pragma mark - db::object_event
 
 namespace yas::db {
-object_event make_object_fetched_event(const_object object) {
+object_event make_object_fetched_event(db::object object) {
     return object_event{object_fetched_event{.object = std::move(object)}};
 }
 
-object_event make_object_loaded_event(const_object object) {
+object_event make_object_loaded_event(db::object object) {
     return object_event{object_loaded_event{.object = std::move(object)}};
 }
 
-object_event make_object_unloaded_event(const_object object) {
+object_event make_object_unloaded_event(db::object object) {
     return object_event{object_unloaded_event{.object = std::move(object)}};
 }
 
