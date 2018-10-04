@@ -115,7 +115,18 @@ Event const &db::object_event::get() const {
     if (auto ip = std::dynamic_pointer_cast<impl<Event>>(impl_ptr())) {
         return ip->event;
     }
+
+    throw std::runtime_error("get event failed.");
 }
+
+template db::object_fetched_event const &db::object_event::get<db::object_fetched_event>() const;
+template db::object_loaded_event const &db::object_event::get<db::object_loaded_event>() const;
+template db::object_unloaded_event const &db::object_event::get<db::object_unloaded_event>() const;
+template db::object_attribute_updated_event const &db::object_event::get<db::object_attribute_updated_event>() const;
+template db::object_relation_inserted_event const &db::object_event::get<db::object_relation_inserted_event>() const;
+template db::object_relation_removed_event const &db::object_event::get<db::object_relation_removed_event>() const;
+template db::object_relation_replaced_event const &db::object_event::get<db::object_relation_replaced_event>() const;
+template db::object_erased_event const &db::object_event::get<db::object_erased_event>() const;
 
 #pragma mark - db::const_object::impl
 
