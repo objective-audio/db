@@ -723,11 +723,7 @@ db::object::object(db::manager const &manager, db::entity const &entity)
 db::object::object(std::nullptr_t) : const_object(nullptr) {
 }
 
-chaining::chain_unsyncable_t<db::object::chaining_pair_t> db::object::chain() const {
-    return impl_ptr<impl>()->_notifier.chain();
-}
-
-[[nodiscard]] chaining::chain_syncable_t<db::object_event> db::object::chain_event() const {
+chaining::chain_syncable_t<db::object_event> db::object::chain_event() const {
     return impl_ptr<impl>()->_fetcher.chain();
 }
 
