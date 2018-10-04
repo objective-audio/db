@@ -495,25 +495,21 @@ using namespace yas;
     XCTAssertEqual(obj.status(), db::object_status::updating);
 }
 
-- (void)test_observe_attribute {
+- (void)test_chain_attribute_updated_event {
     db::model model = [yas_db_test_utils model_0_0_1];
 
     db::object obj{nullptr, model.entity("sample_a")};
 
     bool called = false;
 
-    chaining::any_observer observer = obj.chain()
-                                          .perform([&called, self](db::object::chaining_pair_t const &pair) {
-                                              db::object::method const &method = pair.first;
-                                              db::object::change_info const &info = pair.second;
+    chaining::any_observer observer = obj.chain_event()
+                                          .perform([&called, self](db::object_event const &event) {
+                                              XCTAssertEqual(event.type(), db::object_event_type::attribute_updated);
 
-                                              XCTAssertEqual(method, db::object::method::attribute_changed);
+                                              auto const &attr_event = event.get<db::object_attribute_updated_event>();
 
-                                              auto const &obj = info.object;
-                                              auto const &name = info.name;
-
-                                              XCTAssertEqual(name, "name");
-                                              XCTAssertEqual(obj.attribute_value(name), db::value{"test_value"});
+                                              XCTAssertEqual(attr_event.name, "name");
+                                              XCTAssertEqual(attr_event.value, db::value{"test_value"});
 
                                               called = true;
                                           })
@@ -524,7 +520,7 @@ using namespace yas;
     XCTAssertTrue(called);
 }
 
-- (void)test_no_observe_attribute_with_same_value {
+- (void)test_no_observe_chain_attribute_updated_with_same_value {
     db::model model = [yas_db_test_utils model_0_0_1];
 
     db::object obj{nullptr, model.entity("sample_a")};
@@ -533,59 +529,67 @@ using namespace yas;
 
     obj.set_attribute_value("name", db::value{"test_value"});
 
-    chaining::any_observer observer = obj.chain().perform([&called, self](auto const &) { called = true; }).end();
+    chaining::any_observer observer = obj.chain_event().perform([&called, self](auto const &) { called = true; }).end();
 
     obj.set_attribute_value("name", db::value{"test_value"});
 
     XCTAssertFalse(called);
 }
 
-- (void)test_observe_relation {
+- (void)test_chain_relation {
     db::model model = [yas_db_test_utils model_0_0_1];
 
     db::object obj{nullptr, model.entity("sample_a")};
 
     size_t called_count = 0;
 
-    chaining::any_observer observer = obj.chain()
-                                          .perform([&called_count, self](db::object::chaining_pair_t const &pair) {
-                                              db::object::method const &method = pair.first;
-                                              db::object::change_info const &info = pair.second;
+    chaining::any_observer observer =
+        obj.chain_event()
+            .perform([&called_count, self, weak_obj = to_weak(obj)](db::object_event const &event) {
+                auto const obj = weak_obj.lock();
 
-                                              XCTAssertEqual(method, db::object::method::relation_changed);
+                if (called_count == 0) {
+                    XCTAssertEqual(event.type(), db::object_event_type::relation_replaced);
 
-                                              auto const &obj = info.object;
-                                              auto const &name = info.name;
-                                              auto const &rel_info = info.relation_change_info();
+                    auto const &replaced_event = event.get<db::object_relation_replaced_event>();
+                    auto const name = replaced_event.name;
 
-                                              XCTAssertEqual(name, "child");
+                    XCTAssertEqual(name, "child");
+                    XCTAssertEqual(obj.relation_size(name), 2);
+                    XCTAssertEqual(obj.relation_id(name, 0).stable(), 10);
+                    XCTAssertEqual(obj.relation_id(name, 1).stable(), 20);
+                } else if (called_count == 1) {
+                    XCTAssertEqual(event.type(), db::object_event_type::relation_inserted);
 
-                                              if (called_count == 0) {
-                                                  XCTAssertEqual(obj.relation_size(name), 2);
-                                                  XCTAssertEqual(obj.relation_id(name, 0).stable(), 10);
-                                                  XCTAssertEqual(obj.relation_id(name, 1).stable(), 20);
-                                                  XCTAssertEqual(rel_info.reason, db::object::change_reason::replaced);
-                                                  XCTAssertEqual(rel_info.indices.size(), 0);
-                                              } else if (called_count == 1) {
-                                                  XCTAssertEqual(obj.relation_size(name), 3);
-                                                  XCTAssertEqual(obj.relation_id(name, 2).stable(), 30);
-                                                  XCTAssertEqual(rel_info.reason, db::object::change_reason::inserted);
-                                                  XCTAssertEqual(rel_info.indices.size(), 1);
-                                              } else if (called_count == 2) {
-                                                  XCTAssertEqual(obj.relation_size(name), 2);
-                                                  XCTAssertEqual(obj.relation_id(name, 0).stable(), 10);
-                                                  XCTAssertEqual(obj.relation_id(name, 1).stable(), 30);
-                                                  XCTAssertEqual(rel_info.reason, db::object::change_reason::removed);
-                                                  XCTAssertEqual(rel_info.indices.size(), 1);
-                                              } else if (called_count == 3) {
-                                                  XCTAssertEqual(obj.relation_size(name), 0);
-                                                  XCTAssertEqual(rel_info.reason, db::object::change_reason::removed);
-                                                  XCTAssertEqual(rel_info.indices.size(), 2);
-                                              }
+                    auto const &inserted_event = event.get<db::object_relation_inserted_event>();
+                    auto const name = inserted_event.name;
 
-                                              ++called_count;
-                                          })
-                                          .end();
+                    XCTAssertEqual(obj.relation_size(name), 3);
+                    XCTAssertEqual(obj.relation_id(name, 2).stable(), 30);
+                    XCTAssertEqual(inserted_event.indices.size(), 1);
+                } else if (called_count == 2) {
+                    XCTAssertEqual(event.type(), db::object_event_type::relation_removed);
+
+                    auto const &removed_event = event.get<db::object_relation_removed_event>();
+                    auto const name = removed_event.name;
+
+                    XCTAssertEqual(obj.relation_size(name), 2);
+                    XCTAssertEqual(obj.relation_id(name, 0).stable(), 10);
+                    XCTAssertEqual(obj.relation_id(name, 1).stable(), 30);
+                    XCTAssertEqual(removed_event.indices.size(), 1);
+                } else if (called_count == 3) {
+                    XCTAssertEqual(event.type(), db::object_event_type::relation_removed);
+
+                    auto const &removed_event = event.get<db::object_relation_removed_event>();
+                    auto const name = removed_event.name;
+
+                    XCTAssertEqual(obj.relation_size(name), 0);
+                    XCTAssertEqual(removed_event.indices.size(), 2);
+                }
+
+                ++called_count;
+            })
+            .end();
 
     obj.set_relation_ids("child",
                          db::id_vector_t{db::make_stable_id(db::value{10}), db::make_stable_id(db::value{20})});
@@ -605,7 +609,7 @@ using namespace yas;
     XCTAssertEqual(called_count, 4);
 }
 
-- (void)test_no_observe_relation_ids_with_same_value {
+- (void)test_no_observe_chain_relation_ids_with_same_value {
     db::model model = [yas_db_test_utils model_0_0_1];
 
     db::object obj{nullptr, model.entity("sample_a")};
@@ -614,31 +618,26 @@ using namespace yas;
 
     bool called = false;
 
-    chaining::any_observer observer = obj.chain().perform([&called, self](auto const &) { called = true; }).end();
+    chaining::any_observer observer = obj.chain_event().perform([&called, self](auto const &) { called = true; }).end();
 
     obj.set_relation_ids("child", {db::make_stable_id(db::value{55})});
 
     XCTAssertFalse(called);
 }
 
-- (void)test_observe_loading {
+- (void)test_chain_loaded {
     db::model model = [yas_db_test_utils model_0_0_1];
 
     db::object obj{nullptr, model.entity("sample_a")};
 
     bool called = false;
 
-    chaining::any_observer observer = obj.chain()
-                                          .perform([&called, self](db::object::chaining_pair_t const &pair) {
-                                              db::object::method const &method = pair.first;
-                                              db::object::change_info const &info = pair.second;
+    chaining::any_observer observer = obj.chain_event()
+                                          .perform([&called, self](db::object_event const &event) {
+                                              XCTAssertEqual(event.type(), db::object_event_type::loaded);
 
-                                              XCTAssertEqual(method, db::object::method::loading_changed);
-
-                                              auto const &obj = info.object;
-                                              auto const &name = info.name;
-
-                                              XCTAssertEqual(name.size(), 0);
+                                              auto const loaded_event = event.get<db::object_loaded_event>();
+                                              auto const &obj = loaded_event.object;
 
                                               XCTAssertEqual(obj.object_id().stable_value(), db::value{1});
 
@@ -692,7 +691,7 @@ using namespace yas;
     XCTAssertEqual(obj.relation_size("child"), 0);
 }
 
-- (void)test_observe_clear {
+- (void)test_chain_unloaded {
     db::model model = [yas_db_test_utils model_0_0_1];
 
     db::object obj{nullptr, model.entity("sample_a")};
@@ -704,20 +703,14 @@ using namespace yas;
 
     bool called = false;
 
-    chaining::any_observer observer = obj.chain()
-                                          .perform([&called, self](db::object::chaining_pair_t const &pair) {
-                                              db::object::method const &method = pair.first;
-                                              db::object::change_info const &info = pair.second;
+    chaining::any_observer observer = obj.chain_event()
+                                          .perform([&called, self](db::object_event const &event) {
+                                              XCTAssertEqual(event.type(), db::object_event_type::unloaded);
 
-                                              XCTAssertEqual(method, db::object::method::loading_changed);
-
-                                              auto const &obj = info.object;
-                                              auto const &name = info.name;
+                                              auto const unloaded_event = event.get<db::object_unloaded_event>();
+                                              auto const &obj = unloaded_event.object;
 
                                               XCTAssertEqual(obj.status(), db::object_status::invalid);
-
-                                              XCTAssertEqual(name.size(), 0);
-
                                               XCTAssertFalse(obj.attribute_value("name"));
                                               XCTAssertEqual(obj.relation_size("child"), 0);
 
