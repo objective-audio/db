@@ -552,8 +552,8 @@ struct db::object::impl : const_object::impl, manageable_object::impl {
                 this->_status = db::object_status::changed;
             }
 
-            this->notify_did_change(db::object::method::relation_changed, rel_name,
-                                    {change_reason::removed, std::move(indices)}, true);
+            this->notify_did_change(db::object::method::relation_changed, rel_name, {change_reason::removed, indices},
+                                    true);
             this->_fetcher.broadcast(make_object_relation_removed_event(rel_name, std::move(indices)));
         }
     }
@@ -604,8 +604,8 @@ struct db::object::impl : const_object::impl, manageable_object::impl {
                 indices.push_back(yas_each_index(each));
             }
 
-            this->notify_did_change(db::object::method::relation_changed, rel_name,
-                                    {change_reason::removed, std::move(indices)}, true);
+            this->notify_did_change(db::object::method::relation_changed, rel_name, {change_reason::removed, indices},
+                                    true);
             this->_fetcher.broadcast(make_object_relation_removed_event(rel_name, std::move(indices)));
         }
     }
