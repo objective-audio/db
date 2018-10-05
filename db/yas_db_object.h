@@ -17,7 +17,7 @@ class manager;
 class entity;
 class identifier;
 
-enum object_event_type {
+enum class object_event_type {
     fetched,
     loaded,
     cleared,
