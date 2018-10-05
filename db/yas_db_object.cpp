@@ -695,20 +695,6 @@ struct db::object::impl : const_object::impl, manageable_object::impl {
     }
 };
 
-#pragma mark - db::object::change_info
-
-db::object::change_info::change_info(db::object const &object, std::string const &name) : object(object), name(name) {
-}
-
-db::object::change_info::change_info(db::object const &object, std::string const &name,
-                                     db::object::relation_change_info &&rel_change_info)
-    : object(object), name(name), _rel_change_info(std::move(rel_change_info)) {
-}
-
-db::object::relation_change_info const &db::object::change_info::relation_change_info() const {
-    return *_rel_change_info;
-}
-
 #pragma mark - db::object
 
 db::object::object(db::manager const &manager, db::entity const &entity)
