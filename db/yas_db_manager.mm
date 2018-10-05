@@ -52,7 +52,7 @@ struct db::manager::impl : base::impl, public object_observable::impl {
 
     // データベースに保存せず仮にオブジェクトを生成する
     // この時点ではobject_idやsave_idは振られていない
-    db::object create_object(std::string const entity_name) {
+    db::object create_temporary_object(std::string const entity_name) {
         db::object object{cast<db::manager>(), this->_model.entity(entity_name)};
 
         object.manageable().load_insertion_data();
@@ -502,7 +502,7 @@ dispatch_queue_t db::manager::dispatch_queue() const {
 }
 
 db::object db::manager::create_object(std::string const entity_name) {
-    return impl_ptr<impl>()->create_object(entity_name);
+    return impl_ptr<impl>()->create_temporary_object(entity_name);
 }
 
 void db::manager::setup(db::completion_f completion) {
