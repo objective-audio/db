@@ -63,12 +63,12 @@ objc_ptr<NSArray<NSIndexPath *> *> to_index_paths(std::vector<std::size_t> const
 - (void)viewDidLoad {
     [super viewDidLoad];
 
-    self.title = (__bridge NSString *)to_cf_object(_rel_name);
+    self.title = (__bridge NSString *)to_cf_object(self->_rel_name);
 }
 
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
     if (auto viewController = objc_cast<DBSampleObjectSelectionViewController>(segue.destinationViewController)) {
-        auto const &relation = _db_object->entity().relations.at(_rel_name);
+        auto const &relation = self->_db_object->entity().relations.at(self->_rel_name);
 
         auto unowned_self = make_objc_ptr([[YASUnownedObject<typeof(self)> alloc] initWithObject:self]);
 
@@ -77,7 +77,7 @@ objc_ptr<NSArray<NSIndexPath *> *> to_index_paths(std::vector<std::size_t> const
             self.db_object.add_relation_object(self.relation_name, rel_object);
         };
 
-        [viewController set_db_controller:_db_controller
+        [viewController set_db_controller:self->_db_controller
                                    entity:db_controller::entity_for_name(relation.target)
                          selected_handler:std::move(selected_handler)];
     }
@@ -86,71 +86,60 @@ objc_ptr<NSArray<NSIndexPath *> *> to_index_paths(std::vector<std::size_t> const
 - (void)set_db_controller:(std::weak_ptr<sample::db_controller>)controller
                    object:(db::object)object
              relationName:(std::string)rel_name {
-    _db_controller = std::move(controller);
-    *_db_object = std::move(object);
-    _rel_name = std::move(rel_name);
+    self->_db_controller = std::move(controller);
+    *self->_db_object = std::move(object);
+    self->_rel_name = std::move(rel_name);
 
     auto unowned_self = make_objc_ptr([[YASUnownedObject<typeof(self)> alloc] initWithObject:self]);
 
-    self->_pool += self->_db_object->chain()
-                       .guard([](db::object_event const &event) {
-                           return event.type() == db::object_event_type::relation_inserted;
-                       })
-                       .perform([unowned_self, rel_name = self->_rel_name](db::object_event const &event) {
-                           auto const &inserted_event = event.get<db::object_relation_inserted_event>();
-                           auto self = unowned_self.object().object;
+    self->_pool +=
+        self->_db_object->chain()
+            .perform([unowned_self, rel_name = self->_rel_name](db::object_event const &event) {
+                auto self = unowned_self.object().object;
+                if (!self) {
+                    return;
+                }
 
-                           if (inserted_event.name != rel_name || !self) {
-                               return;
-                           }
+                switch (event.type()) {
+                    case db::object_event_type::relation_inserted: {
+                        auto const &inserted_event = event.get<db::object_relation_inserted_event>();
+                        if (inserted_event.name != rel_name) {
+                            return;
+                        }
+                        [self.tableView insertRowsAtIndexPaths:to_index_paths(inserted_event.indices).object()
+                                              withRowAnimation:UITableViewRowAnimationAutomatic];
+                    } break;
 
-                           auto index_paths = to_index_paths(inserted_event.indices);
-                           [self.tableView insertRowsAtIndexPaths:index_paths.object()
-                                                 withRowAnimation:UITableViewRowAnimationAutomatic];
-                       })
-                       .end();
+                    case db::object_event_type::relation_removed: {
+                        auto const &removed_event = event.get<db::object_relation_removed_event>();
+                        if (removed_event.name != rel_name) {
+                            return;
+                        }
+                        [self.tableView deleteRowsAtIndexPaths:to_index_paths(removed_event.indices).object()
+                                              withRowAnimation:UITableViewRowAnimationAutomatic];
+                    } break;
 
-    self->_pool += self->_db_object->chain()
-                       .guard([](db::object_event const &event) {
-                           return event.type() == db::object_event_type::relation_removed;
-                       })
-                       .perform([unowned_self, rel_name = self->_rel_name](db::object_event const &event) {
-                           auto const &removed_event = event.get<db::object_relation_removed_event>();
-                           auto self = unowned_self.object().object;
+                    case db::object_event_type::relation_replaced: {
+                        auto const &replaced_event = event.get<db::object_relation_replaced_event>();
+                        if (replaced_event.name != rel_name) {
+                            return;
+                        }
+                        [self.tableView reloadData];
+                    } break;
 
-                           if (removed_event.name != rel_name || !self) {
-                               return;
-                           }
-
-                           auto index_paths = to_index_paths(removed_event.indices);
-                           [self.tableView deleteRowsAtIndexPaths:index_paths.object()
-                                                 withRowAnimation:UITableViewRowAnimationAutomatic];
-                       })
-                       .end();
-
-    self->_pool += self->_db_object->chain()
-                       .guard([](db::object_event const &event) {
-                           return event.type() == db::object_event_type::relation_replaced;
-                       })
-                       .perform([unowned_self, rel_name = self->_rel_name](db::object_event const &event) {
-                           auto const &replaced_event = event.get<db::object_relation_replaced_event>();
-                           auto self = unowned_self.object().object;
-
-                           if (replaced_event.name != rel_name || !self) {
-                               return;
-                           }
-
-                           [self.tableView reloadData];
-                       })
-                       .end();
+                    default:
+                        break;
+                }
+            })
+            .end();
 }
 
 - (db::object &)db_object {
-    return *_db_object;
+    return *self->_db_object;
 }
 
 - (std::string const &)relation_name {
-    return _rel_name;
+    return self->_rel_name;
 }
 
 #pragma mark - Table view data source
@@ -165,7 +154,7 @@ objc_ptr<NSArray<NSIndexPath *> *> to_index_paths(std::vector<std::size_t> const
             return to_idx(rel_control_row::last) + 1;
 
         case rel_section::objects:
-            return [self db_object].relation_size(_rel_name);
+            return [self db_object].relation_size(self->_rel_name);
     }
 }
 
@@ -202,13 +191,13 @@ objc_ptr<NSArray<NSIndexPath *> *> to_index_paths(std::vector<std::size_t> const
             cell = [tableView dequeueReusableCellWithIdentifier:sample::rel_normal_cell_id forIndexPath:indexPath];
             if (auto normalCell = objc_cast<DBSampleObjectNormalCell>(cell)) {
                 auto const &db_obj = [self db_object];
-                if (auto const rel_obj = db_obj.relation_object_at(_rel_name, indexPath.row)) {
+                if (auto const rel_obj = db_obj.relation_object_at(self->_rel_name, indexPath.row)) {
                     auto const &obj_id = rel_obj.object_id();
                     auto const &name = rel_obj.attribute_value("name");
                     std::string const title = "object_id:" + to_string(obj_id) + " name:" + to_string(name);
                     [normalCell setupWithTitle:title];
                 } else {
-                    auto const &rel_id = db_obj.relation_id(_rel_name, indexPath.row);
+                    auto const &rel_id = db_obj.relation_id(self->_rel_name, indexPath.row);
                     std::string const title = "object_id" + to_string(rel_id) + " (null)";
                     [normalCell setupWithTitle:title];
                 }
@@ -234,7 +223,7 @@ objc_ptr<NSArray<NSIndexPath *> *> to_index_paths(std::vector<std::size_t> const
      forRowAtIndexPath:(NSIndexPath *)indexPath {
     if (editingStyle == UITableViewCellEditingStyleDelete) {
         if (rel_section(indexPath.section) == rel_section::objects) {
-            _db_object->remove_relation_at(_rel_name, indexPath.row);
+            self->_db_object->remove_relation_at(self->_rel_name, indexPath.row);
         }
     }
 }
