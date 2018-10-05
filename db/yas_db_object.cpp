@@ -368,7 +368,6 @@ bool db::const_object::is_removed() const {
 struct db::object::impl : const_object::impl, manageable_object::impl {
     enum db::object_status _status = db::object_status::invalid;
     db::manager _manager;
-    chaining::notifier<chaining_pair_t> _notifier;
     chaining::fetcher<object_event> _fetcher = nullptr;
 
     impl(db::manager const &manager, db::entity const &entity, bool const is_temporary)
@@ -687,21 +686,7 @@ struct db::object::impl : const_object::impl, manageable_object::impl {
         this->_status = stat;
     }
 
-    void notify_did_change(db::object::method const &key, std::string const &name, bool const send_to_manager) {
-        this->_notifier.notify(std::make_pair(key, db::object::change_info{cast<db::object>(), name}));
-
-        if (send_to_manager && this->_manager) {
-            if (db::object_observable &observable = this->_manager.object_observable()) {
-                observable.object_did_change(cast<db::object>());
-            }
-        }
-    }
-
-    void notify_did_change(db::object::method const &key, std::string const &name,
-                           db::object::relation_change_info &&rel_change_info, bool const send_to_manager) {
-        this->_notifier.notify(
-            std::make_pair(key, db::object::change_info{cast<db::object>(), name, std::move(rel_change_info)}));
-
+    void notify_did_change(std::string const &name, bool const send_to_manager) {
         if (send_to_manager && this->_manager) {
             if (db::object_observable &observable = this->_manager.object_observable()) {
                 observable.object_did_change(cast<db::object>());
