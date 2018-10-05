@@ -42,6 +42,14 @@ rel_section_type_t to_idx(rel_section const &section) {
 rel_control_row_type_t to_idx(rel_control_row const &row) {
     return rel_control_row_type_t(row);
 }
+
+objc_ptr<NSArray<NSIndexPath *> *> to_index_paths(std::vector<std::size_t> const &indices) {
+    auto index_paths = make_objc_ptr([[NSMutableArray<NSIndexPath *> alloc] init]);
+    for (auto const &idx : indices) {
+        [index_paths.object() addObject:[NSIndexPath indexPathForRow:idx inSection:NSInteger(rel_section::objects)]];
+    }
+    return make_objc_ptr<NSArray<NSIndexPath *> *>([index_paths.object() copy]);
+}
 }
 
 @implementation DBSampleRelationViewController {
@@ -84,37 +92,57 @@ rel_control_row_type_t to_idx(rel_control_row const &row) {
 
     auto unowned_self = make_objc_ptr([[YASUnownedObject<typeof(self)> alloc] initWithObject:self]);
 
-    self->_pool +=
-        self->_db_object->chain()
-            .guard([](auto const &pair) { return pair.first == db::object::method::relation_changed; })
-            .perform([unowned_self, rel_name = self->_rel_name](auto const &pair) {
-                db::object::change_info const &info = pair.second;
-                if (info.name == rel_name) {
-                    if (auto self = unowned_self.object().object) {
-                        auto const &rel_info = info.relation_change_info();
-                        auto indexPaths = [[NSMutableArray<NSIndexPath *> alloc] init];
-                        for (auto const &idx : rel_info.indices) {
-                            [indexPaths
-                                addObject:[NSIndexPath indexPathForRow:idx inSection:NSInteger(rel_section::objects)]];
-                        }
+    self->_pool += self->_db_object->chain()
+                       .guard([](db::object_event const &event) {
+                           return event.type() == db::object_event_type::relation_inserted;
+                       })
+                       .perform([unowned_self, rel_name = self->_rel_name](db::object_event const &event) {
+                           auto const &inserted_event = event.get<db::object_relation_inserted_event>();
+                           auto self = unowned_self.object().object;
 
-                        switch (rel_info.reason) {
-                            case db::object::change_reason::inserted: {
-                                [self.tableView insertRowsAtIndexPaths:indexPaths
-                                                      withRowAnimation:UITableViewRowAnimationAutomatic];
-                            } break;
+                           if (inserted_event.name != rel_name || !self) {
+                               return;
+                           }
 
-                            case db::object::change_reason::removed: {
-                                [self.tableView deleteRowsAtIndexPaths:indexPaths
-                                                      withRowAnimation:UITableViewRowAnimationAutomatic];
-                            } break;
+                           auto index_paths = to_index_paths(inserted_event.indices);
+                           [self.tableView insertRowsAtIndexPaths:index_paths.object()
+                                                 withRowAnimation:UITableViewRowAnimationAutomatic];
+                       })
+                       .end();
 
-                            default: { [self.tableView reloadData]; } break;
-                        }
-                    }
-                }
-            })
-            .end();
+    self->_pool += self->_db_object->chain()
+                       .guard([](db::object_event const &event) {
+                           return event.type() == db::object_event_type::relation_removed;
+                       })
+                       .perform([unowned_self, rel_name = self->_rel_name](db::object_event const &event) {
+                           auto const &removed_event = event.get<db::object_relation_removed_event>();
+                           auto self = unowned_self.object().object;
+
+                           if (removed_event.name != rel_name || !self) {
+                               return;
+                           }
+
+                           auto index_paths = to_index_paths(removed_event.indices);
+                           [self.tableView deleteRowsAtIndexPaths:index_paths.object()
+                                                 withRowAnimation:UITableViewRowAnimationAutomatic];
+                       })
+                       .end();
+
+    self->_pool += self->_db_object->chain()
+                       .guard([](db::object_event const &event) {
+                           return event.type() == db::object_event_type::relation_replaced;
+                       })
+                       .perform([unowned_self, rel_name = self->_rel_name](db::object_event const &event) {
+                           auto const &replaced_event = event.get<db::object_relation_replaced_event>();
+                           auto self = unowned_self.object().object;
+
+                           if (replaced_event.name != rel_name || !self) {
+                               return;
+                           }
+
+                           [self.tableView reloadData];
+                       })
+                       .end();
 }
 
 - (db::object &)db_object {
