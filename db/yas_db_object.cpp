@@ -420,7 +420,6 @@ struct db::object::impl : const_object::impl, manageable_object::impl {
                 this->_status = db::object_status::saved;
             }
 
-            notify_did_change(method::loading_changed, "", false);
             this->_fetcher.broadcast(make_object_loaded_event(cast<db::object>()));
         }
     }
@@ -444,7 +443,6 @@ struct db::object::impl : const_object::impl, manageable_object::impl {
     void clear_data() override {
         this->clear();
 
-        this->notify_did_change(db::object::method::loading_changed, "", false);
         this->_fetcher.broadcast(make_object_cleared_event(cast<db::object>()));
     }
 
