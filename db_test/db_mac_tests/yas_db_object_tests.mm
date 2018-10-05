@@ -691,7 +691,7 @@ using namespace yas;
     XCTAssertEqual(obj.relation_size("child"), 0);
 }
 
-- (void)test_chain_unloaded {
+- (void)test_chain_cleared {
     db::model model = [yas_db_test_utils model_0_0_1];
 
     db::object obj{nullptr, model.entity("sample_a")};
@@ -705,10 +705,10 @@ using namespace yas;
 
     chaining::any_observer observer = obj.chain()
                                           .perform([&called, self](db::object_event const &event) {
-                                              XCTAssertEqual(event.type(), db::object_event_type::unloaded);
+                                              XCTAssertEqual(event.type(), db::object_event_type::cleared);
 
-                                              auto const unloaded_event = event.get<db::object_unloaded_event>();
-                                              auto const &obj = unloaded_event.object;
+                                              auto const cleared_event = event.get<db::object_cleared_event>();
+                                              auto const &obj = cleared_event.object;
 
                                               XCTAssertEqual(obj.status(), db::object_status::invalid);
                                               XCTAssertFalse(obj.attribute_value("name"));

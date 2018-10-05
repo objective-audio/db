@@ -20,7 +20,7 @@ class identifier;
 enum object_event_type {
     fetched,
     loaded,
-    unloaded,
+    cleared,
     attribute_updated,
     relation_inserted,
     relation_removed,
@@ -38,8 +38,8 @@ struct object_loaded_event {
     db::object const &object;
 };
 
-struct object_unloaded_event {
-    static object_event_type const type = object_event_type::unloaded;
+struct object_cleared_event {
+    static object_event_type const type = object_event_type::cleared;
     db::object const &object;
 };
 
@@ -80,7 +80,7 @@ struct object_event : base {
 
     object_event(object_fetched_event &&);
     object_event(object_loaded_event &&);
-    object_event(object_unloaded_event &&);
+    object_event(object_cleared_event &&);
     object_event(object_attribute_updated_event &&);
     object_event(object_relation_inserted_event &&);
     object_event(object_relation_removed_event &&);

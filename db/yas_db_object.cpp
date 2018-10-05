@@ -28,8 +28,8 @@ object_event make_object_loaded_event(db::object object) {
     return object_event{object_loaded_event{.object = std::move(object)}};
 }
 
-object_event make_object_unloaded_event(db::object object) {
-    return object_event{object_unloaded_event{.object = std::move(object)}};
+object_event make_object_cleared_event(db::object object) {
+    return object_event{object_cleared_event{.object = std::move(object)}};
 }
 
 object_event make_object_attribute_updated_event(std::string const &name, db::value const &value) {
@@ -79,8 +79,8 @@ db::object_event::object_event(object_loaded_event &&event)
     : base(std::make_shared<impl<object_loaded_event>>(std::move(event))) {
 }
 
-db::object_event::object_event(object_unloaded_event &&event)
-    : base(std::make_shared<impl<object_unloaded_event>>(std::move(event))) {
+db::object_event::object_event(object_cleared_event &&event)
+    : base(std::make_shared<impl<object_cleared_event>>(std::move(event))) {
 }
 
 db::object_event::object_event(object_attribute_updated_event &&event)
@@ -121,7 +121,7 @@ Event const &db::object_event::get() const {
 
 template db::object_fetched_event const &db::object_event::get<db::object_fetched_event>() const;
 template db::object_loaded_event const &db::object_event::get<db::object_loaded_event>() const;
-template db::object_unloaded_event const &db::object_event::get<db::object_unloaded_event>() const;
+template db::object_cleared_event const &db::object_event::get<db::object_cleared_event>() const;
 template db::object_attribute_updated_event const &db::object_event::get<db::object_attribute_updated_event>() const;
 template db::object_relation_inserted_event const &db::object_event::get<db::object_relation_inserted_event>() const;
 template db::object_relation_removed_event const &db::object_event::get<db::object_relation_removed_event>() const;
@@ -446,7 +446,7 @@ struct db::object::impl : const_object::impl, manageable_object::impl {
         this->clear();
 
         this->notify_did_change(db::object::method::loading_changed, "", false);
-        this->_fetcher.broadcast(make_object_unloaded_event(cast<db::object>()));
+        this->_fetcher.broadcast(make_object_cleared_event(cast<db::object>()));
     }
 
     void set_attribute_value(std::string const &attr_name, db::value const &value, bool const loading = false) {
