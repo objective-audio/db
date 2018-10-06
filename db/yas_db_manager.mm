@@ -1115,3 +1115,7 @@ db::object_observable &db::manager::object_observable() {
     }
     return _object_observable;
 }
+
+db::object db::manager::make_object(std::string const &entity_name) {
+    return db::object{*this, this->model().entity(entity_name)};
+}

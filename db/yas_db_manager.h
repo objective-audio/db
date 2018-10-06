@@ -76,6 +76,7 @@ class manager : public base {
     std::size_t changed_object_count(std::string const &entity_name) const;
 
     db::object_observable &object_observable();
+    db::object make_object(std::string const &entity_name);
 
    private:
     db::object_observable _object_observable = nullptr;
