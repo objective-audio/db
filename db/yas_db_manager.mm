@@ -446,18 +446,16 @@ struct db::manager::impl : base::impl, public object_observable::impl {
 
     db::object _make_object(db::manager &manager, std::string const &entity_name) {
         db::object obj{manager, this->_model.entity(entity_name)};
+        auto weak_manager = to_weak(manager);
 
         this->_pool +=
             obj.chain()
-                .guard([](db::object_event const &event) { return event.type() == db::object_event_type::erased; })
-                .perform([weak_manager = to_weak(manager)](db::object_event const &event) {
-                    auto manager = weak_manager.lock();
-                    if (!manager) {
-                        return;
-                    }
-                    auto const erased_event = event.get<db::object_erased_event>();
-                    auto ip = manager.impl_ptr<impl>();
-                    ip->_cached_objects.erase(erased_event.entity_name, erased_event.object_id);
+                .guard([weak_manager](db::object_event const &event) {
+                    return event.type() == db::object_event_type::erased && !!weak_manager;
+                })
+                .to([](db::object_event const &event) { return event.get<db::object_erased_event>(); })
+                .perform([weak_manager](db::object_erased_event const &event) {
+                    weak_manager.lock().impl_ptr<impl>()->_cached_objects.erase(event.entity_name, event.object_id);
                 })
                 .end();
 
