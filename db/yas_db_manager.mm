@@ -39,6 +39,7 @@ struct db::manager::impl : base::impl, public object_observable::impl {
     chaining::holder<db::info> _db_info = db::null_info();
     chaining::notifier<db::object> _db_object_notifier;
     dispatch_queue_t _dispatch_queue;
+    chaining::observer_pool _pool;
 
     impl(std::string const &path, db::model const &model, dispatch_queue_t const dispatch_queue,
          std::size_t const priority_count)
@@ -441,6 +442,26 @@ struct db::manager::impl : base::impl, public object_observable::impl {
         if (_suspend_count == 0) {
             _op_queue.resume();
         }
+    }
+
+    db::object _make_object(db::manager &manager, std::string const &entity_name) {
+        db::object obj{manager, this->_model.entity(entity_name)};
+
+        this->_pool +=
+            obj.chain()
+                .guard([](db::object_event const &event) { return event.type() == db::object_event_type::erased; })
+                .perform([weak_manager = to_weak(manager)](db::object_event const &event) {
+                    auto manager = weak_manager.lock();
+                    if (!manager) {
+                        return;
+                    }
+                    auto const erased_event = event.get<db::object_erased_event>();
+                    auto ip = manager.impl_ptr<impl>();
+                    ip->_cached_objects.erase(erased_event.entity_name, erased_event.object_id);
+                })
+                .end();
+
+        return obj;
     }
 };
 
@@ -1116,7 +1137,5 @@ db::object_observable &db::manager::object_observable() {
 }
 
 db::object db::manager::make_object(std::string const &entity_name) {
-    db::object obj{*this, this->model().entity(entity_name)};
-#warning
-    return obj;
+    return impl_ptr<impl>()->_make_object(*this, entity_name);
 }
