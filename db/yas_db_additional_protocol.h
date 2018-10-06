@@ -57,7 +57,7 @@ struct object_observable : protocol {
     object_observable(std::nullptr_t) : protocol(nullptr) {
     }
 
-    void object_did_change(object const &obj) {
+    void object_did_change(db::object const &obj) {
         impl_ptr<impl>()->_object_did_change(obj);
     }
 
