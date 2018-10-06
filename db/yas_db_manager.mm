@@ -52,8 +52,8 @@ struct db::manager::impl : base::impl, public object_observable::impl {
 
     // データベースに保存せず仮にオブジェクトを生成する
     // この時点ではobject_idやsave_idは振られていない
-    db::object create_temporary_object(std::string const entity_name) {
-        db::object object{cast<db::manager>(), this->_model.entity(entity_name)};
+    db::object create_temporary_object(db::manager &manager, std::string const entity_name) {
+        db::object object = manager.make_object(entity_name);
 
         object.manageable().load_insertion_data();
 
@@ -98,9 +98,8 @@ struct db::manager::impl : base::impl, public object_observable::impl {
         if (!object) {
             // 挿入でなければobjectはnullなので、キャッシュに追加または取得する
             auto manager = cast<db::manager>();
-            object = this->_cached_objects.get_or_create(entity_name, data.object_id, [&manager, &entity_name]() {
-                return db::object{manager, manager.model().entity(entity_name)};
-            });
+            object = this->_cached_objects.get_or_create(
+                entity_name, data.object_id, [&manager, &entity_name]() { return manager.make_object(entity_name); });
         }
 
         // オブジェクトにデータをロード
@@ -502,7 +501,7 @@ dispatch_queue_t db::manager::dispatch_queue() const {
 }
 
 db::object db::manager::create_object(std::string const entity_name) {
-    return impl_ptr<impl>()->create_temporary_object(entity_name);
+    return impl_ptr<impl>()->create_temporary_object(*this, entity_name);
 }
 
 void db::manager::setup(db::completion_f completion) {
@@ -1117,5 +1116,7 @@ db::object_observable &db::manager::object_observable() {
 }
 
 db::object db::manager::make_object(std::string const &entity_name) {
-    return db::object{*this, this->model().entity(entity_name)};
+    db::object obj{*this, this->model().entity(entity_name)};
+#warning
+    return obj;
 }
