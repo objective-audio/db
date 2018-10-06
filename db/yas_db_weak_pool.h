@@ -9,8 +9,6 @@
 #include "yas_base.h"
 
 namespace yas::db {
-class object;
-
 template <typename K, typename V>
 struct weak_pool {
     using value_map_t = std::unordered_map<K, weak<V>>;
