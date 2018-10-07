@@ -346,13 +346,6 @@ struct db::manager::impl : base::impl, public object_observable::impl {
         this->_db_object_notifier.notify(object);
     }
 
-    // オブジェクトが解放された時の処理
-    void _object_did_erase(std::string const &entity_name, db::object_id const &object_id) {
-        // キャッシュからオブジェクトを削除する
-        // キャッシュにはweakで持っている
-        this->_cached_objects.erase(entity_name, object_id);
-    }
-
     // バックグラウンドでデータベースの処理をする
     void execute(db::cancellation_f &&cancellation, db::execution_f &&execution) {
         auto op_lambda = [cancellation = std::move(cancellation), execution = std::move(execution),
