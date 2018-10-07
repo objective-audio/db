@@ -45,24 +45,28 @@ struct object_cleared_event {
 
 struct object_attribute_updated_event {
     static object_event_type const type = object_event_type::attribute_updated;
+    db::object const &object;
     std::string const name;
     db::value const &value;
 };
 
 struct object_relation_inserted_event {
     static object_event_type const type = object_event_type::relation_inserted;
+    db::object const &object;
     std::string const name;
     std::vector<std::size_t> const indices;
 };
 
 struct object_relation_removed_event {
     static object_event_type const type = object_event_type::relation_removed;
+    db::object const &object;
     std::string const name;
     std::vector<std::size_t> const indices;
 };
 
 struct object_relation_replaced_event {
     static object_event_type const type = object_event_type::relation_replaced;
+    db::object const &object;
     std::string const name;
 };
 
@@ -90,11 +94,13 @@ struct object_event : base {
 
     object_event_type type() const;
 
+    template <typename Event>
+    Event const &get() const;
+
     bool is_changed() const;
     bool is_erased() const;
 
-    template <typename Event>
-    Event const &get() const;
+    db::object const &object() const;
 };
 
 class const_object : public base {

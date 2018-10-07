@@ -437,6 +437,7 @@ struct db::manager::impl : base::impl, public object_observable::impl {
         }
     }
 
+    // managerで管理するobjectを作成する
     db::object _make_object(db::manager &manager, std::string const &entity_name) {
         db::object obj{manager, this->_model.entity(entity_name)};
         auto weak_manager = to_weak(manager);
@@ -447,6 +448,14 @@ struct db::manager::impl : base::impl, public object_observable::impl {
                 .to([](db::object_event const &event) { return event.get<db::object_erased_event>(); })
                 .perform([weak_manager](db::object_erased_event const &event) {
                     weak_manager.lock().impl_ptr<impl>()->_cached_objects.erase(event.entity_name, event.object_id);
+                })
+                .end();
+
+        this->_pool +=
+            obj.chain()
+                .guard([weak_manager](db::object_event const &event) { return event.is_changed() && !!weak_manager; })
+                .perform([weak_manager](db::object_event const &event) {
+                    weak_manager.lock().impl_ptr<impl>()->_object_did_change(event.object());
                 })
                 .end();
 
