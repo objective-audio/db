@@ -90,6 +90,9 @@ struct object_event : base {
 
     object_event_type type() const;
 
+    bool is_changed() const;
+    bool is_erased() const;
+
     template <typename Event>
     Event const &get() const;
 };

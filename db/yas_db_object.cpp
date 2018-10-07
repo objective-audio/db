@@ -110,6 +110,22 @@ db::object_event_type db::object_event::type() const {
     return this->template impl_ptr<impl_base>()->type();
 }
 
+bool db::object_event::is_changed() const {
+    switch (this->type()) {
+        case db::object_event_type::attribute_updated:
+        case db::object_event_type::relation_inserted:
+        case db::object_event_type::relation_removed:
+        case db::object_event_type::relation_replaced:
+            return true;
+        default:
+            return false;
+    }
+}
+
+bool db::object_event::is_erased() const {
+    return this->type() == db::object_event_type::erased;
+}
+
 template <typename Event>
 Event const &db::object_event::get() const {
     if (auto ip = std::dynamic_pointer_cast<impl<Event>>(impl_ptr())) {
