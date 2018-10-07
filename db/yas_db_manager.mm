@@ -443,9 +443,7 @@ struct db::manager::impl : base::impl, public object_observable::impl {
 
         this->_pool +=
             obj.chain()
-                .guard([weak_manager](db::object_event const &event) {
-                    return event.type() == db::object_event_type::erased && !!weak_manager;
-                })
+                .guard([weak_manager](db::object_event const &event) { return event.is_erased() && !!weak_manager; })
                 .to([](db::object_event const &event) { return event.get<db::object_erased_event>(); })
                 .perform([weak_manager](db::object_erased_event const &event) {
                     weak_manager.lock().impl_ptr<impl>()->_cached_objects.erase(event.entity_name, event.object_id);
