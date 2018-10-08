@@ -834,4 +834,21 @@ using namespace yas;
     XCTAssertEqual(db::remove_action_value().get<db::text>(), db::remove_action);
 }
 
+- (void)test_fetched_event {
+    db::model model = [yas_db_test_utils model_0_0_1];
+    db::object obj{model.entity("sample_a")};
+
+    bool called = false;
+
+    auto chain = obj.chain()
+                     .perform([&called](db::object_event const &event) {
+                         if (event.type() == db::object_event_type::fetched) {
+                             called = true;
+                         }
+                     })
+                     .sync();
+
+    XCTAssertTrue(called);
+}
+
 @end
