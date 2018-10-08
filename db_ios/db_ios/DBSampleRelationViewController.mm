@@ -191,7 +191,8 @@ objc_ptr<NSArray<NSIndexPath *> *> to_index_paths(std::vector<std::size_t> const
             cell = [tableView dequeueReusableCellWithIdentifier:sample::rel_normal_cell_id forIndexPath:indexPath];
             if (auto normalCell = objc_cast<DBSampleObjectNormalCell>(cell)) {
                 auto const &db_obj = [self db_object];
-                if (auto const rel_obj = db_obj.relation_object_at(self->_rel_name, indexPath.row)) {
+                if (auto const rel_obj =
+                        self->_db_controller.lock()->relation_object_at(db_obj, self->_rel_name, indexPath.row)) {
                     auto const &obj_id = rel_obj.object_id();
                     auto const &name = rel_obj.attribute_value("name");
                     std::string const title = "object_id:" + to_string(obj_id) + " name:" + to_string(name);
