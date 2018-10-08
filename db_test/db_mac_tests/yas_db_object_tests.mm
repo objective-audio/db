@@ -24,7 +24,7 @@ using namespace yas;
 - (void)test_create_object {
     db::model model = [yas_db_test_utils model_0_0_1];
 
-    db::object obj{nullptr, model.entity("sample_a")};
+    db::object obj{model.entity("sample_a")};
 
     XCTAssertEqual(obj.entity().name, "sample_a");
     XCTAssertEqual(obj.entity_name(), "sample_a");
@@ -38,7 +38,7 @@ using namespace yas;
 
 - (void)test_load_values {
     db::model model = [yas_db_test_utils model_0_0_1];
-    db::object obj{nullptr, model.entity("sample_a")};
+    db::object obj{model.entity("sample_a")};
 
     db::object_id obj_id = db::make_stable_id(db::value{1});
     db::value_map_t attributes{std::make_pair("age", db::value{10}), std::make_pair("name", db::value{"name_val"}),
@@ -89,7 +89,7 @@ using namespace yas;
 
 - (void)test_reload_values {
     db::model model = [yas_db_test_utils model_0_0_1];
-    db::object obj{nullptr, model.entity("sample_a")};
+    db::object obj{model.entity("sample_a")};
 
     db::object_id obj_id = db::make_stable_id(db::value{1});
     db::value_map_t prev_attributes{std::make_pair("age", db::value{10}), std::make_pair("name", db::value{"name_val"}),
@@ -128,7 +128,7 @@ using namespace yas;
 
 - (void)test_set_and_get_value {
     db::model model = [yas_db_test_utils model_0_0_1];
-    db::object obj{nullptr, model.entity("sample_a")};
+    db::object obj{model.entity("sample_a")};
 
     obj.set_attribute_value("age", db::value{24});
     obj.set_attribute_value("name", db::value{"nabe"});
@@ -141,7 +141,7 @@ using namespace yas;
 
 - (void)test_add_and_remove_relation_id {
     db::model model = [yas_db_test_utils model_0_0_1];
-    db::object obj{nullptr, model.entity("sample_a")};
+    db::object obj{model.entity("sample_a")};
 
     obj.add_relation_id("child", db::make_stable_id(db::value{321}));
 
@@ -181,10 +181,10 @@ using namespace yas;
 - (void)test_add_and_remove_relation_object {
     db::model model = [yas_db_test_utils model_0_0_1];
 
-    db::object obj{nullptr, model.entity("sample_a")};
-    db::object obj_b1{nullptr, model.entity("sample_b")};
-    db::object obj_b2{nullptr, model.entity("sample_b")};
-    db::object obj_b3{nullptr, model.entity("sample_b")};
+    db::object obj{model.entity("sample_a")};
+    db::object obj_b1{model.entity("sample_b")};
+    db::object obj_b2{model.entity("sample_b")};
+    db::object obj_b3{model.entity("sample_b")};
 
     obj_b1.manageable().load_data({.object_id = db::make_stable_id(db::value{5})});
     obj_b2.manageable().load_data({.object_id = db::make_stable_id(db::value{6})});
@@ -230,10 +230,10 @@ using namespace yas;
 - (void)test_insert_relation_id {
     db::model model = [yas_db_test_utils model_0_0_1];
 
-    db::object obj{nullptr, model.entity("sample_a")};
-    db::object obj_b1{nullptr, model.entity("sample_b")};
-    db::object obj_b2{nullptr, model.entity("sample_b")};
-    db::object obj_b3{nullptr, model.entity("sample_b")};
+    db::object obj{model.entity("sample_a")};
+    db::object obj_b1{model.entity("sample_b")};
+    db::object obj_b2{model.entity("sample_b")};
+    db::object obj_b3{model.entity("sample_b")};
     obj_b1.manageable().load_data({.object_id = db::make_stable_id(db::value{5})});
     obj_b2.manageable().load_data({.object_id = db::make_stable_id(db::value{6})});
     obj_b3.manageable().load_data({.object_id = db::make_stable_id(db::value{7})});
@@ -258,10 +258,10 @@ using namespace yas;
 - (void)test_insert_relation_object {
     db::model model = [yas_db_test_utils model_0_0_1];
 
-    db::object obj{nullptr, model.entity("sample_a")};
-    db::object obj_b1{nullptr, model.entity("sample_b")};
-    db::object obj_b2{nullptr, model.entity("sample_b")};
-    db::object obj_b3{nullptr, model.entity("sample_b")};
+    db::object obj{model.entity("sample_a")};
+    db::object obj_b1{model.entity("sample_b")};
+    db::object obj_b2{model.entity("sample_b")};
+    db::object obj_b3{model.entity("sample_b")};
     obj_b1.manageable().load_data({.object_id = db::make_stable_id(db::value{5})});
     obj_b2.manageable().load_data({.object_id = db::make_stable_id(db::value{6})});
     obj_b3.manageable().load_data({.object_id = db::make_stable_id(db::value{7})});
@@ -285,7 +285,7 @@ using namespace yas;
 
 - (void)test_replace_value {
     db::model model = [yas_db_test_utils model_0_0_1];
-    db::object obj{nullptr, model.entity("sample_a")};
+    db::object obj{model.entity("sample_a")};
 
     obj.set_attribute_value("age", db::value{1});
 
@@ -298,7 +298,7 @@ using namespace yas;
 
 - (void)test_remove {
     db::model model = [yas_db_test_utils model_0_0_1];
-    db::object obj{nullptr, model.entity("sample_a")};
+    db::object obj{model.entity("sample_a")};
 
     XCTAssertFalse(obj.is_removed());
 
@@ -322,7 +322,7 @@ using namespace yas;
 
 - (void)test_action {
     db::model model = [yas_db_test_utils model_0_0_1];
-    db::object obj{nullptr, model.entity("sample_a")};
+    db::object obj{model.entity("sample_a")};
     auto manageable_obj = obj.manageable();
 
     XCTAssertEqual(obj.action(), db::null_value());
@@ -376,7 +376,7 @@ using namespace yas;
 
 - (void)test_save_data {
     db::model model = [yas_db_test_utils model_0_0_1];
-    db::object obj{nullptr, model.entity("sample_a")};
+    db::object obj{model.entity("sample_a")};
 
     obj.manageable().load_data({.object_id = db::make_stable_id(db::value{55})});
     obj.set_attribute_value(db::pk_id_field, db::value{22});
@@ -422,10 +422,10 @@ using namespace yas;
     // save_dataで返されるobject_idが共通になっているか
     db::model model = [yas_db_test_utils model_0_0_1];
 
-    db::object obj_a{nullptr, model.entity("sample_a")};
+    db::object obj_a{model.entity("sample_a")};
     obj_a.manageable().load_data({.object_id = db::make_stable_id(100)});
 
-    db::object obj_b{nullptr, model.entity("sample_b")};
+    db::object obj_b{model.entity("sample_b")};
     obj_b.manageable().load_data({.object_id = db::make_stable_id(200)});
 
     obj_a.add_relation_object("child", obj_b);
@@ -445,15 +445,15 @@ using namespace yas;
 - (void)test_save_data_same_object_id {
     db::model model = [yas_db_test_utils model_0_0_1];
 
-    db::object obj_a1{nullptr, model.entity("sample_a")};
+    db::object obj_a1{model.entity("sample_a")};
     obj_a1.manageable().load_data({.object_id = db::make_stable_id(db::value{10})});
     obj_a1.set_relation_ids("child", db::id_vector_t{db::make_stable_id(db::value{10})});
 
-    db::object obj_a2{nullptr, model.entity("sample_a")};
+    db::object obj_a2{model.entity("sample_a")};
     obj_a2.manageable().load_data({.object_id = db::make_stable_id(db::value{20})});
     obj_a2.set_relation_ids("child", db::id_vector_t{db::make_stable_id(db::value{10})});
 
-    db::object obj_b{nullptr, model.entity("sample_b")};
+    db::object obj_b{model.entity("sample_b")};
     obj_b.manageable().load_data({.object_id = db::make_stable_id(db::value{10})});
 
     db::object_id_pool_t pool;
@@ -472,7 +472,7 @@ using namespace yas;
 
 - (void)test_change_status {
     db::model model = [yas_db_test_utils model_0_0_1];
-    db::object obj{nullptr, model.entity("sample_a")};
+    db::object obj{model.entity("sample_a")};
 
     auto manageable_obj = obj.manageable();
 
@@ -498,7 +498,7 @@ using namespace yas;
 - (void)test_chain_attribute_updated_event {
     db::model model = [yas_db_test_utils model_0_0_1];
 
-    db::object obj{nullptr, model.entity("sample_a")};
+    db::object obj{model.entity("sample_a")};
 
     bool called = false;
 
@@ -523,7 +523,7 @@ using namespace yas;
 - (void)test_no_observe_chain_attribute_updated_with_same_value {
     db::model model = [yas_db_test_utils model_0_0_1];
 
-    db::object obj{nullptr, model.entity("sample_a")};
+    db::object obj{model.entity("sample_a")};
 
     bool called = false;
 
@@ -539,7 +539,7 @@ using namespace yas;
 - (void)test_chain_relation {
     db::model model = [yas_db_test_utils model_0_0_1];
 
-    db::object obj{nullptr, model.entity("sample_a")};
+    db::object obj{model.entity("sample_a")};
 
     size_t called_count = 0;
 
@@ -612,7 +612,7 @@ using namespace yas;
 - (void)test_no_observe_chain_relation_ids_with_same_value {
     db::model model = [yas_db_test_utils model_0_0_1];
 
-    db::object obj{nullptr, model.entity("sample_a")};
+    db::object obj{model.entity("sample_a")};
 
     obj.set_relation_ids("child", {db::make_stable_id(db::value{55})});
 
@@ -628,7 +628,7 @@ using namespace yas;
 - (void)test_chain_loaded {
     db::model model = [yas_db_test_utils model_0_0_1];
 
-    db::object obj{nullptr, model.entity("sample_a")};
+    db::object obj{model.entity("sample_a")};
 
     bool called = false;
 
@@ -669,7 +669,7 @@ using namespace yas;
 - (void)test_clear {
     db::model model = [yas_db_test_utils model_0_0_1];
 
-    db::object obj{nullptr, model.entity("sample_a")};
+    db::object obj{model.entity("sample_a")};
 
     obj.set_attribute_value("age", db::value{20});
     obj.set_attribute_value("name", db::value{"test_name"});
@@ -694,7 +694,7 @@ using namespace yas;
 - (void)test_chain_cleared {
     db::model model = [yas_db_test_utils model_0_0_1];
 
-    db::object obj{nullptr, model.entity("sample_a")};
+    db::object obj{model.entity("sample_a")};
 
     obj.set_attribute_value("name", db::value{"test_name"});
     obj.set_relation_ids("child", {db::make_stable_id(db::value{101}), db::make_stable_id(db::value{102})});
@@ -726,7 +726,7 @@ using namespace yas;
 - (void)test_move {
     db::model model = [yas_db_test_utils model_0_0_1];
 
-    db::object obj{nullptr, model.entity("sample_a")};
+    db::object obj{model.entity("sample_a")};
 
     XCTAssertTrue(obj);
 
@@ -775,7 +775,7 @@ using namespace yas;
 
 - (void)test_is_inserted {
     db::model model = [yas_db_test_utils model_0_0_1];
-    db::object obj{nullptr, model.entity("sample_a")};
+    db::object obj{model.entity("sample_a")};
 
     obj.set_attribute_value(db::action_field, db::insert_action_value());
 
@@ -792,7 +792,7 @@ using namespace yas;
 
 - (void)test_is_updated {
     db::model model = [yas_db_test_utils model_0_0_1];
-    db::object obj{nullptr, model.entity("sample_a")};
+    db::object obj{model.entity("sample_a")};
 
     obj.set_attribute_value(db::action_field, db::update_action_value());
 
@@ -809,7 +809,7 @@ using namespace yas;
 
 - (void)test_is_removed {
     db::model model = [yas_db_test_utils model_0_0_1];
-    db::object obj{nullptr, model.entity("sample_a")};
+    db::object obj{model.entity("sample_a")};
 
     obj.set_attribute_value(db::action_field, db::remove_action_value());
 

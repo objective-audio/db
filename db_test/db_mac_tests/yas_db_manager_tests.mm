@@ -564,7 +564,7 @@ using namespace yas;
                            []() {
                                return db::entity_count_map_t{{"sample_a", 3}};
                            },
-                           [self, &manager, exp1, &inserted_objects_1](auto result) {
+                           [self, exp1, &inserted_objects_1](auto result) {
                                XCTAssertTrue(result);
 
                                inserted_objects_1 = std::move(result.value());
@@ -584,10 +584,6 @@ using namespace yas;
                                XCTAssertEqual(objects.at(0).action(), db::insert_action_value());
                                XCTAssertEqual(objects.at(1).action(), db::insert_action_value());
                                XCTAssertEqual(objects.at(2).action(), db::insert_action_value());
-
-                               XCTAssertEqual(objects.at(0).manager(), manager);
-                               XCTAssertEqual(objects.at(1).manager(), manager);
-                               XCTAssertEqual(objects.at(2).manager(), manager);
 
                                [exp1 fulfill];
                            });
@@ -609,7 +605,7 @@ using namespace yas;
                            []() {
                                return db::entity_count_map_t{{"sample_a", 1}};
                            },
-                           [self, exp2, &manager, &inserted_objects_2](auto result) {
+                           [self, exp2, &inserted_objects_2](auto result) {
                                XCTAssertTrue(result);
 
                                inserted_objects_2 = std::move(result.value());
@@ -620,7 +616,6 @@ using namespace yas;
                                XCTAssertEqual(objects.at(0).object_id().stable_value(), db::value{4});
                                XCTAssertEqual(objects.at(0).save_id(), db::value{2});
                                XCTAssertEqual(objects.at(0).action(), db::insert_action_value());
-                               XCTAssertEqual(objects.at(0).manager(), manager);
 
                                [exp2 fulfill];
                            });
