@@ -439,7 +439,7 @@ struct db::manager::impl : base::impl, public object_observable::impl {
 
     // managerで管理するobjectを作成する
     db::object _make_object(db::manager &manager, std::string const &entity_name) {
-        db::object obj{manager, this->_model.entity(entity_name)};
+        db::object obj{this->_model.entity(entity_name)};
         auto weak_manager = to_weak(manager);
 
         this->_pool +=

@@ -13,7 +13,6 @@
 #include "yas_db_additional_protocol.h"
 
 namespace yas::db {
-class manager;
 class entity;
 class identifier;
 
@@ -137,7 +136,7 @@ class object : public const_object {
    public:
     class impl;
 
-    object(db::manager const &manager, db::entity const &entity);
+    object(db::entity const &entity);
     object(std::nullptr_t);
 
     [[nodiscard]] chaining::chain_syncable_t<object_event> chain() const;
@@ -154,8 +153,6 @@ class object : public const_object {
     void remove_relation_object(std::string const &rel_name, db::object const &rel_object);
     void remove_relation_at(std::string const &rel_name, std::size_t const idx);
     void remove_all_relations(std::string const &rel_name);
-
-    db::manager const &manager() const;
 
     db::object_status status() const;
 

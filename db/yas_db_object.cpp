@@ -6,7 +6,6 @@
 #include "yas_chaining.h"
 #include "yas_db_attribute.h"
 #include "yas_db_entity.h"
-#include "yas_db_manager.h"
 #include "yas_db_manager_utils.h"
 #include "yas_db_model.h"
 #include "yas_db_object_id.h"
@@ -407,11 +406,9 @@ bool db::const_object::is_removed() const {
 
 struct db::object::impl : const_object::impl, manageable_object::impl {
     enum db::object_status _status = db::object_status::invalid;
-    db::manager _manager;
     chaining::fetcher<object_event> _fetcher = nullptr;
 
-    impl(db::manager const &manager, db::entity const &entity, bool const is_temporary)
-        : const_object::impl(entity, db::make_temporary_id()), _manager(manager) {
+    impl(db::entity const &entity, bool const is_temporary) : const_object::impl(entity, db::make_temporary_id()) {
     }
 
     ~impl() {
@@ -713,8 +710,7 @@ struct db::object::impl : const_object::impl, manageable_object::impl {
 
 #pragma mark - db::object
 
-db::object::object(db::manager const &manager, db::entity const &entity)
-    : const_object(std::make_unique<impl>(manager, entity, true)) {
+db::object::object(db::entity const &entity) : const_object(std::make_unique<impl>(entity, true)) {
     impl_ptr<impl>()->prepare(*this);
 }
 
@@ -770,10 +766,6 @@ void db::object::remove_relation_at(std::string const &rel_name, std::size_t con
 
 void db::object::remove_all_relations(std::string const &rel_name) {
     impl_ptr<impl>()->remove_all_relations(rel_name);
-}
-
-db::manager const &db::object::manager() const {
-    return impl_ptr<impl>()->_manager;
 }
 
 enum db::object_status db::object::status() const {
