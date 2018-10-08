@@ -144,9 +144,6 @@ class object : public const_object {
 
     void set_attribute_value(std::string const &attr_name, db::value const &value);
 
-    db::object_vector_t relation_objects(std::string const &rel_name) const;
-    db::object relation_object_at(std::string const &rel_name, std::size_t const idx) const;
-
     void set_relation_ids(std::string const &rel_name, db::id_vector_t const &relation_ids);
     void add_relation_id(std::string const &rel_name, db::object_id const &relation_id);
     void insert_relation_id(std::string const &rel_name, db::object_id const &relation_id, std::size_t const idx);

@@ -729,19 +729,6 @@ void db::object::set_attribute_value(std::string const &attr_name, db::value con
     impl_ptr<impl>()->set_attribute_value(attr_name, value);
 }
 
-db::object_vector_t db::object::relation_objects(std::string const &rel_name) const {
-    auto const &rel_ids = impl_ptr<impl>()->relation_ids(rel_name);
-    std::string const &tgt_entity_name = this->entity().relations.at(rel_name).target;
-    return to_vector<db::object>(rel_ids, [manager = manager(), &tgt_entity_name](db::object_id const &rel_id) {
-        return manager.cached_or_created_object(tgt_entity_name, rel_id);
-    });
-}
-
-db::object db::object::relation_object_at(std::string const &rel_name, std::size_t const idx) const {
-    std::string const &tgt_entity_name = this->entity().relations.at(rel_name).target;
-    return this->manager().cached_or_created_object(tgt_entity_name, relation_id(rel_name, idx));
-}
-
 void db::object::set_relation_ids(std::string const &rel_name, db::id_vector_t const &relation_ids) {
     impl_ptr<impl>()->set_relation_ids(rel_name, relation_ids);
 }
