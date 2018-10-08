@@ -53,6 +53,8 @@ class db_controller : public std::enable_shared_from_this<db_controller> {
     db::object const &object(entity const &, std::size_t const idx) const;
     std::size_t object_count(entity const &) const;
 
+    db::object relation_object_at(db::object const &, std::string const &rel_name, std::size_t const idx) const;
+
     db::integer::type const &current_save_id() const;
     db::integer::type const &last_save_id() const;
 

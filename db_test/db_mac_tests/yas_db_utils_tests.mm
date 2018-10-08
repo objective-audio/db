@@ -406,8 +406,8 @@ using namespace yas;
 - (void)test_to_object_map {
     db::model model = [yas_db_test_utils model_0_0_1];
 
-    db::object obj_a0{nullptr, model.entity("sample_a")};
-    db::object obj_a1{nullptr, model.entity("sample_a")};
+    db::object obj_a0{model.entity("sample_a")};
+    db::object obj_a1{model.entity("sample_a")};
 
     obj_a0.manageable().load_data({.object_id = db::make_stable_id(db::value{0})});
     obj_a1.manageable().load_data({.object_id = db::make_stable_id(db::value{1})});
@@ -437,10 +437,10 @@ using namespace yas;
 - (void)test_to_object_map_map {
     db::model model = [yas_db_test_utils model_0_0_1];
 
-    db::object obj_a0{nullptr, model.entity("sample_a")};
-    db::object obj_a1{nullptr, model.entity("sample_a")};
-    db::object obj_b0{nullptr, model.entity("sample_b")};
-    db::object obj_b1{nullptr, model.entity("sample_b")};
+    db::object obj_a0{model.entity("sample_a")};
+    db::object obj_a1{model.entity("sample_a")};
+    db::object obj_b0{model.entity("sample_b")};
+    db::object obj_b1{model.entity("sample_b")};
 
     obj_a0.manageable().load_data({.object_id = db::make_stable_id(db::value{0})});
     obj_a1.manageable().load_data({.object_id = db::make_stable_id(db::value{1})});

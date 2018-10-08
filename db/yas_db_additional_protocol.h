@@ -44,25 +44,4 @@ struct manageable_object : protocol {
         impl_ptr<impl>()->clear_data();
     }
 };
-
-struct object_observable : protocol {
-    struct impl : protocol::impl {
-        virtual void _object_did_change(db::object const &) = 0;
-        virtual void _object_did_erase(std::string const &entity_name, db::object_id const &object_id) = 0;
-    };
-
-    explicit object_observable(std::shared_ptr<impl> impl) : protocol(std::move(impl)) {
-    }
-
-    object_observable(std::nullptr_t) : protocol(nullptr) {
-    }
-
-    void object_did_change(object const &obj) {
-        impl_ptr<impl>()->_object_did_change(obj);
-    }
-
-    void object_did_erase(std::string const &entity_name, db::object_id const &object_id) {
-        impl_ptr<impl>()->_object_did_erase(entity_name, object_id);
-    }
-};
 }  // namespace yas::db

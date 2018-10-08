@@ -28,7 +28,7 @@ using namespace yas;
 
 #pragma mark - impl
 
-struct db::manager::impl : base::impl, public object_observable::impl {
+struct db::manager::impl : base::impl {
     db::database _database;
     db::model _model;
     operation_queue _op_queue;
@@ -39,6 +39,7 @@ struct db::manager::impl : base::impl, public object_observable::impl {
     chaining::holder<db::info> _db_info = db::null_info();
     chaining::notifier<db::object> _db_object_notifier;
     dispatch_queue_t _dispatch_queue;
+    chaining::observer_pool _pool;
 
     impl(std::string const &path, db::model const &model, dispatch_queue_t const dispatch_queue,
          std::size_t const priority_count)
@@ -52,8 +53,8 @@ struct db::manager::impl : base::impl, public object_observable::impl {
 
     // データベースに保存せず仮にオブジェクトを生成する
     // この時点ではobject_idやsave_idは振られていない
-    db::object create_object(std::string const entity_name) {
-        db::object object{cast<db::manager>(), this->_model.entity(entity_name)};
+    db::object create_temporary_object(db::manager &manager, std::string const entity_name) {
+        db::object object = manager.make_object(entity_name);
 
         object.manageable().load_insertion_data();
 
@@ -98,9 +99,8 @@ struct db::manager::impl : base::impl, public object_observable::impl {
         if (!object) {
             // 挿入でなければobjectはnullなので、キャッシュに追加または取得する
             auto manager = cast<db::manager>();
-            object = this->_cached_objects.get_or_create(entity_name, data.object_id, [&manager, &entity_name]() {
-                return db::object{manager, manager.model().entity(entity_name)};
-            });
+            object = this->_cached_objects.get_or_create(
+                entity_name, data.object_id, [&manager, &entity_name]() { return manager.make_object(entity_name); });
         }
 
         // オブジェクトにデータをロード
@@ -346,13 +346,6 @@ struct db::manager::impl : base::impl, public object_observable::impl {
         this->_db_object_notifier.notify(object);
     }
 
-    // オブジェクトが解放された時の処理
-    void _object_did_erase(std::string const &entity_name, db::object_id const &object_id) {
-        // キャッシュからオブジェクトを削除する
-        // キャッシュにはweakで持っている
-        this->_cached_objects.erase(entity_name, object_id);
-    }
-
     // バックグラウンドでデータベースの処理をする
     void execute(db::cancellation_f &&cancellation, db::execution_f &&execution) {
         auto op_lambda = [cancellation = std::move(cancellation), execution = std::move(execution),
@@ -443,6 +436,31 @@ struct db::manager::impl : base::impl, public object_observable::impl {
             _op_queue.resume();
         }
     }
+
+    // managerで管理するobjectを作成する
+    db::object _make_object(db::manager &manager, std::string const &entity_name) {
+        db::object obj{this->_model.entity(entity_name)};
+        auto weak_manager = to_weak(manager);
+
+        this->_pool +=
+            obj.chain()
+                .guard([weak_manager](db::object_event const &event) { return event.is_erased() && !!weak_manager; })
+                .to([](db::object_event const &event) { return event.get<db::object_erased_event>(); })
+                .perform([weak_manager](db::object_erased_event const &event) {
+                    weak_manager.lock().impl_ptr<impl>()->_cached_objects.erase(event.entity_name, event.object_id);
+                })
+                .end();
+
+        this->_pool +=
+            obj.chain()
+                .guard([weak_manager](db::object_event const &event) { return event.is_changed() && !!weak_manager; })
+                .perform([weak_manager](db::object_event const &event) {
+                    weak_manager.lock().impl_ptr<impl>()->_object_did_change(event.object());
+                })
+                .end();
+
+        return obj;
+    }
 };
 
 #pragma mark - manager
@@ -502,7 +520,7 @@ dispatch_queue_t db::manager::dispatch_queue() const {
 }
 
 db::object db::manager::create_object(std::string const entity_name) {
-    return impl_ptr<impl>()->create_object(entity_name);
+    return impl_ptr<impl>()->create_temporary_object(*this, entity_name);
 }
 
 void db::manager::setup(db::completion_f completion) {
@@ -1109,9 +1127,20 @@ chaining::chain_unsyncable_t<db::object> db::manager::chain_db_object() const {
     return impl_ptr<impl>()->_db_object_notifier.chain();
 }
 
-db::object_observable &db::manager::object_observable() {
-    if (!this->_object_observable) {
-        this->_object_observable = db::object_observable{impl_ptr<db::object_observable::impl>()};
-    }
-    return _object_observable;
+db::object_vector_t db::manager::relation_objects(db::object const &object, std::string const &rel_name) const {
+    auto const &rel_ids = object.relation_ids(rel_name);
+    std::string const &tgt_entity_name = object.entity().relations.at(rel_name).target;
+    return to_vector<db::object>(rel_ids, [this, &tgt_entity_name](db::object_id const &rel_id) {
+        return this->cached_or_created_object(tgt_entity_name, rel_id);
+    });
+}
+
+db::object db::manager::relation_object_at(db::object const &object, std::string const &rel_name,
+                                           std::size_t const idx) const {
+    std::string const &tgt_entity_name = object.entity().relations.at(rel_name).target;
+    return this->cached_or_created_object(tgt_entity_name, object.relation_id(rel_name, idx));
+}
+
+db::object db::manager::make_object(std::string const &entity_name) {
+    return impl_ptr<impl>()->_make_object(*this, entity_name);
 }

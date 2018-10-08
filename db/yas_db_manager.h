@@ -75,9 +75,8 @@ class manager : public base {
     std::size_t created_object_count(std::string const &entity_name) const;
     std::size_t changed_object_count(std::string const &entity_name) const;
 
-    db::object_observable &object_observable();
-
-   private:
-    db::object_observable _object_observable = nullptr;
+    db::object_vector_t relation_objects(db::object const &, std::string const &rel_name) const;
+    db::object relation_object_at(db::object const &, std::string const &rel_name, std::size_t const idx) const;
+    db::object make_object(std::string const &entity_name);
 };
 }  // namespace yas::db

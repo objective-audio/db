@@ -42,6 +42,14 @@ rel_section_type_t to_idx(rel_section const &section) {
 rel_control_row_type_t to_idx(rel_control_row const &row) {
     return rel_control_row_type_t(row);
 }
+
+objc_ptr<NSArray<NSIndexPath *> *> to_index_paths(std::vector<std::size_t> const &indices) {
+    auto index_paths = make_objc_ptr([[NSMutableArray<NSIndexPath *> alloc] init]);
+    for (auto const &idx : indices) {
+        [index_paths.object() addObject:[NSIndexPath indexPathForRow:idx inSection:NSInteger(rel_section::objects)]];
+    }
+    return make_objc_ptr<NSArray<NSIndexPath *> *>([index_paths.object() copy]);
+}
 }
 
 @implementation DBSampleRelationViewController {
@@ -55,12 +63,12 @@ rel_control_row_type_t to_idx(rel_control_row const &row) {
 - (void)viewDidLoad {
     [super viewDidLoad];
 
-    self.title = (__bridge NSString *)to_cf_object(_rel_name);
+    self.title = (__bridge NSString *)to_cf_object(self->_rel_name);
 }
 
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
     if (auto viewController = objc_cast<DBSampleObjectSelectionViewController>(segue.destinationViewController)) {
-        auto const &relation = _db_object->entity().relations.at(_rel_name);
+        auto const &relation = self->_db_object->entity().relations.at(self->_rel_name);
 
         auto unowned_self = make_objc_ptr([[YASUnownedObject<typeof(self)> alloc] initWithObject:self]);
 
@@ -69,7 +77,7 @@ rel_control_row_type_t to_idx(rel_control_row const &row) {
             self.db_object.add_relation_object(self.relation_name, rel_object);
         };
 
-        [viewController set_db_controller:_db_controller
+        [viewController set_db_controller:self->_db_controller
                                    entity:db_controller::entity_for_name(relation.target)
                          selected_handler:std::move(selected_handler)];
     }
@@ -78,51 +86,60 @@ rel_control_row_type_t to_idx(rel_control_row const &row) {
 - (void)set_db_controller:(std::weak_ptr<sample::db_controller>)controller
                    object:(db::object)object
              relationName:(std::string)rel_name {
-    _db_controller = std::move(controller);
-    *_db_object = std::move(object);
-    _rel_name = std::move(rel_name);
+    self->_db_controller = std::move(controller);
+    *self->_db_object = std::move(object);
+    self->_rel_name = std::move(rel_name);
 
     auto unowned_self = make_objc_ptr([[YASUnownedObject<typeof(self)> alloc] initWithObject:self]);
 
     self->_pool +=
         self->_db_object->chain()
-            .guard([](auto const &pair) { return pair.first == db::object::method::relation_changed; })
-            .perform([unowned_self, rel_name = self->_rel_name](auto const &pair) {
-                db::object::change_info const &info = pair.second;
-                if (info.name == rel_name) {
-                    if (auto self = unowned_self.object().object) {
-                        auto const &rel_info = info.relation_change_info();
-                        auto indexPaths = [[NSMutableArray<NSIndexPath *> alloc] init];
-                        for (auto const &idx : rel_info.indices) {
-                            [indexPaths
-                                addObject:[NSIndexPath indexPathForRow:idx inSection:NSInteger(rel_section::objects)]];
+            .perform([unowned_self, rel_name = self->_rel_name](db::object_event const &event) {
+                auto self = unowned_self.object().object;
+                if (!self) {
+                    return;
+                }
+
+                switch (event.type()) {
+                    case db::object_event_type::relation_inserted: {
+                        auto const &inserted_event = event.get<db::object_relation_inserted_event>();
+                        if (inserted_event.name != rel_name) {
+                            return;
                         }
+                        [self.tableView insertRowsAtIndexPaths:to_index_paths(inserted_event.indices).object()
+                                              withRowAnimation:UITableViewRowAnimationAutomatic];
+                    } break;
 
-                        switch (rel_info.reason) {
-                            case db::object::change_reason::inserted: {
-                                [self.tableView insertRowsAtIndexPaths:indexPaths
-                                                      withRowAnimation:UITableViewRowAnimationAutomatic];
-                            } break;
-
-                            case db::object::change_reason::removed: {
-                                [self.tableView deleteRowsAtIndexPaths:indexPaths
-                                                      withRowAnimation:UITableViewRowAnimationAutomatic];
-                            } break;
-
-                            default: { [self.tableView reloadData]; } break;
+                    case db::object_event_type::relation_removed: {
+                        auto const &removed_event = event.get<db::object_relation_removed_event>();
+                        if (removed_event.name != rel_name) {
+                            return;
                         }
-                    }
+                        [self.tableView deleteRowsAtIndexPaths:to_index_paths(removed_event.indices).object()
+                                              withRowAnimation:UITableViewRowAnimationAutomatic];
+                    } break;
+
+                    case db::object_event_type::relation_replaced: {
+                        auto const &replaced_event = event.get<db::object_relation_replaced_event>();
+                        if (replaced_event.name != rel_name) {
+                            return;
+                        }
+                        [self.tableView reloadData];
+                    } break;
+
+                    default:
+                        break;
                 }
             })
             .end();
 }
 
 - (db::object &)db_object {
-    return *_db_object;
+    return *self->_db_object;
 }
 
 - (std::string const &)relation_name {
-    return _rel_name;
+    return self->_rel_name;
 }
 
 #pragma mark - Table view data source
@@ -137,7 +154,7 @@ rel_control_row_type_t to_idx(rel_control_row const &row) {
             return to_idx(rel_control_row::last) + 1;
 
         case rel_section::objects:
-            return [self db_object].relation_size(_rel_name);
+            return [self db_object].relation_size(self->_rel_name);
     }
 }
 
@@ -174,13 +191,14 @@ rel_control_row_type_t to_idx(rel_control_row const &row) {
             cell = [tableView dequeueReusableCellWithIdentifier:sample::rel_normal_cell_id forIndexPath:indexPath];
             if (auto normalCell = objc_cast<DBSampleObjectNormalCell>(cell)) {
                 auto const &db_obj = [self db_object];
-                if (auto const rel_obj = db_obj.relation_object_at(_rel_name, indexPath.row)) {
+                if (auto const rel_obj =
+                        self->_db_controller.lock()->relation_object_at(db_obj, self->_rel_name, indexPath.row)) {
                     auto const &obj_id = rel_obj.object_id();
                     auto const &name = rel_obj.attribute_value("name");
                     std::string const title = "object_id:" + to_string(obj_id) + " name:" + to_string(name);
                     [normalCell setupWithTitle:title];
                 } else {
-                    auto const &rel_id = db_obj.relation_id(_rel_name, indexPath.row);
+                    auto const &rel_id = db_obj.relation_id(self->_rel_name, indexPath.row);
                     std::string const title = "object_id" + to_string(rel_id) + " (null)";
                     [normalCell setupWithTitle:title];
                 }
@@ -206,7 +224,7 @@ rel_control_row_type_t to_idx(rel_control_row const &row) {
      forRowAtIndexPath:(NSIndexPath *)indexPath {
     if (editingStyle == UITableViewCellEditingStyleDelete) {
         if (rel_section(indexPath.section) == rel_section::objects) {
-            _db_object->remove_relation_at(_rel_name, indexPath.row);
+            self->_db_object->remove_relation_at(self->_rel_name, indexPath.row);
         }
     }
 }
