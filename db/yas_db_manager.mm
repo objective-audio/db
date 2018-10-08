@@ -28,7 +28,7 @@ using namespace yas;
 
 #pragma mark - impl
 
-struct db::manager::impl : base::impl, public object_observable::impl {
+struct db::manager::impl : base::impl {
     db::database _database;
     db::model _model;
     operation_queue _op_queue;
@@ -1125,13 +1125,6 @@ chaining::chain_syncable_t<db::info> db::manager::chain_db_info() const {
 
 chaining::chain_unsyncable_t<db::object> db::manager::chain_db_object() const {
     return impl_ptr<impl>()->_db_object_notifier.chain();
-}
-
-db::object_observable &db::manager::object_observable() {
-    if (!this->_object_observable) {
-        this->_object_observable = db::object_observable{impl_ptr<db::object_observable::impl>()};
-    }
-    return _object_observable;
 }
 
 db::object_vector_t db::manager::relation_objects(db::object const &object, std::string const &rel_name) const {
