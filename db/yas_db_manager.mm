@@ -1134,6 +1134,20 @@ db::object_observable &db::manager::object_observable() {
     return _object_observable;
 }
 
+db::object_vector_t db::manager::relation_objects(db::object const &object, std::string const &rel_name) const {
+    auto const &rel_ids = object.relation_ids(rel_name);
+    std::string const &tgt_entity_name = object.entity().relations.at(rel_name).target;
+    return to_vector<db::object>(rel_ids, [this, &tgt_entity_name](db::object_id const &rel_id) {
+        return this->cached_or_created_object(tgt_entity_name, rel_id);
+    });
+}
+
+db::object db::manager::relation_object_at(db::object const &object, std::string const &rel_name,
+                                           std::size_t const idx) const {
+    std::string const &tgt_entity_name = object.entity().relations.at(rel_name).target;
+    return this->cached_or_created_object(tgt_entity_name, object.relation_id(rel_name, idx));
+}
+
 db::object db::manager::make_object(std::string const &entity_name) {
     return impl_ptr<impl>()->_make_object(*this, entity_name);
 }
