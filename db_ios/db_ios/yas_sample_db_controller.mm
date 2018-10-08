@@ -458,6 +458,11 @@ std::size_t db_controller::object_count(entity const &entity) const {
     return this->_objects.at(to_entity_name(entity)).size();
 }
 
+db::object db_controller::relation_object_at(db::object const &object, std::string const &rel_name,
+                                             std::size_t const idx) const {
+    return this->_manager.relation_object_at(object, rel_name, idx);
+}
+
 db::integer::type const &db_controller::current_save_id() const {
     return this->_manager.current_save_id().get<db::integer>();
 }
