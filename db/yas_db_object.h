@@ -139,7 +139,7 @@ class object : public const_object {
     object(db::entity const &entity);
     object(std::nullptr_t);
 
-    [[nodiscard]] chaining::chain_syncable_t<object_event> chain() const;
+    [[nodiscard]] chaining::chain_sync_t<object_event> chain() const;
 
     void set_attribute_value(std::string const &attr_name, db::value const &value);
 

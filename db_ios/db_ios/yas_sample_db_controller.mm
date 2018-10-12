@@ -471,7 +471,7 @@ db::integer::type const &db_controller::last_save_id() const {
     return this->_manager.last_save_id().get<db::integer>();
 }
 
-chaining::chain_unsyncable_t<db_controller::chain_pair_t> db_controller::chain() {
+chaining::chain_unsync_t<db_controller::chain_pair_t> db_controller::chain() {
     return this->_notifier.chain();
 }
 
