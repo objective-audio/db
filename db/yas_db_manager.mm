@@ -1119,11 +1119,11 @@ std::size_t db::manager::changed_object_count(std::string const &entity_name) co
     return 0;
 }
 
-chaining::chain_syncable_t<db::info> db::manager::chain_db_info() const {
+chaining::chain_sync_t<db::info> db::manager::chain_db_info() const {
     return impl_ptr<impl>()->_db_info.chain();
 }
 
-chaining::chain_unsyncable_t<db::object> db::manager::chain_db_object() const {
+chaining::chain_unsync_t<db::object> db::manager::chain_db_object() const {
     return impl_ptr<impl>()->_db_object_notifier.chain();
 }
 

@@ -42,8 +42,8 @@ class manager : public base {
     db::value const &current_save_id() const;
     db::value const &last_save_id() const;
 
-    chaining::chain_syncable_t<db::info> chain_db_info() const;
-    chaining::chain_unsyncable_t<db::object> chain_db_object() const;
+    chaining::chain_sync_t<db::info> chain_db_info() const;
+    chaining::chain_unsync_t<db::object> chain_db_object() const;
 
     dispatch_queue_t dispatch_queue() const;
 

@@ -723,7 +723,7 @@ db::object::object(db::entity const &entity) : const_object(std::make_unique<imp
 db::object::object(std::nullptr_t) : const_object(nullptr) {
 }
 
-chaining::chain_syncable_t<db::object_event> db::object::chain() const {
+chaining::chain_sync_t<db::object_event> db::object::chain() const {
     return impl_ptr<impl>()->_fetcher.chain();
 }
 

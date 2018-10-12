@@ -58,7 +58,7 @@ class db_controller : public std::enable_shared_from_this<db_controller> {
     db::integer::type const &current_save_id() const;
     db::integer::type const &last_save_id() const;
 
-    chaining::chain_unsyncable_t<chain_pair_t> chain();
+    chaining::chain_unsync_t<chain_pair_t> chain();
 
     bool is_processing() const;
 
