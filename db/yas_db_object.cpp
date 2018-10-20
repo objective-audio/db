@@ -418,9 +418,9 @@ struct db::object::impl : const_object::impl, manageable_object::impl {
     void prepare(db::object &object) {
         this->_fetcher = chaining::fetcher<object_event>{[weak_object = to_weak(object)]() {
             if (auto object = weak_object.lock()) {
-                return opt_t<object_event>{make_object_fetched_event(object)};
+                return std::optional<object_event>{make_object_fetched_event(object)};
             } else {
-                return opt_t<object_event>{nullopt};
+                return std::optional<object_event>{std::nullopt};
             }
         }};
     }
