@@ -4,9 +4,9 @@
 
 #include "yas_sample_db_controller.h"
 #import <Foundation/Foundation.h>
-#include "yas_cf_ref.h"
-#include "yas_cf_utils.h"
-#include "yas_objc_ptr.h"
+#include <cpp_utils/yas_cf_ref.h>
+#include <cpp_utils/yas_cf_utils.h>
+#include <cpp_utils/yas_objc_ptr.h>
 
 using namespace yas;
 using namespace yas::sample;

@@ -3,7 +3,7 @@
 //
 
 #import "DBSampleObjectNormalCell.h"
-#import "yas_cf_utils.h"
+#import <cpp_utils/yas_cf_utils.h>
 
 using namespace yas;
 
