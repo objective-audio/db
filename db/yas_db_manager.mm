@@ -3,7 +3,13 @@
 //
 
 #include "yas_db_manager.h"
-#include "yas_chaining.h"
+#include <chaining/yas_chaining_umbrella.h>
+#include <cpp_utils/yas_each_index.h>
+#include <cpp_utils/yas_operation.h>
+#include <cpp_utils/yas_result.h>
+#include <cpp_utils/yas_stl_utils.h>
+#include <cpp_utils/yas_unless.h>
+#include <objc_utils/yas_objc_macros.h>
 #include "yas_db_attribute.h"
 #include "yas_db_database.h"
 #include "yas_db_entity.h"
@@ -17,12 +23,6 @@
 #include "yas_db_select_option.h"
 #include "yas_db_sql_utils.h"
 #include "yas_db_utils.h"
-#include "yas_each_index.h"
-#include "yas_objc_macros.h"
-#include "yas_operation.h"
-#include "yas_result.h"
-#include "yas_stl_utils.h"
-#include "yas_unless.h"
 
 using namespace yas;
 

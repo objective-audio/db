@@ -3,11 +3,11 @@
 //
 
 #include "yas_db_entity.h"
+#include <cpp_utils/yas_stl_utils.h>
 #include "yas_db_additional_protocol.h"
 #include "yas_db_attribute.h"
 #include "yas_db_relation.h"
 #include "yas_db_sql_utils.h"
-#include "yas_stl_utils.h"
 
 using namespace yas;
 

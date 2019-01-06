@@ -3,8 +3,8 @@
 //
 
 #import <XCTest/XCTest.h>
-#import "yas_db_additional_types.h"
-#import "yas_db_index.h"
+#import <db/yas_db_additional_types.h>
+#import <db/yas_db_index.h>
 
 using namespace yas;
 

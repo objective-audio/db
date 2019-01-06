@@ -4,9 +4,9 @@
 
 #pragma once
 
+#include <cpp_utils/yas_base.h>
 #include <memory>
 #include <vector>
-#include "yas_base.h"
 #include "yas_db_protocol.h"
 #include "yas_db_types.h"
 

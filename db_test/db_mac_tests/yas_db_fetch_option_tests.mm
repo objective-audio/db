@@ -3,7 +3,7 @@
 //
 
 #import <XCTest/XCTest.h>
-#import "yas_db_fetch_option.h"
+#import <db/yas_db_fetch_option.h>
 
 using namespace yas;
 

@@ -4,10 +4,10 @@
 
 #pragma once
 
+#include <cpp_utils/yas_base.h>
 #include <sqlite3.h>
 #include <memory>
 #include <string>
-#include "yas_base.h"
 #include "yas_db_protocol.h"
 
 namespace yas::db {

@@ -3,7 +3,9 @@
 //
 
 #include "yas_db_object.h"
-#include "yas_chaining.h"
+#include <chaining/yas_chaining_umbrella.h>
+#include <cpp_utils/yas_fast_each.h>
+#include <cpp_utils/yas_stl_utils.h>
 #include "yas_db_attribute.h"
 #include "yas_db_entity.h"
 #include "yas_db_manager_utils.h"
@@ -11,8 +13,6 @@
 #include "yas_db_object_id.h"
 #include "yas_db_relation.h"
 #include "yas_db_value.h"
-#include "yas_fast_each.h"
-#include "yas_stl_utils.h"
 
 using namespace yas;
 

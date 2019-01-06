@@ -3,6 +3,9 @@
 //
 
 #include "yas_db_utils.h"
+#include <cpp_utils/yas_result.h>
+#include <cpp_utils/yas_stl_utils.h>
+#include <cpp_utils/yas_unless.h>
 #include "yas_db_additional_protocol.h"
 #include "yas_db_attribute.h"
 #include "yas_db_database.h"
@@ -11,9 +14,6 @@
 #include "yas_db_row_set.h"
 #include "yas_db_select_option.h"
 #include "yas_db_sql_utils.h"
-#include "yas_result.h"
-#include "yas_stl_utils.h"
-#include "yas_unless.h"
 
 using namespace yas;
 

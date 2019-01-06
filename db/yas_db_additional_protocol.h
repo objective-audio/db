@@ -4,9 +4,9 @@
 
 #pragma once
 
+#include <cpp_utils/yas_protocol.h>
+#include <cpp_utils/yas_result.h>
 #include "yas_db_additional_types.h"
-#include "yas_protocol.h"
-#include "yas_result.h"
 
 namespace yas::db {
 struct manageable_object : protocol {
