@@ -4,12 +4,12 @@
 
 #pragma once
 
+#include <chaining/yas_chaining_umbrella.h>
 #include <deque>
 #include <experimental/optional>
 #include <set>
 #include <unordered_map>
 #include "yas_base.h"
-#include "yas_chaining.h"
 #include "yas_db_additional_protocol.h"
 
 namespace yas::db {
