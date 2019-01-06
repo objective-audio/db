@@ -8,5 +8,4 @@ notifications:
 install:
   - brew install clang-format
 script:
-  - xcodebuild -project db_test/db_test.xcodeproj -scheme db_mac_arc_tests -configuration Debug OBJROOT=build -sdk macosx clean test
-  - xcodebuild -project db_test/db_test.xcodeproj -scheme db_mac_non_arc_tests -configuration Debug OBJROOT=build -sdk macosx clean test
+  - xcodebuild -workspace db_mac.xcworkspace -scheme db_mac_tests -configuration Debug OBJROOT=build -sdk macosx clean test
