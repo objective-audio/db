@@ -2,11 +2,11 @@
 //  yas_db_manager_tests.mm
 //
 
-#import "yas_db_manager_utils.h"
+#import <cpp_utils/yas_fast_each.h>
+#import <cpp_utils/yas_objc_ptr.h>
+#import <db/yas_db_manager_utils.h>
+#import <db/yas_db_utils.h>
 #import "yas_db_test_utils.h"
-#import "yas_db_utils.h"
-#import "yas_fast_each.h"
-#import "yas_objc_ptr.h"
 
 using namespace yas;
 

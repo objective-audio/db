@@ -15,8 +15,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "B607FBC9204A8EB700FA2BB9"
-               BuildableName = "db_mac_non_arc_tests.xctest"
-               BlueprintName = "db_mac_non_arc_tests"
+               BuildableName = "db_mac_tests.xctest"
+               BlueprintName = "db_mac_tests"
                ReferencedContainer = "container:db_test.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -34,8 +34,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "B607FBC9204A8EB700FA2BB9"
-               BuildableName = "db_mac_non_arc_tests.xctest"
-               BlueprintName = "db_mac_non_arc_tests"
+               BuildableName = "db_mac_tests.xctest"
+               BlueprintName = "db_mac_tests"
                ReferencedContainer = "container:db_test.xcodeproj">
             </BuildableReference>
          </TestableReference>
@@ -44,8 +44,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "B607FBC9204A8EB700FA2BB9"
-            BuildableName = "db_mac_non_arc_tests.xctest"
-            BlueprintName = "db_mac_non_arc_tests"
+            BuildableName = "db_mac_tests.xctest"
+            BlueprintName = "db_mac_tests"
             ReferencedContainer = "container:db_test.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -66,8 +66,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "B607FBC9204A8EB700FA2BB9"
-            BuildableName = "db_mac_non_arc_tests.xctest"
-            BlueprintName = "db_mac_non_arc_tests"
+            BuildableName = "db_mac_tests.xctest"
+            BlueprintName = "db_mac_tests"
             ReferencedContainer = "container:db_test.xcodeproj">
          </BuildableReference>
       </MacroExpansion>

@@ -4,8 +4,8 @@
 
 #pragma once
 
+#include <cpp_utils/yas_base.h>
 #include <functional>
-#include "yas_base.h"
 #include "yas_db_protocol.h"
 #include "yas_db_value.h"
 

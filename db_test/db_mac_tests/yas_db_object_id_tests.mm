@@ -3,7 +3,7 @@
 //
 
 #import <XCTest/XCTest.h>
-#import "yas_db_object_id.h"
+#import <db/yas_db_object_id.h>
 
 using namespace yas;
 

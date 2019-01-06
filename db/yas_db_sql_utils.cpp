@@ -3,8 +3,8 @@
 //
 
 #include "yas_db_sql_utils.h"
+#include <cpp_utils/yas_stl_utils.h>
 #include <sstream>
-#include "yas_stl_utils.h"
 
 using namespace yas;
 

@@ -3,14 +3,14 @@
 //
 
 #include "yas_db_database.h"
+#include <cpp_utils/yas_fast_each.h>
+#include <cpp_utils/yas_result.h>
+#include <cpp_utils/yas_stl_utils.h>
 #include <mutex>
 #include "yas_db_error.h"
 #include "yas_db_row_set.h"
 #include "yas_db_statement.h"
 #include "yas_db_value.h"
-#include "yas_fast_each.h"
-#include "yas_result.h"
-#include "yas_stl_utils.h"
 
 using namespace yas;
 

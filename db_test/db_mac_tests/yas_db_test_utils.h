@@ -3,10 +3,10 @@
 //
 
 #import <XCTest/XCTest.h>
-#import "yas_cf_utils.h"
-#import "yas_db.h"
-#import "yas_operation.h"
-#import "yas_version.h"
+#import <cpp_utils/yas_cf_utils.h>
+#import <cpp_utils/yas_operation.h>
+#import <cpp_utils/yas_version.h>
+#import <db/yas_db_umbrella.h>
 
 @interface yas_db_test_utils : NSObject
 

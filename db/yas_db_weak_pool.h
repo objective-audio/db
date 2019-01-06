@@ -4,9 +4,9 @@
 
 #pragma once
 
+#include <cpp_utils/yas_base.h>
 #include <functional>
 #include <unordered_map>
-#include "yas_base.h"
 
 namespace yas::db {
 template <typename K, typename V>
