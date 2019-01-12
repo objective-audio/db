@@ -31,7 +31,7 @@ using namespace yas;
 
 - (void)test_column {
     db::database db = [yas_db_test_utils create_test_database];
-    db.open();
+    XCTAssertTrue(db.open());
 
     XCTAssertTrue(db.execute_update("create table test_table (field_a, field_b);"));
 
@@ -62,7 +62,7 @@ using namespace yas;
 
 - (void)test_has_row {
     db::database db = [yas_db_test_utils create_test_database];
-    db.open();
+    XCTAssertTrue(db.open());
 
     XCTAssertTrue(db.execute_update("create table test_table (field_a, field_b);"));
 
@@ -89,7 +89,7 @@ using namespace yas;
 
 - (void)test_column_value {
     db::database db = [yas_db_test_utils create_test_database];
-    db.open();
+    XCTAssertTrue(db.open());
 
     XCTAssertTrue(
         db.execute_update("create table test_table (int_field, float_field, string_field, data_field, null_field);"));
@@ -144,7 +144,7 @@ using namespace yas;
 
 - (void)test_result_map {
     db::database db = [yas_db_test_utils create_test_database];
-    db.open();
+    XCTAssertTrue(db.open());
 
     XCTAssertTrue(
         db.execute_update("create table test_table (int_field, float_field, string_field, data_field, null_field);"));
@@ -200,7 +200,7 @@ using namespace yas;
 
 - (void)test_is_equal {
     db::database db = [yas_db_test_utils create_test_database];
-    db.open();
+    XCTAssertTrue(db.open());
     db.execute_update("create table test_table (test_field);");
 
     db::value_map_t args{std::make_pair("test_field", db::value{"value"})};

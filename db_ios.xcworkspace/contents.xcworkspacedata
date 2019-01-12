@@ -5,6 +5,9 @@
       location = "group:db_ios_sample/db_ios_sample.xcodeproj">
    </FileRef>
    <FileRef
+      location = "group:db_ios_tests/db_ios_tests.xcodeproj">
+   </FileRef>
+   <FileRef
       location = "group:db_ios/db_ios.xcodeproj">
    </FileRef>
    <FileRef

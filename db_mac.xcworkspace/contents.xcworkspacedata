@@ -2,7 +2,7 @@
 <Workspace
    version = "1.0">
    <FileRef
-      location = "group:db_test/db_test.xcodeproj">
+      location = "group:db_mac_tests/db_mac_tests.xcodeproj">
    </FileRef>
    <FileRef
       location = "group:db_mac/db_mac.xcodeproj">
