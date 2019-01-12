@@ -54,7 +54,7 @@ using namespace yas;
 
     XCTAssertFalse(db.good_connection());
 
-    db.open();
+    XCTAssertTrue(db.open());
 
     XCTAssertTrue(db.sqlite_handle() != nullptr);
     XCTAssertTrue(db.good_connection());
@@ -69,7 +69,7 @@ using namespace yas;
 
 - (void)test_create_table {
     db::database db = [yas_db_test_utils create_test_database];
-    db.open();
+    XCTAssertTrue(db.open());
 
     XCTAssertTrue(db.execute_update("create table test_table_1 (field_a, field_b);"));
     XCTAssertTrue(db.execute_update("create table test_table_2 (field_c, field_d);"));
@@ -84,7 +84,7 @@ using namespace yas;
 
 - (void)test_execute_update_with_vector {
     db::database db = [yas_db_test_utils create_test_database];
-    db.open();
+    XCTAssertTrue(db.open());
 
     XCTAssertTrue(db::create_table(db, "test_table", {"field_a", "field_b"}));
 
@@ -119,7 +119,7 @@ using namespace yas;
 
 - (void)test_execute_update_with_map {
     db::database db = [yas_db_test_utils create_test_database];
-    db.open();
+    XCTAssertTrue(db.open());
 
     XCTAssertTrue(db::create_table(db, "test_table", {"field_a", "field_b"}));
 
@@ -156,7 +156,7 @@ using namespace yas;
 
 - (void)test_execute_statements {
     db::database db = [yas_db_test_utils create_test_database];
-    db.open();
+    XCTAssertTrue(db.open());
 
     std::string sql_a = db::create_table_sql("test_table_a", {"field_a", "field_b"});
     std::string sql_b = db::create_table_sql("test_table_b", {"field_a", "field_b"});
@@ -190,7 +190,7 @@ using namespace yas;
 
 - (void)test_execute_query_with_vector {
     db::database db = [yas_db_test_utils create_test_database];
-    db.open();
+    XCTAssertTrue(db.open());
 
     XCTAssertTrue(db::create_table(db, "test_table", {"field_a"}));
 
@@ -214,7 +214,7 @@ using namespace yas;
 
 - (void)test_execute_query_with_map {
     db::database db = [yas_db_test_utils create_test_database];
-    db.open();
+    XCTAssertTrue(db.open());
 
     XCTAssertTrue(db::create_table(db, "test_table", {"field_a"}));
 
@@ -239,7 +239,7 @@ using namespace yas;
 
 - (void)test_get_error {
     db::database db = [yas_db_test_utils create_test_database];
-    db.open();
+    XCTAssertTrue(db.open());
 
     XCTAssertFalse(db.had_error());
     XCTAssertEqual(db.last_error_code(), SQLITE_OK);
@@ -254,7 +254,7 @@ using namespace yas;
 
 - (void)test_should_cache_statement {
     db::database db = [yas_db_test_utils create_test_database];
-    db.open();
+    XCTAssertTrue(db.open());
     db.set_should_cache_statements(true);
 
     XCTAssertTrue(db::create_table(db, "test_table", {"test_field"}));
@@ -288,7 +288,7 @@ using namespace yas;
 
 - (void)test_open_row_sets {
     db::database db = [yas_db_test_utils create_test_database];
-    db.open();
+    XCTAssertTrue(db.open());
 
     XCTAssertTrue(db::create_table(db, "test_table", {"test_field"}));
     XCTAssertTrue(db.execute_update("insert into test_table(test_field) values('value1')"));
@@ -331,7 +331,7 @@ using namespace yas;
 
 - (void)test_foreign_key {
     db::database db = [yas_db_test_utils create_test_database];
-    db.open();
+    XCTAssertTrue(db.open());
 
     db::begin_transaction(db);
 
@@ -367,7 +367,7 @@ using namespace yas;
 
 - (void)test_integrity_check {
     db::database db = [yas_db_test_utils create_test_database];
-    db.open();
+    XCTAssertTrue(db.open());
 
     auto result = db.integrity_check();
     XCTAssertTrue(result.is_success());

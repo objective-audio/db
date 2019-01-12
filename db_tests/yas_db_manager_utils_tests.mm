@@ -25,7 +25,7 @@ using namespace yas;
 
 - (void)test_select_last {
     db::database db = [yas_db_test_utils create_test_database];
-    db.open();
+    XCTAssertTrue(db.open());
 
     auto const table_name = "table_a";
     auto const field_name = "field_a";
@@ -68,7 +68,7 @@ using namespace yas;
 
 - (void)test_select_last_by_save_id {
     db::database db = [yas_db_test_utils create_test_database];
-    db.open();
+    XCTAssertTrue(db.open());
 
     auto const table_name = "table_a";
     auto const field_name = "field_a";
@@ -118,7 +118,7 @@ using namespace yas;
 
 - (void)test_select_last_with_addtional_parameters {
     db::database db = [yas_db_test_utils create_test_database];
-    db.open();
+    XCTAssertTrue(db.open());
 
     auto const table_name = "table_a";
     auto const field_name = "field_a";
@@ -163,7 +163,7 @@ using namespace yas;
 
 - (void)test_select_undo {
     db::database db = [yas_db_test_utils create_test_database];
-    db.open();
+    XCTAssertTrue(db.open());
 
     auto const table_name = "table_a";
     auto const field_name = "field_a";
@@ -233,7 +233,7 @@ using namespace yas;
 
 - (void)test_select_redo {
     db::database db = [yas_db_test_utils create_test_database];
-    db.open();
+    XCTAssertTrue(db.open());
 
     auto const table_name = "table_a";
     auto const field_name = "field_a";
@@ -289,7 +289,7 @@ using namespace yas;
 
 - (void)test_select_revert {
     db::database db = [yas_db_test_utils create_test_database];
-    db.open();
+    XCTAssertTrue(db.open());
 
     auto const table_name = "table_a";
     auto const field_name = "field_a";

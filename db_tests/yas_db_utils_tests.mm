@@ -25,7 +25,7 @@ using namespace yas;
 
 - (void)test_table {
     db::database db = [yas_db_test_utils create_test_database];
-    db.open();
+    XCTAssertTrue(db.open());
 
     XCTAssertTrue(db::create_table(db, "test_table_a", {"field_a"}));
     XCTAssertTrue(db::create_table(db, "test_table_b", {"field_b"}));
@@ -55,7 +55,7 @@ using namespace yas;
 
 - (void)test_transaction_commit {
     db::database db = [yas_db_test_utils create_test_database];
-    db.open();
+    XCTAssertTrue(db.open());
 
     XCTAssertTrue(db.execute_update(db::create_table_sql("test_table", {"test_field"})));
     XCTAssertTrue(db.execute_update("insert into test_table(test_field) values('value1')"));
@@ -80,7 +80,7 @@ using namespace yas;
 
 - (void)test_transaction_rollback {
     db::database db = [yas_db_test_utils create_test_database];
-    db.open();
+    XCTAssertTrue(db.open());
 
     XCTAssertTrue(db.execute_update(db::create_table_sql("test_table", {"test_field"})));
     XCTAssertTrue(db.execute_update("insert into test_table(test_field) values('value1')"));
@@ -103,7 +103,7 @@ using namespace yas;
 
 - (void)test_save_point {
     db::database db = [yas_db_test_utils create_test_database];
-    db.open();
+    XCTAssertTrue(db.open());
 
     XCTAssertTrue(db::create_table(db, "test_table", {"test_field"}));
 
@@ -131,7 +131,7 @@ using namespace yas;
 
 - (void)test_in_save_point {
     db::database db = [yas_db_test_utils create_test_database];
-    db.open();
+    XCTAssertTrue(db.open());
 
     XCTAssertTrue(db.execute_update(db::create_table_sql("test_table", {"test_field"})));
 
@@ -154,7 +154,7 @@ using namespace yas;
 
 - (void)test_in_save_point_rollback {
     db::database db = [yas_db_test_utils create_test_database];
-    db.open();
+    XCTAssertTrue(db.open());
 
     XCTAssertTrue(db::create_table(db, "test_table", {"test_field"}));
 
@@ -178,7 +178,7 @@ using namespace yas;
 
 - (void)test_savepoint_failed {
     db::database db = [yas_db_test_utils create_test_database];
-    db.open();
+    XCTAssertTrue(db.open());
 
     XCTAssertFalse(db::start_save_point(db, ""));
     XCTAssertFalse(db::release_save_point(db, ""));
@@ -187,7 +187,7 @@ using namespace yas;
 
 - (void)test_table_exists {
     db::database db = [yas_db_test_utils create_test_database];
-    db.open();
+    XCTAssertTrue(db.open());
 
     XCTAssertTrue(db::create_table(db, "test_table", {"field"}));
 
@@ -197,7 +197,7 @@ using namespace yas;
 
 - (void)test_index_exists {
     db::database db = [yas_db_test_utils create_test_database];
-    db.open();
+    XCTAssertTrue(db.open());
 
     XCTAssertTrue(db::create_table(db, "test_table", {"field"}));
 
@@ -215,7 +215,7 @@ using namespace yas;
 
 - (void)test_column_exists {
     db::database db = [yas_db_test_utils create_test_database];
-    db.open();
+    XCTAssertTrue(db.open());
 
     XCTAssertTrue(db::create_table(db, "test_table", {"field_a", "field_b"}));
 
@@ -228,7 +228,7 @@ using namespace yas;
 
 - (void)test_get_schema {
     db::database db = [yas_db_test_utils create_test_database];
-    db.open();
+    XCTAssertTrue(db.open());
 
     std::string const sql = "create table test_table (test_field)";
     XCTAssertTrue(db.execute_update(sql));
@@ -269,7 +269,7 @@ using namespace yas;
 
 - (void)test_get_table_schema {
     db::database db = [yas_db_test_utils create_test_database];
-    db.open();
+    XCTAssertTrue(db.open());
 
     XCTAssertTrue(db::create_table(db, "test_table", {"field_a", "field_b"}));
 
@@ -299,7 +299,7 @@ using namespace yas;
 
 - (void)test_get_index_schema {
     db::database db = [yas_db_test_utils create_test_database];
-    db.open();
+    XCTAssertTrue(db.open());
 
     XCTAssertTrue(db::create_table(db, "test_table", {"field_a", "field_b"}));
     XCTAssertTrue(db::create_index(db, "test_index", "test_table", {"field_a"}));
@@ -317,7 +317,7 @@ using namespace yas;
 
 - (void)test_select {
     db::database db = [yas_db_test_utils create_test_database];
-    db.open();
+    XCTAssertTrue(db.open());
 
     auto const table = "table_a";
     auto const field_a = "field_a";
@@ -342,7 +342,7 @@ using namespace yas;
 
 - (void)test_max {
     db::database db = [yas_db_test_utils create_test_database];
-    db.open();
+    XCTAssertTrue(db.open());
 
     auto const table_name = "table_a";
     auto const field_name = "field_a";
@@ -367,7 +367,7 @@ using namespace yas;
 
 - (void)test_select_in_object_ids {
     db::database db = [yas_db_test_utils create_test_database];
-    db.open();
+    XCTAssertTrue(db.open());
 
     auto const table_name = "table_a";
     auto const field_name = "field_a";

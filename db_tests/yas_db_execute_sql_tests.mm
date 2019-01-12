@@ -23,7 +23,7 @@ using namespace yas;
 
 - (void)test_table {
     db::database db = [yas_db_test_utils create_test_database];
-    db.open();
+    XCTAssertTrue(db.open());
 
     std::string const &create_sql_a = db::create_table_sql("test_table_a", {"field_a"});
     XCTAssertTrue(db.execute_update(create_sql_a));
