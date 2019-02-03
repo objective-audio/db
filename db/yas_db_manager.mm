@@ -36,7 +36,7 @@ struct db::manager::impl : base::impl {
     db::weak_pool<db::object_id, db::object> _cached_objects;
     db::tmp_object_map_map_t _created_objects;
     db::object_map_map_t _changed_objects;
-    chaining::holder<db::info> _db_info = db::null_info();
+    chaining::value::holder<db::info> _db_info = db::null_info();
     chaining::notifier<db::object> _db_object_notifier;
     dispatch_queue_t _dispatch_queue;
     chaining::observer_pool _pool;
