@@ -502,14 +502,14 @@ db::model const &db::manager::model() const {
 }
 
 db::value const &db::manager::current_save_id() const {
-    if (auto info = impl_ptr<impl>()->_db_info.value()) {
+    if (auto const &info = impl_ptr<impl>()->_db_info.raw()) {
         return info.current_save_id_value();
     }
     return db::null_value();
 }
 
 db::value const &db::manager::last_save_id() const {
-    if (auto info = impl_ptr<impl>()->_db_info.value()) {
+    if (auto const &info = impl_ptr<impl>()->_db_info.raw()) {
         return info.last_save_id_value();
     }
     return db::null_value();
