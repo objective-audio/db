@@ -54,7 +54,7 @@ objc_ptr<NSArray<NSIndexPath *> *> to_index_paths(std::vector<std::size_t> const
 
 @implementation DBSampleRelationViewController {
     std::weak_ptr<db_controller> _db_controller;
-    std::experimental::optional<db::object> _db_object;
+    std::optional<db::object> _db_object;
     std::string _rel_name;
 
     chaining::observer_pool _pool;

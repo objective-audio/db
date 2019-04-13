@@ -50,7 +50,7 @@ sample::object_info_row_type_t to_idx(object_info_row const &row) {
 
 @implementation DBSampleObjectViewController {
     std::weak_ptr<yas::sample::db_controller> _db_controller;
-    std::experimental::optional<db::object> _db_object;
+    std::optional<db::object> _db_object;
     std::vector<db::attribute> _attributes;
     std::vector<db::relation> _relations;
 }

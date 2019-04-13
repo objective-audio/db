@@ -84,7 +84,7 @@ void db_controller::setup(db::completion_f completion) {
 
     this->_pool += this->_manager.chain_db_info()
                        .to_value(std::make_pair(method::db_info_changed, change_info{nullptr}))
-                       .receive(this->_notifier.receiver())
+                       .send_to(this->_notifier.receiver())
                        .end();
 
     auto continuous_result = std::make_shared<db::manager_result_t>(nullptr);
