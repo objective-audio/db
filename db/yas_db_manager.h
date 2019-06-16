@@ -5,7 +5,7 @@
 #pragma once
 
 #include <cpp_utils/yas_base.h>
-#include <cpp_utils/yas_operation_protocol.h>
+#include <cpp_utils/yas_task_protocol.h>
 #include <dispatch/dispatch.h>
 #include "yas_db_additional_protocol.h"
 #include "yas_db_fetch_option.h"
@@ -13,7 +13,7 @@
 #include "yas_db_object.h"
 
 namespace yas {
-class operation;
+class task;
 
 template <typename T, typename K>
 class subject;
