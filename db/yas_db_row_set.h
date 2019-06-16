@@ -70,8 +70,8 @@ struct std::hash<yas::db::row_set> {
 };
 
 template <>
-struct std::hash<yas::weak<yas::db::row_set>> {
-    std::size_t operator()(yas::weak<yas::db::row_set> const &key) const {
+struct std::hash<yas::base::weak<yas::db::row_set>> {
+    std::size_t operator()(yas::base::weak<yas::db::row_set> const &key) const {
         return std::hash<uintptr_t>()(key.identifier());
     }
 };

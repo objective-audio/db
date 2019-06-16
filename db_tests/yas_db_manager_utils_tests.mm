@@ -382,7 +382,7 @@ using namespace yas;
         XCTAssertEqual(manager.current_save_id(), db::value{3});
     });
 
-    manager.execute(db::no_cancellation, [self, &manager](auto const &op) {
+    manager.execute(db::no_cancellation, [self, &manager](auto const &) {
         auto &db = manager.database();
 
         auto update_result = db::purge_attributes(db, "sample_a");
@@ -403,7 +403,7 @@ using namespace yas;
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
 
-    manager.execute(db::no_cancellation, [exp](auto const &op) { [exp fulfill]; });
+    manager.execute(db::no_cancellation, [exp](auto const &) { [exp fulfill]; });
 
     [self waitForExpectationsWithTimeout:1.0 handler:nil];
 }
@@ -471,7 +471,7 @@ using namespace yas;
         XCTAssertEqual(manager.current_save_id(), db::value{4});
     });
 
-    manager.execute(db::no_cancellation, [self, &manager](auto const &op) {
+    manager.execute(db::no_cancellation, [self, &manager](auto const &) {
         auto &db = manager.database();
 
         auto purge_result = db::purge_attributes(db, "sample_a");
@@ -496,7 +496,7 @@ using namespace yas;
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
 
-    manager.execute(db::no_cancellation, [exp](auto const &op) { [exp fulfill]; });
+    manager.execute(db::no_cancellation, [exp](auto const &) { [exp fulfill]; });
 
     [self waitForExpectationsWithTimeout:1.0 handler:nil];
 }

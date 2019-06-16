@@ -12,7 +12,7 @@
 #include "yas_db_weak_pool.h"
 
 namespace yas {
-class operation;
+class task;
 }
 
 namespace yas::db {
@@ -79,7 +79,7 @@ using manager_info_result_t = result<db::info, db::manager_error>;
 using manager_fetch_result_t = result<db::object_data_vector_map_t, db::manager_error>;
 
 using cancellation_f = std::function<bool(void)>;
-using execution_f = std::function<void(operation const &)>;
+using execution_f = std::function<void(task const &)>;
 
 using entity_count_map_t = std::unordered_map<std::string, std::size_t>;
 
