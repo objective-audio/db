@@ -36,8 +36,8 @@ struct db::manager::impl : base::impl {
     db::weak_pool<db::object_id, db::object> _cached_objects;
     db::tmp_object_map_map_t _created_objects;
     db::object_map_map_t _changed_objects;
-    chaining::value::holder<db::info> _db_info = db::null_info();
-    chaining::notifier<db::object> _db_object_notifier;
+    chaining::value::holder_ptr<db::info> _db_info = chaining::value::holder<db::info>::make_shared(db::null_info());
+    chaining::notifier_ptr<db::object> _db_object_notifier = chaining::notifier<db::object>::make_shared();
     dispatch_queue_t _dispatch_queue;
     chaining::observer_pool _pool;
 
@@ -173,7 +173,7 @@ struct db::manager::impl : base::impl {
 
     // データベース情報を置き換える
     void set_db_info(db::info &&info) {
-        this->_db_info.set_value(std::move(info));
+        this->_db_info->set_value(std::move(info));
     }
 
     // データベースに保存するために、全てのエンティティで変更のあったオブジェクトのobject_dataを取得する
@@ -343,7 +343,7 @@ struct db::manager::impl : base::impl {
         }
 
         // オブジェクトが変更された通知を送信
-        this->_db_object_notifier.notify(object);
+        this->_db_object_notifier->notify(object);
     }
 
     // バックグラウンドでデータベースの処理をする
@@ -358,7 +358,7 @@ struct db::manager::impl : base::impl {
             }
         };
 
-        this->_task_queue.push_back(task{std::move(op_lambda)});
+        this->_task_queue.push_back(task::make_shared(std::move(op_lambda)));
     }
 
     // バックグラウンドでデータベースからオブジェクトデータを取得する。条件はselect_optionで指定。単独のエンティティのみ
@@ -502,14 +502,14 @@ db::model const &db::manager::model() const {
 }
 
 db::value const &db::manager::current_save_id() const {
-    if (auto const &info = impl_ptr<impl>()->_db_info.raw()) {
+    if (auto const &info = impl_ptr<impl>()->_db_info->raw()) {
         return info.current_save_id_value();
     }
     return db::null_value();
 }
 
 db::value const &db::manager::last_save_id() const {
-    if (auto const &info = impl_ptr<impl>()->_db_info.raw()) {
+    if (auto const &info = impl_ptr<impl>()->_db_info->raw()) {
         return info.last_save_id_value();
     }
     return db::null_value();
@@ -1120,11 +1120,11 @@ std::size_t db::manager::changed_object_count(std::string const &entity_name) co
 }
 
 chaining::chain_sync_t<db::info> db::manager::chain_db_info() const {
-    return impl_ptr<impl>()->_db_info.chain();
+    return impl_ptr<impl>()->_db_info->chain();
 }
 
 chaining::chain_unsync_t<db::object> db::manager::chain_db_object() const {
-    return impl_ptr<impl>()->_db_object_notifier.chain();
+    return impl_ptr<impl>()->_db_object_notifier->chain();
 }
 
 db::object_vector_t db::manager::relation_objects(db::object const &object, std::string const &rel_name) const {

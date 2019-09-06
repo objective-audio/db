@@ -40,7 +40,6 @@ using namespace yas;
     XCTestExpectation *exp = [self expectationWithDescription:@"execution"];
 
     manager.execute(db::no_cancellation, [self, exp](auto const &task) {
-        XCTAssertTrue(task);
         XCTAssertFalse([NSThread isMainThread]);
         [exp fulfill];
     });
