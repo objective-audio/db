@@ -9,11 +9,6 @@
 #include "yas_db_ptr.h"
 #include "yas_db_value.h"
 
-namespace yas {
-template <typename T, typename U>
-class result;
-}
-
 namespace yas::db {
 class error;
 
@@ -24,7 +19,7 @@ union callback_id {
     };
 };
 
-struct database {
+struct database final {
     class impl;
 
     using callback_f = std::function<int(db::value_map_t const &)>;
