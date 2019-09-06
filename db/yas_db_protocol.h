@@ -5,6 +5,7 @@
 #pragma once
 
 #include <cpp_utils/yas_protocol.h>
+#include "yas_db_ptr.h"
 
 namespace yas::db {
 class database;
@@ -43,7 +44,7 @@ struct row_set_observable : protocol {
 
 struct db_settable : protocol {
     struct impl : protocol::impl {
-        virtual void _set_database(database const &) = 0;
+        virtual void _set_database(database_ptr const &) = 0;
     };
 
     explicit db_settable(std::shared_ptr<impl> impl) : protocol(std::move(impl)) {
@@ -52,7 +53,7 @@ struct db_settable : protocol {
     db_settable(std::nullptr_t) : protocol(nullptr) {
     }
 
-    void set_database(database const &db) {
+    void set_database(database_ptr const &db) {
         impl_ptr<impl>()->_set_database(db);
     }
 };

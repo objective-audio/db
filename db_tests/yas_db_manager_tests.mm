@@ -53,12 +53,12 @@ using namespace yas;
     manager.execute(db::no_cancellation, [self, &manager](task const &) {
         auto &db = manager.database();
 
-        XCTAssertTrue(db.execute_update(db::create_table_sql("test_table", {"field_a", "field_b"})));
+        XCTAssertTrue(db->execute_update(db::create_table_sql("test_table", {"field_a", "field_b"})));
 
         db::value_vector_t args{db::value{"value_a"}, db::value{"value_b"}};
-        XCTAssertTrue(db.execute_update("insert into test_table(field_a, field_b) values(:field_a, :field_b)", args));
+        XCTAssertTrue(db->execute_update("insert into test_table(field_a, field_b) values(:field_a, :field_b)", args));
 
-        auto query_result = db.execute_query("select * from test_table");
+        auto query_result = db->execute_query("select * from test_table");
         auto &row_set = query_result.value();
 
         XCTAssertTrue(row_set);
@@ -442,12 +442,12 @@ using namespace yas;
 
         bool rollback = false;
 
-        if (!db.execute_update(db::insert_sql("sample_a", {"age", "name", "weight"}),
+        if (!db->execute_update(db::insert_sql("sample_a", {"age", "name", "weight"}),
                                {db::value{2}, db::value{"xyz"}, db::value{451.2}})) {
             rollback = true;
         }
 
-        if (!db.execute_update(db::insert_sql("sample_b", {"name"}), {db::value{"qwerty"}})) {
+        if (!db->execute_update(db::insert_sql("sample_b", {"name"}), {db::value{"qwerty"}})) {
             rollback = true;
         }
 
@@ -460,12 +460,12 @@ using namespace yas;
         auto &tgt_obj_id = select_result_b.value().at(0).at(db::object_id_field);
 
         auto sql = db::insert_sql("rel_sample_a_child", {db::src_obj_id_field, db::tgt_obj_id_field});
-        if (!db.execute_update(sql, db::value_vector_t{src_obj_id, tgt_obj_id})) {
+        if (!db->execute_update(sql, db::value_vector_t{src_obj_id, tgt_obj_id})) {
             rollback = true;
         }
 
         db::value const save_id{100};
-        if (!db.execute_update(db::update_sql(db::info_table, {db::current_save_id_field, db::last_save_id_field}, ""),
+        if (!db->execute_update(db::update_sql(db::info_table, {db::current_save_id_field, db::last_save_id_field}, ""),
                                db::value_vector_t{save_id, save_id})) {
             rollback = true;
         }

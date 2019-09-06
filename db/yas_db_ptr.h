@@ -10,4 +10,5 @@ namespace yas::db {
 class database;
 
 using database_ptr = std::shared_ptr<database>;
+using database_wptr = std::weak_ptr<database>;
 }  // namespace yas::db

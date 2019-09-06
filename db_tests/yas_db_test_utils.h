@@ -10,7 +10,7 @@
 
 @interface yas_db_test_utils : NSObject
 
-+ (yas::db::database)create_test_database;
++ (yas::db::database_ptr)create_test_database;
 + (yas::db::manager)create_test_manager;
 + (yas::db::manager)create_test_manager:(yas::db::model &&)model;
 + (yas::db::manager)create_test_manager:(yas::db::model &&)model priority_count:(size_t)count;

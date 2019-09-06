@@ -51,7 +51,7 @@ std::string last_where_exprs(std::string const &table, std::string const &where_
 }
 
 // 単独の関連の関連先のidの配列をDBから取得する
-db::value_vector_result_t select_relation_target_ids(db::database &db, std::string const &rel_table,
+db::value_vector_result_t select_relation_target_ids(db::database_ptr const &db, std::string const &rel_table,
                                                      db::value const &save_id, db::value const &src_obj_id) {
     std::string where_exprs =
         joined({db::equal_field_expr(db::save_id_field), db::equal_field_expr(db::src_obj_id_field)}, " and ");
@@ -73,7 +73,7 @@ db::value_vector_result_t select_relation_target_ids(db::database &db, std::stri
 }
 
 // 単独のオブジェクトの全ての関連の関連先のidの配列をDBから取得する
-db::value_vector_map_result_t select_relation_data(db::database &db, db::relation_map_t const &rel_models,
+db::value_vector_map_result_t select_relation_data(db::database_ptr const &db, db::relation_map_t const &rel_models,
                                                    db::value const &save_id, db::value const &src_obj_id) {
     db::value_vector_map_t relations;
 
@@ -114,13 +114,13 @@ static void get_relation_ids(db::integer_set_map_t &out_ids, db::object const &o
 
 #pragma mark - select
 
-db::select_result_t db::select_last(db::database const &db, db::select_option option, db::value const &save_id,
+db::select_result_t db::select_last(db::database_ptr const &db, db::select_option option, db::value const &save_id,
                                     bool const include_removed) {
     option.where_exprs = db::last_where_exprs(option.table, option.where_exprs, save_id, include_removed);
     return db::select(db, option);
 }
 
-db::select_result_t db::select_for_undo(db::database const &db, std::string const &table,
+db::select_result_t db::select_for_undo(db::database_ptr const &db, std::string const &table,
                                         db::integer::type const revert_save_id,
                                         db::integer::type const current_save_id) {
     // リバート先のセーブIDはカレントより小さくないといけない
@@ -175,7 +175,7 @@ db::select_result_t db::select_for_undo(db::database const &db, std::string cons
     return db::select_result_t{connect(std::move(result.value()), std::move(empty_result.value()))};
 }
 
-db::select_result_t db::select_for_redo(db::database const &db, std::string const &table,
+db::select_result_t db::select_for_redo(db::database_ptr const &db, std::string const &table,
                                         db::integer::type const revert_save_id,
                                         db::integer::type const current_save_id) {
     // リバート先のセーブIDはカレントより後でないといけない
@@ -191,7 +191,7 @@ db::select_result_t db::select_for_redo(db::database const &db, std::string cons
     return db::select_last(db, std::move(option), db::value{revert_save_id}, true);
 }
 
-db::select_result_t db::select_for_revert(db::database const &db, std::string const &table,
+db::select_result_t db::select_for_revert(db::database_ptr const &db, std::string const &table,
                                           db::integer::type const revert_save_id,
                                           db::integer::type const current_save_id) {
     // リバート先のセーブIDによってアンドゥとリドゥに分岐する
@@ -204,7 +204,7 @@ db::select_result_t db::select_for_revert(db::database const &db, std::string co
     return db::select_result_t{db::value_map_vector_t{}};
 }
 
-db::select_result_t db::select_for_save(db::database const &db, std::string const &entity_table,
+db::select_result_t db::select_for_save(db::database_ptr const &db, std::string const &entity_table,
                                         std::string const &rel_table, db::value_vector_t const &tgt_obj_ids) {
     // 最後のオブジェクトのpk_idを取得するsql
     std::string const last_exprs = db::last_where_exprs(entity_table, "", nullptr, false);
@@ -227,7 +227,7 @@ db::select_result_t db::select_for_save(db::database const &db, std::string cons
 
 #pragma mark - info
 
-db::manager_info_result_t db::fetch_info(db::database const &db) {
+db::manager_info_result_t db::fetch_info(db::database_ptr const &db) {
     if (db::select_single_result_t select_result = db::select_single(db, db::select_option{.table = db::info_table})) {
         auto const &values = select_result.value();
         if (values.count(db::version_field) == 0) {
@@ -246,9 +246,9 @@ db::manager_info_result_t db::fetch_info(db::database const &db) {
     }
 }
 
-db::manager_result_t db::create_info(db::database &db, yas::version const &version) {
+db::manager_result_t db::create_info(db::database_ptr const &db, yas::version const &version) {
     // infoテーブルをデータベース上に作成
-    if (auto ul = unless(db.execute_update(db::info::sql_for_create()))) {
+    if (auto ul = unless(db->execute_update(db::info::sql_for_create()))) {
         return db::make_error_result(db::manager_error_type::create_info_table_failed, std::move(ul.value.error()));
     }
 
@@ -256,17 +256,17 @@ db::manager_result_t db::create_info(db::database &db, yas::version const &versi
     db::value_vector_t const args{db::value{version.str()}, zero_value, zero_value};
 
     // infoデータを挿入。セーブIDは0
-    if (auto ul = unless(db.execute_update(db::info::sql_for_insert(), args))) {
+    if (auto ul = unless(db->execute_update(db::info::sql_for_insert(), args))) {
         return db::make_error_result(db::manager_error_type::insert_info_failed, std::move(ul.value.error()));
     }
 
     return db::manager_result_t{nullptr};
 }
 
-db::manager_info_result_t db::update_info(db::database &db, db::value const &cur_save_id,
+db::manager_info_result_t db::update_info(db::database_ptr const &db, db::value const &cur_save_id,
                                           db::value const &last_save_id) {
     db::value_vector_t const params{cur_save_id, last_save_id};
-    if (db::update_result_t update_result = db.execute_update(db::info::sql_for_update_save_ids(), params)) {
+    if (db::update_result_t update_result = db->execute_update(db::info::sql_for_update_save_ids(), params)) {
         if (db::manager_info_result_t select_result = db::fetch_info(db)) {
             return db::manager_info_result_t{std::move(select_result.value())};
         } else {
@@ -278,9 +278,9 @@ db::manager_info_result_t db::update_info(db::database &db, db::value const &cur
     }
 }
 
-db::manager_info_result_t db::update_current_save_id(db::database &db, db::value const &cur_save_id) {
+db::manager_info_result_t db::update_current_save_id(db::database_ptr const &db, db::value const &cur_save_id) {
     db::value_vector_t const params{cur_save_id};
-    if (db::update_result_t update_result = db.execute_update(db::info::sql_for_update_current_save_id(), params)) {
+    if (db::update_result_t update_result = db->execute_update(db::info::sql_for_update_current_save_id(), params)) {
         if (db::manager_info_result_t select_result = db::fetch_info(db)) {
             return db::manager_info_result_t{std::move(select_result.value())};
         } else {
@@ -292,9 +292,9 @@ db::manager_info_result_t db::update_current_save_id(db::database &db, db::value
     }
 }
 
-db::manager_result_t db::update_version(db::database &db, yas::version const &version) {
+db::manager_result_t db::update_version(db::database_ptr const &db, yas::version const &version) {
     if (db::update_result_t update_result =
-            db.execute_update(db::info::sql_for_update_version(), {db::value{version.str()}})) {
+            db->execute_update(db::info::sql_for_update_version(), {db::value{version.str()}})) {
         return db::manager_result_t{nullptr};
     } else {
         return db::make_error_result(db::manager_error_type::update_info_failed, std::move(update_result.error()));
@@ -438,7 +438,7 @@ db::manager_result_t db::make_error_result(db::manager_error_type const &error_t
 }
 
 // 単独のエンティティでオブジェクトのアトリビュートの値を元に関連の値をデータベースから取得してobject_dataのvectorを生成する
-db::object_data_vector_result_t db::make_entity_object_datas(db::database &db, std::string const &entity_name,
+db::object_data_vector_result_t db::make_entity_object_datas(db::database_ptr const &db, std::string const &entity_name,
                                                              db::relation_map_t const &rel_models,
                                                              db::value_map_vector_t const &entity_attrs) {
     db::object_data_vector_t entity_datas;
@@ -470,7 +470,7 @@ db::object_data_vector_result_t db::make_entity_object_datas(db::database &db, s
 
 #pragma mark - setup
 
-db::manager_result_t db::migrate_db_if_needed(db::database &db, db::model const &model) {
+db::manager_result_t db::migrate_db_if_needed(db::database_ptr const &db, db::model const &model) {
     // infoからバージョンを取得。1つしかデータが無いこと前提
     if (db::manager_info_result_t select_result = db::fetch_info(db)) {
         // infoを現在のバージョンで上書き
@@ -498,7 +498,7 @@ db::manager_result_t db::migrate_db_if_needed(db::database &db, db::model const 
                 if (!db::column_exists(db, attr_pair.first, entity_name)) {
                     // テーブルにカラムが存在しなければalter tableを実行する
                     db::attribute const &attr = attr_pair.second;
-                    if (auto ul = unless(db.execute_update(alter_table_sql(entity_name, attr.sql())))) {
+                    if (auto ul = unless(db->execute_update(alter_table_sql(entity_name, attr.sql())))) {
                         return db::make_error_result(db::manager_error_type::alter_entity_table_failed,
                                                      std::move(ul.value.error()));
                     }
@@ -507,7 +507,7 @@ db::manager_result_t db::migrate_db_if_needed(db::database &db, db::model const 
         } else {
             // エンティティのテーブルが存在していない場合
             // テーブルを作成する
-            if (auto ul = unless(db.execute_update(entity.sql_for_create()))) {
+            if (auto ul = unless(db->execute_update(entity.sql_for_create()))) {
                 return db::make_error_result(db::manager_error_type::create_entity_table_failed,
                                              std::move(ul.value.error()));
             }
@@ -515,7 +515,7 @@ db::manager_result_t db::migrate_db_if_needed(db::database &db, db::model const 
 
         // 関連のテーブルを作成する
         for (auto &rel_pair : entity.relations) {
-            if (auto ul = unless(db.execute_update(rel_pair.second.sql_for_create()))) {
+            if (auto ul = unless(db->execute_update(rel_pair.second.sql_for_create()))) {
                 return db::make_error_result(db::manager_error_type::create_relation_table_failed,
                                              std::move(ul.value.error()));
             }
@@ -526,7 +526,7 @@ db::manager_result_t db::migrate_db_if_needed(db::database &db, db::model const 
     for (auto const &index_pair : model.indices()) {
         if (!db::index_exists(db, index_pair.first)) {
             db::index const &index = index_pair.second;
-            if (auto ul = unless(db.execute_update(index.sql_for_create()))) {
+            if (auto ul = unless(db->execute_update(index.sql_for_create()))) {
                 return db::make_error_result(db::manager_error_type::create_index_failed, std::move(ul.value.error()));
             }
         }
@@ -535,7 +535,7 @@ db::manager_result_t db::migrate_db_if_needed(db::database &db, db::model const 
     return db::manager_result_t{nullptr};
 }
 
-db::manager_result_t db::create_info_and_tables(db::database &db, db::model const &model) {
+db::manager_result_t db::create_info_and_tables(db::database_ptr const &db, db::model const &model) {
     // infoテーブルをデータベース上に作成
     if (auto ul = unless(db::create_info(db, model.version()))) {
         return std::move(ul.value);
@@ -545,13 +545,13 @@ db::manager_result_t db::create_info_and_tables(db::database &db, db::model cons
     auto const &entities = model.entities();
     for (auto &entity_pair : entities) {
         db::entity const &entity = entity_pair.second;
-        if (auto ul = unless(db.execute_update(entity.sql_for_create()))) {
+        if (auto ul = unless(db->execute_update(entity.sql_for_create()))) {
             return db::make_error_result(db::manager_error_type::create_entity_table_failed,
                                          std::move(ul.value.error()));
         }
 
         for (auto &rel_pair : entity.relations) {
-            if (auto ul = unless(db.execute_update(rel_pair.second.sql_for_create()))) {
+            if (auto ul = unless(db->execute_update(rel_pair.second.sql_for_create()))) {
                 return db::make_error_result(db::manager_error_type::create_relation_table_failed,
                                              std::move(ul.value.error()));
             }
@@ -561,7 +561,7 @@ db::manager_result_t db::create_info_and_tables(db::database &db, db::model cons
     // 全てのインデックスをデータベース上に作成する
     for (auto const &index_pair : model.indices()) {
         db::index const &index = index_pair.second;
-        if (auto ul = unless(db.execute_update(index.sql_for_create()))) {
+        if (auto ul = unless(db->execute_update(index.sql_for_create()))) {
             return db::make_error_result(db::manager_error_type::create_index_failed, std::move(ul.value.error()));
         }
     }
@@ -569,14 +569,14 @@ db::manager_result_t db::create_info_and_tables(db::database &db, db::model cons
     return db::manager_result_t{nullptr};
 }
 
-db::manager_result_t db::clear_db(db::database &db, db::model const &model) {
+db::manager_result_t db::clear_db(db::database_ptr const &db, db::model const &model) {
     // トランザクション開始
     for (auto const &entity_pair : model.entities()) {
         db::entity const &entity = entity_pair.second;
         std::string const &entity_table_name = entity.name;
 
         // エンティティのテーブルのデータを全てデータベースから削除
-        if (auto ul = unless(db.execute_update(db::delete_sql(entity_table_name)))) {
+        if (auto ul = unless(db->execute_update(db::delete_sql(entity_table_name)))) {
             return db::make_error_result(db::manager_error_type::delete_failed, std::move(ul.value.error()));
         }
 
@@ -584,7 +584,7 @@ db::manager_result_t db::clear_db(db::database &db, db::model const &model) {
             std::string const rel_table_name = rel_pair.second.table;
 
             // 関連のテーブルのデータを全てデータベースから削除
-            if (auto ul = unless(db.execute_update(db::delete_sql(rel_table_name)))) {
+            if (auto ul = unless(db->execute_update(db::delete_sql(rel_table_name)))) {
                 return db::make_error_result(db::manager_error_type::delete_failed, std::move(ul.value.error()));
             }
         }
@@ -595,7 +595,7 @@ db::manager_result_t db::clear_db(db::database &db, db::model const &model) {
 
 #pragma mark - editing
 
-db::manager_fetch_result_t db::insert(db::database &db, db::model const &model, db::info const info,
+db::manager_fetch_result_t db::insert(db::database_ptr const &db, db::model const &model, db::info const info,
                                       db::value_map_vector_map_t &&values) {
     if (info.current_save_id() < info.last_save_id()) {
         // カレントがラストより前ならカレントより後を削除する
@@ -634,7 +634,7 @@ db::manager_fetch_result_t db::insert(db::database &db, db::model const &model, 
                 args.emplace_back(std::move(value.second));
             }
 
-            if (auto ul = unless(db.execute_update(db::insert_sql(entity_name, fields), std::move(args)))) {
+            if (auto ul = unless(db->execute_update(db::insert_sql(entity_name, fields), std::move(args)))) {
                 return db::manager_fetch_result_t{
                     db::manager_error{db::manager_error_type::insert_attributes_failed, std::move(ul.value.error())}};
             }
@@ -668,7 +668,8 @@ db::manager_fetch_result_t db::insert(db::database &db, db::model const &model, 
     return db::manager_fetch_result_t{std::move(inserted_datas)};
 }
 
-db::manager_fetch_result_t db::fetch(db::database &db, db::model const &model, db::fetch_option const &fetch_option) {
+db::manager_fetch_result_t db::fetch(db::database_ptr const &db, db::model const &model,
+                                     db::fetch_option const &fetch_option) {
     // カレントセーブIDをデータベースから取得
     db::value current_save_id = db::null_value();
     if (db::manager_info_result_t info_select_result = db::fetch_info(db)) {
@@ -706,20 +707,21 @@ db::manager_fetch_result_t db::fetch(db::database &db, db::model const &model, d
     return db::manager_fetch_result_t{std::move(fetched_datas)};
 }
 
-db::update_result_t db::purge_attributes(db::database &db, std::string const &table) {
+db::update_result_t db::purge_attributes(db::database_ptr const &db, std::string const &table) {
     db::select_option const option{
         .table = table, .fields = {"MAX(" + db::pk_id_field + ")"}, .group_by = db::object_id_field};
     std::string const in_expr = db::in_expr("NOT " + db::pk_id_field, option);
-    return db.execute_update(db::delete_sql(table, in_expr));
+    return db->execute_update(db::delete_sql(table, in_expr));
 }
 
-db::update_result_t db::purge_relations(database &db, std::string const &table, std::string const &src_table) {
+db::update_result_t db::purge_relations(database_ptr const &db, std::string const &table,
+                                        std::string const &src_table) {
     db::select_option const option{.table = src_table, .fields = {db::pk_id_field}};
     std::string const in_expr = db::in_expr("NOT " + db::src_pk_id_field, option);
-    return db.execute_update(db::delete_sql(table, in_expr));
+    return db->execute_update(db::delete_sql(table, in_expr));
 }
 
-db::manager_result_t db::purge_db(db::database &db, db::model const &model) {
+db::manager_result_t db::purge_db(db::database_ptr const &db, db::model const &model) {
     // DB情報をデータベースから取得
     if (db::manager_info_result_t select_result = db::fetch_info(db)) {
         db::info const &db_info = select_result.value();
@@ -745,7 +747,7 @@ db::manager_result_t db::purge_db(db::database &db, db::model const &model) {
         if (db::update_result_t purge_result = db::purge_attributes(db, entity_name)) {
             // 残ったデータのセーブIDを全て1にする
             std::string const update_entity_sql = db::update_sql(entity_name, save_id_fields);
-            if (db::update_result_t update_result = db.execute_update(update_entity_sql, one_value_args)) {
+            if (db::update_result_t update_result = db->execute_update(update_entity_sql, one_value_args)) {
                 for (auto const &rel_pair : entity.relations) {
                     db::relation const &relation = rel_pair.second;
                     std::string const &rel_table_name = relation.table;
@@ -754,7 +756,7 @@ db::manager_result_t db::purge_db(db::database &db, db::model const &model) {
                     if (db::update_result_t purge_rel_result = db::purge_relations(db, rel_table_name, entity_name)) {
                         // 残ったデータのセーブIDを全て1にする
                         std::string const update_rel_sql = db::update_sql(rel_table_name, save_id_fields);
-                        if (auto ul = unless(db.execute_update(update_rel_sql, one_value_args))) {
+                        if (auto ul = unless(db->execute_update(update_rel_sql, one_value_args))) {
                             return db::make_error_result(db::manager_error_type::update_save_id_failed,
                                                          std::move(ul.value.error()));
                         }
@@ -775,7 +777,7 @@ db::manager_result_t db::purge_db(db::database &db, db::model const &model) {
     return db::manager_result_t{nullptr};
 }
 
-db::manager_fetch_result_t db::save(db::database &db, db::model const &model, db::info const &info,
+db::manager_fetch_result_t db::save(db::database_ptr const &db, db::model const &model, db::info const &info,
                                     db::object_data_vector_map_t const &changed_datas) {
     // ラストのセーブIDよりカレントが前ならカレントより後のデータは削除する
     if (info.current_save_id() < info.last_save_id()) {
@@ -816,7 +818,7 @@ db::manager_fetch_result_t db::save(db::database &db, db::model const &model, db
             }
 
             // データベースにアトリビュートのデータを挿入する
-            if (db::update_result_t update_result = db.execute_update(entity_insert_sql, changed_data.attributes)) {
+            if (db::update_result_t update_result = db->execute_update(entity_insert_sql, changed_data.attributes)) {
                 saved_data.attributes = changed_data.attributes;
             } else {
                 return db::manager_fetch_result_t{db::manager_error{db::manager_error_type::insert_attributes_failed,
@@ -824,7 +826,7 @@ db::manager_fetch_result_t db::save(db::database &db, db::model const &model, db
             }
 
             // 挿入したデータのrowidを取得
-            if (db::row_result_t row_result = db.last_insert_rowid()) {
+            if (db::row_result_t row_result = db->last_insert_rowid()) {
                 db::value pk_id{std::move(row_result.value())};
                 saved_data.attributes.emplace(db::pk_id_field, std::move(pk_id));
             } else {
@@ -873,7 +875,8 @@ db::manager_fetch_result_t db::save(db::database &db, db::model const &model, db
     return db::manager_fetch_result_t{std::move(saved_datas)};
 }
 
-db::manager_result_t db::remove_relations_at_save(db::database &db, db::model const &model, db::info const &info,
+db::manager_result_t db::remove_relations_at_save(db::database_ptr const &db, db::model const &model,
+                                                  db::info const &info,
                                                   db::object_data_vector_map_t const &changed_datas) {
     // オブジェクトが削除された場合に逆関連があったらデータベース上で関連を外す
     db::value const next_save_id = info.next_save_id_value();
@@ -963,14 +966,14 @@ db::manager_result_t db::remove_relations_at_save(db::database &db, db::model co
                     replace(obj_data.attributes, db::save_id_field, next_save_id);
                     replace(obj_data.attributes, db::object_id_field, obj_data.object_id.stable_value());
                     // データベースにアトリビュートのデータを挿入する
-                    if (auto ul = unless(db.execute_update(entity_insert_sql, obj_data.attributes))) {
+                    if (auto ul = unless(db->execute_update(entity_insert_sql, obj_data.attributes))) {
                         return db::make_error_result(db::manager_error_type::insert_attributes_failed,
                                                      std::move(ul.value.error()));
                         break;
                     }
 
                     // pk_idを取得してセットする
-                    if (db::row_result_t row_result = db.last_insert_rowid()) {
+                    if (db::row_result_t row_result = db->last_insert_rowid()) {
                         db::value const src_pk_id = db::value{std::move(row_result.value())};
                         db::value const src_obj_id = obj_data.attributes.at(db::object_id_field);
 
@@ -1002,18 +1005,19 @@ db::manager_result_t db::remove_relations_at_save(db::database &db, db::model co
 }
 
 // 指定したsave_idより大きいsave_idのデータを、全てのエンティティに対してデータベース上から削除する
-db::manager_result_t db::delete_next_to_last(db::database &db, db::model const &model, db::value const &save_id) {
+db::manager_result_t db::delete_next_to_last(db::database_ptr const &db, db::model const &model,
+                                             db::value const &save_id) {
     auto const &entity_models = model.entities();
     std::string const delete_exprs = expr(db::save_id_field, ">", to_string(save_id));
 
     for (auto const &entity_pair : entity_models) {
         std::string const &entity_name = entity_pair.first;
 
-        if (db::update_result_t delete_result = db.execute_update(db::delete_sql(entity_name, delete_exprs))) {
+        if (db::update_result_t delete_result = db->execute_update(db::delete_sql(entity_name, delete_exprs))) {
             for (auto const &rel_pair : entity_pair.second.relations) {
                 std::string const table = rel_pair.second.table;
 
-                if (auto ul = unless(db.execute_update(db::delete_sql(table, delete_exprs)))) {
+                if (auto ul = unless(db->execute_update(db::delete_sql(table, delete_exprs)))) {
                     return db::make_error_result(db::manager_error_type::delete_failed, std::move(ul.value.error()));
                 }
             }
@@ -1025,9 +1029,9 @@ db::manager_result_t db::delete_next_to_last(db::database &db, db::model const &
     return db::manager_result_t{nullptr};
 }
 
-db::manager_result_t db::insert_relations(db::database &db, db::relation const &rel_model, db::value const &src_pk_id,
-                                          db::value const &src_obj_id, db::value_vector_t const &rel_tgt_obj_ids,
-                                          db::value const &save_id) {
+db::manager_result_t db::insert_relations(db::database_ptr const &db, db::relation const &rel_model,
+                                          db::value const &src_pk_id, db::value const &src_obj_id,
+                                          db::value_vector_t const &rel_tgt_obj_ids, db::value const &save_id) {
     std::string const &rel_insert_sql = rel_model.sql_for_insert();
     auto src_pk_id_pair = std::make_pair(db::src_pk_id_field, src_pk_id);
     auto src_obj_id_pair = std::make_pair(db::src_obj_id_field, src_obj_id);
@@ -1037,7 +1041,7 @@ db::manager_result_t db::insert_relations(db::database &db, db::relation const &
         auto tgt_obj_id_pair = std::make_pair(db::tgt_obj_id_field, rel_tgt_obj_id);
 
         db::value_map_t args{src_pk_id_pair, src_obj_id_pair, std::move(tgt_obj_id_pair), save_id_pair};
-        if (auto ul = unless(db.execute_update(rel_insert_sql, std::move(args)))) {
+        if (auto ul = unless(db->execute_update(rel_insert_sql, std::move(args)))) {
             return db::make_error_result(db::manager_error_type::insert_relation_failed, std::move(ul.value.error()));
         }
     }

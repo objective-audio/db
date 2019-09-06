@@ -16,7 +16,6 @@ class result;
 }
 
 namespace yas::db {
-class database;
 class statement;
 class value;
 
@@ -32,7 +31,7 @@ class row_set : public base {
 
     using index_result_t = result<int, std::nullptr_t>;
 
-    row_set(statement const &, database const &);
+    row_set(statement const &, database_ptr const &);
     row_set(std::nullptr_t);
 
     ~row_set();

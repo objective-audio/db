@@ -25,7 +25,7 @@ db::next_result_code::operator bool() const {
 #pragma mark - impl
 
 struct db::row_set::impl : base::impl, closable::impl, db_settable::impl {
-    impl(db::statement const &statement, database const &database) : _statement(statement), _database(database) {
+    impl(db::statement const &statement, database_ptr const &database) : _statement(statement), _database(database) {
         this->_statement.set_in_use(true);
     }
 
@@ -36,18 +36,18 @@ struct db::row_set::impl : base::impl, closable::impl, db_settable::impl {
     void close() override {
         this->_statement.reset();
         if (this->_database) {
-            if (db::row_set_observable &observable_db = this->_database.row_set_observable()) {
+            if (db::row_set_observable &observable_db = this->_database->row_set_observable()) {
                 observable_db.row_set_did_close(identifier());
             }
             this->_database = nullptr;
         }
     }
 
-    void _set_database(database const &database) override {
+    void _set_database(database_ptr const &database) override {
         this->_database = database;
     }
 
-    database const &database() const {
+    database_ptr const &database() const {
         return this->_database;
     }
 
@@ -70,13 +70,13 @@ struct db::row_set::impl : base::impl, closable::impl, db_settable::impl {
     }
 
    private:
-    db::database _database;
+    db::database_ptr _database;
     db::statement _statement;
 
     mutable std::unordered_map<std::string, int> _column_name_to_index_map;
 };
 
-db::row_set::row_set(db::statement const &statement, database const &database)
+db::row_set::row_set(db::statement const &statement, database_ptr const &database)
     : base(std::make_unique<impl>(statement, database)) {
 }
 
@@ -100,8 +100,8 @@ db::next_result_code db::row_set::next() {
 }
 
 bool db::row_set::has_row() {
-    if (db::database const &database = impl_ptr<impl>()->database()) {
-        if (sqlite3 *const sqlite_handle = database.sqlite_handle()) {
+    if (db::database_ptr const &database = impl_ptr<impl>()->database()) {
+        if (sqlite3 *const sqlite_handle = database->sqlite_handle()) {
             return sqlite3_errcode(sqlite_handle) == SQLITE_ROW;
         }
     }

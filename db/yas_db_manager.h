@@ -36,8 +36,7 @@ class manager : public base {
     manager(std::nullptr_t);
 
     std::string const &database_path() const;
-    db::database const &database() const;
-    db::database &database();
+    db::database_ptr const &database() const;
     db::model const &model() const;
     db::value const &current_save_id() const;
     db::value const &last_save_id() const;

@@ -24,8 +24,8 @@ using namespace yas;
 }
 
 - (void)test_select_last {
-    db::database db = [yas_db_test_utils create_test_database];
-    XCTAssertTrue(db.open());
+    db::database_ptr const db = [yas_db_test_utils create_test_database];
+    XCTAssertTrue(db->open());
 
     auto const table_name = "table_a";
     auto const field_name = "field_a";
@@ -37,10 +37,10 @@ using namespace yas;
 
     args = {db::value{1}, db::value{"value_1"}, db::insert_action_value()};
 
-    auto result = db.execute_update(db::insert_sql(table_name, fields), args);
+    auto result = db->execute_update(db::insert_sql(table_name, fields), args);
     XCTAssertTrue(result);
     args = {db::value{2}, db::value{"value_2"}, db::insert_action_value()};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
 
     auto select_result = db::select_last(db, db::select_option{.table = table_name});
     XCTAssertTrue(select_result);
@@ -49,7 +49,7 @@ using namespace yas;
     XCTAssertEqual(select_result.value().at(1).at(field_name).get<db::text>(), "value_2");
 
     args = {db::value{1}, db::value{"value_1_1"}, db::update_action_value()};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
 
     select_result = db::select_last(db, db::select_option{.table = table_name});
     XCTAssertTrue(select_result);
@@ -58,7 +58,7 @@ using namespace yas;
     XCTAssertEqual(select_result.value().at(1).at(field_name).get<db::text>(), "value_1_1");
 
     args = {db::value{1}, db::null_value(), db::remove_action_value()};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
 
     select_result = db::select_last(db, db::select_option{.table = table_name});
     XCTAssertTrue(select_result);
@@ -67,8 +67,8 @@ using namespace yas;
 }
 
 - (void)test_select_last_by_save_id {
-    db::database db = [yas_db_test_utils create_test_database];
-    XCTAssertTrue(db.open());
+    db::database_ptr const db = [yas_db_test_utils create_test_database];
+    XCTAssertTrue(db->open());
 
     auto const table_name = "table_a";
     auto const field_name = "field_a";
@@ -79,17 +79,17 @@ using namespace yas;
 
     db::value_vector_t args;
     args = {db::value{1}, db::value{"value_1_a"}, db::value{1}, insert_action_value};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
     args = {db::value{2}, db::value{"value_2_a"}, db::value{1}, insert_action_value};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
     args = {db::value{1}, db::value{"value_1_b"}, db::value{2}, insert_action_value};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
     args = {db::value{2}, db::value{"value_2_b"}, db::value{2}, insert_action_value};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
     args = {db::value{1}, db::value{"value_1_c"}, db::value{3}, insert_action_value};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
     args = {db::value{2}, db::value{"value_2_c"}, db::value{4}, insert_action_value};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
 
     auto select_result = db::select_last(db, db::select_option{.table = table_name}, db::value{4});
     XCTAssertTrue(select_result);
@@ -117,8 +117,8 @@ using namespace yas;
 }
 
 - (void)test_select_last_with_addtional_parameters {
-    db::database db = [yas_db_test_utils create_test_database];
-    XCTAssertTrue(db.open());
+    db::database_ptr const db = [yas_db_test_utils create_test_database];
+    XCTAssertTrue(db->open());
 
     auto const table_name = "table_a";
     auto const field_name = "field_a";
@@ -130,17 +130,17 @@ using namespace yas;
 
     db::value_vector_t args;
     args = {db::value{1}, db::value{"value_1_a"}, db::value{1}, insert_action_value};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
     args = {db::value{2}, db::value{"value_2_a"}, db::value{1}, insert_action_value};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
     args = {db::value{1}, db::value{"value_1_b"}, db::value{2}, update_action_value};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
     args = {db::value{2}, db::value{"value_2_b"}, db::value{2}, update_action_value};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
     args = {db::value{1}, db::value{"value_1_c"}, db::value{3}, update_action_value};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
     args = {db::value{2}, db::value{"value_2_c"}, db::value{4}, update_action_value};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
 
     auto select_result = db::select_last(
         db, db::select_option{.table = table_name, .field_orders = {{db::object_id_field, db::order::ascending}}},
@@ -162,8 +162,8 @@ using namespace yas;
 }
 
 - (void)test_select_undo {
-    db::database db = [yas_db_test_utils create_test_database];
-    XCTAssertTrue(db.open());
+    db::database_ptr const db = [yas_db_test_utils create_test_database];
+    XCTAssertTrue(db->open());
 
     auto const table_name = "table_a";
     auto const field_name = "field_a";
@@ -173,20 +173,20 @@ using namespace yas;
 
     db::value_vector_t args;
     args = {db::value{1}, db::value{"value_1_a"}, db::value{1}, db::insert_action_value()};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
     args = {db::value{2}, db::value{"value_2_a"}, db::value{1}, db::insert_action_value()};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
 
     args = {db::value{1}, db::value{"value_1_b"}, db::value{2}, db::update_action_value()};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
 
     args = {db::value{2}, db::value{"value_2_c"}, db::value{3}, db::update_action_value()};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
 
     args = {db::value{1}, db::value{"value_1_d"}, db::value{4}, db::update_action_value()};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
     args = {db::value{2}, db::value{"value_2_d"}, db::value{4}, db::update_action_value()};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
 
     auto select_result = db::select_for_undo(db, table_name, 3, 4);
     XCTAssertTrue(select_result);
@@ -232,8 +232,8 @@ using namespace yas;
 }
 
 - (void)test_select_redo {
-    db::database db = [yas_db_test_utils create_test_database];
-    XCTAssertTrue(db.open());
+    db::database_ptr const db = [yas_db_test_utils create_test_database];
+    XCTAssertTrue(db->open());
 
     auto const table_name = "table_a";
     auto const field_name = "field_a";
@@ -243,20 +243,20 @@ using namespace yas;
 
     db::value_vector_t args;
     args = {db::value{1}, db::value{"value_1_a"}, db::value{1}};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
     args = {db::value{2}, db::value{"value_2_a"}, db::value{1}};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
 
     args = {db::value{1}, db::value{"value_1_b"}, db::value{2}};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
 
     args = {db::value{2}, db::value{"value_2_c"}, db::value{3}};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
 
     args = {db::value{1}, db::value{"value_1_d"}, db::value{4}};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
     args = {db::value{2}, db::value{"value_2_d"}, db::value{4}};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
 
     auto select_result = db::select_for_redo(db, table_name, 4, 3);
     XCTAssertTrue(select_result);
@@ -288,8 +288,8 @@ using namespace yas;
 }
 
 - (void)test_select_revert {
-    db::database db = [yas_db_test_utils create_test_database];
-    XCTAssertTrue(db.open());
+    db::database_ptr const db = [yas_db_test_utils create_test_database];
+    XCTAssertTrue(db->open());
 
     auto const table_name = "table_a";
     auto const field_name = "field_a";
@@ -299,20 +299,20 @@ using namespace yas;
 
     db::value_vector_t args;
     args = {db::value{1}, db::value{"value_1_a"}, db::value{1}, db::insert_action_value()};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
     args = {db::value{2}, db::value{"value_2_a"}, db::value{1}, db::insert_action_value()};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
 
     args = {db::value{1}, db::value{"value_1_b"}, db::value{2}, db::update_action_value()};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
 
     args = {db::value{2}, db::value{"value_2_c"}, db::value{3}, db::update_action_value()};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
 
     args = {db::value{1}, db::value{"value_1_d"}, db::value{4}, db::update_action_value()};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
     args = {db::value{2}, db::value{"value_2_d"}, db::value{4}, db::update_action_value()};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
 
     auto select_result = db::select_for_revert(db, table_name, 1, 4);
 

@@ -29,7 +29,7 @@ using namespace yas;
 #pragma mark - impl
 
 struct db::manager::impl : base::impl {
-    db::database _database;
+    db::database_ptr _database;
     db::model _model;
     task_queue _task_queue;
     std::size_t _suspend_count = 0;
@@ -43,7 +43,10 @@ struct db::manager::impl : base::impl {
 
     impl(std::string const &path, db::model const &model, dispatch_queue_t const dispatch_queue,
          std::size_t const priority_count)
-        : _database(path), _model(model), _dispatch_queue(dispatch_queue), _task_queue(priority_count) {
+        : _database(database::make_shared(path)),
+          _model(model),
+          _dispatch_queue(dispatch_queue),
+          _task_queue(priority_count) {
         yas_dispatch_queue_retain(dispatch_queue);
     }
 
@@ -351,10 +354,10 @@ struct db::manager::impl : base::impl {
         auto op_lambda = [cancellation = std::move(cancellation), execution = std::move(execution),
                           manager = cast<manager>()](task const &task) mutable {
             if (!task.is_canceled() && !cancellation()) {
-                auto &db = manager.impl_ptr<impl>()->_database;
-                db.open();
+                auto const &db = manager.impl_ptr<impl>()->_database;
+                db->open();
                 execution(task);
-                db.close();
+                db->close();
             }
         };
 
@@ -372,7 +375,7 @@ struct db::manager::impl : base::impl {
             auto preparation_on_main = [&fetch_option, &preparation]() { fetch_option = preparation(); };
             dispatch_sync(manager.dispatch_queue(), std::move(preparation_on_main));
 
-            auto &db = manager.database();
+            auto const &db = manager.database();
             auto const &model = manager.model();
             db::manager_result_t state{nullptr};
             db::object_data_vector_map_t fetched_datas;
@@ -486,14 +489,10 @@ bool db::manager::is_suspended() const {
 }
 
 std::string const &db::manager::database_path() const {
-    return impl_ptr<impl>()->_database.database_path();
+    return impl_ptr<impl>()->_database->database_path();
 }
 
-db::database const &db::manager::database() const {
-    return impl_ptr<impl>()->_database;
-}
-
-db::database &db::manager::database() {
+db::database_ptr const &db::manager::database() const {
     return impl_ptr<impl>()->_database;
 }
 
@@ -525,7 +524,7 @@ db::object db::manager::create_object(std::string const entity_name) {
 
 void db::manager::setup(db::completion_f completion) {
     auto execution = [completion = std::move(completion), manager = *this](task const &) mutable {
-        db::database &db = manager.database();
+        db::database_ptr const &db = manager.database();
         db::model const &model = manager.model();
 
         db::manager_result_t state{nullptr};
@@ -660,7 +659,7 @@ void db::manager::purge(db::cancellation_f cancellation, db::completion_f comple
 
         if (state) {
             // バキュームする（バキュームはトランザクション中はできない）
-            if (auto ul = unless(db.execute_update(db::vacuum_sql()))) {
+            if (auto ul = unless(db->execute_update(db::vacuum_sql()))) {
                 state = db::make_error_result(db::manager_error_type::vacuum_failed, std::move(ul.value.error()));
             }
         }

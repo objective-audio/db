@@ -15,12 +15,12 @@
 using namespace yas;
 
 namespace yas::db {
-static std::map<uint8_t, base::weak<database>> _databases;
+static std::map<uint8_t, database_wptr> _databases;
 }
 
 #pragma mark - impl
 
-struct db::database::impl : base::impl, row_set_observable::impl {
+struct db::database::impl : row_set_observable::impl {
     uint8_t _db_key;
     std::string _database_path;
     sqlite3 *_sqlite_handle = nullptr;
@@ -31,7 +31,7 @@ struct db::database::impl : base::impl, row_set_observable::impl {
     std::chrono::time_point<std::chrono::system_clock> _start_busy_retry_time = std::chrono::system_clock::now();
 
     std::unordered_map<std::string, std::unordered_map<uintptr_t, db::statement>> _cached_statements;
-    std::unordered_map<uintptr_t, weak<row_set>> _open_row_sets;
+    std::unordered_map<uintptr_t, base::weak<row_set>> _open_row_sets;
 
     db::database::callback_f _callback_for_execute_statements;
 
@@ -42,6 +42,10 @@ struct db::database::impl : base::impl, row_set_observable::impl {
         this->close();
 
         db::_databases.erase(_db_key);
+    }
+
+    void prepare(database_ptr const &database) {
+        this->_weak_database = database;
     }
 
     const char *sqlite_path() const {
@@ -313,7 +317,7 @@ struct db::database::impl : base::impl, row_set_observable::impl {
         static auto execute_bulk_sql_callback = [](void *id, int columns, char **values, char **names) {
             auto database_id = (db::callback_id){id}.database;
             if (db::_databases.count(database_id) > 0) {
-                if (db::database database = db::_databases.at(database_id).lock()) {
+                if (db::database_ptr database = db::_databases.at(database_id).lock()) {
                     std::unordered_map<std::string, db::value> map;
                     auto each = make_fast_each(columns);
                     while (yas_each_next(each)) {
@@ -329,7 +333,7 @@ struct db::database::impl : base::impl, row_set_observable::impl {
                         }
                     }
 
-                    if (callback_f const &callback = database.callback_for_execute_statements()) {
+                    if (callback_f const &callback = database->callback_for_execute_statements()) {
                         return callback(map);
                     }
                 }
@@ -431,7 +435,7 @@ struct db::database::impl : base::impl, row_set_observable::impl {
             }
         }
 
-        row_set = db::row_set{statement, cast<db::database>()};
+        row_set = db::row_set{statement, this->_weak_database.lock()};
 
         this->_open_row_sets.insert(std::make_pair(row_set.identifier(), row_set));
 
@@ -481,15 +485,15 @@ struct db::database::impl : base::impl, row_set_observable::impl {
             static auto sqlite_busy_handler = [](void *id, int count) {
                 uint8_t const database_id = (db::callback_id){id}.database;
                 if (db::_databases.count(database_id) > 0) {
-                    if (auto database = db::_databases.at(database_id).lock()) {
+                    if (auto const database = db::_databases.at(database_id).lock()) {
                         if (count == 0) {
-                            database.set_start_busy_retry_time(std::chrono::system_clock::now());
+                            database->set_start_busy_retry_time(std::chrono::system_clock::now());
                             return 1;
                         }
 
                         std::chrono::duration<double> delta =
-                            std::chrono::system_clock::now() - database.start_busy_retry_time();
-                        if (delta.count() < database.max_busy_retry_time_interval()) {
+                            std::chrono::system_clock::now() - database->start_busy_retry_time();
+                        if (delta.count() < database->max_busy_retry_time_interval()) {
                             sqlite3_sleep(50);
                             return 1;
                         }
@@ -513,6 +517,7 @@ struct db::database::impl : base::impl, row_set_observable::impl {
     }
 
    private:
+    database_wptr _weak_database;
     double _max_busy_retry_time_interval = 2.0;
 };
 
@@ -526,42 +531,33 @@ bool db::database::sqlite_thread_safe() {
     return sqlite3_threadsafe() != 0;
 }
 
-db::database::database(std::string const &path) : base(std::make_shared<impl>(path)) {
-    if (auto key = min_empty_key(db::_databases)) {
-        impl_ptr<impl>()->_db_key = *key;
-        db::_databases.insert(std::make_pair(*key, *this));
-    }
+db::database::database(std::string const &path) : _impl(std::make_shared<impl>(path)) {
 }
-
-db::database::database(std::nullptr_t) : base(nullptr) {
-}
-
-db::database::~database() = default;
 
 std::string const &db::database::database_path() const {
-    return impl_ptr<impl>()->_database_path;
+    return this->_impl->_database_path;
 }
 
 sqlite3 *db::database::sqlite_handle() const {
-    return impl_ptr<impl>()->_sqlite_handle;
+    return this->_impl->_sqlite_handle;
 }
 
 bool db::database::open() {
-    return impl_ptr<impl>()->open();
+    return this->_impl->open();
 }
 
 #if SQLITE_VERSION_NUMBER >= 3005000
 bool db::database::open(int flags) {
-    return impl_ptr<impl>()->open(flags);
+    return this->_impl->open(flags);
 }
 #endif
 
 void db::database::close() {
-    impl_ptr<impl>()->close();
+    this->_impl->close();
 }
 
 bool db::database::good_connection() const {
-    if (!impl_ptr<impl>()->_sqlite_handle) {
+    if (!this->_impl->_sqlite_handle) {
         return false;
     }
 
@@ -595,105 +591,122 @@ db::integrity_result_t db::database::integrity_check() const {
 }
 
 db::update_result_t db::database::execute_update(std::string const &sql) {
-    return impl_ptr<impl>()->execute_update(sql, {}, {});
+    return this->_impl->execute_update(sql, {}, {});
 }
 
 db::update_result_t db::database::execute_update(std::string const &sql, std::vector<db::value> const &arguments) {
-    return impl_ptr<impl>()->execute_update(sql, arguments, {});
+    return this->_impl->execute_update(sql, arguments, {});
 }
 
 db::update_result_t db::database::execute_update(std::string const &sql,
                                                  std::unordered_map<std::string, db::value> const &arguments) {
-    return impl_ptr<impl>()->execute_update(sql, {}, arguments);
+    return this->_impl->execute_update(sql, {}, arguments);
 }
 
 db::update_result_t db::database::execute_statements(std::string const &sql) {
-    return impl_ptr<impl>()->execute_statements(sql, nullptr);
+    return this->_impl->execute_statements(sql, nullptr);
 }
 
 db::update_result_t db::database::execute_statements(std::string const &sql, callback_f const &callback) {
-    return impl_ptr<impl>()->execute_statements(sql, callback);
+    return this->_impl->execute_statements(sql, callback);
 }
 
 db::database::callback_f const &db::database::callback_for_execute_statements() const {
-    return impl_ptr<impl>()->_callback_for_execute_statements;
+    return this->_impl->_callback_for_execute_statements;
 }
 
 db::query_result_t db::database::execute_query(std::string const &sql) const {
-    return impl_ptr<impl>()->execute_query(sql, {}, {});
+    return this->_impl->execute_query(sql, {}, {});
 }
 
 db::query_result_t db::database::execute_query(std::string const &sql, value_vector_t const &arguments) const {
-    return impl_ptr<impl>()->execute_query(sql, arguments, {});
+    return this->_impl->execute_query(sql, arguments, {});
 }
 
 db::query_result_t db::database::execute_query(std::string const &sql, value_map_t const &arguments) const {
-    return impl_ptr<impl>()->execute_query(sql, {}, arguments);
+    return this->_impl->execute_query(sql, {}, arguments);
 }
 
 db::row_result_t db::database::last_insert_rowid() const {
-    return impl_ptr<impl>()->last_insert_rowid();
+    return this->_impl->last_insert_rowid();
 }
 
 db::count_result_t db::database::changes() const {
-    return impl_ptr<impl>()->changes();
+    return this->_impl->changes();
 }
 
 void db::database::clear_cached_statements() {
-    impl_ptr<impl>()->clear_cached_statements();
+    this->_impl->clear_cached_statements();
 }
 
 void db::database::close_open_row_sets() {
-    impl_ptr<impl>()->close_open_row_sets();
+    this->_impl->close_open_row_sets();
 }
 
 bool db::database::has_open_row_sets() const {
-    return impl_ptr<impl>()->_open_row_sets.size() > 0;
+    return this->_impl->_open_row_sets.size() > 0;
 }
 
 bool db::database::should_cache_statements() const {
-    return impl_ptr<impl>()->_should_cache_statements;
+    return this->_impl->_should_cache_statements;
 }
 
 void db::database::set_should_cache_statements(bool flag) {
-    impl_ptr<impl>()->_should_cache_statements = flag;
+    this->_impl->_should_cache_statements = flag;
 
     if (!flag) {
-        impl_ptr<impl>()->_cached_statements.clear();
+        this->_impl->_cached_statements.clear();
     }
 }
 
 std::string db::database::last_error_message() const {
-    return impl_ptr<impl>()->last_error_message();
+    return this->_impl->last_error_message();
 }
 
 int db::database::last_error_code() const {
-    return impl_ptr<impl>()->last_error_code();
+    return this->_impl->last_error_code();
 }
 
 bool db::database::had_error() const {
-    return impl_ptr<impl>()->had_error();
+    return this->_impl->had_error();
 }
 
 void db::database::set_max_busy_retry_time_interval(double const timeout) {
-    impl_ptr<impl>()->set_max_busy_retry_time_interval(timeout);
+    this->_impl->set_max_busy_retry_time_interval(timeout);
 }
 
 double db::database::max_busy_retry_time_interval() const {
-    return impl_ptr<impl>()->max_busy_retry_time_interval();
+    return this->_impl->max_busy_retry_time_interval();
 }
 
 void db::database::set_start_busy_retry_time(std::chrono::time_point<std::chrono::system_clock> const &time) {
-    impl_ptr<impl>()->_start_busy_retry_time = time;
+    this->_impl->_start_busy_retry_time = time;
 }
 
 std::chrono::time_point<std::chrono::system_clock> db::database::start_busy_retry_time() const {
-    return impl_ptr<impl>()->_start_busy_retry_time;
+    return this->_impl->_start_busy_retry_time;
 }
 
 db::row_set_observable &db::database::row_set_observable() {
     if (!this->_row_set_observable) {
-        this->_row_set_observable = db::row_set_observable{impl_ptr<row_set_observable::impl>()};
+        this->_row_set_observable = db::row_set_observable{this->_impl};
     }
     return this->_row_set_observable;
+}
+
+void db::database::_prepare(database_ptr const &shared) {
+    auto imp = this->_impl;
+
+    imp->prepare(shared);
+
+    if (auto key = min_empty_key(db::_databases)) {
+        imp->_db_key = *key;
+        db::_databases.insert(std::make_pair(*key, to_weak(shared)));
+    }
+}
+
+db::database_ptr db::database::make_shared(std::string const &path) {
+    auto shared = std::shared_ptr<database>(new database{path});
+    shared->_prepare(shared);
+    return shared;
 }

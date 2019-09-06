@@ -8,10 +8,10 @@ using namespace yas;
 
 @implementation yas_db_test_utils
 
-+ (db::database)create_test_database {
++ (db::database_ptr)create_test_database {
     NSString *databasePath = [[self class] databasePath];
     std::string db_path = yas::to_string((__bridge CFStringRef)databasePath);
-    return db::database{db_path};
+    return db::database::make_shared(db_path);
 }
 
 + (db::manager)create_test_manager {

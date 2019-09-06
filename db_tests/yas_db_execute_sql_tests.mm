@@ -22,14 +22,14 @@ using namespace yas;
 }
 
 - (void)test_table {
-    db::database db = [yas_db_test_utils create_test_database];
-    XCTAssertTrue(db.open());
+    db::database_ptr const db = [yas_db_test_utils create_test_database];
+    XCTAssertTrue(db->open());
 
     std::string const &create_sql_a = db::create_table_sql("test_table_a", {"field_a"});
-    XCTAssertTrue(db.execute_update(create_sql_a));
+    XCTAssertTrue(db->execute_update(create_sql_a));
 
     std::string const &create_sql_b = db::create_table_sql("test_table_b", {"field_b"});
-    XCTAssertTrue(db.execute_update(create_sql_b));
+    XCTAssertTrue(db->execute_update(create_sql_b));
 
     XCTAssertTrue(db::table_exists(db, "test_table_a"));
     XCTAssertTrue(db::table_exists(db, "test_table_b"));
@@ -40,7 +40,7 @@ using namespace yas;
     XCTAssertFalse(schema_set_1.next());
 
     std::string const &alter_sql = db::alter_table_sql("test_table_a", "field_c");
-    XCTAssertTrue(db.execute_update(alter_sql));
+    XCTAssertTrue(db->execute_update(alter_sql));
 
     auto schema_set_2 = db::get_table_schema(db, "test_table_a");
     XCTAssertTrue(schema_set_2.next());
@@ -50,7 +50,7 @@ using namespace yas;
     XCTAssertFalse(schema_set_2.next());
 
     std::string const &drop_sql = db::drop_table_sql("test_table_b");
-    XCTAssertTrue(db.execute_update(drop_sql));
+    XCTAssertTrue(db->execute_update(drop_sql));
 
     XCTAssertTrue(db::table_exists(db, "test_table_a"));
     XCTAssertFalse(db::table_exists(db, "test_table_b"));

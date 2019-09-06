@@ -30,15 +30,15 @@ using namespace yas;
 }
 
 - (void)test_column {
-    db::database db = [yas_db_test_utils create_test_database];
-    XCTAssertTrue(db.open());
+    db::database_ptr const db = [yas_db_test_utils create_test_database];
+    XCTAssertTrue(db->open());
 
-    XCTAssertTrue(db.execute_update("create table test_table (field_a, field_b);"));
+    XCTAssertTrue(db->execute_update("create table test_table (field_a, field_b);"));
 
     db::value_map_t args{std::make_pair("field_a", db::value{"value_a"}), std::make_pair("field_b", db::null_value())};
-    XCTAssertTrue(db.execute_update("insert into test_table(field_a, field_b) values(:field_a, :field_b)", args));
+    XCTAssertTrue(db->execute_update("insert into test_table(field_a, field_b) values(:field_a, :field_b)", args));
 
-    auto query_result = db.execute_query("select field_a, field_b from test_table");
+    auto query_result = db->execute_query("select field_a, field_b from test_table");
     XCTAssertTrue(query_result);
 
     auto &row_set = query_result.value();
@@ -61,15 +61,15 @@ using namespace yas;
 }
 
 - (void)test_has_row {
-    db::database db = [yas_db_test_utils create_test_database];
-    XCTAssertTrue(db.open());
+    db::database_ptr const db = [yas_db_test_utils create_test_database];
+    XCTAssertTrue(db->open());
 
-    XCTAssertTrue(db.execute_update("create table test_table (field_a, field_b);"));
+    XCTAssertTrue(db->execute_update("create table test_table (field_a, field_b);"));
 
     db::value_map_t args{std::make_pair("field_a", db::value{"value_a"}), std::make_pair("field_b", db::null_value())};
-    XCTAssertTrue(db.execute_update("insert into test_table(field_a, field_b) values(:field_a, :field_b)", args));
+    XCTAssertTrue(db->execute_update("insert into test_table(field_a, field_b) values(:field_a, :field_b)", args));
 
-    auto query_result = db.execute_query("select * from test_table");
+    auto query_result = db->execute_query("select * from test_table");
     XCTAssertTrue(query_result);
 
     auto &row_set = query_result.value();
@@ -88,11 +88,11 @@ using namespace yas;
 }
 
 - (void)test_column_value {
-    db::database db = [yas_db_test_utils create_test_database];
-    XCTAssertTrue(db.open());
+    db::database_ptr const db = [yas_db_test_utils create_test_database];
+    XCTAssertTrue(db->open());
 
     XCTAssertTrue(
-        db.execute_update("create table test_table (int_field, float_field, string_field, data_field, null_field);"));
+        db->execute_update("create table test_table (int_field, float_field, string_field, data_field, null_field);"));
 
     std::vector<uint8_t> vec{0, 1, 2, 3};
 
@@ -103,11 +103,11 @@ using namespace yas;
                          std::make_pair("null_field", db::null_value())};
 
     XCTAssertTrue(
-        db.execute_update("insert into test_table(int_field, float_field, string_field, data_field, null_field) "
+        db->execute_update("insert into test_table(int_field, float_field, string_field, data_field, null_field) "
                           "values(:int_field, :float_field, :string_field, :data_field, :null_field)",
                           args));
 
-    auto query_result = db.execute_query("select * from test_table");
+    auto query_result = db->execute_query("select * from test_table");
     XCTAssertTrue(query_result);
 
     auto &row_set = query_result.value();
@@ -143,11 +143,11 @@ using namespace yas;
 }
 
 - (void)test_result_map {
-    db::database db = [yas_db_test_utils create_test_database];
-    XCTAssertTrue(db.open());
+    db::database_ptr const db = [yas_db_test_utils create_test_database];
+    XCTAssertTrue(db->open());
 
     XCTAssertTrue(
-        db.execute_update("create table test_table (int_field, float_field, string_field, data_field, null_field);"));
+        db->execute_update("create table test_table (int_field, float_field, string_field, data_field, null_field);"));
 
     std::vector<uint8_t> vec{0, 1, 2, 3};
 
@@ -157,11 +157,11 @@ using namespace yas;
                          std::make_pair("data_field", db::value{vec.data(), vec.size()}),
                          std::make_pair("null_field", db::null_value())};
     XCTAssertTrue(
-        db.execute_update("insert into test_table(int_field, float_field, string_field, data_field, null_field) "
+        db->execute_update("insert into test_table(int_field, float_field, string_field, data_field, null_field) "
                           "values(:int_field, :float_field, :string_field, :data_field, :null_field)",
                           args));
 
-    auto query_result = db.execute_query("select * from test_table");
+    auto query_result = db->execute_query("select * from test_table");
     XCTAssertTrue(query_result);
 
     auto &row_set = query_result.value();
@@ -199,14 +199,14 @@ using namespace yas;
 }
 
 - (void)test_is_equal {
-    db::database db = [yas_db_test_utils create_test_database];
-    XCTAssertTrue(db.open());
-    db.execute_update("create table test_table (test_field);");
+    db::database_ptr const db = [yas_db_test_utils create_test_database];
+    XCTAssertTrue(db->open());
+    db->execute_update("create table test_table (test_field);");
 
     db::value_map_t args{std::make_pair("test_field", db::value{"value"})};
-    db.execute_update("insert into test_table(field_a) values(:field_a)", args);
+    db->execute_update("insert into test_table(field_a) values(:field_a)", args);
 
-    auto query_result = db.execute_query("select * from test_table");
+    auto query_result = db->execute_query("select * from test_table");
     auto &row_set = query_result.value();
 
     db::row_set null_row_set{nullptr};

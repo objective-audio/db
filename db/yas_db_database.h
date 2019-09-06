@@ -4,9 +4,9 @@
 
 #pragma once
 
-#include <cpp_utils/yas_base.h>
 #include <functional>
 #include "yas_db_protocol.h"
+#include "yas_db_ptr.h"
 #include "yas_db_value.h"
 
 namespace yas {
@@ -24,8 +24,7 @@ union callback_id {
     };
 };
 
-class database : public base {
-   public:
+struct database {
     class impl;
 
     using callback_f = std::function<int(db::value_map_t const &)>;
@@ -33,10 +32,7 @@ class database : public base {
     static std::string sqlite_lib_version();
     static bool sqlite_thread_safe();
 
-    explicit database(std::string const &path);
-    database(std::nullptr_t);
-
-    ~database();
+    ~database() = default;
 
     std::string const &database_path() const;
     sqlite3 *sqlite_handle() const;
@@ -80,7 +76,19 @@ class database : public base {
 
     db::row_set_observable &row_set_observable();
 
+    static database_ptr make_shared(std::string const &path);
+
    private:
+    std::shared_ptr<impl> _impl;
     db::row_set_observable _row_set_observable = nullptr;
+
+    explicit database(std::string const &path);
+
+    database(database const &) = delete;
+    database(database &&) = delete;
+    database &operator=(database const &) = delete;
+    database &operator=(database &&) = delete;
+
+    void _prepare(database_ptr const &);
 };
 }  // namespace yas::db
