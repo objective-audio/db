@@ -406,23 +406,25 @@ bool db::const_object::is_removed() const {
 
 struct db::object::impl : const_object::impl, manageable_object::impl {
     enum db::object_status _status = db::object_status::invalid;
-    chaining::fetcher<object_event> _fetcher = nullptr;
+    chaining::fetcher_ptr<object_event> _fetcher = nullptr;
+    std::shared_ptr<chaining::sender_protocol<object_event>> _sender = nullptr;
 
     impl(db::entity const &entity, bool const is_temporary) : const_object::impl(entity, db::make_temporary_id()) {
     }
 
     ~impl() {
-        this->_fetcher.broadcast(make_object_erased_event(this->_entity.name, this->_identifier));
+        this->_sender->broadcast(make_object_erased_event(this->_entity.name, this->_identifier));
     }
 
     void prepare(db::object &object) {
-        this->_fetcher = chaining::fetcher<object_event>{[weak_object = to_weak(object)]() {
+        this->_fetcher = chaining::fetcher<object_event>::make_shared([weak_object = to_weak(object)]() {
             if (auto object = weak_object.lock()) {
                 return std::optional<object_event>{make_object_fetched_event(object)};
             } else {
                 return std::optional<object_event>{std::nullopt};
             }
-        }};
+        });
+        this->_sender = this->_fetcher;
     }
 
     void clear() {
@@ -457,7 +459,7 @@ struct db::object::impl : const_object::impl, manageable_object::impl {
                 this->_status = db::object_status::saved;
             }
 
-            this->_fetcher.broadcast(make_object_loaded_event(cast<db::object>()));
+            this->_sender->broadcast(make_object_loaded_event(cast<db::object>()));
         }
     }
 
@@ -480,7 +482,7 @@ struct db::object::impl : const_object::impl, manageable_object::impl {
     void clear_data() override {
         this->clear();
 
-        this->_fetcher.broadcast(make_object_cleared_event(cast<db::object>()));
+        this->_sender->broadcast(make_object_cleared_event(cast<db::object>()));
     }
 
     void set_attribute_value(std::string const &attr_name, db::value const &value, bool const loading = false) {
@@ -505,7 +507,7 @@ struct db::object::impl : const_object::impl, manageable_object::impl {
                 this->_status = db::object_status::changed;
             }
 
-            this->_fetcher.broadcast(make_object_attribute_updated_event(cast<db::object>(), attr_name, value));
+            this->_sender->broadcast(make_object_attribute_updated_event(cast<db::object>(), attr_name, value));
         }
     }
 
@@ -527,7 +529,7 @@ struct db::object::impl : const_object::impl, manageable_object::impl {
                 this->_status = db::object_status::changed;
             }
 
-            this->_fetcher.broadcast(make_object_relation_replaced_event(cast<db::object>(), rel_name));
+            this->_sender->broadcast(make_object_relation_replaced_event(cast<db::object>(), rel_name));
         }
     }
 
@@ -556,7 +558,7 @@ struct db::object::impl : const_object::impl, manageable_object::impl {
             this->_status = db::object_status::changed;
         }
 
-        this->_fetcher.broadcast(make_object_relation_inserted_event(cast<db::object>(), rel_name, {idx}));
+        this->_sender->broadcast(make_object_relation_inserted_event(cast<db::object>(), rel_name, {idx}));
     }
 
     void remove_relation_id(std::string const &rel_name, db::object_id const &relation_id) {
@@ -582,7 +584,7 @@ struct db::object::impl : const_object::impl, manageable_object::impl {
                 this->_status = db::object_status::changed;
             }
 
-            this->_fetcher.broadcast(
+            this->_sender->broadcast(
                 make_object_relation_removed_event(cast<db::object>(), rel_name, std::move(indices)));
         }
     }
@@ -602,7 +604,7 @@ struct db::object::impl : const_object::impl, manageable_object::impl {
                 this->_status = db::object_status::changed;
             }
 
-            this->_fetcher.broadcast(make_object_relation_removed_event(cast<db::object>(), rel_name, {idx}));
+            this->_sender->broadcast(make_object_relation_removed_event(cast<db::object>(), rel_name, {idx}));
         }
     }
 
@@ -631,7 +633,7 @@ struct db::object::impl : const_object::impl, manageable_object::impl {
                 indices.push_back(yas_each_index(each));
             }
 
-            this->_fetcher.broadcast(
+            this->_sender->broadcast(
                 make_object_relation_removed_event(cast<db::object>(), rel_name, std::move(indices)));
         }
     }
@@ -724,7 +726,7 @@ db::object::object(std::nullptr_t) : const_object(nullptr) {
 }
 
 chaining::chain_sync_t<db::object_event> db::object::chain() const {
-    return impl_ptr<impl>()->_fetcher.chain();
+    return impl_ptr<impl>()->_fetcher->chain();
 }
 
 void db::object::set_attribute_value(std::string const &attr_name, db::value const &value) {

@@ -502,7 +502,7 @@ using namespace yas;
 
     bool called = false;
 
-    chaining::any_observer observer = obj.chain()
+    chaining::any_observer_ptr observer = obj.chain()
                                           .perform([&called, self](db::object_event const &event) {
                                               XCTAssertEqual(event.type(), db::object_event_type::attribute_updated);
 
@@ -529,7 +529,7 @@ using namespace yas;
 
     obj.set_attribute_value("name", db::value{"test_value"});
 
-    chaining::any_observer observer = obj.chain().perform([&called, self](auto const &) { called = true; }).end();
+    chaining::any_observer_ptr observer = obj.chain().perform([&called, self](auto const &) { called = true; }).end();
 
     obj.set_attribute_value("name", db::value{"test_value"});
 
@@ -543,7 +543,7 @@ using namespace yas;
 
     size_t called_count = 0;
 
-    chaining::any_observer observer =
+    chaining::any_observer_ptr observer =
         obj.chain()
             .perform([&called_count, self, weak_obj = to_weak(obj)](db::object_event const &event) {
                 auto const obj = weak_obj.lock();
@@ -618,7 +618,7 @@ using namespace yas;
 
     bool called = false;
 
-    chaining::any_observer observer = obj.chain().perform([&called, self](auto const &) { called = true; }).end();
+    chaining::any_observer_ptr observer = obj.chain().perform([&called, self](auto const &) { called = true; }).end();
 
     obj.set_relation_ids("child", {db::make_stable_id(db::value{55})});
 
@@ -632,7 +632,7 @@ using namespace yas;
 
     bool called = false;
 
-    chaining::any_observer observer = obj.chain()
+    chaining::any_observer_ptr observer = obj.chain()
                                           .perform([&called, self](db::object_event const &event) {
                                               XCTAssertEqual(event.type(), db::object_event_type::loaded);
 
@@ -703,7 +703,7 @@ using namespace yas;
 
     bool called = false;
 
-    chaining::any_observer observer = obj.chain()
+    chaining::any_observer_ptr observer = obj.chain()
                                           .perform([&called, self](db::object_event const &event) {
                                               XCTAssertEqual(event.type(), db::object_event_type::cleared);
 
