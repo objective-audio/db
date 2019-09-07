@@ -13,7 +13,6 @@
 
 namespace yas::db {
 class entity;
-class identifier;
 
 enum class object_event_type {
     fetched,
