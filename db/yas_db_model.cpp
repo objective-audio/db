@@ -85,9 +85,6 @@ struct db::model::impl {
 db::model::model(model_args args) : _impl(std::make_shared<impl>(std::move(args))) {
 }
 
-db::model::model(std::nullptr_t) : _impl(nullptr) {
-}
-
 yas::version const &db::model::version() const {
     return this->_impl->_args.version;
 }

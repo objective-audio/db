@@ -15,7 +15,6 @@ class version;
 namespace yas::db {
 struct model {
     explicit model(model_args);
-    model(std::nullptr_t);
 
     yas::version const &version() const;
     db::entity_map_t const &entities() const;
