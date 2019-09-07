@@ -1,5 +1,5 @@
 //
-//  yas_db_identifier.cpp
+//  yas_db_object_id.cpp
 //
 
 #include "yas_db_object_id.h"
