@@ -5,12 +5,13 @@
 #pragma once
 
 #include <cpp_utils/yas_base.h>
+#include <cpp_utils/yas_weakable.h>
 #include "yas_db_value.h"
 
 namespace yas::db {
 class value;
 
-struct object_id : base {
+struct object_id : base, weakable<object_id> {
     class impl;
 
     object_id(db::value stable, db::value temporary);
@@ -30,6 +31,8 @@ struct object_id : base {
     db::object_id copy() const;
 
     std::size_t hash() const;
+
+    std::shared_ptr<weakable_impl> weakable_impl_ptr() const override;
 };
 
 db::object_id make_stable_id(db::value);

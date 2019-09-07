@@ -5,6 +5,7 @@
 #pragma once
 
 #include <cpp_utils/yas_base.h>
+#include <cpp_utils/yas_weakable.h>
 #include <memory>
 #include <vector>
 #include "yas_db_protocol.h"
@@ -63,7 +64,7 @@ struct null {
     static constexpr auto name = "NULL";
 };
 
-struct value : base {
+struct value : base, weakable<value> {
     template <typename T>
     class impl;
 
@@ -102,6 +103,8 @@ struct value : base {
     typename T::type const &get() const;
 
     std::string sql() const;
+
+    std::shared_ptr<weakable_impl> weakable_impl_ptr() const override;
 
    private:
     static std::shared_ptr<db::value::impl<null>> const &null_value_impl_ptr();

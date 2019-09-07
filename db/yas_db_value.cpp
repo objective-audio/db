@@ -58,7 +58,7 @@ std::size_t db::blob::size() const {
 
 #pragma mark - value::impl
 
-struct db::value::impl_base : base::impl {
+struct db::value::impl_base : base::impl, weakable_impl {
     virtual std::type_info const &type() const = 0;
 };
 
@@ -200,6 +200,10 @@ std::string db::value::sql() const {
 std::shared_ptr<db::value::impl<db::null>> const &db::value::null_value_impl_ptr() {
     static auto _impl_ptr = std::make_shared<db::value::impl<db::null>>(nullptr);
     return _impl_ptr;
+}
+
+std::shared_ptr<weakable_impl> db::value::weakable_impl_ptr() const {
+    return impl_ptr<impl_base>();
 }
 
 #pragma mark -
