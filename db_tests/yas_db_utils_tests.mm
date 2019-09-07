@@ -34,18 +34,18 @@ using namespace yas;
     XCTAssertTrue(db::table_exists(db, "test_table_b"));
 
     auto schema_set_1 = db::get_table_schema(db, "test_table_a");
-    XCTAssertTrue(schema_set_1.next());
-    XCTAssertEqual(schema_set_1.column_value("name").get<db::text>(), "field_a");
-    XCTAssertFalse(schema_set_1.next());
+    XCTAssertTrue(schema_set_1->next());
+    XCTAssertEqual(schema_set_1->column_value("name").get<db::text>(), "field_a");
+    XCTAssertFalse(schema_set_1->next());
 
     XCTAssertTrue(db::alter_table(db, "test_table_a", "field_c"));
 
     auto schema_set_2 = db::get_table_schema(db, "test_table_a");
-    XCTAssertTrue(schema_set_2.next());
-    XCTAssertEqual(schema_set_2.column_value("name").get<db::text>(), "field_a");
-    XCTAssertTrue(schema_set_2.next());
-    XCTAssertEqual(schema_set_2.column_value("name").get<db::text>(), "field_c");
-    XCTAssertFalse(schema_set_2.next());
+    XCTAssertTrue(schema_set_2->next());
+    XCTAssertEqual(schema_set_2->column_value("name").get<db::text>(), "field_a");
+    XCTAssertTrue(schema_set_2->next());
+    XCTAssertEqual(schema_set_2->column_value("name").get<db::text>(), "field_c");
+    XCTAssertFalse(schema_set_2->next());
 
     XCTAssertTrue(db::drop_table(db, "test_table_b"));
 
@@ -62,8 +62,8 @@ using namespace yas;
 
     auto query_result_1 = db->execute_query("select * from test_table");
     XCTAssertTrue(query_result_1);
-    XCTAssertTrue(query_result_1.value().next());
-    XCTAssertFalse(query_result_1.value().next());
+    XCTAssertTrue(query_result_1.value()->next());
+    XCTAssertFalse(query_result_1.value()->next());
 
     XCTAssertTrue(db::begin_transaction(db));
     XCTAssertTrue(db->execute_update("insert into test_table(test_field) values('value2')"));
@@ -72,10 +72,10 @@ using namespace yas;
 
     auto query_result_2 = db->execute_query("select * from test_table");
     XCTAssertTrue(query_result_2);
-    XCTAssertTrue(query_result_2.value().next());
-    XCTAssertTrue(query_result_2.value().next());
-    XCTAssertTrue(query_result_2.value().next());
-    XCTAssertFalse(query_result_2.value().next());
+    XCTAssertTrue(query_result_2.value()->next());
+    XCTAssertTrue(query_result_2.value()->next());
+    XCTAssertTrue(query_result_2.value()->next());
+    XCTAssertFalse(query_result_2.value()->next());
 }
 
 - (void)test_transaction_rollback {
@@ -87,8 +87,8 @@ using namespace yas;
 
     auto query_result_1 = db->execute_query("select * from test_table");
     XCTAssertTrue(query_result_1);
-    XCTAssertTrue(query_result_1.value().next());
-    XCTAssertFalse(query_result_1.value().next());
+    XCTAssertTrue(query_result_1.value()->next());
+    XCTAssertFalse(query_result_1.value()->next());
 
     XCTAssertTrue(db::begin_transaction(db));
     XCTAssertTrue(db->execute_update("insert into test_table(test_field) values('value2')"));
@@ -97,8 +97,8 @@ using namespace yas;
 
     auto query_result_2 = db->execute_query("select * from test_table");
     XCTAssertTrue(query_result_2);
-    XCTAssertTrue(query_result_2.value().next());
-    XCTAssertFalse(query_result_2.value().next());
+    XCTAssertTrue(query_result_2.value()->next());
+    XCTAssertFalse(query_result_2.value()->next());
 }
 
 - (void)test_save_point {
@@ -110,7 +110,7 @@ using namespace yas;
     auto count_of_row = [&db]() {
         auto query_result = db->execute_query("select * from test_table");
         int count = 0;
-        while (query_result.value().next()) {
+        while (query_result.value()->next()) {
             ++count;
         }
         return count;
@@ -138,7 +138,7 @@ using namespace yas;
     auto count_of_row = [&db]() {
         auto query_result = db->execute_query("select * from test_table");
         int count = 0;
-        while (query_result.value().next()) {
+        while (query_result.value()->next()) {
             ++count;
         }
         return count;
@@ -161,7 +161,7 @@ using namespace yas;
     auto count_of_row = [&db]() {
         auto query_result = db->execute_query("select * from test_table");
         int count = 0;
-        while (query_result.value().next()) {
+        while (query_result.value()->next()) {
             ++count;
         }
         return count;
@@ -235,9 +235,9 @@ using namespace yas;
 
     auto row_set = db::get_schema(db);
     XCTAssertTrue(row_set);
-    XCTAssertTrue(row_set.next());
+    XCTAssertTrue(row_set->next());
 
-    auto map = row_set.values();
+    auto map = row_set->values();
 
     XCTAssertGreaterThan(map.count("sql"), 0);
     auto &sql_column_value = map.at("sql");
@@ -264,7 +264,7 @@ using namespace yas;
     XCTAssertTrue(type_column_value.type() == typeid(db::text));
     XCTAssertEqual(type_column_value.get<db::text>(), "table");
 
-    XCTAssertFalse(row_set.next());
+    XCTAssertFalse(row_set->next());
 }
 
 - (void)test_get_table_schema {
@@ -275,9 +275,9 @@ using namespace yas;
 
     auto row_set = db::get_table_schema(db, "test_table");
     XCTAssertTrue(row_set);
-    XCTAssertTrue(row_set.next());
+    XCTAssertTrue(row_set->next());
 
-    auto map = row_set.values();
+    auto map = row_set->values();
 
     XCTAssertGreaterThan(map.count("pk"), 0);
     XCTAssertGreaterThan(map.count("dflt_value"), 0);
@@ -288,13 +288,13 @@ using namespace yas;
 
     XCTAssertEqual(map.at("name").get<db::text>(), "field_a");
 
-    XCTAssertTrue(row_set.next());
+    XCTAssertTrue(row_set->next());
 
-    map = row_set.values();
+    map = row_set->values();
 
     XCTAssertEqual(map.at("name").get<db::text>(), "field_b");
 
-    XCTAssertFalse(row_set.next());
+    XCTAssertFalse(row_set->next());
 }
 
 - (void)test_get_index_schema {
@@ -306,9 +306,9 @@ using namespace yas;
 
     auto row_set = db::get_index_schema(db, "test_index");
     XCTAssertTrue(row_set);
-    XCTAssertTrue(row_set.next());
+    XCTAssertTrue(row_set->next());
 
-    auto map = row_set.values();
+    auto map = row_set->values();
 
     XCTAssertEqual(map.at("type"), db::value{"index"});
     XCTAssertEqual(map.at("name"), db::value{"test_index"});

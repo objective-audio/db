@@ -31,7 +31,7 @@ struct db::database::impl : row_set_observable::impl {
     std::chrono::time_point<std::chrono::system_clock> _start_busy_retry_time = std::chrono::system_clock::now();
 
     std::unordered_map<std::string, std::unordered_map<uintptr_t, db::statement>> _cached_statements;
-    std::unordered_map<uintptr_t, base::weak<row_set>> _open_row_sets;
+    std::unordered_map<uintptr_t, row_set_wptr> _open_row_sets;
 
     db::database::callback_f _callback_for_execute_statements;
 
@@ -172,9 +172,9 @@ struct db::database::impl : row_set_observable::impl {
 
     void close_open_row_sets() {
         for (auto &pair : this->_open_row_sets) {
-            if (db::row_set row_set = pair.second.lock()) {
-                row_set.db_settable().set_database(nullptr);
-                row_set.closable().close();
+            if (db::row_set_ptr const row_set = pair.second.lock()) {
+                row_set->db_settable().set_database(nullptr);
+                row_set->closable().close();
             }
         }
         this->_open_row_sets.clear();
@@ -377,7 +377,7 @@ struct db::database::impl : row_set_observable::impl {
         std::string error_message;
         sqlite3_stmt *stmt{nullptr};
         statement statement{nullptr};
-        row_set row_set{nullptr};
+        row_set_ptr row_set{nullptr};
 
         if (this->_should_cache_statements) {
             statement = this->cached_statement(sql);
@@ -435,9 +435,9 @@ struct db::database::impl : row_set_observable::impl {
             }
         }
 
-        row_set = db::row_set{statement, this->_weak_database.lock()};
+        row_set = db::row_set::make_shared(statement, this->_weak_database.lock());
 
-        this->_open_row_sets.insert(std::make_pair(row_set.identifier(), row_set));
+        this->_open_row_sets.insert(std::make_pair(row_set->identifier(), row_set));
 
         this->_is_executing_statement = false;
 
@@ -562,8 +562,8 @@ bool db::database::good_connection() const {
     }
 
     if (db::query_result_t query_result = execute_query("select name from sqlite_master where type='table'")) {
-        db::row_set &row_set = query_result.value();
-        if (db::closable &closable_rs = row_set.closable()) {
+        db::row_set_ptr const &row_set = query_result.value();
+        if (db::closable &closable_rs = row_set->closable()) {
             closable_rs.close();
         }
         return true;
@@ -575,9 +575,9 @@ bool db::database::good_connection() const {
 db::integrity_result_t db::database::integrity_check() const {
     auto query_result = this->execute_query("pragma integrity_check;");
     if (query_result) {
-        auto &row_set = query_result.value();
-        if (row_set.next()) {
-            if (db::value value = row_set.column_value("integrity_check")) {
+        auto const &row_set = query_result.value();
+        if (row_set->next()) {
+            if (db::value value = row_set->column_value("integrity_check")) {
                 std::string str_value = value.get<db::text>();
                 if (to_lower(str_value) == "ok") {
                     return db::integrity_result_t{nullptr};

@@ -7,6 +7,7 @@
 #include <cpp_utils/yas_base.h>
 #include <string>
 #include "yas_db_protocol.h"
+#include "yas_db_ptr.h"
 #include "yas_db_result_code.h"
 #include "yas_db_types.h"
 
@@ -30,12 +31,9 @@ struct row_set : base {
 
     using index_result_t = result<int, std::nullptr_t>;
 
-    row_set(statement const &, database_ptr const &);
-    row_set(std::nullptr_t);
-
     ~row_set();
 
-    statement const &statement() const;
+    db::statement const &statement() const;
 
     db::next_result_code next();
     bool has_row();
@@ -54,22 +52,12 @@ struct row_set : base {
     db::closable &closable();
     db_settable &db_settable();
 
+    static row_set_ptr make_shared(db::statement const &, database_ptr const &);
+
    private:
     db::closable _closable = nullptr;
     db::db_settable _db_settable = nullptr;
+
+    row_set(db::statement const &, database_ptr const &);
 };
 }  // namespace yas::db
-
-template <>
-struct std::hash<yas::db::row_set> {
-    std::size_t operator()(yas::db::row_set const &key) const {
-        return std::hash<uintptr_t>()(key.identifier());
-    }
-};
-
-template <>
-struct std::hash<yas::base::weak<yas::db::row_set>> {
-    std::size_t operator()(yas::base::weak<yas::db::row_set> const &key) const {
-        return std::hash<uintptr_t>()(key.identifier());
-    }
-};

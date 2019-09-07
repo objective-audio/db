@@ -62,12 +62,12 @@ using namespace yas;
         auto &row_set = query_result.value();
 
         XCTAssertTrue(row_set);
-        XCTAssertTrue(row_set.next());
+        XCTAssertTrue(row_set->next());
 
-        XCTAssertEqual(row_set.column_value(0).get<db::text>(), "value_a");
-        XCTAssertEqual(row_set.column_value(1).get<db::text>(), "value_b");
+        XCTAssertEqual(row_set->column_value(0).get<db::text>(), "value_a");
+        XCTAssertEqual(row_set->column_value(1).get<db::text>(), "value_b");
 
-        XCTAssertFalse(row_set.next());
+        XCTAssertFalse(row_set->next());
     });
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];

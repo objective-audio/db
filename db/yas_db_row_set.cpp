@@ -80,9 +80,6 @@ db::row_set::row_set(db::statement const &statement, database_ptr const &databas
     : base(std::make_unique<impl>(statement, database)) {
 }
 
-db::row_set::row_set(std::nullptr_t) : base(nullptr) {
-}
-
 db::row_set::~row_set() = default;
 
 db::statement const &db::row_set::statement() const {
@@ -198,4 +195,8 @@ db::db_settable &db::row_set::db_settable() {
         this->_db_settable = db::db_settable{impl_ptr<db_settable::impl>()};
     }
     return this->_db_settable;
+}
+
+db::row_set_ptr db::row_set::make_shared(db::statement const &statement, database_ptr const &database) {
+    return row_set_ptr(new row_set{statement, database});
 }

@@ -95,12 +95,12 @@ using namespace yas;
     auto &row_set = query_result.value();
 
     XCTAssertTrue(row_set);
-    XCTAssertTrue(row_set.next());
+    XCTAssertTrue(row_set->next());
 
-    XCTAssertEqual(row_set.column_value(0).get<db::text>(), "value_a");
-    XCTAssertEqual(row_set.column_value(1).get<db::text>(), "value_b");
+    XCTAssertEqual(row_set->column_value(0).get<db::text>(), "value_a");
+    XCTAssertEqual(row_set->column_value(1).get<db::text>(), "value_b");
 
-    XCTAssertFalse(row_set.next());
+    XCTAssertFalse(row_set->next());
 
     db::value_vector_t update_args{db::value{"value_a_2"}, db::value{"value_b_2"}};
     XCTAssertTrue(db->execute_update("update test_table set field_a = :field_a, field_b = :field_b", update_args));
@@ -109,12 +109,12 @@ using namespace yas;
     row_set = query_result.value();
 
     XCTAssertTrue(row_set);
-    XCTAssertTrue(row_set.next());
+    XCTAssertTrue(row_set->next());
 
-    XCTAssertEqual(row_set.column_value(0).get<db::text>(), "value_a_2");
-    XCTAssertEqual(row_set.column_value(1).get<db::text>(), "value_b_2");
+    XCTAssertEqual(row_set->column_value(0).get<db::text>(), "value_a_2");
+    XCTAssertEqual(row_set->column_value(1).get<db::text>(), "value_b_2");
 
-    XCTAssertFalse(row_set.next());
+    XCTAssertFalse(row_set->next());
 }
 
 - (void)test_execute_update_with_map {
@@ -131,12 +131,12 @@ using namespace yas;
     auto &row_set = query_result.value();
 
     XCTAssertTrue(row_set);
-    XCTAssertTrue(row_set.next());
+    XCTAssertTrue(row_set->next());
 
-    XCTAssertEqual(row_set.column_value("field_a").get<db::text>(), "value_a");
-    XCTAssertEqual(row_set.column_value("field_b").get<db::text>(), "value_b");
+    XCTAssertEqual(row_set->column_value("field_a").get<db::text>(), "value_a");
+    XCTAssertEqual(row_set->column_value("field_b").get<db::text>(), "value_b");
 
-    XCTAssertFalse(row_set.next());
+    XCTAssertFalse(row_set->next());
 
     db::value_map_t update_args{std::make_pair("field_a", db::value{"value_a_2"}),
                                 std::make_pair("field_b", db::value{"value_b_2"})};
@@ -146,12 +146,12 @@ using namespace yas;
     row_set = query_result.value();
 
     XCTAssertTrue(row_set);
-    XCTAssertTrue(row_set.next());
+    XCTAssertTrue(row_set->next());
 
-    XCTAssertEqual(row_set.column_value(0).get<db::text>(), "value_a_2");
-    XCTAssertEqual(row_set.column_value(1).get<db::text>(), "value_b_2");
+    XCTAssertEqual(row_set->column_value(0).get<db::text>(), "value_a_2");
+    XCTAssertEqual(row_set->column_value(1).get<db::text>(), "value_b_2");
 
-    XCTAssertFalse(row_set.next());
+    XCTAssertFalse(row_set->next());
 }
 
 - (void)test_execute_statements {
@@ -205,11 +205,11 @@ using namespace yas;
     auto &row_set = query_result.value();
 
     XCTAssertTrue(row_set);
-    XCTAssertTrue(row_set.next());
+    XCTAssertTrue(row_set->next());
 
-    XCTAssertEqual(row_set.column_value("field_a").get<db::text>(), "value_a");
+    XCTAssertEqual(row_set->column_value("field_a").get<db::text>(), "value_a");
 
-    XCTAssertFalse(row_set.next());
+    XCTAssertFalse(row_set->next());
 }
 
 - (void)test_execute_query_with_map {
@@ -230,11 +230,11 @@ using namespace yas;
     auto &row_set = query_result.value();
 
     XCTAssertTrue(row_set);
-    XCTAssertTrue(row_set.next());
+    XCTAssertTrue(row_set->next());
 
-    XCTAssertEqual(row_set.column_value("field_a").get<db::text>(), "value_a");
+    XCTAssertEqual(row_set->column_value("field_a").get<db::text>(), "value_a");
 
-    XCTAssertFalse(row_set.next());
+    XCTAssertFalse(row_set->next());
 }
 
 - (void)test_get_error {
@@ -266,24 +266,24 @@ using namespace yas;
 
     auto query_result_1 = db->execute_query(select_query);
     XCTAssertTrue(query_result_1);
-    XCTAssertTrue(query_result_1.value().next());
-    XCTAssertFalse(query_result_1.value().next());
+    XCTAssertTrue(query_result_1.value()->next());
+    XCTAssertFalse(query_result_1.value()->next());
 
     XCTAssertTrue(db->execute_update(insert_query));
 
     auto query_result_2 = db->execute_query(select_query);
     XCTAssertTrue(query_result_2);
-    XCTAssertTrue(query_result_2.value().next());
-    XCTAssertTrue(query_result_2.value().next());
-    XCTAssertFalse(query_result_2.value().next());
+    XCTAssertTrue(query_result_2.value()->next());
+    XCTAssertTrue(query_result_2.value()->next());
+    XCTAssertFalse(query_result_2.value()->next());
 
-    XCTAssertEqual(query_result_1.value().statement(), query_result_2.value().statement());
+    XCTAssertEqual(query_result_1.value()->statement(), query_result_2.value()->statement());
 
     db->set_should_cache_statements(false);
 
     auto query_result_3 = db->execute_query(select_query);
 
-    XCTAssertNotEqual(query_result_1.value().statement(), query_result_3.value().statement());
+    XCTAssertNotEqual(query_result_1.value()->statement(), query_result_3.value()->statement());
 }
 
 - (void)test_open_row_sets {
@@ -303,13 +303,13 @@ using namespace yas;
 
     if (auto query_result = db->execute_query("select * from test_table")) {
         auto &row_set = query_result.value();
-        XCTAssertTrue(row_set.next());
-        XCTAssertTrue(row_set.has_row());
+        XCTAssertTrue(row_set->next());
+        XCTAssertTrue(row_set->has_row());
         XCTAssertTrue(db->has_open_row_sets());
 
         db->close_open_row_sets();
 
-        XCTAssertFalse(row_set.has_row());
+        XCTAssertFalse(row_set->has_row());
         XCTAssertFalse(db->has_open_row_sets());
     }
 }
@@ -346,23 +346,23 @@ using namespace yas;
 
     auto query_result = db->execute_query("select * from idmaster;");
     auto &row_set = query_result.value();
-    XCTAssertTrue(row_set.next());
-    XCTAssertFalse(row_set.next());
+    XCTAssertTrue(row_set->next());
+    XCTAssertFalse(row_set->next());
 
     query_result = db->execute_query("select * from address;");
     row_set = query_result.value();
-    XCTAssertTrue(row_set.next());
-    XCTAssertFalse(row_set.next());
+    XCTAssertTrue(row_set->next());
+    XCTAssertFalse(row_set->next());
 
     XCTAssertTrue(db->execute_update("delete from idmaster"));
 
     query_result = db->execute_query("select * from idmaster;");
     row_set = query_result.value();
-    XCTAssertFalse(row_set.next());
+    XCTAssertFalse(row_set->next());
 
     query_result = db->execute_query("select * from address;");
     row_set = query_result.value();
-    XCTAssertFalse(row_set.next());
+    XCTAssertFalse(row_set->next());
 }
 
 - (void)test_integrity_check {

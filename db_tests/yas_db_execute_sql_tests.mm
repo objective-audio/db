@@ -35,19 +35,19 @@ using namespace yas;
     XCTAssertTrue(db::table_exists(db, "test_table_b"));
 
     auto schema_set_1 = db::get_table_schema(db, "test_table_a");
-    XCTAssertTrue(schema_set_1.next());
-    XCTAssertEqual(schema_set_1.column_value("name").get<db::text>(), "field_a");
-    XCTAssertFalse(schema_set_1.next());
+    XCTAssertTrue(schema_set_1->next());
+    XCTAssertEqual(schema_set_1->column_value("name").get<db::text>(), "field_a");
+    XCTAssertFalse(schema_set_1->next());
 
     std::string const &alter_sql = db::alter_table_sql("test_table_a", "field_c");
     XCTAssertTrue(db->execute_update(alter_sql));
 
     auto schema_set_2 = db::get_table_schema(db, "test_table_a");
-    XCTAssertTrue(schema_set_2.next());
-    XCTAssertEqual(schema_set_2.column_value("name").get<db::text>(), "field_a");
-    XCTAssertTrue(schema_set_2.next());
-    XCTAssertEqual(schema_set_2.column_value("name").get<db::text>(), "field_c");
-    XCTAssertFalse(schema_set_2.next());
+    XCTAssertTrue(schema_set_2->next());
+    XCTAssertEqual(schema_set_2->column_value("name").get<db::text>(), "field_a");
+    XCTAssertTrue(schema_set_2->next());
+    XCTAssertEqual(schema_set_2->column_value("name").get<db::text>(), "field_c");
+    XCTAssertFalse(schema_set_2->next());
 
     std::string const &drop_sql = db::drop_table_sql("test_table_b");
     XCTAssertTrue(db->execute_update(drop_sql));

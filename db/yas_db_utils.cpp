@@ -107,8 +107,8 @@ db::update_result_t db::in_save_point(db::database_ptr const &db, std::function<
 #endif
 
 bool db::table_exists(db::database_ptr const &db, std::string const &table_name) {
-    if (db::row_set row_set = db::get_table_schema(db, table_name)) {
-        if (row_set.next()) {
+    if (db::row_set_ptr const row_set = db::get_table_schema(db, table_name)) {
+        if (row_set->next()) {
             return true;
         }
     }
@@ -116,15 +116,15 @@ bool db::table_exists(db::database_ptr const &db, std::string const &table_name)
 }
 
 bool db::index_exists(db::database_ptr const &db, std::string const &index_name) {
-    if (db::row_set row_set = db::get_index_schema(db, index_name)) {
-        if (row_set.next()) {
+    if (db::row_set_ptr const row_set = db::get_index_schema(db, index_name)) {
+        if (row_set->next()) {
             return true;
         }
     }
     return false;
 }
 
-db::row_set db::get_schema(db::database_ptr const &db) {
+db::row_set_ptr db::get_schema(db::database_ptr const &db) {
     if (db::query_result_t result = db->execute_query(
             "select type, name, tbl_name, rootpage, sql from (select * from sqlite_master union all select * from "
             "sqlite_temp_master) where type != 'meta' and name not like 'sqlite_%' order by tbl_name, type desc, "
@@ -134,14 +134,14 @@ db::row_set db::get_schema(db::database_ptr const &db) {
     return nullptr;
 }
 
-db::row_set db::get_table_schema(db::database_ptr const &db, std::string const &table_name) {
+db::row_set_ptr db::get_table_schema(db::database_ptr const &db, std::string const &table_name) {
     if (db::query_result_t result = db->execute_query("PRAGMA table_info('" + table_name + "')")) {
         return result.value();
     }
     return nullptr;
 }
 
-db::row_set db::get_index_schema(db::database_ptr const &db, std::string const &index_name) {
+db::row_set_ptr db::get_index_schema(db::database_ptr const &db, std::string const &index_name) {
     if (db::query_result_t result =
             db->execute_query("SELECT * FROM sqlite_master WHERE type = 'index' AND name = '" + index_name + "';")) {
         return result.value();
@@ -153,9 +153,9 @@ bool db::column_exists(db::database_ptr const &db, std::string column_name, std:
     std::string lower_table_name = to_lower(std::move(table_name));
     std::string lower_column_name = to_lower(std::move(column_name));
 
-    if (db::row_set row_set = db::get_table_schema(db, lower_table_name)) {
-        while (row_set.next()) {
-            db::value value = row_set.column_value("name");
+    if (db::row_set_ptr const row_set = db::get_table_schema(db, lower_table_name)) {
+        while (row_set->next()) {
+            db::value value = row_set->column_value("name");
             if (to_lower(value.get<db::text>()) == lower_column_name) {
                 return true;
             }
@@ -172,8 +172,8 @@ db::select_result_t db::select(db::database_ptr const &db, db::select_option con
 
     if (db::query_result_t result = db->execute_query(sql, option.arguments)) {
         auto row_set = result.value();
-        while (row_set.next()) {
-            value_map_vector.emplace_back(row_set.values());
+        while (row_set->next()) {
+            value_map_vector.emplace_back(row_set->values());
         }
     } else {
         return db::select_result_t{std::move(result.error())};
@@ -197,8 +197,8 @@ db::select_single_result_t db::select_single(db::database_ptr const &db, db::sel
 db::value db::max(database_ptr const &db, std::string const &table_name, std::string const &field) {
     if (db::query_result_t result = db->execute_query("SELECT MAX(" + field + ") FROM " + table_name + ";")) {
         auto &row_set = result.value();
-        if (row_set.next()) {
-            return row_set.column_value(0);
+        if (row_set->next()) {
+            return row_set->column_value(0);
         }
     }
     return nullptr;

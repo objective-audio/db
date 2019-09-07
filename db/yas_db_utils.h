@@ -38,9 +38,9 @@ db::update_result_t in_save_point(db::database_ptr const &db, std::function<void
 
 bool table_exists(db::database_ptr const &db, std::string const &table_name);
 bool index_exists(db::database_ptr const &db, std::string const &index_name);
-db::row_set get_schema(db::database_ptr const &db);
-db::row_set get_table_schema(db::database_ptr const &db, std::string const &table_name);
-db::row_set get_index_schema(db::database_ptr const &db, std::string const &index_name);
+db::row_set_ptr get_schema(db::database_ptr const &db);
+db::row_set_ptr get_table_schema(db::database_ptr const &db, std::string const &table_name);
+db::row_set_ptr get_index_schema(db::database_ptr const &db, std::string const &index_name);
 bool column_exists(db::database_ptr const &db, std::string column_name, std::string table_name);
 
 db::select_result_t select(db::database_ptr const &db, db::select_option const &option);
