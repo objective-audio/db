@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <cpp_utils/yas_base.h>
 #include "yas_db_value.h"
 
 namespace yas::db {
