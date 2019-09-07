@@ -74,7 +74,7 @@ struct object_erased_event {
     db::object_id const &object_id;
 };
 
-struct object_event : base {
+struct object_event {
     class impl_base;
 
     template <typename Event>
@@ -99,6 +99,9 @@ struct object_event : base {
     bool is_erased() const;
 
     db::object const &object() const;
+
+   private:
+    std::shared_ptr<impl_base> _impl;
 };
 
 class const_object : public base {

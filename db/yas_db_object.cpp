@@ -55,7 +55,7 @@ object_event make_object_erased_event(std::string const &entity_name, db::object
 }
 }  // namespace yas::db
 
-struct db::object_event::impl_base : base::impl {
+struct db::object_event::impl_base {
     virtual object_event_type type() {
         throw std::runtime_error("type() must be overridden");
     }
@@ -74,47 +74,47 @@ struct db::object_event::impl : db::object_event::impl_base {
 };
 
 db::object_event::object_event(object_fetched_event &&event)
-    : base(std::make_shared<impl<object_fetched_event>>(std::move(event))) {
+    : _impl(std::make_shared<impl<object_fetched_event>>(std::move(event))) {
 }
 
 db::object_event::object_event(object_loaded_event &&event)
-    : base(std::make_shared<impl<object_loaded_event>>(std::move(event))) {
+    : _impl(std::make_shared<impl<object_loaded_event>>(std::move(event))) {
 }
 
 db::object_event::object_event(object_cleared_event &&event)
-    : base(std::make_shared<impl<object_cleared_event>>(std::move(event))) {
+    : _impl(std::make_shared<impl<object_cleared_event>>(std::move(event))) {
 }
 
 db::object_event::object_event(object_attribute_updated_event &&event)
-    : base(std::make_shared<impl<object_attribute_updated_event>>(std::move(event))) {
+    : _impl(std::make_shared<impl<object_attribute_updated_event>>(std::move(event))) {
 }
 
 db::object_event::object_event(object_relation_inserted_event &&event)
-    : base(std::make_shared<impl<object_relation_inserted_event>>(std::move(event))) {
+    : _impl(std::make_shared<impl<object_relation_inserted_event>>(std::move(event))) {
 }
 
 db::object_event::object_event(object_relation_removed_event &&event)
-    : base(std::make_shared<impl<object_relation_removed_event>>(std::move(event))) {
+    : _impl(std::make_shared<impl<object_relation_removed_event>>(std::move(event))) {
 }
 
 db::object_event::object_event(object_relation_replaced_event &&event)
-    : base(std::make_shared<impl<object_relation_replaced_event>>(std::move(event))) {
+    : _impl(std::make_shared<impl<object_relation_replaced_event>>(std::move(event))) {
 }
 
 db::object_event::object_event(object_erased_event &&event)
-    : base(std::make_shared<impl<object_erased_event>>(std::move(event))) {
+    : _impl(std::make_shared<impl<object_erased_event>>(std::move(event))) {
 }
 
-db::object_event::object_event(std::nullptr_t) : base(nullptr) {
+db::object_event::object_event(std::nullptr_t) : _impl(nullptr) {
 }
 
 db::object_event_type db::object_event::type() const {
-    return this->template impl_ptr<impl_base>()->type();
+    return this->_impl->type();
 }
 
 template <typename Event>
 Event const &db::object_event::get() const {
-    if (auto ip = std::dynamic_pointer_cast<impl<Event>>(impl_ptr())) {
+    if (auto ip = std::dynamic_pointer_cast<impl<Event>>(this->_impl)) {
         return ip->event;
     }
 
