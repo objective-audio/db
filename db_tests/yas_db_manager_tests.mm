@@ -2748,7 +2748,7 @@ using namespace yas;
 
     std::size_t observing_count = 0;
 
-    auto observer = manager.chain_db_info().perform([&observing_count](db::info const &) { ++observing_count; }).end();
+    auto observer = manager.chain_db_info().perform([&observing_count](db::info_opt const &) { ++observing_count; }).end();
 
     manager.setup([self, &manager, &observing_count](auto result) {
         XCTAssertTrue(result);

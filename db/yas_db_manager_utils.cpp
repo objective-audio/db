@@ -595,7 +595,7 @@ db::manager_result_t db::clear_db(db::database_ptr const &db, db::model const &m
 
 #pragma mark - editing
 
-db::manager_fetch_result_t db::insert(db::database_ptr const &db, db::model const &model, db::info const info,
+db::manager_fetch_result_t db::insert(db::database_ptr const &db, db::model const &model, db::info const &info,
                                       db::value_map_vector_map_t &&values) {
     if (info.current_save_id() < info.last_save_id()) {
         // カレントがラストより前ならカレントより後を削除する

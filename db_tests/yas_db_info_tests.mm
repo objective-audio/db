@@ -20,10 +20,6 @@ using namespace yas;
     [super tearDown];
 }
 
-- (void)test_null_info {
-    XCTAssertFalse(db::null_info());
-}
-
 - (void)test_create {
     db::info const info{"1.0.0", 1, 2};
 

@@ -10,6 +10,7 @@
 #include <cpp_utils/yas_task.h>
 #include <cpp_utils/yas_unless.h>
 #include <objc_utils/yas_objc_macros.h>
+#include <optional>
 #include "yas_db_attribute.h"
 #include "yas_db_database.h"
 #include "yas_db_entity.h"
@@ -36,7 +37,8 @@ struct db::manager::impl : base::impl {
     db::weak_pool<db::object_id, db::object> _cached_objects;
     db::tmp_object_map_map_t _created_objects;
     db::object_map_map_t _changed_objects;
-    chaining::value::holder_ptr<db::info> _db_info = chaining::value::holder<db::info>::make_shared(db::null_info());
+    chaining::value::holder_ptr<db::info_opt> _db_info =
+        chaining::value::holder<db::info_opt>::make_shared(std::nullopt);
     chaining::notifier_ptr<db::object> _db_object_notifier = chaining::notifier<db::object>::make_shared();
     dispatch_queue_t _dispatch_queue;
     chaining::observer_pool _pool;
@@ -175,7 +177,7 @@ struct db::manager::impl : base::impl {
     }
 
     // データベース情報を置き換える
-    void set_db_info(db::info &&info) {
+    void set_db_info(db::info_opt &&info) {
         this->_db_info->set_value(std::move(info));
     }
 
@@ -502,14 +504,14 @@ db::model const &db::manager::model() const {
 
 db::value const &db::manager::current_save_id() const {
     if (auto const &info = impl_ptr<impl>()->_db_info->raw()) {
-        return info.current_save_id_value();
+        return info->current_save_id_value();
     }
     return db::null_value();
 }
 
 db::value const &db::manager::last_save_id() const {
     if (auto const &info = impl_ptr<impl>()->_db_info->raw()) {
-        return info.last_save_id_value();
+        return info->last_save_id_value();
     }
     return db::null_value();
 }
@@ -550,7 +552,7 @@ void db::manager::setup(db::completion_f completion) {
                                           std::move(begin_result.error()));
         }
 
-        db::info info = db::null_info();
+        db::info_opt info = std::nullopt;
 
         if (state) {
             if (auto select_result = db::fetch_info(db)) {
@@ -579,7 +581,7 @@ void db::manager::clear(db::cancellation_f cancellation, db::completion_f comple
         auto &db = manager.database();
         auto const &model = manager.model();
 
-        db::info db_info = db::null_info();
+        db::info_opt db_info = std::nullopt;
         db::manager_result_t state{nullptr};
 
         // トランザクション開始
@@ -602,7 +604,7 @@ void db::manager::clear(db::cancellation_f cancellation, db::completion_f comple
                 db::commit(db);
             } else {
                 db::rollback(db);
-                db_info = db::null_info();
+                db_info = std::nullopt;
             }
         } else {
             state = db::make_error_result(db::manager_error_type::begin_transaction_failed,
@@ -629,7 +631,7 @@ void db::manager::purge(db::cancellation_f cancellation, db::completion_f comple
         auto &db = manager.database();
         auto const &model = manager.model();
 
-        db::info db_info = db::null_info();
+        db::info_opt db_info = std::nullopt;
         db::manager_result_t state{nullptr};
 
         // トランザクション開始
@@ -738,7 +740,7 @@ void db::manager::insert_objects(db::cancellation_f cancellation, db::insert_val
         auto &db = manager.database();
         auto const &model = manager.model();
 
-        db::info ret_db_info = db::null_info();
+        db::info_opt ret_db_info = std::nullopt;
         db::object_data_vector_map_t inserted_datas;
 
         db::manager_result_t state{nullptr};
@@ -747,23 +749,25 @@ void db::manager::insert_objects(db::cancellation_f cancellation, db::insert_val
             // トランザクション開始
 
             // DB情報を取得する
-            db::info info = db::null_info();
+            db::info_opt info = std::nullopt;
             if (auto info_result = db::fetch_info(db)) {
                 info = std::move(info_result.value());
             } else {
                 state = db::manager_result_t{std::move(info_result.error())};
             }
 
-            // DB上に新規にデータを挿入する
-            if (auto insert_result = db::insert(db, model, info, std::move(values))) {
-                inserted_datas = std::move(insert_result.value());
-            } else {
-                state = db::manager_result_t{std::move(insert_result.error())};
+            if (state) {
+                // DB上に新規にデータを挿入する
+                if (auto insert_result = db::insert(db, model, *info, std::move(values))) {
+                    inserted_datas = std::move(insert_result.value());
+                } else {
+                    state = db::manager_result_t{std::move(insert_result.error())};
+                }
             }
 
             if (state) {
                 // DB情報を更新する
-                auto const next_save_id = info.next_save_id_value();
+                auto const next_save_id = info->next_save_id_value();
                 if (auto update_result = db::update_info(db, next_save_id, next_save_id)) {
                     ret_db_info = std::move(update_result.value());
                 } else {
@@ -899,7 +903,7 @@ void db::manager::save(db::cancellation_f cancellation, db::map_completion_f com
         auto &db = manager.database();
         auto const &model = manager.model();
 
-        db::info db_info = db::null_info();
+        db::info_opt db_info = std::nullopt;
         db::object_data_vector_map_t saved_datas;
 
         db::manager_result_t state{nullptr};
@@ -915,19 +919,19 @@ void db::manager::save(db::cancellation_f cancellation, db::map_completion_f com
             // トランザクション開始
             if (auto begin_result = db::begin_transaction(db)) {
                 // 変更のあったデータをデータベースに保存する
-                if (auto save_result = db::save(db, model, db_info, changed_datas)) {
+                if (auto save_result = db::save(db, model, *db_info, changed_datas)) {
                     saved_datas = std::move(save_result.value());
                 } else {
                     state = db::manager_result_t{std::move(save_result.error())};
                 }
 
-                if (auto ul = unless(db::remove_relations_at_save(db, model, db_info, changed_datas))) {
+                if (auto ul = unless(db::remove_relations_at_save(db, model, *db_info, changed_datas))) {
                     state = std::move(ul.value);
                 }
 
                 if (state) {
                     // infoの更新
-                    auto const &next_save_id = db_info.next_save_id_value();
+                    auto const &next_save_id = db_info->next_save_id_value();
                     if (auto update_result = db::update_info(db, next_save_id, next_save_id)) {
                         db_info = std::move(update_result.value());
                     } else {
@@ -981,7 +985,7 @@ void db::manager::revert(db::cancellation_f cancellation, db::revert_preparation
 
         db::value_map_vector_map_t reverted_attrs;
         db::object_data_vector_map_t reverted_datas;
-        db::info ret_db_info = db::null_info();
+        std::optional<db::info> ret_db_info = std::nullopt;
 
         if (auto begin_result = db::begin_transaction(db)) {
             // トランザクション開始
@@ -1054,7 +1058,7 @@ void db::manager::revert(db::cancellation_f cancellation, db::revert_preparation
             } else {
                 db::rollback(db);
                 reverted_datas.clear();
-                ret_db_info = db::null_info();
+                ret_db_info = std::nullopt;
             }
         } else {
             state = db::make_error_result(db::manager_error_type::begin_transaction_failed,
@@ -1118,7 +1122,7 @@ std::size_t db::manager::changed_object_count(std::string const &entity_name) co
     return 0;
 }
 
-chaining::chain_sync_t<db::info> db::manager::chain_db_info() const {
+chaining::chain_sync_t<db::info_opt> db::manager::chain_db_info() const {
     return impl_ptr<impl>()->_db_info->chain();
 }
 

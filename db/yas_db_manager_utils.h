@@ -120,7 +120,7 @@ db::manager_result_t clear_db(db::database_ptr const &db, db::model const &model
 
 namespace yas::db {
 // DB上に新規のデータを挿入する
-db::manager_fetch_result_t insert(db::database_ptr const &db, db::model const &model, db::info const info,
+db::manager_fetch_result_t insert(db::database_ptr const &db, db::model const &model, db::info const &info,
                                   db::value_map_vector_map_t &&values);
 
 // select_optionでの条件に一致したデータをDBから取得する
