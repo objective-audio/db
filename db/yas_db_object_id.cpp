@@ -80,6 +80,9 @@ db::object_id::object_id(db::value stable, db::value temporary)
     : base(std::make_shared<impl>(std::move(stable), std::move(temporary))) {
 }
 
+db::object_id::object_id(std::shared_ptr<weakable_impl> &&wimpl) : base(std::dynamic_pointer_cast<impl>(wimpl)) {
+}
+
 db::object_id::object_id(std::nullptr_t) : base(nullptr) {
 }
 

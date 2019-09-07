@@ -88,6 +88,8 @@ struct value : base, weakable<value> {
     template <typename T = db::copy_tag_t>
     value(const void *const data, std::size_t const size, T const tag = db::copy_tag);
 
+    value(std::shared_ptr<weakable_impl> &&);
+
     value(value const &);
     value(value &&);
     value &operator=(value const &);

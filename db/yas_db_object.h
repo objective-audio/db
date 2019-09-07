@@ -6,6 +6,7 @@
 
 #include <chaining/yas_chaining_umbrella.h>
 #include <cpp_utils/yas_base.h>
+#include <cpp_utils/yas_weakable.h>
 #include <deque>
 #include <set>
 #include <unordered_map>
@@ -132,11 +133,11 @@ struct const_object : base {
     const_object(std::shared_ptr<impl> &&);
 };
 
-class object : public const_object {
-   public:
+struct object : const_object, weakable<object> {
     class impl;
 
     object(db::entity const &entity);
+    object(std::shared_ptr<weakable_impl> &&);
     object(std::nullptr_t);
 
     [[nodiscard]] chaining::chain_sync_t<object_event> chain() const;
@@ -163,6 +164,8 @@ class object : public const_object {
     db::object_data save_data(db::object_id_pool_t &) const;
 
     db::manageable_object &manageable();
+
+    std::shared_ptr<weakable_impl> weakable_impl_ptr() const override;
 
    private:
     db::manageable_object _manageable = nullptr;

@@ -15,10 +15,10 @@ V weak_pool<K, V>::get_or_create(std::string const &entity_name, K const &key, v
 
     if (entity_values.count(key) == 0) {
         V value = handler();
-        entity_values.emplace(key, to_weak(value));
+        entity_values.emplace(key, weak_ref<V>(value));
         return value;
     } else {
-        return entity_values.at(key).lock();
+        return *entity_values.at(key).lock();
     }
 }
 
@@ -27,7 +27,7 @@ V weak_pool<K, V>::get(std::string const &entity_name, K const &key) {
     if (this->_all_values.count(entity_name) > 0) {
         auto const &entity_values = this->_all_values.at(entity_name);
         if (entity_values.count(key) > 0) {
-            return entity_values.at(key).lock();
+            return *entity_values.at(key).lock();
         }
     }
     return V{nullptr};
@@ -50,7 +50,7 @@ void weak_pool<K, V>::perform(perform_handler const &handler) {
         std::string const &entity_name = entity_pair.first;
         for (auto &value_pair : entity_pair.second) {
             K const &key = value_pair.first;
-            V value = value_pair.second.lock();
+            V value = *value_pair.second.lock();
             handler(entity_name, key, value);
         }
     }
@@ -61,7 +61,7 @@ void weak_pool<K, V>::perform_entity(std::string const &entity_name, perform_han
     if (this->_all_values.count(entity_name)) {
         for (auto &value_pair : this->_all_values.at(entity_name)) {
             K const &key = value_pair.first;
-            V value = value_pair.second.lock();
+            V value = *value_pair.second.lock();
             handler(entity_name, key, value);
         }
     }

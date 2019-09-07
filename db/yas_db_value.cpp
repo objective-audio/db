@@ -140,6 +140,9 @@ db::value::value(const void *const data_ptr, std::size_t const size, db::no_copy
     : value(blob{data_ptr, size, db::no_copy_tag}) {
 }
 
+db::value::value(std::shared_ptr<weakable_impl> &&wimpl) : base(std::dynamic_pointer_cast<impl>(wimpl)) {
+}
+
 db::value::~value() = default;
 
 db::value::value(value const &) = default;

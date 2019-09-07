@@ -15,6 +15,7 @@ struct object_id : base, weakable<object_id> {
     class impl;
 
     object_id(db::value stable, db::value temporary);
+    object_id(std::shared_ptr<weakable_impl> &&);
     object_id(std::nullptr_t);
 
     void set_stable(db::integer::type const);

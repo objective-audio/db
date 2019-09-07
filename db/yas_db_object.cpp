@@ -404,7 +404,7 @@ bool db::const_object::is_removed() const {
 
 #pragma mark - db::object::impl
 
-struct db::object::impl : const_object::impl, manageable_object::impl {
+struct db::object::impl : const_object::impl, manageable_object::impl, weakable_impl {
     enum db::object_status _status = db::object_status::invalid;
     chaining::fetcher_ptr<object_event> _fetcher = nullptr;
     std::shared_ptr<chaining::sender_protocol<object_event>> _sender = nullptr;
@@ -722,6 +722,9 @@ db::object::object(db::entity const &entity) : const_object(std::make_unique<imp
     impl_ptr<impl>()->prepare(*this);
 }
 
+db::object::object(std::shared_ptr<weakable_impl> &&wimpl) : const_object(std::dynamic_pointer_cast<impl>(wimpl)) {
+}
+
 db::object::object(std::nullptr_t) : const_object(nullptr) {
 }
 
@@ -797,6 +800,10 @@ db::manageable_object &db::object::manageable() {
         _manageable = manageable_object{impl_ptr<manageable_object::impl>()};
     }
     return _manageable;
+}
+
+std::shared_ptr<weakable_impl> db::object::weakable_impl_ptr() const {
+    return impl_ptr<impl>();
 }
 
 #pragma mark -

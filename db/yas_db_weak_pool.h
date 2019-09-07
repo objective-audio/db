@@ -4,14 +4,14 @@
 
 #pragma once
 
-#include <cpp_utils/yas_base.h>
+#include <cpp_utils/yas_weakable.h>
 #include <functional>
 #include <unordered_map>
 
 namespace yas::db {
 template <typename K, typename V>
 struct weak_pool {
-    using value_map_t = std::unordered_map<K, base::weak<V>>;
+    using value_map_t = std::unordered_map<K, weak_ref<V>>;
     using value_create_handler = std::function<V(void)>;
     using perform_handler = std::function<void(std::string const &, K const &, V &)>;
 
