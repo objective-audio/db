@@ -103,8 +103,7 @@ struct object_event {
     std::shared_ptr<impl_base> _impl;
 };
 
-class const_object : public base {
-   public:
+struct const_object : base {
     class impl;
 
     const_object(db::entity const &entity, db::object_data const &obj_data);

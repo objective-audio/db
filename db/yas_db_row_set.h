@@ -25,8 +25,7 @@ struct next_result_code : result_code {
     explicit operator bool() const;
 };
 
-class row_set : public base {
-   public:
+struct row_set : base {
     class impl;
 
     using index_result_t = result<int, std::nullptr_t>;

@@ -63,11 +63,10 @@ struct null {
     static constexpr auto name = "NULL";
 };
 
-class value : public base {
+struct value : base {
     template <typename T>
     class impl;
 
-   public:
     class impl_base;
 
     explicit value(uint8_t const &);

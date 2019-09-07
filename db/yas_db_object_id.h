@@ -9,10 +9,9 @@
 namespace yas::db {
 class value;
 
-class object_id : public base {
+struct object_id : base {
     class impl;
 
-   public:
     object_id(db::value stable, db::value temporary);
     object_id(std::nullptr_t);
 

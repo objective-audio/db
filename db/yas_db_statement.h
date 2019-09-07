@@ -11,10 +11,9 @@
 #include "yas_db_protocol.h"
 
 namespace yas::db {
-class statement : public base {
+struct statement : base {
     class impl;
 
-   public:
     statement();
     statement(std::nullptr_t);
 
