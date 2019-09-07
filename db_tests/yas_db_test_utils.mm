@@ -14,24 +14,24 @@ using namespace yas;
     return db::database::make_shared(db_path);
 }
 
-+ (db::manager)create_test_manager {
++ (db::manager_ptr)create_test_manager {
     return [self create_test_manager:db::model{nullptr}];
 }
 
-+ (db::manager)create_test_manager:(db::model &&)model {
++ (db::manager_ptr)create_test_manager:(db::model &&)model {
     return [self create_test_manager:std::move(model) priority_count:1];
 }
 
-+ (yas::db::manager)create_test_manager:(yas::db::model &&)model priority_count:(size_t)count {
++ (yas::db::manager_ptr)create_test_manager:(yas::db::model &&)model priority_count:(size_t)count {
     return [self create_test_manager:std::move(model) priority_count:count dispatch_queue:dispatch_get_main_queue()];
 }
 
-+ (yas::db::manager)create_test_manager:(yas::db::model &&)model
++ (yas::db::manager_ptr)create_test_manager:(yas::db::model &&)model
                          priority_count:(size_t)count
                          dispatch_queue:(dispatch_queue_t)queue {
     NSString *databasePath = [[self class] databasePath];
     std::string db_path = yas::to_string((__bridge CFStringRef)databasePath);
-    return db::manager{db_path, std::move(model), count, queue};
+    return db::manager::make_shared(db_path, std::move(model), count, queue);
 }
 
 + (std::string)database_path {

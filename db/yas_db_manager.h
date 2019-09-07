@@ -4,21 +4,16 @@
 
 #pragma once
 
-#include <cpp_utils/yas_base.h>
 #include <cpp_utils/yas_task_protocol.h>
 #include <dispatch/dispatch.h>
 #include "yas_db_additional_protocol.h"
 #include "yas_db_fetch_option.h"
 #include "yas_db_manager_error.h"
 #include "yas_db_object.h"
+#include "yas_db_ptr.h"
 
 namespace yas {
 class task;
-
-template <typename T, typename K>
-class subject;
-template <typename T, typename K>
-class observer;
 }  // namespace yas
 
 namespace yas::db {
@@ -27,14 +22,7 @@ class model;
 class error;
 class database;
 
-class manager : public base {
-   public:
-    class impl;
-
-    manager(std::string const &db_path, db::model const &model, std::size_t const priority_count = 1,
-            dispatch_queue_t const dispatch_queue = dispatch_get_main_queue());
-    manager(std::nullptr_t);
-
+struct manager final {
     std::string const &database_path() const;
     db::database_ptr const &database() const;
     db::model const &model() const;
@@ -77,5 +65,24 @@ class manager : public base {
     db::object_vector_t relation_objects(db::object const &, std::string const &rel_name) const;
     db::object relation_object_at(db::object const &, std::string const &rel_name, std::size_t const idx) const;
     db::object make_object(std::string const &entity_name);
+
+    static manager_ptr make_shared(std::string const &db_path, db::model const &model,
+                                   std::size_t const priority_count = 1,
+                                   dispatch_queue_t const dispatch_queue = dispatch_get_main_queue());
+
+   private:
+    class impl;
+
+    std::shared_ptr<impl> _impl;
+
+    manager(std::string const &db_path, db::model const &model, std::size_t const priority_count,
+            dispatch_queue_t const dispatch_queue);
+
+    void _prepare(manager_ptr const &);
+
+    manager(manager const &) = delete;
+    manager(manager &&) = delete;
+    manager &operator=(manager const &) = delete;
+    manager &operator=(manager &&) = delete;
 };
 }  // namespace yas::db
