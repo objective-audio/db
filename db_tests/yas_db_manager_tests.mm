@@ -28,7 +28,7 @@ using namespace yas;
 
 - (void)test_create {
     auto db_path = [yas_db_test_utils database_path];
-    auto const manager = db::manager::make_shared(db_path, db::model{nullptr});
+    auto const manager = db::manager::make_shared(db_path, [yas_db_test_utils model_0_0_0]);
 
     XCTAssertTrue(manager);
     XCTAssertEqual(manager->database_path(), db_path);

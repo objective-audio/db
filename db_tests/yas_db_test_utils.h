@@ -21,6 +21,7 @@
 + (NSString *)databasePath;
 + (void)deleteDatabase;
 
++ (yas::db::model)model_0_0_0;
 + (yas::db::model)model_0_0_1;
 + (yas::db::model)model_0_0_2;
 

@@ -15,7 +15,7 @@ using namespace yas;
 }
 
 + (db::manager_ptr)create_test_manager {
-    return [self create_test_manager:db::model{nullptr}];
+    return [self create_test_manager:[self model_0_0_0]];
 }
 
 + (db::manager_ptr)create_test_manager:(db::model &&)model {
@@ -50,6 +50,13 @@ using namespace yas;
     if ([fileManager fileExistsAtPath:path]) {
         [fileManager removeItemAtPath:path error:nil];
     }
+}
+
++ (yas::db::model)model_0_0_0 {
+    yas::version version{"0.0.0"};
+    
+    return db::model{
+    db::model_args{.version = std::move(version), .entities = {}, .indices = {}}};
 }
 
 + (db::model)model_0_0_1 {
