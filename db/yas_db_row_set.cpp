@@ -25,8 +25,9 @@ db::next_result_code::operator bool() const {
 #pragma mark - impl
 
 struct db::row_set::impl : closable::impl, db_settable::impl {
-    impl(db::statement const &statement, database_ptr const &database) : _statement(statement), _database(database) {
-        this->_statement.set_in_use(true);
+    impl(db::statement_ptr const &statement, database_ptr const &database)
+        : _statement(statement), _database(database) {
+        this->_statement->set_in_use(true);
     }
 
     ~impl() {
@@ -38,7 +39,7 @@ struct db::row_set::impl : closable::impl, db_settable::impl {
     }
 
     void close() override {
-        this->_statement.reset();
+        this->_statement->reset();
         if (this->_database) {
             if (db::row_set_observable &observable_db = this->_database->row_set_observable()) {
                 observable_db.row_set_did_close(identifier());
@@ -55,13 +56,13 @@ struct db::row_set::impl : closable::impl, db_settable::impl {
         return this->_database;
     }
 
-    db::statement const &statement() const {
+    db::statement_ptr const &statement() const {
         return this->_statement;
     }
 
     std::unordered_map<std::string, int> const &column_name_to_index_map() const {
         if (this->_column_name_to_index_map.empty()) {
-            sqlite3_stmt *const stmt = this->_statement.stmt();
+            sqlite3_stmt *const stmt = this->_statement->stmt();
             int column_count = sqlite3_column_count(stmt);
             auto each = make_fast_each(column_count);
             while (yas_each_next(each)) {
@@ -75,12 +76,12 @@ struct db::row_set::impl : closable::impl, db_settable::impl {
 
    private:
     db::database_ptr _database;
-    db::statement _statement;
+    db::statement_ptr _statement;
 
     mutable std::unordered_map<std::string, int> _column_name_to_index_map;
 };
 
-db::row_set::row_set(db::statement const &statement, database_ptr const &database)
+db::row_set::row_set(db::statement_ptr const &statement, database_ptr const &database)
     : _impl(std::make_unique<impl>(statement, database)) {
 }
 
@@ -90,12 +91,12 @@ uintptr_t db::row_set::identifier() const {
     return this->_impl->identifier();
 }
 
-db::statement const &db::row_set::statement() const {
+db::statement_ptr const &db::row_set::statement() const {
     return this->_impl->statement();
 }
 
 db::next_result_code db::row_set::next() {
-    next_result_code result{sqlite3_step(this->_impl->statement().stmt())};
+    next_result_code result{sqlite3_step(this->_impl->statement()->stmt())};
 
     if (!result) {
         this->_impl->close();
@@ -114,7 +115,7 @@ bool db::row_set::has_row() {
 }
 
 int db::row_set::column_count() const {
-    return sqlite3_column_count(this->_impl->statement().stmt());
+    return sqlite3_column_count(this->_impl->statement()->stmt());
 }
 
 db::row_set::index_result_t db::row_set::column_index(std::string column_name) const {
@@ -130,11 +131,11 @@ db::row_set::index_result_t db::row_set::column_index(std::string column_name) c
 }
 
 std::string db::row_set::column_name(int const column_idx) const {
-    return sqlite3_column_name(this->_impl->statement().stmt(), column_idx);
+    return sqlite3_column_name(this->_impl->statement()->stmt(), column_idx);
 }
 
 bool db::row_set::column_is_null(int const column_idx) {
-    return sqlite3_column_type(this->_impl->statement().stmt(), column_idx) == SQLITE_NULL;
+    return sqlite3_column_type(this->_impl->statement()->stmt(), column_idx) == SQLITE_NULL;
 }
 
 bool db::row_set::column_is_null(std::string column_name) {
@@ -146,7 +147,7 @@ bool db::row_set::column_is_null(std::string column_name) {
 
 db::value db::row_set::column_value(int const column_idx) const {
     if (column_idx >= 0) {
-        sqlite3_stmt *const stmt = this->_impl->statement().stmt();
+        sqlite3_stmt *const stmt = this->_impl->statement()->stmt();
         int type = sqlite3_column_type(stmt, column_idx);
 
         if (type != SQLITE_NULL) {
@@ -176,7 +177,7 @@ db::value db::row_set::column_value(std::string column_name) const {
 }
 
 db::value_map_t db::row_set::values() const {
-    sqlite3_stmt *const stmt = this->_impl->statement().stmt();
+    sqlite3_stmt *const stmt = this->_impl->statement()->stmt();
     int const column_count = sqlite3_data_count(stmt);
 
     db::value_map_t map;
@@ -205,6 +206,6 @@ db::db_settable &db::row_set::db_settable() {
     return this->_db_settable;
 }
 
-db::row_set_ptr db::row_set::make_shared(db::statement const &statement, database_ptr const &database) {
+db::row_set_ptr db::row_set::make_shared(db::statement_ptr const &statement, database_ptr const &database) {
     return row_set_ptr(new row_set{statement, database});
 }

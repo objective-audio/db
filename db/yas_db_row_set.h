@@ -32,7 +32,7 @@ struct row_set {
 
     uintptr_t identifier() const;
 
-    db::statement const &statement() const;
+    db::statement_ptr const &statement() const;
 
     db::next_result_code next();
     bool has_row();
@@ -51,7 +51,7 @@ struct row_set {
     db::closable &closable();
     db_settable &db_settable();
 
-    static row_set_ptr make_shared(db::statement const &, database_ptr const &);
+    static row_set_ptr make_shared(db::statement_ptr const &, database_ptr const &);
 
    private:
     class impl;
@@ -59,6 +59,6 @@ struct row_set {
     db::closable _closable = nullptr;
     db::db_settable _db_settable = nullptr;
 
-    row_set(db::statement const &, database_ptr const &);
+    row_set(db::statement_ptr const &, database_ptr const &);
 };
 }  // namespace yas::db

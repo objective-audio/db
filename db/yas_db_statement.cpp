@@ -8,9 +8,13 @@ using namespace yas;
 
 #pragma mark - statement::impl
 
-struct db::statement::impl : base::impl, closable::impl {
+struct db::statement::impl : closable::impl {
     ~impl() {
         this->close();
+    }
+
+    uintptr_t identifier() {
+        return reinterpret_cast<uintptr_t>(this);
     }
 
     void close() override {
@@ -37,45 +41,48 @@ struct db::statement::impl : base::impl, closable::impl {
 
 #pragma mark - statement
 
-db::statement::statement() : base(std::make_unique<impl>()) {
+db::statement::statement() : _impl(std::make_unique<impl>()) {
 }
 
-db::statement::statement(std::nullptr_t) : base(nullptr) {
+uintptr_t db::statement::identifier() const {
+    return this->_impl->identifier();
 }
-
-db::statement::~statement() = default;
 
 void db::statement::set_stmt(sqlite3_stmt *const stmt) {
-    impl_ptr<impl>()->_stmt = stmt;
+    this->_impl->_stmt = stmt;
 }
 
 sqlite3_stmt *db::statement::stmt() const {
-    return impl_ptr<impl>()->_stmt;
+    return this->_impl->_stmt;
 }
 
 void db::statement::set_query(std::string query) {
-    impl_ptr<impl>()->_query = std::move(query);
+    this->_impl->_query = std::move(query);
 }
 
 std::string const &db::statement::query() const {
-    return impl_ptr<impl>()->_query;
+    return this->_impl->_query;
 }
 
 void db::statement::set_in_use(bool const in_use) {
-    impl_ptr<impl>()->_in_use = in_use;
+    this->_impl->_in_use = in_use;
 }
 
 bool db::statement::in_use() const {
-    return impl_ptr<impl>()->_in_use;
+    return this->_impl->_in_use;
 }
 
 void db::statement::reset() {
-    impl_ptr<impl>()->reset();
+    this->_impl->reset();
 }
 
 db::closable &db::statement::closable() {
     if (!this->_closable) {
-        this->_closable = db::closable{impl_ptr<db::closable::impl>()};
+        this->_closable = db::closable{this->_impl};
     }
     return this->_closable;
+}
+
+db::statement_ptr db::statement::make_shared() {
+    return statement_ptr(new statement{});
 }

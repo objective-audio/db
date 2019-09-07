@@ -30,7 +30,7 @@ struct db::database::impl : row_set_observable::impl {
 
     std::chrono::time_point<std::chrono::system_clock> _start_busy_retry_time = std::chrono::system_clock::now();
 
-    std::unordered_map<std::string, std::unordered_map<uintptr_t, db::statement>> _cached_statements;
+    std::unordered_map<std::string, std::unordered_map<uintptr_t, db::statement_ptr>> _cached_statements;
     std::unordered_map<uintptr_t, row_set_wptr> _open_row_sets;
 
     db::database::callback_f _callback_for_execute_statements;
@@ -136,11 +136,11 @@ struct db::database::impl : row_set_observable::impl {
 
 #pragma mark - private
 
-    db::statement cached_statement(std::string const &query) {
+    db::statement_ptr cached_statement(std::string const &query) {
         if (this->_cached_statements.count(query) > 0) {
             auto &statements = this->_cached_statements.at(query);
             for (auto &pair : statements) {
-                if (!pair.second.in_use()) {
+                if (!pair.second->in_use()) {
                     return pair.second;
                 }
             }
@@ -148,21 +148,20 @@ struct db::database::impl : row_set_observable::impl {
         return nullptr;
     }
 
-    void set_cached_statement(db::statement const &statement, std::string const &query) {
-        db::statement cached_statement = statement;
-        cached_statement.set_query(query);
+    void set_cached_statement(db::statement_ptr const &statement, std::string const &query) {
+        statement->set_query(query);
 
         if (this->_cached_statements.count(query) == 0) {
-            this->_cached_statements.insert(std::make_pair(query, std::unordered_map<uintptr_t, db::statement>{}));
+            this->_cached_statements.insert(std::make_pair(query, std::unordered_map<uintptr_t, db::statement_ptr>{}));
         }
 
-        _cached_statements.at(query).insert(std::make_pair(statement.identifier(), statement));
+        _cached_statements.at(query).insert(std::make_pair(statement->identifier(), statement));
     }
 
     void clear_cached_statements() {
         for (auto &pair : this->_cached_statements) {
             for (auto &statementpair : pair.second) {
-                if (db::closable &statement = statementpair.second.closable()) {
+                if (db::closable &statement = statementpair.second->closable()) {
                     statement.close();
                 }
             }
@@ -220,13 +219,13 @@ struct db::database::impl : row_set_observable::impl {
         db::sqlite_result_code result_code{SQLITE_OK};
         std::string error_message;
         sqlite3_stmt *stmt = nullptr;
-        db::statement statement{nullptr};
+        db::statement_ptr statement{nullptr};
 
         if (this->_should_cache_statements) {
             statement = cached_statement(sql);
             if (statement) {
-                stmt = statement.stmt();
-                statement.reset();
+                stmt = statement->stmt();
+                statement->reset();
             }
         }
 
@@ -283,8 +282,8 @@ struct db::database::impl : row_set_observable::impl {
         }
 
         if (this->_should_cache_statements && !statement) {
-            statement = db::statement{};
-            statement.set_stmt(stmt);
+            statement = db::statement::make_shared();
+            statement->set_stmt(stmt);
             this->set_cached_statement(statement, sql);
         }
 
@@ -376,14 +375,14 @@ struct db::database::impl : row_set_observable::impl {
         db::sqlite_result_code result_code = 0;
         std::string error_message;
         sqlite3_stmt *stmt{nullptr};
-        statement statement{nullptr};
+        statement_ptr statement{nullptr};
         row_set_ptr row_set{nullptr};
 
         if (this->_should_cache_statements) {
             statement = this->cached_statement(sql);
             if (statement) {
-                stmt = statement.stmt();
-                statement.reset();
+                stmt = statement->stmt();
+                statement->reset();
             }
         }
 
@@ -427,8 +426,8 @@ struct db::database::impl : row_set_observable::impl {
         }
 
         if (!statement) {
-            statement = db::statement{};
-            statement.set_stmt(stmt);
+            statement = db::statement::make_shared();
+            statement->set_stmt(stmt);
 
             if (this->_should_cache_statements && sql.size() > 0) {
                 this->set_cached_statement(statement, sql);
