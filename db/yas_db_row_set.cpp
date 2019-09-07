@@ -24,13 +24,17 @@ db::next_result_code::operator bool() const {
 
 #pragma mark - impl
 
-struct db::row_set::impl : base::impl, closable::impl, db_settable::impl {
+struct db::row_set::impl : closable::impl, db_settable::impl {
     impl(db::statement const &statement, database_ptr const &database) : _statement(statement), _database(database) {
         this->_statement.set_in_use(true);
     }
 
     ~impl() {
         this->close();
+    }
+
+    uintptr_t identifier() {
+        return reinterpret_cast<uintptr_t>(this);
     }
 
     void close() override {
@@ -77,27 +81,31 @@ struct db::row_set::impl : base::impl, closable::impl, db_settable::impl {
 };
 
 db::row_set::row_set(db::statement const &statement, database_ptr const &database)
-    : base(std::make_unique<impl>(statement, database)) {
+    : _impl(std::make_unique<impl>(statement, database)) {
 }
 
 db::row_set::~row_set() = default;
 
+uintptr_t db::row_set::identifier() const {
+    return this->_impl->identifier();
+}
+
 db::statement const &db::row_set::statement() const {
-    return impl_ptr<impl>()->statement();
+    return this->_impl->statement();
 }
 
 db::next_result_code db::row_set::next() {
-    next_result_code result{sqlite3_step(impl_ptr<impl>()->statement().stmt())};
+    next_result_code result{sqlite3_step(this->_impl->statement().stmt())};
 
     if (!result) {
-        impl_ptr<impl>()->close();
+        this->_impl->close();
     }
 
     return result;
 }
 
 bool db::row_set::has_row() {
-    if (db::database_ptr const &database = impl_ptr<impl>()->database()) {
+    if (db::database_ptr const &database = this->_impl->database()) {
         if (sqlite3 *const sqlite_handle = database->sqlite_handle()) {
             return sqlite3_errcode(sqlite_handle) == SQLITE_ROW;
         }
@@ -106,13 +114,13 @@ bool db::row_set::has_row() {
 }
 
 int db::row_set::column_count() const {
-    return sqlite3_column_count(impl_ptr<impl>()->statement().stmt());
+    return sqlite3_column_count(this->_impl->statement().stmt());
 }
 
 db::row_set::index_result_t db::row_set::column_index(std::string column_name) const {
     std::string lower_column_name = to_lower(std::move(column_name));
 
-    auto const &map = impl_ptr<impl>()->column_name_to_index_map();
+    auto const &map = this->_impl->column_name_to_index_map();
 
     if (map.count(lower_column_name) > 0) {
         return db::row_set::index_result_t{map.at(lower_column_name)};
@@ -122,11 +130,11 @@ db::row_set::index_result_t db::row_set::column_index(std::string column_name) c
 }
 
 std::string db::row_set::column_name(int const column_idx) const {
-    return sqlite3_column_name(impl_ptr<impl>()->statement().stmt(), column_idx);
+    return sqlite3_column_name(this->_impl->statement().stmt(), column_idx);
 }
 
 bool db::row_set::column_is_null(int const column_idx) {
-    return sqlite3_column_type(impl_ptr<impl>()->statement().stmt(), column_idx) == SQLITE_NULL;
+    return sqlite3_column_type(this->_impl->statement().stmt(), column_idx) == SQLITE_NULL;
 }
 
 bool db::row_set::column_is_null(std::string column_name) {
@@ -138,7 +146,7 @@ bool db::row_set::column_is_null(std::string column_name) {
 
 db::value db::row_set::column_value(int const column_idx) const {
     if (column_idx >= 0) {
-        sqlite3_stmt *const stmt = impl_ptr<impl>()->statement().stmt();
+        sqlite3_stmt *const stmt = this->_impl->statement().stmt();
         int type = sqlite3_column_type(stmt, column_idx);
 
         if (type != SQLITE_NULL) {
@@ -168,7 +176,7 @@ db::value db::row_set::column_value(std::string column_name) const {
 }
 
 db::value_map_t db::row_set::values() const {
-    sqlite3_stmt *const stmt = impl_ptr<impl>()->statement().stmt();
+    sqlite3_stmt *const stmt = this->_impl->statement().stmt();
     int const column_count = sqlite3_data_count(stmt);
 
     db::value_map_t map;
@@ -185,14 +193,14 @@ db::value_map_t db::row_set::values() const {
 
 db::closable &db::row_set::closable() {
     if (!this->_closable) {
-        this->_closable = db::closable{impl_ptr<closable::impl>()};
+        this->_closable = db::closable{this->_impl};
     }
     return this->_closable;
 }
 
 db::db_settable &db::row_set::db_settable() {
     if (!this->_db_settable) {
-        this->_db_settable = db::db_settable{impl_ptr<db_settable::impl>()};
+        this->_db_settable = db::db_settable{this->_impl};
     }
     return this->_db_settable;
 }

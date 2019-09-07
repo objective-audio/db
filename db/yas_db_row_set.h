@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include <cpp_utils/yas_base.h>
 #include <string>
 #include "yas_db_protocol.h"
 #include "yas_db_ptr.h"
@@ -26,12 +25,12 @@ struct next_result_code : result_code {
     explicit operator bool() const;
 };
 
-struct row_set : base {
-    class impl;
-
+struct row_set {
     using index_result_t = result<int, std::nullptr_t>;
 
     ~row_set();
+
+    uintptr_t identifier() const;
 
     db::statement const &statement() const;
 
@@ -55,6 +54,8 @@ struct row_set : base {
     static row_set_ptr make_shared(db::statement const &, database_ptr const &);
 
    private:
+    class impl;
+    std::shared_ptr<impl> _impl;
     db::closable _closable = nullptr;
     db::db_settable _db_settable = nullptr;
 
