@@ -39,7 +39,7 @@ static std::unordered_map<std::string, db::string_set_map_t> make_inverse_relati
 }
 }  // namespace yas::db
 
-struct db::model::impl : base::impl {
+struct db::model::impl {
     struct args {
         yas::version const version;
         db::entity_map_t const entities;
@@ -82,22 +82,22 @@ struct db::model::impl : base::impl {
     }
 };
 
-db::model::model(model_args args) : base(std::make_shared<impl>(std::move(args))) {
+db::model::model(model_args args) : _impl(std::make_shared<impl>(std::move(args))) {
 }
 
-db::model::model(std::nullptr_t) : base(nullptr) {
+db::model::model(std::nullptr_t) : _impl(nullptr) {
 }
 
 yas::version const &db::model::version() const {
-    return impl_ptr<impl>()->_args.version;
+    return this->_impl->_args.version;
 }
 
 db::entity_map_t const &db::model::entities() const {
-    return impl_ptr<impl>()->_args.entities;
+    return this->_impl->_args.entities;
 }
 
 db::index_map_t const &db::model::indices() const {
-    return impl_ptr<impl>()->_args.indices;
+    return this->_impl->_args.indices;
 }
 
 db::entity const &db::model::entity(std::string const &entity) const {

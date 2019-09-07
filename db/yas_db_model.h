@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include <cpp_utils/yas_base.h>
 #include <memory>
 #include <string>
 #include "yas_db_additional_protocol.h"
@@ -14,10 +13,7 @@ class version;
 }
 
 namespace yas::db {
-class model : public base {
-    class impl;
-
-   public:
+struct model {
     explicit model(model_args);
     model(std::nullptr_t);
 
@@ -37,5 +33,10 @@ class model : public base {
     bool attribute_exists(std::string const &entity, std::string const &attribute) const;
     bool relation_exists(std::string const &entity, std::string const &relation) const;
     bool index_exists(std::string const &index_name) const;
+
+   private:
+    class impl;
+
+    std::shared_ptr<impl> _impl;
 };
 }  // namespace yas::db
