@@ -13,13 +13,17 @@ V weak_pool<K, V>::get_or_create(std::string const &entity_name, K const &key, v
 
     auto &entity_values = this->_all_values.at(entity_name);
 
-    if (entity_values.count(key) == 0) {
-        V value = handler();
-        entity_values.emplace(key, weak_ref<V>(value));
-        return value;
-    } else {
-        return *entity_values.at(key).lock();
+    if (entity_values.count(key) > 0) {
+        if (auto locked_value = entity_values.at(key).lock()) {
+            return *locked_value;
+        } else {
+            entity_values.erase(key);
+        }
     }
+
+    V value = handler();
+    entity_values.emplace(key, weak_ref<V>(value));
+    return value;
 }
 
 template <typename K, typename V>
