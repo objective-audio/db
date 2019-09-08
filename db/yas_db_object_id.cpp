@@ -56,12 +56,10 @@ struct db::object_id::impl : weakable_impl {
     }
 
     bool is_equal(std::shared_ptr<impl> const &rhs) const {
-        if (auto casted_rhs = std::dynamic_pointer_cast<impl>(rhs)) {
-            if (this->_temporary && casted_rhs->_temporary) {
-                return this->_temporary == casted_rhs->_temporary;
-            } else if (this->_stable && casted_rhs->_stable) {
-                return this->_stable == casted_rhs->_stable;
-            }
+        if (this->_temporary && rhs->_temporary) {
+            return this->_temporary == rhs->_temporary;
+        } else if (this->_stable && rhs->_stable) {
+            return this->_stable == rhs->_stable;
         }
 
         return false;
