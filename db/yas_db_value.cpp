@@ -58,7 +58,7 @@ std::size_t db::blob::size() const {
 
 #pragma mark - value::impl
 
-struct db::value::impl_base : base::impl, weakable_impl {
+struct db::value::impl : base::impl, weakable_impl {
     virtual std::type_info const &type() const = 0;
 };
 
