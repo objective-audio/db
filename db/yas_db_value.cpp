@@ -141,6 +141,7 @@ db::value::value(const void *const data_ptr, std::size_t const size, db::no_copy
 }
 
 db::value::value(std::shared_ptr<weakable_impl> &&wimpl) : base(std::dynamic_pointer_cast<impl>(wimpl)) {
+    assert(impl_ptr());
 }
 
 db::value::~value() = default;

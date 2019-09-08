@@ -723,6 +723,7 @@ db::object::object(db::entity const &entity) : const_object(std::make_unique<imp
 }
 
 db::object::object(std::shared_ptr<weakable_impl> &&wimpl) : const_object(std::dynamic_pointer_cast<impl>(wimpl)) {
+    assert(impl_ptr());
 }
 
 db::object::object(std::nullptr_t) : const_object(nullptr) {
