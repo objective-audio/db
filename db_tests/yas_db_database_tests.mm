@@ -202,7 +202,7 @@ using namespace yas;
 
     XCTAssertTrue(query_result);
 
-    auto &row_set = query_result.value();
+    auto const &row_set = query_result.value();
 
     XCTAssertTrue(row_set);
     XCTAssertTrue(row_set->next());
