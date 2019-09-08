@@ -309,8 +309,10 @@ struct db::manager::impl {
     db::object cached_or_created_object(std::string const &entity_name, db::object_id const &object_id) {
         if (object_id.is_temporary()) {
             return this->_inserted_object(entity_name, object_id.temporary());
+        } else if (auto object = this->_cached_objects.get(entity_name, object_id)) {
+            return *object;
         } else {
-            return this->_cached_objects.get(entity_name, object_id);
+            return db::null_object();
         }
     }
 
