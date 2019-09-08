@@ -140,7 +140,7 @@ std::shared_ptr<weakable_impl> db::object_id::weakable_impl_ptr() const {
 }
 
 bool db::object_id::operator==(object_id const &rhs) const {
-    return this->_impl->is_equal(rhs._impl);
+    return this->_impl && rhs._impl && this->_impl->is_equal(rhs._impl);
 }
 
 bool db::object_id::operator!=(object_id const &rhs) const {
