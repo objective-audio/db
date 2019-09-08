@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include <cpp_utils/yas_base.h>
 #include <cpp_utils/yas_weakable.h>
 #include <memory>
 #include <vector>
@@ -64,7 +63,7 @@ struct null {
     static constexpr auto name = "NULL";
 };
 
-struct value : base, weakable<value> {
+struct value : weakable<value> {
     template <typename T>
     class typed_impl;
 
@@ -97,6 +96,8 @@ struct value : base, weakable<value> {
 
     ~value();
 
+    uintptr_t identifier() const;
+
     explicit operator bool() const;
 
     std::type_info const &type() const;
@@ -108,7 +109,12 @@ struct value : base, weakable<value> {
 
     std::shared_ptr<weakable_impl> weakable_impl_ptr() const override;
 
+    bool operator==(value const &rhs) const;
+    bool operator!=(value const &rhs) const;
+
    private:
+    std::shared_ptr<impl> _impl;
+
     static std::shared_ptr<db::value::typed_impl<null>> const &null_value_impl_ptr();
 };
 
