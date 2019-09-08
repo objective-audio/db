@@ -5,7 +5,6 @@
 #pragma once
 
 #include <chaining/yas_chaining_umbrella.h>
-#include <cpp_utils/yas_base.h>
 #include <cpp_utils/yas_weakable.h>
 #include <deque>
 #include <set>
@@ -104,7 +103,7 @@ struct object_event {
     std::shared_ptr<impl_base> _impl;
 };
 
-struct const_object : base {
+struct const_object {
     class impl;
 
     const_object(db::entity const &entity, db::object_data const &obj_data);
@@ -128,12 +127,19 @@ struct const_object : base {
     bool is_updated() const;
     bool is_removed() const;
 
+    bool operator==(const_object const &rhs) const;
+    bool operator!=(const_object const &rhs) const;
+
+    explicit operator bool() const;
+
    protected:
+    std::shared_ptr<impl> _impl;
+
     const_object(std::shared_ptr<impl> const &);
     const_object(std::shared_ptr<impl> &&);
 };
 
-struct object : const_object, weakable<object> {
+struct object final : const_object, weakable<object> {
     class impl;
 
     object(db::entity const &entity);
@@ -169,6 +175,8 @@ struct object : const_object, weakable<object> {
 
    private:
     db::manageable_object _manageable = nullptr;
+
+    std::shared_ptr<impl> _mutable_impl() const;
 };
 
 db::const_object const &null_const_object();
