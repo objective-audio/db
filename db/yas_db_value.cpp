@@ -197,13 +197,13 @@ std::string db::value::sql() const {
     return nullptr;
 }
 
-std::shared_ptr<db::value::impl<db::null>> const &db::value::null_value_impl_ptr() {
-    static auto _impl_ptr = std::make_shared<db::value::impl<db::null>>(nullptr);
+std::shared_ptr<db::value::typed_impl<db::null>> const &db::value::null_value_impl_ptr() {
+    static auto _impl_ptr = std::make_shared<db::value::typed_impl<db::null>>(nullptr);
     return _impl_ptr;
 }
 
 std::shared_ptr<weakable_impl> db::value::weakable_impl_ptr() const {
-    return impl_ptr<impl_base>();
+    return impl_ptr<impl>();
 }
 
 #pragma mark -

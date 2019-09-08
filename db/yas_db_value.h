@@ -66,9 +66,9 @@ struct null {
 
 struct value : base, weakable<value> {
     template <typename T>
-    class impl;
+    class typed_impl;
 
-    class impl_base;
+    class impl;
 
     explicit value(uint8_t const &);
     explicit value(int8_t const &);
