@@ -63,24 +63,24 @@ struct db::value::impl_base : base::impl, weakable_impl {
 };
 
 template <typename T>
-struct db::value::impl : impl_base {
+struct db::value::typed_impl : impl {
     typename T::type _value;
 
-    impl(typename T::type const &val) : _value(val) {
+    typed_impl(typename T::type const &val) : _value(val) {
     }
 
-    impl(typename T::type &&val) : _value(std::move(val)) {
+    typed_impl(typename T::type &&val) : _value(std::move(val)) {
     }
 
-    impl(impl const &) = delete;
-    impl(impl &&) = delete;
-    impl &operator=(impl const &) = delete;
-    impl &operator=(impl &&) = delete;
+    typed_impl(typed_impl const &) = delete;
+    typed_impl(typed_impl &&) = delete;
+    typed_impl &operator=(typed_impl const &) = delete;
+    typed_impl &operator=(typed_impl &&) = delete;
 
-    ~impl() = default;
+    ~typed_impl() = default;
 
     virtual bool is_equal(std::shared_ptr<base::impl> const &rhs) const override {
-        if (auto casted_rhs = std::dynamic_pointer_cast<impl>(rhs)) {
+        if (auto casted_rhs = std::dynamic_pointer_cast<typed_impl>(rhs)) {
             std::type_info const &type_info = type();
             if (type_info == casted_rhs->type()) {
                 return this->_value == casted_rhs->_value;
@@ -97,34 +97,34 @@ struct db::value::impl : impl_base {
 
 #pragma mark - value
 
-db::value::value(uint8_t const &value) : base(std::make_unique<impl<db::integer>>(value)) {
+db::value::value(uint8_t const &value) : base(std::make_unique<typed_impl<db::integer>>(value)) {
 }
-db::value::value(int8_t const &value) : base(std::make_unique<impl<db::integer>>(value)) {
+db::value::value(int8_t const &value) : base(std::make_unique<typed_impl<db::integer>>(value)) {
 }
-db::value::value(uint16_t const &value) : base(std::make_unique<impl<db::integer>>(value)) {
+db::value::value(uint16_t const &value) : base(std::make_unique<typed_impl<db::integer>>(value)) {
 }
-db::value::value(int16_t const &value) : base(std::make_unique<impl<db::integer>>(value)) {
+db::value::value(int16_t const &value) : base(std::make_unique<typed_impl<db::integer>>(value)) {
 }
-db::value::value(uint32_t const &value) : base(std::make_unique<impl<db::integer>>(value)) {
+db::value::value(uint32_t const &value) : base(std::make_unique<typed_impl<db::integer>>(value)) {
 }
-db::value::value(int32_t const &value) : base(std::make_unique<impl<db::integer>>(value)) {
+db::value::value(int32_t const &value) : base(std::make_unique<typed_impl<db::integer>>(value)) {
 }
-db::value::value(uint64_t const &value) : base(std::make_unique<impl<db::integer>>(value)) {
+db::value::value(uint64_t const &value) : base(std::make_unique<typed_impl<db::integer>>(value)) {
 }
-db::value::value(int64_t const &value) : base(std::make_unique<impl<db::integer>>(value)) {
-}
-
-db::value::value(float const &value) : base(std::make_unique<impl<real>>(value)) {
-}
-db::value::value(double const &value) : base(std::make_unique<impl<real>>(value)) {
+db::value::value(int64_t const &value) : base(std::make_unique<typed_impl<db::integer>>(value)) {
 }
 
-db::value::value(std::string const &value) : base(std::make_unique<impl<text>>(value)) {
+db::value::value(float const &value) : base(std::make_unique<typed_impl<real>>(value)) {
 }
-db::value::value(std::string &&value) : base(std::make_unique<impl<text>>(std::move(value))) {
+db::value::value(double const &value) : base(std::make_unique<typed_impl<real>>(value)) {
 }
 
-db::value::value(blob::type &&value) : base(std::make_unique<impl<blob>>(std::move(value))) {
+db::value::value(std::string const &value) : base(std::make_unique<typed_impl<text>>(value)) {
+}
+db::value::value(std::string &&value) : base(std::make_unique<typed_impl<text>>(std::move(value))) {
+}
+
+db::value::value(blob::type &&value) : base(std::make_unique<typed_impl<blob>>(std::move(value))) {
 }
 
 db::value::value(null::type) : base(null_value_impl_ptr()) {
@@ -161,12 +161,12 @@ db::value::operator bool() const {
 }
 
 std::type_info const &db::value::type() const {
-    return impl_ptr<impl_base>()->type();
+    return impl_ptr<impl>()->type();
 }
 
 template <typename T>
 typename T::type const &db::value::get() const {
-    if (auto ip = std::dynamic_pointer_cast<impl<T>>(impl_ptr())) {
+    if (auto ip = std::dynamic_pointer_cast<typed_impl<T>>(impl_ptr())) {
         return ip->_value;
     }
 

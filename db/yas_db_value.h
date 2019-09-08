@@ -107,7 +107,7 @@ struct value : base, weakable<value> {
     std::shared_ptr<weakable_impl> weakable_impl_ptr() const override;
 
    private:
-    static std::shared_ptr<db::value::impl<null>> const &null_value_impl_ptr();
+    static std::shared_ptr<db::value::typed_impl<null>> const &null_value_impl_ptr();
 };
 
 db::value const &null_value();
