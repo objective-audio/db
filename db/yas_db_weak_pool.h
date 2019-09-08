@@ -16,7 +16,7 @@ struct weak_pool {
     using perform_handler = std::function<void(std::string const &, K const &, V &)>;
 
     V get_or_create(std::string const &entity_name, K const &key, value_create_handler handler);
-    V get(std::string const &entity_name, K const &key);
+    std::optional<V> get(std::string const &entity_name, K const &key);
     void set(std::string const &entity_name, K const &key, V value);
 
     void perform(perform_handler const &handler);
