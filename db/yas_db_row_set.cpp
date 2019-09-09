@@ -25,8 +25,8 @@ db::next_result_code::operator bool() const {
 #pragma mark - impl
 
 struct db::row_set::impl : closable::impl, db_settable::impl {
-    impl(db::statement_ptr const &statement, database_ptr const &database)
-        : _statement(statement), _database(database) {
+    impl(db::statement_ptr const &statement, database_ptr const &database, std::vector<db::value> const &context)
+        : _statement(statement), _database(database), _context(context) {
         this->_statement->set_in_use(true);
     }
 
@@ -77,12 +77,14 @@ struct db::row_set::impl : closable::impl, db_settable::impl {
    private:
     db::database_ptr _database;
     db::statement_ptr _statement;
+    std::vector<db::value> _context;
 
     mutable std::unordered_map<std::string, int> _column_name_to_index_map;
 };
 
-db::row_set::row_set(db::statement_ptr const &statement, database_ptr const &database)
-    : _impl(std::make_unique<impl>(statement, database)) {
+db::row_set::row_set(db::statement_ptr const &statement, database_ptr const &database,
+                     std::vector<db::value> const &context)
+    : _impl(std::make_unique<impl>(statement, database, context)) {
 }
 
 db::row_set::~row_set() = default;
@@ -206,6 +208,7 @@ db::db_settable &db::row_set::db_settable() {
     return this->_db_settable;
 }
 
-db::row_set_ptr db::row_set::make_shared(db::statement_ptr const &statement, database_ptr const &database) {
-    return row_set_ptr(new row_set{statement, database});
+db::row_set_ptr db::row_set::make_shared(db::statement_ptr const &statement, database_ptr const &database,
+                                         std::vector<db::value> const &context) {
+    return row_set_ptr(new row_set{statement, database, context});
 }

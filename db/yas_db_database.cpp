@@ -397,16 +397,20 @@ struct db::database::impl : row_set_observable::impl {
             }
         }
 
+        std::vector<db::value> context;
         int idx = 0;
         int query_count = sqlite3_bind_parameter_count(stmt);
 
         if (map.size() == query_count) {
+            context.reserve(map.size());
+
             for (auto &pair : map) {
                 std::string parameter_name = ":" + pair.first;
                 int named_idx = sqlite3_bind_parameter_index(stmt, parameter_name.c_str());
                 if (named_idx > 0) {
                     bind(pair.second, named_idx, stmt);
                     ++idx;
+                    context.push_back(pair.second);
                 } else {
                     error_message = "could not find index for '" + parameter_name + "'.";
                 }
@@ -417,6 +421,7 @@ struct db::database::impl : row_set_observable::impl {
                 ++idx;
                 bind(value, idx, stmt);
             }
+            context = vec;
         }
 
         if (idx != query_count) {
@@ -434,7 +439,7 @@ struct db::database::impl : row_set_observable::impl {
             }
         }
 
-        row_set = db::row_set::make_shared(statement, this->_weak_database.lock());
+        row_set = db::row_set::make_shared(statement, this->_weak_database.lock(), context);
 
         this->_open_row_sets.insert(std::make_pair(row_set->identifier(), row_set));
 

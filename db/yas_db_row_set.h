@@ -51,7 +51,7 @@ struct row_set {
     db::closable &closable();
     db_settable &db_settable();
 
-    static row_set_ptr make_shared(db::statement_ptr const &, database_ptr const &);
+    static row_set_ptr make_shared(db::statement_ptr const &, database_ptr const &, std::vector<db::value> const &);
 
    private:
     class impl;
@@ -59,6 +59,6 @@ struct row_set {
     db::closable _closable = nullptr;
     db::db_settable _db_settable = nullptr;
 
-    row_set(db::statement_ptr const &, database_ptr const &);
+    row_set(db::statement_ptr const &, database_ptr const &, std::vector<db::value> const &);
 };
 }  // namespace yas::db
