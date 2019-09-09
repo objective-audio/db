@@ -10,7 +10,7 @@
 namespace yas::db {
 using select_option_map_t = std::unordered_map<std::string, db::select_option>;
 
-struct fetch_option {
+struct fetch_option final {
     fetch_option();
     explicit fetch_option(std::size_t const reserve);
 

@@ -7,10 +7,8 @@
 #include <string>
 
 namespace yas::db {
-class result_code {
-   public:
+struct result_code {
     explicit result_code(int const &);
-    ~result_code();
 
     int raw_value() const;
 

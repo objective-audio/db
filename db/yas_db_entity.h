@@ -9,7 +9,7 @@
 #include "yas_db_additional_protocol.h"
 
 namespace yas::db {
-struct entity {
+struct entity final {
     std::string const name;
     db::attribute_map_t const all_attributes;
     db::attribute_map_t const custom_attributes;

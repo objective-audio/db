@@ -13,7 +13,7 @@ class version;
 }
 
 namespace yas::db {
-struct model {
+struct model final {
     explicit model(model_args);
 
     yas::version const &version() const;

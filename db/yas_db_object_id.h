@@ -10,7 +10,7 @@
 namespace yas::db {
 class value;
 
-struct object_id : weakable<object_id> {
+struct object_id final : weakable<object_id> {
     class impl;
 
     object_id(db::value stable, db::value temporary);

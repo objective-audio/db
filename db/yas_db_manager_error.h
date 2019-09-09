@@ -45,7 +45,7 @@ enum class manager_error_type {
     last_insert_rowid_failed,
 };
 
-struct manager_error {
+struct manager_error final {
     manager_error(std::nullptr_t);
     explicit manager_error(db::manager_error_type const error_type);
     manager_error(db::manager_error_type const error_type, db::error db_error);

@@ -10,7 +10,7 @@
 namespace yas::db {
 class index_args;
 
-class index {
+class index final {
    public:
     std::string const name;
     std::string const entity;

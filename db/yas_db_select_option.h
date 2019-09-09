@@ -13,14 +13,14 @@ enum class order {
     descending,
 };
 
-struct field_order {
+struct field_order final {
     std::string field = "";
     db::order order = db::order::ascending;
 
     std::string sql() const;
 };
 
-struct range {
+struct range final {
     uint64_t location = 0;
     uint64_t length = 0;
 
@@ -31,7 +31,7 @@ struct range {
 
 db::range const &empty_range();
 
-struct select_option {
+struct select_option final {
     std::string table = "";
     std::vector<std::string> fields = {"*"};
     std::string where_exprs = "";

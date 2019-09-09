@@ -19,13 +19,13 @@ namespace yas::db {
 class statement;
 class value;
 
-struct next_result_code : result_code {
+struct next_result_code final : result_code {
     next_result_code(int const &value);
 
     explicit operator bool() const;
 };
 
-struct row_set {
+struct row_set final {
     using index_result_t = result<int, std::nullptr_t>;
 
     ~row_set();

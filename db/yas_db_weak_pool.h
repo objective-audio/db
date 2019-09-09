@@ -10,7 +10,7 @@
 
 namespace yas::db {
 template <typename K, typename V>
-struct weak_pool {
+struct weak_pool final {
     using value_map_t = std::unordered_map<K, weak_ref<V>>;
     using value_create_handler = std::function<V(void)>;
     using perform_handler = std::function<void(std::string const &, K const &, V &)>;

@@ -63,7 +63,7 @@ struct null {
     static constexpr auto name = "NULL";
 };
 
-struct value : weakable<value> {
+struct value final : weakable<value> {
     template <typename T>
     class typed_impl;
 

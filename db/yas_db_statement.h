@@ -10,7 +10,7 @@
 #include "yas_db_protocol.h"
 
 namespace yas::db {
-struct statement {
+struct statement final {
     ~statement() = default;
 
     statement(statement const &) = default;

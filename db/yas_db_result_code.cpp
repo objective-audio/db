@@ -11,8 +11,6 @@ using namespace yas::db;
 result_code::result_code(int const &value) : _raw_value(value) {
 }
 
-result_code::~result_code() = default;
-
 int result_code::raw_value() const {
     return this->_raw_value;
 }
