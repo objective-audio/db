@@ -24,8 +24,8 @@ using namespace yas;
 }
 
 - (void)test_table {
-    db::database db = [yas_db_test_utils create_test_database];
-    XCTAssertTrue(db.open());
+    db::database_ptr const db = [yas_db_test_utils create_test_database];
+    XCTAssertTrue(db->open());
 
     XCTAssertTrue(db::create_table(db, "test_table_a", {"field_a"}));
     XCTAssertTrue(db::create_table(db, "test_table_b", {"field_b"}));
@@ -34,18 +34,18 @@ using namespace yas;
     XCTAssertTrue(db::table_exists(db, "test_table_b"));
 
     auto schema_set_1 = db::get_table_schema(db, "test_table_a");
-    XCTAssertTrue(schema_set_1.next());
-    XCTAssertEqual(schema_set_1.column_value("name").get<db::text>(), "field_a");
-    XCTAssertFalse(schema_set_1.next());
+    XCTAssertTrue(schema_set_1->next());
+    XCTAssertEqual(schema_set_1->column_value("name").get<db::text>(), "field_a");
+    XCTAssertFalse(schema_set_1->next());
 
     XCTAssertTrue(db::alter_table(db, "test_table_a", "field_c"));
 
     auto schema_set_2 = db::get_table_schema(db, "test_table_a");
-    XCTAssertTrue(schema_set_2.next());
-    XCTAssertEqual(schema_set_2.column_value("name").get<db::text>(), "field_a");
-    XCTAssertTrue(schema_set_2.next());
-    XCTAssertEqual(schema_set_2.column_value("name").get<db::text>(), "field_c");
-    XCTAssertFalse(schema_set_2.next());
+    XCTAssertTrue(schema_set_2->next());
+    XCTAssertEqual(schema_set_2->column_value("name").get<db::text>(), "field_a");
+    XCTAssertTrue(schema_set_2->next());
+    XCTAssertEqual(schema_set_2->column_value("name").get<db::text>(), "field_c");
+    XCTAssertFalse(schema_set_2->next());
 
     XCTAssertTrue(db::drop_table(db, "test_table_b"));
 
@@ -54,63 +54,63 @@ using namespace yas;
 }
 
 - (void)test_transaction_commit {
-    db::database db = [yas_db_test_utils create_test_database];
-    XCTAssertTrue(db.open());
+    db::database_ptr const db = [yas_db_test_utils create_test_database];
+    XCTAssertTrue(db->open());
 
-    XCTAssertTrue(db.execute_update(db::create_table_sql("test_table", {"test_field"})));
-    XCTAssertTrue(db.execute_update("insert into test_table(test_field) values('value1')"));
+    XCTAssertTrue(db->execute_update(db::create_table_sql("test_table", {"test_field"})));
+    XCTAssertTrue(db->execute_update("insert into test_table(test_field) values('value1')"));
 
-    auto query_result_1 = db.execute_query("select * from test_table");
+    auto query_result_1 = db->execute_query("select * from test_table");
     XCTAssertTrue(query_result_1);
-    XCTAssertTrue(query_result_1.value().next());
-    XCTAssertFalse(query_result_1.value().next());
+    XCTAssertTrue(query_result_1.value()->next());
+    XCTAssertFalse(query_result_1.value()->next());
 
     XCTAssertTrue(db::begin_transaction(db));
-    XCTAssertTrue(db.execute_update("insert into test_table(test_field) values('value2')"));
-    XCTAssertTrue(db.execute_update("insert into test_table(test_field) values('value3')"));
+    XCTAssertTrue(db->execute_update("insert into test_table(test_field) values('value2')"));
+    XCTAssertTrue(db->execute_update("insert into test_table(test_field) values('value3')"));
     XCTAssertTrue(db::commit(db));
 
-    auto query_result_2 = db.execute_query("select * from test_table");
+    auto query_result_2 = db->execute_query("select * from test_table");
     XCTAssertTrue(query_result_2);
-    XCTAssertTrue(query_result_2.value().next());
-    XCTAssertTrue(query_result_2.value().next());
-    XCTAssertTrue(query_result_2.value().next());
-    XCTAssertFalse(query_result_2.value().next());
+    XCTAssertTrue(query_result_2.value()->next());
+    XCTAssertTrue(query_result_2.value()->next());
+    XCTAssertTrue(query_result_2.value()->next());
+    XCTAssertFalse(query_result_2.value()->next());
 }
 
 - (void)test_transaction_rollback {
-    db::database db = [yas_db_test_utils create_test_database];
-    XCTAssertTrue(db.open());
+    db::database_ptr const db = [yas_db_test_utils create_test_database];
+    XCTAssertTrue(db->open());
 
-    XCTAssertTrue(db.execute_update(db::create_table_sql("test_table", {"test_field"})));
-    XCTAssertTrue(db.execute_update("insert into test_table(test_field) values('value1')"));
+    XCTAssertTrue(db->execute_update(db::create_table_sql("test_table", {"test_field"})));
+    XCTAssertTrue(db->execute_update("insert into test_table(test_field) values('value1')"));
 
-    auto query_result_1 = db.execute_query("select * from test_table");
+    auto query_result_1 = db->execute_query("select * from test_table");
     XCTAssertTrue(query_result_1);
-    XCTAssertTrue(query_result_1.value().next());
-    XCTAssertFalse(query_result_1.value().next());
+    XCTAssertTrue(query_result_1.value()->next());
+    XCTAssertFalse(query_result_1.value()->next());
 
     XCTAssertTrue(db::begin_transaction(db));
-    XCTAssertTrue(db.execute_update("insert into test_table(test_field) values('value2')"));
-    XCTAssertTrue(db.execute_update("insert into test_table(test_field) values('value3')"));
+    XCTAssertTrue(db->execute_update("insert into test_table(test_field) values('value2')"));
+    XCTAssertTrue(db->execute_update("insert into test_table(test_field) values('value3')"));
     XCTAssertTrue(db::rollback(db));
 
-    auto query_result_2 = db.execute_query("select * from test_table");
+    auto query_result_2 = db->execute_query("select * from test_table");
     XCTAssertTrue(query_result_2);
-    XCTAssertTrue(query_result_2.value().next());
-    XCTAssertFalse(query_result_2.value().next());
+    XCTAssertTrue(query_result_2.value()->next());
+    XCTAssertFalse(query_result_2.value()->next());
 }
 
 - (void)test_save_point {
-    db::database db = [yas_db_test_utils create_test_database];
-    XCTAssertTrue(db.open());
+    db::database_ptr const db = [yas_db_test_utils create_test_database];
+    XCTAssertTrue(db->open());
 
     XCTAssertTrue(db::create_table(db, "test_table", {"test_field"}));
 
     auto count_of_row = [&db]() {
-        auto query_result = db.execute_query("select * from test_table");
+        auto query_result = db->execute_query("select * from test_table");
         int count = 0;
-        while (query_result.value().next()) {
+        while (query_result.value()->next()) {
             ++count;
         }
         return count;
@@ -118,10 +118,10 @@ using namespace yas;
 
     XCTAssertEqual(count_of_row(), 0);
     XCTAssertTrue(db::start_save_point(db, "sp_1"));
-    XCTAssertTrue(db.execute_update("insert into test_table(test_field) values('value1')"));
+    XCTAssertTrue(db->execute_update("insert into test_table(test_field) values('value1')"));
     XCTAssertEqual(count_of_row(), 1);
     XCTAssertTrue(db::start_save_point(db, "sp_2"));
-    XCTAssertTrue(db.execute_update("insert into test_table(test_field) values('value2')"));
+    XCTAssertTrue(db->execute_update("insert into test_table(test_field) values('value2')"));
     XCTAssertEqual(count_of_row(), 2);
     XCTAssertTrue(db::rollback_save_point(db, "sp_2"));
     XCTAssertEqual(count_of_row(), 1);
@@ -130,22 +130,22 @@ using namespace yas;
 }
 
 - (void)test_in_save_point {
-    db::database db = [yas_db_test_utils create_test_database];
-    XCTAssertTrue(db.open());
+    db::database_ptr const db = [yas_db_test_utils create_test_database];
+    XCTAssertTrue(db->open());
 
-    XCTAssertTrue(db.execute_update(db::create_table_sql("test_table", {"test_field"})));
+    XCTAssertTrue(db->execute_update(db::create_table_sql("test_table", {"test_field"})));
 
     auto count_of_row = [&db]() {
-        auto query_result = db.execute_query("select * from test_table");
+        auto query_result = db->execute_query("select * from test_table");
         int count = 0;
-        while (query_result.value().next()) {
+        while (query_result.value()->next()) {
             ++count;
         }
         return count;
     };
 
     XCTAssertTrue(db::in_save_point(db, [&db, &count_of_row, &self](bool &should_rollback) {
-        XCTAssertTrue(db.execute_update("insert into test_table(test_field) values('value1')"));
+        XCTAssertTrue(db->execute_update("insert into test_table(test_field) values('value1')"));
         XCTAssertEqual(count_of_row(), 1);
     }));
 
@@ -153,22 +153,22 @@ using namespace yas;
 }
 
 - (void)test_in_save_point_rollback {
-    db::database db = [yas_db_test_utils create_test_database];
-    XCTAssertTrue(db.open());
+    db::database_ptr const db = [yas_db_test_utils create_test_database];
+    XCTAssertTrue(db->open());
 
     XCTAssertTrue(db::create_table(db, "test_table", {"test_field"}));
 
     auto count_of_row = [&db]() {
-        auto query_result = db.execute_query("select * from test_table");
+        auto query_result = db->execute_query("select * from test_table");
         int count = 0;
-        while (query_result.value().next()) {
+        while (query_result.value()->next()) {
             ++count;
         }
         return count;
     };
 
     XCTAssertTrue(db::in_save_point(db, [&db, &count_of_row, &self](bool &should_rollback) {
-        XCTAssertTrue(db.execute_update("insert into test_table(test_field) values('value1')"));
+        XCTAssertTrue(db->execute_update("insert into test_table(test_field) values('value1')"));
         XCTAssertEqual(count_of_row(), 1);
         should_rollback = true;
     }));
@@ -177,8 +177,8 @@ using namespace yas;
 }
 
 - (void)test_savepoint_failed {
-    db::database db = [yas_db_test_utils create_test_database];
-    XCTAssertTrue(db.open());
+    db::database_ptr const db = [yas_db_test_utils create_test_database];
+    XCTAssertTrue(db->open());
 
     XCTAssertFalse(db::start_save_point(db, ""));
     XCTAssertFalse(db::release_save_point(db, ""));
@@ -186,8 +186,8 @@ using namespace yas;
 }
 
 - (void)test_table_exists {
-    db::database db = [yas_db_test_utils create_test_database];
-    XCTAssertTrue(db.open());
+    db::database_ptr const db = [yas_db_test_utils create_test_database];
+    XCTAssertTrue(db->open());
 
     XCTAssertTrue(db::create_table(db, "test_table", {"field"}));
 
@@ -196,8 +196,8 @@ using namespace yas;
 }
 
 - (void)test_index_exists {
-    db::database db = [yas_db_test_utils create_test_database];
-    XCTAssertTrue(db.open());
+    db::database_ptr const db = [yas_db_test_utils create_test_database];
+    XCTAssertTrue(db->open());
 
     XCTAssertTrue(db::create_table(db, "test_table", {"field"}));
 
@@ -214,8 +214,8 @@ using namespace yas;
 }
 
 - (void)test_column_exists {
-    db::database db = [yas_db_test_utils create_test_database];
-    XCTAssertTrue(db.open());
+    db::database_ptr const db = [yas_db_test_utils create_test_database];
+    XCTAssertTrue(db->open());
 
     XCTAssertTrue(db::create_table(db, "test_table", {"field_a", "field_b"}));
 
@@ -227,17 +227,17 @@ using namespace yas;
 }
 
 - (void)test_get_schema {
-    db::database db = [yas_db_test_utils create_test_database];
-    XCTAssertTrue(db.open());
+    db::database_ptr const db = [yas_db_test_utils create_test_database];
+    XCTAssertTrue(db->open());
 
     std::string const sql = "create table test_table (test_field)";
-    XCTAssertTrue(db.execute_update(sql));
+    XCTAssertTrue(db->execute_update(sql));
 
     auto row_set = db::get_schema(db);
     XCTAssertTrue(row_set);
-    XCTAssertTrue(row_set.next());
+    XCTAssertTrue(row_set->next());
 
-    auto map = row_set.values();
+    auto map = row_set->values();
 
     XCTAssertGreaterThan(map.count("sql"), 0);
     auto &sql_column_value = map.at("sql");
@@ -264,20 +264,20 @@ using namespace yas;
     XCTAssertTrue(type_column_value.type() == typeid(db::text));
     XCTAssertEqual(type_column_value.get<db::text>(), "table");
 
-    XCTAssertFalse(row_set.next());
+    XCTAssertFalse(row_set->next());
 }
 
 - (void)test_get_table_schema {
-    db::database db = [yas_db_test_utils create_test_database];
-    XCTAssertTrue(db.open());
+    db::database_ptr const db = [yas_db_test_utils create_test_database];
+    XCTAssertTrue(db->open());
 
     XCTAssertTrue(db::create_table(db, "test_table", {"field_a", "field_b"}));
 
     auto row_set = db::get_table_schema(db, "test_table");
     XCTAssertTrue(row_set);
-    XCTAssertTrue(row_set.next());
+    XCTAssertTrue(row_set->next());
 
-    auto map = row_set.values();
+    auto map = row_set->values();
 
     XCTAssertGreaterThan(map.count("pk"), 0);
     XCTAssertGreaterThan(map.count("dflt_value"), 0);
@@ -288,27 +288,27 @@ using namespace yas;
 
     XCTAssertEqual(map.at("name").get<db::text>(), "field_a");
 
-    XCTAssertTrue(row_set.next());
+    XCTAssertTrue(row_set->next());
 
-    map = row_set.values();
+    map = row_set->values();
 
     XCTAssertEqual(map.at("name").get<db::text>(), "field_b");
 
-    XCTAssertFalse(row_set.next());
+    XCTAssertFalse(row_set->next());
 }
 
 - (void)test_get_index_schema {
-    db::database db = [yas_db_test_utils create_test_database];
-    XCTAssertTrue(db.open());
+    db::database_ptr const db = [yas_db_test_utils create_test_database];
+    XCTAssertTrue(db->open());
 
     XCTAssertTrue(db::create_table(db, "test_table", {"field_a", "field_b"}));
     XCTAssertTrue(db::create_index(db, "test_index", "test_table", {"field_a"}));
 
     auto row_set = db::get_index_schema(db, "test_index");
     XCTAssertTrue(row_set);
-    XCTAssertTrue(row_set.next());
+    XCTAssertTrue(row_set->next());
 
-    auto map = row_set.values();
+    auto map = row_set->values();
 
     XCTAssertEqual(map.at("type"), db::value{"index"});
     XCTAssertEqual(map.at("name"), db::value{"test_index"});
@@ -316,8 +316,8 @@ using namespace yas;
 }
 
 - (void)test_select {
-    db::database db = [yas_db_test_utils create_test_database];
-    XCTAssertTrue(db.open());
+    db::database_ptr const db = [yas_db_test_utils create_test_database];
+    XCTAssertTrue(db->open());
 
     auto const table = "table_a";
     auto const field_a = "field_a";
@@ -326,10 +326,10 @@ using namespace yas;
     XCTAssertTrue(db::create_table(db, table, {field_a, field_b}));
 
     db::value_vector_t args_1{db::value{"value_a_1"}, db::value{"value_b_1"}};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table, {field_a, field_b}), std::move(args_1)));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table, {field_a, field_b}), std::move(args_1)));
 
     db::value_vector_t args_2{db::value{"value_a_2"}, db::value{"value_b_2"}};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table, {field_a, field_b}), std::move(args_2)));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table, {field_a, field_b}), std::move(args_2)));
 
     auto const select_result = db::select(db, {.table = table,
                                                .fields = {field_a, field_b},
@@ -341,8 +341,8 @@ using namespace yas;
 }
 
 - (void)test_max {
-    db::database db = [yas_db_test_utils create_test_database];
-    XCTAssertTrue(db.open());
+    db::database_ptr const db = [yas_db_test_utils create_test_database];
+    XCTAssertTrue(db->open());
 
     auto const table_name = "table_a";
     auto const field_name = "field_a";
@@ -352,22 +352,22 @@ using namespace yas;
 
     XCTAssertFalse(db::max(db, table_name, field_name));
 
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), {db::value{1}}));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), {db::value{1}}));
 
     XCTAssertEqual(db::max(db, table_name, field_name), db::value{1});
 
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), {db::value{10}}));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), {db::value{10}}));
 
     XCTAssertEqual(db::max(db, table_name, field_name), db::value{10});
 
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), {db::value{5}}));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), {db::value{5}}));
 
     XCTAssertEqual(db::max(db, table_name, field_name), db::value{10});
 }
 
 - (void)test_select_in_object_ids {
-    db::database db = [yas_db_test_utils create_test_database];
-    XCTAssertTrue(db.open());
+    db::database_ptr const db = [yas_db_test_utils create_test_database];
+    XCTAssertTrue(db->open());
 
     auto const table_name = "table_a";
     auto const field_name = "field_a";
@@ -377,17 +377,17 @@ using namespace yas;
 
     db::value_vector_t args;
     args = {db::value{1}, db::value{"value_1"}};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
     args = {db::value{2}, db::value{"value_2"}};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
     args = {db::value{3}, db::value{"value_3"}};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
     args = {db::value{4}, db::value{"value_4"}};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
     args = {db::value{5}, db::value{"value_5"}};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
     args = {db::value{6}, db::value{"value_6"}};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
 
     db::select_option option;
     option.table = table_name;

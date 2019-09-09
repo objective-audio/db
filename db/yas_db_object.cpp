@@ -55,7 +55,7 @@ object_event make_object_erased_event(std::string const &entity_name, db::object
 }
 }  // namespace yas::db
 
-struct db::object_event::impl_base : base::impl {
+struct db::object_event::impl_base {
     virtual object_event_type type() {
         throw std::runtime_error("type() must be overridden");
     }
@@ -74,47 +74,47 @@ struct db::object_event::impl : db::object_event::impl_base {
 };
 
 db::object_event::object_event(object_fetched_event &&event)
-    : base(std::make_shared<impl<object_fetched_event>>(std::move(event))) {
+    : _impl(std::make_shared<impl<object_fetched_event>>(std::move(event))) {
 }
 
 db::object_event::object_event(object_loaded_event &&event)
-    : base(std::make_shared<impl<object_loaded_event>>(std::move(event))) {
+    : _impl(std::make_shared<impl<object_loaded_event>>(std::move(event))) {
 }
 
 db::object_event::object_event(object_cleared_event &&event)
-    : base(std::make_shared<impl<object_cleared_event>>(std::move(event))) {
+    : _impl(std::make_shared<impl<object_cleared_event>>(std::move(event))) {
 }
 
 db::object_event::object_event(object_attribute_updated_event &&event)
-    : base(std::make_shared<impl<object_attribute_updated_event>>(std::move(event))) {
+    : _impl(std::make_shared<impl<object_attribute_updated_event>>(std::move(event))) {
 }
 
 db::object_event::object_event(object_relation_inserted_event &&event)
-    : base(std::make_shared<impl<object_relation_inserted_event>>(std::move(event))) {
+    : _impl(std::make_shared<impl<object_relation_inserted_event>>(std::move(event))) {
 }
 
 db::object_event::object_event(object_relation_removed_event &&event)
-    : base(std::make_shared<impl<object_relation_removed_event>>(std::move(event))) {
+    : _impl(std::make_shared<impl<object_relation_removed_event>>(std::move(event))) {
 }
 
 db::object_event::object_event(object_relation_replaced_event &&event)
-    : base(std::make_shared<impl<object_relation_replaced_event>>(std::move(event))) {
+    : _impl(std::make_shared<impl<object_relation_replaced_event>>(std::move(event))) {
 }
 
 db::object_event::object_event(object_erased_event &&event)
-    : base(std::make_shared<impl<object_erased_event>>(std::move(event))) {
+    : _impl(std::make_shared<impl<object_erased_event>>(std::move(event))) {
 }
 
-db::object_event::object_event(std::nullptr_t) : base(nullptr) {
+db::object_event::object_event(std::nullptr_t) : _impl(nullptr) {
 }
 
 db::object_event_type db::object_event::type() const {
-    return this->template impl_ptr<impl_base>()->type();
+    return this->_impl->type();
 }
 
 template <typename Event>
 Event const &db::object_event::get() const {
-    if (auto ip = std::dynamic_pointer_cast<impl<Event>>(impl_ptr())) {
+    if (auto ip = std::dynamic_pointer_cast<impl<Event>>(this->_impl)) {
         return ip->event;
     }
 
@@ -169,7 +169,7 @@ template db::object_erased_event const &db::object_event::get<db::object_erased_
 
 #pragma mark - db::const_object::impl
 
-struct db::const_object::impl : base::impl {
+struct db::const_object::impl {
     db::entity _entity;
     db::value_map_t _attributes;
     db::id_vector_map_t _relations;
@@ -184,6 +184,8 @@ struct db::const_object::impl : base::impl {
     // mutableなobjectとして作る場合
     impl(db::entity const &entity, db::object_id &&identifier) : _entity(entity), _identifier(std::move(identifier)) {
     }
+
+    virtual ~impl() = default;
 
     void clear() {
         this->_attributes.clear();
@@ -338,48 +340,48 @@ struct db::const_object::impl : base::impl {
 #pragma mark - db::const_object
 
 db::const_object::const_object(db::entity const &entity, db::object_data const &obj_data)
-    : base(std::make_unique<impl>(entity, obj_data)) {
+    : _impl(std::make_unique<impl>(entity, obj_data)) {
 }
 
-db::const_object::const_object(std::nullptr_t) : base(nullptr) {
+db::const_object::const_object(std::nullptr_t) : _impl(nullptr) {
 }
 
-db::const_object::const_object(std::shared_ptr<impl> const &impl) : base(impl) {
+db::const_object::const_object(std::shared_ptr<impl> const &impl) : _impl(impl) {
 }
 
-db::const_object::const_object(std::shared_ptr<impl> &&impl) : base(std::move(impl)) {
+db::const_object::const_object(std::shared_ptr<impl> &&impl) : _impl(std::move(impl)) {
 }
 
 db::entity const &db::const_object::entity() const {
-    return impl_ptr<impl>()->_entity;
+    return this->_impl->_entity;
 }
 
 std::string const &db::const_object::entity_name() const {
-    return impl_ptr<impl>()->_entity.name;
+    return this->_impl->_entity.name;
 }
 
 db::value const &db::const_object::attribute_value(std::string const &attr_name) const {
-    return impl_ptr<impl>()->attribute_value(attr_name);
+    return this->_impl->attribute_value(attr_name);
 }
 
 db::id_vector_map_t const &db::const_object::all_relation_ids() const {
-    return impl_ptr<impl>()->all_relation_ids();
+    return this->_impl->all_relation_ids();
 }
 
 db::id_vector_t db::const_object::relation_ids(std::string const &rel_name) const {
-    return impl_ptr<impl>()->relation_ids(rel_name);
+    return this->_impl->relation_ids(rel_name);
 }
 
 db::object_id const &db::const_object::relation_id(std::string const &rel_name, std::size_t const idx) const {
-    return impl_ptr<impl>()->relation_id(rel_name, idx);
+    return this->_impl->relation_id(rel_name, idx);
 }
 
 std::size_t db::const_object::relation_size(std::string const &rel_name) const {
-    return impl_ptr<impl>()->relation_size(rel_name);
+    return this->_impl->relation_size(rel_name);
 }
 
 db::object_id const &db::const_object::object_id() const {
-    return impl_ptr<impl>()->_identifier;
+    return this->_impl->_identifier;
 }
 
 db::value const &db::const_object::save_id() const {
@@ -391,23 +393,36 @@ db::value const &db::const_object::action() const {
 }
 
 bool db::const_object::is_inserted() const {
-    return impl_ptr<impl>()->is_equal_to_action(db::insert_action);
+    return this->_impl->is_equal_to_action(db::insert_action);
 }
 
 bool db::const_object::is_updated() const {
-    return impl_ptr<impl>()->is_equal_to_action(db::update_action);
+    return this->_impl->is_equal_to_action(db::update_action);
 }
 
 bool db::const_object::is_removed() const {
-    return impl_ptr<impl>()->is_equal_to_action(db::remove_action);
+    return this->_impl->is_equal_to_action(db::remove_action);
+}
+
+bool db::const_object::operator==(const_object const &rhs) const {
+    return this->_impl && rhs._impl && this->_impl == rhs._impl;
+}
+
+bool db::const_object::operator!=(const_object const &rhs) const {
+    return !(*this == rhs);
+}
+
+db::const_object::operator bool() const {
+    return this->_impl != nullptr;
 }
 
 #pragma mark - db::object::impl
 
-struct db::object::impl : const_object::impl, manageable_object::impl {
+struct db::object::impl : const_object::impl, manageable_object::impl, weakable_impl {
     enum db::object_status _status = db::object_status::invalid;
     chaining::fetcher_ptr<object_event> _fetcher = nullptr;
     std::shared_ptr<chaining::sender_protocol<object_event>> _sender = nullptr;
+    std::weak_ptr<db::object::impl> _weak_impl;
 
     impl(db::entity const &entity, bool const is_temporary) : const_object::impl(entity, db::make_temporary_id()) {
     }
@@ -416,10 +431,16 @@ struct db::object::impl : const_object::impl, manageable_object::impl {
         this->_sender->broadcast(make_object_erased_event(this->_entity.name, this->_identifier));
     }
 
+    db::object cast() {
+        return db::object{this->_weak_impl.lock()};
+    }
+
     void prepare(db::object &object) {
+        this->_weak_impl = object._mutable_impl();
+
         this->_fetcher = chaining::fetcher<object_event>::make_shared([weak_object = to_weak(object)]() {
             if (auto object = weak_object.lock()) {
-                return std::optional<object_event>{make_object_fetched_event(object)};
+                return std::optional<object_event>{make_object_fetched_event(*object)};
             } else {
                 return std::optional<object_event>{std::nullopt};
             }
@@ -459,7 +480,7 @@ struct db::object::impl : const_object::impl, manageable_object::impl {
                 this->_status = db::object_status::saved;
             }
 
-            this->_sender->broadcast(make_object_loaded_event(cast<db::object>()));
+            this->_sender->broadcast(make_object_loaded_event(this->cast()));
         }
     }
 
@@ -482,7 +503,7 @@ struct db::object::impl : const_object::impl, manageable_object::impl {
     void clear_data() override {
         this->clear();
 
-        this->_sender->broadcast(make_object_cleared_event(cast<db::object>()));
+        this->_sender->broadcast(make_object_cleared_event(this->cast()));
     }
 
     void set_attribute_value(std::string const &attr_name, db::value const &value, bool const loading = false) {
@@ -507,7 +528,7 @@ struct db::object::impl : const_object::impl, manageable_object::impl {
                 this->_status = db::object_status::changed;
             }
 
-            this->_sender->broadcast(make_object_attribute_updated_event(cast<db::object>(), attr_name, value));
+            this->_sender->broadcast(make_object_attribute_updated_event(this->cast(), attr_name, value));
         }
     }
 
@@ -529,7 +550,7 @@ struct db::object::impl : const_object::impl, manageable_object::impl {
                 this->_status = db::object_status::changed;
             }
 
-            this->_sender->broadcast(make_object_relation_replaced_event(cast<db::object>(), rel_name));
+            this->_sender->broadcast(make_object_relation_replaced_event(this->cast(), rel_name));
         }
     }
 
@@ -558,7 +579,7 @@ struct db::object::impl : const_object::impl, manageable_object::impl {
             this->_status = db::object_status::changed;
         }
 
-        this->_sender->broadcast(make_object_relation_inserted_event(cast<db::object>(), rel_name, {idx}));
+        this->_sender->broadcast(make_object_relation_inserted_event(this->cast(), rel_name, {idx}));
     }
 
     void remove_relation_id(std::string const &rel_name, db::object_id const &relation_id) {
@@ -584,8 +605,7 @@ struct db::object::impl : const_object::impl, manageable_object::impl {
                 this->_status = db::object_status::changed;
             }
 
-            this->_sender->broadcast(
-                make_object_relation_removed_event(cast<db::object>(), rel_name, std::move(indices)));
+            this->_sender->broadcast(make_object_relation_removed_event(this->cast(), rel_name, std::move(indices)));
         }
     }
 
@@ -604,7 +624,7 @@ struct db::object::impl : const_object::impl, manageable_object::impl {
                 this->_status = db::object_status::changed;
             }
 
-            this->_sender->broadcast(make_object_relation_removed_event(cast<db::object>(), rel_name, {idx}));
+            this->_sender->broadcast(make_object_relation_removed_event(this->cast(), rel_name, {idx}));
         }
     }
 
@@ -633,8 +653,7 @@ struct db::object::impl : const_object::impl, manageable_object::impl {
                 indices.push_back(yas_each_index(each));
             }
 
-            this->_sender->broadcast(
-                make_object_relation_removed_event(cast<db::object>(), rel_name, std::move(indices)));
+            this->_sender->broadcast(make_object_relation_removed_event(this->cast(), rel_name, std::move(indices)));
         }
     }
 
@@ -719,69 +738,73 @@ struct db::object::impl : const_object::impl, manageable_object::impl {
 #pragma mark - db::object
 
 db::object::object(db::entity const &entity) : const_object(std::make_unique<impl>(entity, true)) {
-    impl_ptr<impl>()->prepare(*this);
+    this->_mutable_impl()->prepare(*this);
+}
+
+db::object::object(std::shared_ptr<weakable_impl> &&wimpl) : const_object(std::dynamic_pointer_cast<impl>(wimpl)) {
+    assert(this->_mutable_impl());
 }
 
 db::object::object(std::nullptr_t) : const_object(nullptr) {
 }
 
 chaining::chain_sync_t<db::object_event> db::object::chain() const {
-    return impl_ptr<impl>()->_fetcher->chain();
+    return this->_mutable_impl()->_fetcher->chain();
 }
 
 void db::object::set_attribute_value(std::string const &attr_name, db::value const &value) {
-    impl_ptr<impl>()->set_attribute_value(attr_name, value);
+    this->_mutable_impl()->set_attribute_value(attr_name, value);
 }
 
 void db::object::set_relation_ids(std::string const &rel_name, db::id_vector_t const &relation_ids) {
-    impl_ptr<impl>()->set_relation_ids(rel_name, relation_ids);
+    this->_mutable_impl()->set_relation_ids(rel_name, relation_ids);
 }
 
 void db::object::add_relation_id(std::string const &rel_name, db::object_id const &rel_id) {
-    impl_ptr<impl>()->add_relation_id(rel_name, rel_id);
+    this->_mutable_impl()->add_relation_id(rel_name, rel_id);
 }
 
 void db::object::insert_relation_id(std::string const &rel_name, db::object_id const &rel_id, std::size_t const idx) {
-    impl_ptr<impl>()->insert_relation_id(rel_name, rel_id, idx);
+    this->_mutable_impl()->insert_relation_id(rel_name, rel_id, idx);
 }
 
 void db::object::remove_relation_id(std::string const &rel_name, db::object_id const &rel_id) {
-    impl_ptr<impl>()->remove_relation_id(rel_name, rel_id);
+    this->_mutable_impl()->remove_relation_id(rel_name, rel_id);
 }
 
 void db::object::set_relation_objects(std::string const &rel_name, db::object_vector_t const &rel_objects) {
-    impl_ptr<impl>()->set_relation_ids(
+    this->_mutable_impl()->set_relation_ids(
         rel_name, to_vector<db::object_id>(
                       rel_objects, [entity_name = entity_name()](db::object const &obj) { return obj.object_id(); }));
 }
 
 void db::object::add_relation_object(std::string const &rel_name, db::object const &rel_object) {
-    impl_ptr<impl>()->add_relation_id(rel_name, rel_object.object_id());
+    this->_mutable_impl()->add_relation_id(rel_name, rel_object.object_id());
 }
 
 void db::object::insert_relation_object(std::string const &rel_name, db::object const &rel_object,
                                         std::size_t const idx) {
-    impl_ptr<impl>()->insert_relation_id(rel_name, rel_object.object_id(), idx);
+    this->_mutable_impl()->insert_relation_id(rel_name, rel_object.object_id(), idx);
 }
 
 void db::object::remove_relation_object(std::string const &rel_name, object const &rel_object) {
-    impl_ptr<impl>()->remove_relation_id(rel_name, rel_object.object_id());
+    this->_mutable_impl()->remove_relation_id(rel_name, rel_object.object_id());
 }
 
 void db::object::remove_relation_at(std::string const &rel_name, std::size_t const idx) {
-    impl_ptr<impl>()->remove_relation_at(rel_name, idx);
+    this->_mutable_impl()->remove_relation_at(rel_name, idx);
 }
 
 void db::object::remove_all_relations(std::string const &rel_name) {
-    impl_ptr<impl>()->remove_all_relations(rel_name);
+    this->_mutable_impl()->remove_all_relations(rel_name);
 }
 
 enum db::object_status db::object::status() const {
-    return impl_ptr<impl>()->_status;
+    return this->_mutable_impl()->_status;
 }
 
 void db::object::remove() {
-    impl_ptr<impl>()->remove();
+    this->_mutable_impl()->remove();
 }
 
 bool db::object::is_temporary() const {
@@ -789,14 +812,22 @@ bool db::object::is_temporary() const {
 }
 
 db::object_data db::object::save_data(db::object_id_pool_t &pool) const {
-    return impl_ptr<impl>()->save_data(pool);
+    return this->_mutable_impl()->save_data(pool);
 }
 
 db::manageable_object &db::object::manageable() {
     if (!_manageable) {
-        _manageable = manageable_object{impl_ptr<manageable_object::impl>()};
+        _manageable = manageable_object{this->_mutable_impl()};
     }
     return _manageable;
+}
+
+std::shared_ptr<weakable_impl> db::object::weakable_impl_ptr() const {
+    return this->_mutable_impl();
+}
+
+std::shared_ptr<db::object::impl> db::object::_mutable_impl() const {
+    return std::dynamic_pointer_cast<db::object::impl>(this->_impl);
 }
 
 #pragma mark -

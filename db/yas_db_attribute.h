@@ -9,7 +9,7 @@
 namespace yas::db {
 class attribute_args;
 
-struct attribute {
+struct attribute final {
     std::string const name;
     std::string const type;
     db::value const default_value;

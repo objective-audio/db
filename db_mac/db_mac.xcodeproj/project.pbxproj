@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B61136A5232298300057C6AE /* yas_db_ptr.h in Headers */ = {isa = PBXBuildFile; fileRef = B61136A42322982C0057C6AE /* yas_db_ptr.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B6B6E0CA21E226070029A7C1 /* db.h in Headers */ = {isa = PBXBuildFile; fileRef = B6B6E0C821E226070029A7C1 /* db.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B6B6E10621E226A50029A7C1 /* yas_db_cf_utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6B6E0CF21E226A50029A7C1 /* yas_db_cf_utils.cpp */; };
 		B6B6E10721E226A50029A7C1 /* yas_db_index.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6B6E0D021E226A50029A7C1 /* yas_db_index.cpp */; };
@@ -70,6 +71,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		B61136A42322982C0057C6AE /* yas_db_ptr.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = yas_db_ptr.h; sourceTree = "<group>"; };
 		B6B6E0C521E226070029A7C1 /* db.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = db.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		B6B6E0C821E226070029A7C1 /* db.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = db.h; sourceTree = "<group>"; };
 		B6B6E0C921E226070029A7C1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -234,6 +236,7 @@
 				B6B6E0D421E226A50029A7C1 /* yas_db_value.h */,
 				B6B6E0F921E226A50029A7C1 /* yas_db_weak_pool_private.h */,
 				B6B6E0D321E226A50029A7C1 /* yas_db_weak_pool.h */,
+				B61136A42322982C0057C6AE /* yas_db_ptr.h */,
 			);
 			name = db;
 			path = ../../db;
@@ -288,6 +291,7 @@
 				B6B6E10C21E226A50029A7C1 /* yas_db_additional_types.h in Headers */,
 				B6B6E13621E226A50029A7C1 /* yas_db_object_id.h in Headers */,
 				B6B6E10A21E226A50029A7C1 /* yas_db_weak_pool.h in Headers */,
+				B61136A5232298300057C6AE /* yas_db_ptr.h in Headers */,
 				B6B6E0CA21E226070029A7C1 /* db.h in Headers */,
 				B6B6E11021E226A50029A7C1 /* yas_db_attribute.h in Headers */,
 			);

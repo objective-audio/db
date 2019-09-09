@@ -24,8 +24,8 @@ using namespace yas;
 }
 
 - (void)test_select_last {
-    db::database db = [yas_db_test_utils create_test_database];
-    XCTAssertTrue(db.open());
+    db::database_ptr const db = [yas_db_test_utils create_test_database];
+    XCTAssertTrue(db->open());
 
     auto const table_name = "table_a";
     auto const field_name = "field_a";
@@ -37,10 +37,10 @@ using namespace yas;
 
     args = {db::value{1}, db::value{"value_1"}, db::insert_action_value()};
 
-    auto result = db.execute_update(db::insert_sql(table_name, fields), args);
+    auto result = db->execute_update(db::insert_sql(table_name, fields), args);
     XCTAssertTrue(result);
     args = {db::value{2}, db::value{"value_2"}, db::insert_action_value()};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
 
     auto select_result = db::select_last(db, db::select_option{.table = table_name});
     XCTAssertTrue(select_result);
@@ -49,7 +49,7 @@ using namespace yas;
     XCTAssertEqual(select_result.value().at(1).at(field_name).get<db::text>(), "value_2");
 
     args = {db::value{1}, db::value{"value_1_1"}, db::update_action_value()};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
 
     select_result = db::select_last(db, db::select_option{.table = table_name});
     XCTAssertTrue(select_result);
@@ -58,7 +58,7 @@ using namespace yas;
     XCTAssertEqual(select_result.value().at(1).at(field_name).get<db::text>(), "value_1_1");
 
     args = {db::value{1}, db::null_value(), db::remove_action_value()};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
 
     select_result = db::select_last(db, db::select_option{.table = table_name});
     XCTAssertTrue(select_result);
@@ -67,8 +67,8 @@ using namespace yas;
 }
 
 - (void)test_select_last_by_save_id {
-    db::database db = [yas_db_test_utils create_test_database];
-    XCTAssertTrue(db.open());
+    db::database_ptr const db = [yas_db_test_utils create_test_database];
+    XCTAssertTrue(db->open());
 
     auto const table_name = "table_a";
     auto const field_name = "field_a";
@@ -79,17 +79,17 @@ using namespace yas;
 
     db::value_vector_t args;
     args = {db::value{1}, db::value{"value_1_a"}, db::value{1}, insert_action_value};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
     args = {db::value{2}, db::value{"value_2_a"}, db::value{1}, insert_action_value};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
     args = {db::value{1}, db::value{"value_1_b"}, db::value{2}, insert_action_value};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
     args = {db::value{2}, db::value{"value_2_b"}, db::value{2}, insert_action_value};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
     args = {db::value{1}, db::value{"value_1_c"}, db::value{3}, insert_action_value};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
     args = {db::value{2}, db::value{"value_2_c"}, db::value{4}, insert_action_value};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
 
     auto select_result = db::select_last(db, db::select_option{.table = table_name}, db::value{4});
     XCTAssertTrue(select_result);
@@ -117,8 +117,8 @@ using namespace yas;
 }
 
 - (void)test_select_last_with_addtional_parameters {
-    db::database db = [yas_db_test_utils create_test_database];
-    XCTAssertTrue(db.open());
+    db::database_ptr const db = [yas_db_test_utils create_test_database];
+    XCTAssertTrue(db->open());
 
     auto const table_name = "table_a";
     auto const field_name = "field_a";
@@ -130,17 +130,17 @@ using namespace yas;
 
     db::value_vector_t args;
     args = {db::value{1}, db::value{"value_1_a"}, db::value{1}, insert_action_value};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
     args = {db::value{2}, db::value{"value_2_a"}, db::value{1}, insert_action_value};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
     args = {db::value{1}, db::value{"value_1_b"}, db::value{2}, update_action_value};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
     args = {db::value{2}, db::value{"value_2_b"}, db::value{2}, update_action_value};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
     args = {db::value{1}, db::value{"value_1_c"}, db::value{3}, update_action_value};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
     args = {db::value{2}, db::value{"value_2_c"}, db::value{4}, update_action_value};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
 
     auto select_result = db::select_last(
         db, db::select_option{.table = table_name, .field_orders = {{db::object_id_field, db::order::ascending}}},
@@ -162,8 +162,8 @@ using namespace yas;
 }
 
 - (void)test_select_undo {
-    db::database db = [yas_db_test_utils create_test_database];
-    XCTAssertTrue(db.open());
+    db::database_ptr const db = [yas_db_test_utils create_test_database];
+    XCTAssertTrue(db->open());
 
     auto const table_name = "table_a";
     auto const field_name = "field_a";
@@ -173,20 +173,20 @@ using namespace yas;
 
     db::value_vector_t args;
     args = {db::value{1}, db::value{"value_1_a"}, db::value{1}, db::insert_action_value()};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
     args = {db::value{2}, db::value{"value_2_a"}, db::value{1}, db::insert_action_value()};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
 
     args = {db::value{1}, db::value{"value_1_b"}, db::value{2}, db::update_action_value()};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
 
     args = {db::value{2}, db::value{"value_2_c"}, db::value{3}, db::update_action_value()};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
 
     args = {db::value{1}, db::value{"value_1_d"}, db::value{4}, db::update_action_value()};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
     args = {db::value{2}, db::value{"value_2_d"}, db::value{4}, db::update_action_value()};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
 
     auto select_result = db::select_for_undo(db, table_name, 3, 4);
     XCTAssertTrue(select_result);
@@ -232,8 +232,8 @@ using namespace yas;
 }
 
 - (void)test_select_redo {
-    db::database db = [yas_db_test_utils create_test_database];
-    XCTAssertTrue(db.open());
+    db::database_ptr const db = [yas_db_test_utils create_test_database];
+    XCTAssertTrue(db->open());
 
     auto const table_name = "table_a";
     auto const field_name = "field_a";
@@ -243,20 +243,20 @@ using namespace yas;
 
     db::value_vector_t args;
     args = {db::value{1}, db::value{"value_1_a"}, db::value{1}};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
     args = {db::value{2}, db::value{"value_2_a"}, db::value{1}};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
 
     args = {db::value{1}, db::value{"value_1_b"}, db::value{2}};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
 
     args = {db::value{2}, db::value{"value_2_c"}, db::value{3}};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
 
     args = {db::value{1}, db::value{"value_1_d"}, db::value{4}};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
     args = {db::value{2}, db::value{"value_2_d"}, db::value{4}};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
 
     auto select_result = db::select_for_redo(db, table_name, 4, 3);
     XCTAssertTrue(select_result);
@@ -288,8 +288,8 @@ using namespace yas;
 }
 
 - (void)test_select_revert {
-    db::database db = [yas_db_test_utils create_test_database];
-    XCTAssertTrue(db.open());
+    db::database_ptr const db = [yas_db_test_utils create_test_database];
+    XCTAssertTrue(db->open());
 
     auto const table_name = "table_a";
     auto const field_name = "field_a";
@@ -299,20 +299,20 @@ using namespace yas;
 
     db::value_vector_t args;
     args = {db::value{1}, db::value{"value_1_a"}, db::value{1}, db::insert_action_value()};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
     args = {db::value{2}, db::value{"value_2_a"}, db::value{1}, db::insert_action_value()};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
 
     args = {db::value{1}, db::value{"value_1_b"}, db::value{2}, db::update_action_value()};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
 
     args = {db::value{2}, db::value{"value_2_c"}, db::value{3}, db::update_action_value()};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
 
     args = {db::value{1}, db::value{"value_1_d"}, db::value{4}, db::update_action_value()};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
     args = {db::value{2}, db::value{"value_2_d"}, db::value{4}, db::update_action_value()};
-    XCTAssertTrue(db.execute_update(db::insert_sql(table_name, fields), args));
+    XCTAssertTrue(db->execute_update(db::insert_sql(table_name, fields), args));
 
     auto select_result = db::select_for_revert(db, table_name, 1, 4);
 
@@ -342,17 +342,17 @@ using namespace yas;
 
 - (void)test_purge_attributes {
     db::model model_0_0_2 = [yas_db_test_utils model_0_0_2];
-    auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_2)];
+    auto const manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_2)];
 
-    manager.setup([self, &manager](auto result) mutable { XCTAssertTrue(result); });
+    manager->setup([self, &manager](auto result) mutable { XCTAssertTrue(result); });
 
-    manager.insert_objects(db::no_cancellation,
+    manager->insert_objects(db::no_cancellation,
                            []() {
                                return db::entity_count_map_t{{"sample_a", 2}};
                            },
                            [self, &manager](auto result) {
                                XCTAssertTrue(result);
-                               XCTAssertEqual(manager.current_save_id(), db::value{1});
+                               XCTAssertEqual(manager->current_save_id(), db::value{1});
 
                                auto &objects = result.value();
                                auto &a_objects = objects.at("sample_a");
@@ -366,9 +366,9 @@ using namespace yas;
                                XCTAssertEqual(object.object_id().stable_value(), db::value{2});
                            });
 
-    manager.save(db::no_cancellation, [self, &manager](db::manager_map_result_t result) {
+    manager->save(db::no_cancellation, [self, &manager](db::manager_map_result_t result) {
         XCTAssertTrue(result);
-        XCTAssertEqual(manager.current_save_id(), db::value{2});
+        XCTAssertEqual(manager->current_save_id(), db::value{2});
 
         db::object_map_map_t &objects = result.value();
         db::object_map_t &a_objects = objects.at("sample_a");
@@ -377,13 +377,13 @@ using namespace yas;
         object.set_attribute_value("name", db::value{"name_0_2"});
     });
 
-    manager.save(db::no_cancellation, [self, &manager](db::manager_map_result_t result) {
+    manager->save(db::no_cancellation, [self, &manager](db::manager_map_result_t result) {
         XCTAssertTrue(result);
-        XCTAssertEqual(manager.current_save_id(), db::value{3});
+        XCTAssertEqual(manager->current_save_id(), db::value{3});
     });
 
-    manager.execute(db::no_cancellation, [self, &manager](auto const &) {
-        auto &db = manager.database();
+    manager->execute(db::no_cancellation, [self, &manager](auto const &) {
+        auto &db = manager->database();
 
         auto update_result = db::purge_attributes(db, "sample_a");
         XCTAssertTrue(update_result);
@@ -403,26 +403,26 @@ using namespace yas;
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
 
-    manager.execute(db::no_cancellation, [exp](auto const &) { [exp fulfill]; });
+    manager->execute(db::no_cancellation, [exp](auto const &) { [exp fulfill]; });
 
     [self waitForExpectationsWithTimeout:1.0 handler:nil];
 }
 
 - (void)test_purge_relations {
     db::model model_0_0_1 = [yas_db_test_utils model_0_0_1];
-    auto manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
+    auto const manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1)];
 
-    manager.setup([self, &manager](auto result) { XCTAssertTrue(result); });
+    manager->setup([self, &manager](auto result) { XCTAssertTrue(result); });
 
     db::object_vector_map_t objects;
 
-    manager.insert_objects(db::no_cancellation,
+    manager->insert_objects(db::no_cancellation,
                            []() {
                                return db::entity_count_map_t{{"sample_a", 1}, {"sample_b", 2}};
                            },
                            [self, &manager, &objects](auto result) {
                                XCTAssertTrue(result);
-                               XCTAssertEqual(manager.current_save_id(), db::value{1});
+                               XCTAssertEqual(manager->current_save_id(), db::value{1});
 
                                objects = std::move(result.value());
                                db::object &obj_a = objects.at("sample_a").at(0);
@@ -436,9 +436,9 @@ using namespace yas;
                                obj_a.set_relation_objects("child", {obj_b0});
                            });
 
-    manager.save(db::no_cancellation, [self, &manager, &objects](db::manager_map_result_t result) {
+    manager->save(db::no_cancellation, [self, &manager, &objects](db::manager_map_result_t result) {
         XCTAssertTrue(result);
-        XCTAssertEqual(manager.current_save_id(), db::value{2});
+        XCTAssertEqual(manager->current_save_id(), db::value{2});
 
         db::object &obj_a = objects.at("sample_a").at(0);
         db::object &obj_b0 = objects.at("sample_b").at(0);
@@ -451,9 +451,9 @@ using namespace yas;
         obj_a.set_relation_objects("child", {obj_b1, obj_b0});
     });
 
-    manager.save(db::no_cancellation, [self, &manager, &objects](db::manager_map_result_t result) {
+    manager->save(db::no_cancellation, [self, &manager, &objects](db::manager_map_result_t result) {
         XCTAssertTrue(result);
-        XCTAssertEqual(manager.current_save_id(), db::value{3});
+        XCTAssertEqual(manager->current_save_id(), db::value{3});
 
         db::object &obj_a = objects.at("sample_a").at(0);
         db::object &obj_b0 = objects.at("sample_b").at(0);
@@ -466,18 +466,18 @@ using namespace yas;
         obj_a.set_relation_objects("child", {obj_b1});
     });
 
-    manager.save(db::no_cancellation, [self, &manager, &objects](db::manager_map_result_t result) {
+    manager->save(db::no_cancellation, [self, &manager, &objects](db::manager_map_result_t result) {
         XCTAssertTrue(result);
-        XCTAssertEqual(manager.current_save_id(), db::value{4});
+        XCTAssertEqual(manager->current_save_id(), db::value{4});
     });
 
-    manager.execute(db::no_cancellation, [self, &manager](auto const &) {
-        auto &db = manager.database();
+    manager->execute(db::no_cancellation, [self, &manager](auto const &) {
+        auto &db = manager->database();
 
         auto purge_result = db::purge_attributes(db, "sample_a");
         XCTAssertTrue(purge_result);
 
-        auto const &rel_table_name = manager.model().entities().at("sample_a").relations.at("child").table;
+        auto const &rel_table_name = manager->model().entities().at("sample_a").relations.at("child").table;
 
         auto purge_relation_result = db::purge_relations(db, rel_table_name, "sample_a");
         XCTAssertTrue(purge_relation_result);
@@ -496,7 +496,7 @@ using namespace yas;
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
 
-    manager.execute(db::no_cancellation, [exp](auto const &) { [exp fulfill]; });
+    manager->execute(db::no_cancellation, [exp](auto const &) { [exp fulfill]; });
 
     [self waitForExpectationsWithTimeout:1.0 handler:nil];
 }
@@ -558,21 +558,21 @@ using namespace yas;
 
 - (void)test_to_preparation_ids_from_objects {
     db::model model_0_0_2 = [yas_db_test_utils model_0_0_2];
-    db::manager manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_2)];
+    db::manager_ptr const manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_2)];
 
     XCTestExpectation *setupExp = [self expectationWithDescription:@"setup"];
 
-    manager.setup([setupExp](db::manager_result_t) { [setupExp fulfill]; });
+    manager->setup([setupExp](db::manager_result_t) { [setupExp fulfill]; });
 
     [self waitForExpectations:@[setupExp] timeout:10.0];
 
-    db::object obj_a_1 = manager.create_object("sample_a");
-    db::object obj_a_2 = manager.create_object("sample_a");
-    db::object obj_b_1 = manager.create_object("sample_b");
-    db::object obj_b_2 = manager.create_object("sample_b");
-    db::object obj_b_3 = manager.create_object("sample_b");
-    db::object obj_b_4 = manager.create_object("sample_b");
-    db::object obj_c_1 = manager.create_object("sample_c");
+    db::object obj_a_1 = manager->create_object("sample_a");
+    db::object obj_a_2 = manager->create_object("sample_a");
+    db::object obj_b_1 = manager->create_object("sample_b");
+    db::object obj_b_2 = manager->create_object("sample_b");
+    db::object obj_b_3 = manager->create_object("sample_b");
+    db::object obj_b_4 = manager->create_object("sample_b");
+    db::object obj_c_1 = manager->create_object("sample_c");
 
     obj_a_1.add_relation_object("child", obj_b_1);
     obj_a_1.add_relation_object("child", obj_b_2);
@@ -586,7 +586,7 @@ using namespace yas;
 
     db::object_map_map_t saved_objects;
 
-    manager.save(db::no_cancellation, [saveExp, &saved_objects](db::manager_map_result_t result) {
+    manager->save(db::no_cancellation, [saveExp, &saved_objects](db::manager_map_result_t result) {
         saved_objects = std::move(result.value());
 
         [saveExp fulfill];
@@ -622,21 +622,21 @@ using namespace yas;
 
 - (void)test_to_preparation_ids_from_object_map {
     db::model model_0_0_2 = [yas_db_test_utils model_0_0_2];
-    db::manager manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_2)];
+    db::manager_ptr const manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_2)];
 
     XCTestExpectation *setupExp = [self expectationWithDescription:@"setup"];
 
-    manager.setup([setupExp](db::manager_result_t) { [setupExp fulfill]; });
+    manager->setup([setupExp](db::manager_result_t) { [setupExp fulfill]; });
 
     [self waitForExpectations:@[setupExp] timeout:10.0];
 
-    db::object obj_a_1 = manager.create_object("sample_a");
-    db::object obj_a_2 = manager.create_object("sample_a");
-    db::object obj_b_1 = manager.create_object("sample_b");
-    db::object obj_b_2 = manager.create_object("sample_b");
-    db::object obj_b_3 = manager.create_object("sample_b");
-    db::object obj_b_4 = manager.create_object("sample_b");
-    db::object obj_c_1 = manager.create_object("sample_c");
+    db::object obj_a_1 = manager->create_object("sample_a");
+    db::object obj_a_2 = manager->create_object("sample_a");
+    db::object obj_b_1 = manager->create_object("sample_b");
+    db::object obj_b_2 = manager->create_object("sample_b");
+    db::object obj_b_3 = manager->create_object("sample_b");
+    db::object obj_b_4 = manager->create_object("sample_b");
+    db::object obj_c_1 = manager->create_object("sample_c");
 
     obj_a_1.add_relation_object("child", obj_b_1);
     obj_a_1.add_relation_object("child", obj_b_2);
@@ -650,7 +650,7 @@ using namespace yas;
 
     db::object_map_map_t saved_objects;
 
-    manager.save(db::no_cancellation, [saveExp, &saved_objects](db::manager_map_result_t result) {
+    manager->save(db::no_cancellation, [saveExp, &saved_objects](db::manager_map_result_t result) {
         saved_objects = std::move(result.value());
 
         [saveExp fulfill];
@@ -688,21 +688,21 @@ using namespace yas;
 
 - (void)test_to_preparation_ids_from_object_vector {
     db::model model_0_0_2 = [yas_db_test_utils model_0_0_2];
-    db::manager manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_2)];
+    db::manager_ptr const manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_2)];
 
     XCTestExpectation *setupExp = [self expectationWithDescription:@"setup"];
 
-    manager.setup([setupExp](db::manager_result_t) { [setupExp fulfill]; });
+    manager->setup([setupExp](db::manager_result_t) { [setupExp fulfill]; });
 
     [self waitForExpectations:@[setupExp] timeout:10.0];
 
-    db::object obj_a_1 = manager.create_object("sample_a");
-    db::object obj_a_2 = manager.create_object("sample_a");
-    db::object obj_b_1 = manager.create_object("sample_b");
-    db::object obj_b_2 = manager.create_object("sample_b");
-    db::object obj_b_3 = manager.create_object("sample_b");
-    db::object obj_b_4 = manager.create_object("sample_b");
-    db::object obj_c_1 = manager.create_object("sample_c");
+    db::object obj_a_1 = manager->create_object("sample_a");
+    db::object obj_a_2 = manager->create_object("sample_a");
+    db::object obj_b_1 = manager->create_object("sample_b");
+    db::object obj_b_2 = manager->create_object("sample_b");
+    db::object obj_b_3 = manager->create_object("sample_b");
+    db::object obj_b_4 = manager->create_object("sample_b");
+    db::object obj_c_1 = manager->create_object("sample_c");
 
     obj_a_1.add_relation_object("child", obj_b_1);
     obj_a_1.add_relation_object("child", obj_b_2);
@@ -716,7 +716,7 @@ using namespace yas;
 
     db::object_map_map_t saved_objects;
 
-    manager.save(db::no_cancellation, [saveExp, &saved_objects](db::manager_map_result_t result) {
+    manager->save(db::no_cancellation, [saveExp, &saved_objects](db::manager_map_result_t result) {
         saved_objects = std::move(result.value());
 
         [saveExp fulfill];

@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include <cpp_utils/yas_base.h>
+#include <cpp_utils/yas_weakable.h>
 #include <memory>
 #include <vector>
 #include "yas_db_protocol.h"
@@ -63,12 +63,11 @@ struct null {
     static constexpr auto name = "NULL";
 };
 
-class value : public base {
+struct value final : weakable<value> {
     template <typename T>
-    class impl;
+    class typed_impl;
 
-   public:
-    class impl_base;
+    class impl;
 
     explicit value(uint8_t const &);
     explicit value(int8_t const &);
@@ -88,12 +87,16 @@ class value : public base {
     template <typename T = db::copy_tag_t>
     value(const void *const data, std::size_t const size, T const tag = db::copy_tag);
 
+    value(std::shared_ptr<weakable_impl> &&);
+
     value(value const &);
     value(value &&);
     value &operator=(value const &);
     value &operator=(value &&);
 
     ~value();
+
+    uintptr_t identifier() const;
 
     explicit operator bool() const;
 
@@ -104,8 +107,15 @@ class value : public base {
 
     std::string sql() const;
 
+    std::shared_ptr<weakable_impl> weakable_impl_ptr() const override;
+
+    bool operator==(value const &rhs) const;
+    bool operator!=(value const &rhs) const;
+
    private:
-    static std::shared_ptr<db::value::impl<null>> const &null_value_impl_ptr();
+    std::shared_ptr<impl> _impl;
+
+    static std::shared_ptr<db::value::typed_impl<null>> const &null_value_impl_ptr();
 };
 
 db::value const &null_value();

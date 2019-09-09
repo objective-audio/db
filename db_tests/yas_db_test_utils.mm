@@ -8,30 +8,30 @@ using namespace yas;
 
 @implementation yas_db_test_utils
 
-+ (db::database)create_test_database {
++ (db::database_ptr)create_test_database {
     NSString *databasePath = [[self class] databasePath];
     std::string db_path = yas::to_string((__bridge CFStringRef)databasePath);
-    return db::database{db_path};
+    return db::database::make_shared(db_path);
 }
 
-+ (db::manager)create_test_manager {
-    return [self create_test_manager:db::model{nullptr}];
++ (db::manager_ptr)create_test_manager {
+    return [self create_test_manager:[self model_0_0_0]];
 }
 
-+ (db::manager)create_test_manager:(db::model &&)model {
-    return [self create_test_manager:std::move(model) priority_count:1];
++ (db::manager_ptr)create_test_manager:(db::model const &)model {
+    return [self create_test_manager:model priority_count:1];
 }
 
-+ (yas::db::manager)create_test_manager:(yas::db::model &&)model priority_count:(size_t)count {
-    return [self create_test_manager:std::move(model) priority_count:count dispatch_queue:dispatch_get_main_queue()];
++ (yas::db::manager_ptr)create_test_manager:(yas::db::model const &)model priority_count:(size_t)count {
+    return [self create_test_manager:model priority_count:count dispatch_queue:dispatch_get_main_queue()];
 }
 
-+ (yas::db::manager)create_test_manager:(yas::db::model &&)model
++ (yas::db::manager_ptr)create_test_manager:(yas::db::model const &)model
                          priority_count:(size_t)count
                          dispatch_queue:(dispatch_queue_t)queue {
     NSString *databasePath = [[self class] databasePath];
     std::string db_path = yas::to_string((__bridge CFStringRef)databasePath);
-    return db::manager{db_path, std::move(model), count, queue};
+    return db::manager::make_shared(db_path, model, count, queue);
 }
 
 + (std::string)database_path {
@@ -50,6 +50,13 @@ using namespace yas;
     if ([fileManager fileExistsAtPath:path]) {
         [fileManager removeItemAtPath:path error:nil];
     }
+}
+
++ (yas::db::model)model_0_0_0 {
+    yas::version version{"0.0.0"};
+    
+    return db::model{
+    db::model_args{.version = std::move(version), .entities = {}, .indices = {}}};
 }
 
 + (db::model)model_0_0_1 {

@@ -4,24 +4,16 @@
 
 #pragma once
 
-#include <cpp_utils/yas_base.h>
+#include <cpp_utils/yas_version.h>
 #include <string>
 #include "yas_db_additional_protocol.h"
-
-namespace yas {
-class version;
-}
 
 namespace yas::db {
 class value;
 
-class info : public base {
-    class impl;
-
-   public:
+struct info final {
     info(std::string version, db::integer::type const current_save_id, db::integer::type const last_save_id);
     explicit info(db::value_map_t values);
-    info(std::nullptr_t);
 
     yas::version const &version() const;
     db::integer::type const &current_save_id() const;
@@ -37,7 +29,13 @@ class info : public base {
     static std::string const &sql_for_update_version();
     static std::string const &sql_for_update_save_ids();
     static std::string const &sql_for_update_current_save_id();
-};
 
-db::info const &null_info();
+    bool operator==(info const &rhs) const;
+    bool operator!=(info const &rhs) const;
+
+   private:
+    yas::version _version;
+    db::value _current_save_id;
+    db::value _last_save_id;
+};
 }  // namespace yas::db

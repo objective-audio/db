@@ -5,7 +5,7 @@
 #pragma once
 
 #include <chaining/yas_chaining_umbrella.h>
-#include <cpp_utils/yas_base.h>
+#include <cpp_utils/yas_weakable.h>
 #include <deque>
 #include <set>
 #include <unordered_map>
@@ -13,7 +13,6 @@
 
 namespace yas::db {
 class entity;
-class identifier;
 
 enum class object_event_type {
     fetched,
@@ -74,7 +73,7 @@ struct object_erased_event {
     db::object_id const &object_id;
 };
 
-struct object_event : base {
+struct object_event {
     class impl_base;
 
     template <typename Event>
@@ -99,10 +98,12 @@ struct object_event : base {
     bool is_erased() const;
 
     db::object const &object() const;
+
+   private:
+    std::shared_ptr<impl_base> _impl;
 };
 
-class const_object : public base {
-   public:
+struct const_object {
     class impl;
 
     const_object(db::entity const &entity, db::object_data const &obj_data);
@@ -126,16 +127,23 @@ class const_object : public base {
     bool is_updated() const;
     bool is_removed() const;
 
+    bool operator==(const_object const &rhs) const;
+    bool operator!=(const_object const &rhs) const;
+
+    explicit operator bool() const;
+
    protected:
+    std::shared_ptr<impl> _impl;
+
     const_object(std::shared_ptr<impl> const &);
     const_object(std::shared_ptr<impl> &&);
 };
 
-class object : public const_object {
-   public:
+struct object final : const_object, weakable<object> {
     class impl;
 
     object(db::entity const &entity);
+    object(std::shared_ptr<weakable_impl> &&);
     object(std::nullptr_t);
 
     [[nodiscard]] chaining::chain_sync_t<object_event> chain() const;
@@ -163,8 +171,12 @@ class object : public const_object {
 
     db::manageable_object &manageable();
 
+    std::shared_ptr<weakable_impl> weakable_impl_ptr() const override;
+
    private:
     db::manageable_object _manageable = nullptr;
+
+    std::shared_ptr<impl> _mutable_impl() const;
 };
 
 db::const_object const &null_const_object();

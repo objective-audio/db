@@ -4,26 +4,21 @@
 
 #pragma once
 
-#include <cpp_utils/yas_base.h>
 #include <sqlite3.h>
 #include <memory>
 #include <string>
 #include "yas_db_protocol.h"
 
 namespace yas::db {
-class statement : public base {
-    class impl;
-
-   public:
-    statement();
-    statement(std::nullptr_t);
-
-    ~statement();
+struct statement final {
+    ~statement() = default;
 
     statement(statement const &) = default;
     statement(statement &&) = default;
     statement &operator=(statement const &) = default;
     statement &operator=(statement &&) = default;
+
+    uintptr_t identifier() const;
 
     void set_stmt(sqlite3_stmt *const);
     sqlite3_stmt *stmt() const;
@@ -38,14 +33,14 @@ class statement : public base {
 
     db::closable &closable();
 
+    static statement_ptr make_shared();
+
    private:
+    class impl;
+
+    std::shared_ptr<impl> _impl;
     db::closable _closable = nullptr;
+
+    statement();
 };
 }  // namespace yas::db
-
-template <>
-struct std::hash<yas::db::statement> {
-    std::size_t operator()(yas::db::statement const &key) const {
-        return std::hash<uintptr_t>()(key.identifier());
-    }
-};

@@ -21,9 +21,9 @@ using namespace yas;
 }
 
 - (void)test_closable {
-    db::statement statement;
+    auto statement = db::statement::make_shared();
 
-    auto closable_statement = statement.closable();
+    auto closable_statement = statement->closable();
     XCTAssertTrue(closable_statement);
 }
 
@@ -31,39 +31,39 @@ using namespace yas;
 }
 
 - (void)test_query {
-    db::statement statement;
+    auto statement = db::statement::make_shared();
 
-    XCTAssertEqual(statement.query(), "");
+    XCTAssertEqual(statement->query(), "");
 
-    statement.set_query("test_query");
+    statement->set_query("test_query");
 
     auto const &const_statement = statement;
 
-    XCTAssertEqual(const_statement.query(), "test_query");
+    XCTAssertEqual(const_statement->query(), "test_query");
 }
 
 - (void)test_in_use {
-    db::statement statement;
+    auto statement = db::statement::make_shared();
 
-    XCTAssertFalse(statement.in_use());
+    XCTAssertFalse(statement->in_use());
 
-    statement.set_in_use(true);
+    statement->set_in_use(true);
 
     auto const &const_statement = statement;
 
-    XCTAssertTrue(const_statement.in_use());
+    XCTAssertTrue(const_statement->in_use());
 }
 
 - (void)test_reset {
-    db::statement statement;
+    auto statement = db::statement::make_shared();
 
-    statement.set_in_use(true);
+    statement->set_in_use(true);
 
-    XCTAssertTrue(statement.in_use());
+    XCTAssertTrue(statement->in_use());
 
-    statement.reset();
+    statement->reset();
 
-    XCTAssertFalse(statement.in_use());
+    XCTAssertFalse(statement->in_use());
 }
 
 @end

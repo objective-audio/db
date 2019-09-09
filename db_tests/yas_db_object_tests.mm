@@ -555,17 +555,17 @@ using namespace yas;
                     auto const name = replaced_event.name;
 
                     XCTAssertEqual(name, "child");
-                    XCTAssertEqual(obj.relation_size(name), 2);
-                    XCTAssertEqual(obj.relation_id(name, 0).stable(), 10);
-                    XCTAssertEqual(obj.relation_id(name, 1).stable(), 20);
+                    XCTAssertEqual(obj->relation_size(name), 2);
+                    XCTAssertEqual(obj->relation_id(name, 0).stable(), 10);
+                    XCTAssertEqual(obj->relation_id(name, 1).stable(), 20);
                 } else if (called_count == 1) {
                     XCTAssertEqual(event.type(), db::object_event_type::relation_inserted);
 
                     auto const &inserted_event = event.get<db::object_relation_inserted_event>();
                     auto const name = inserted_event.name;
 
-                    XCTAssertEqual(obj.relation_size(name), 3);
-                    XCTAssertEqual(obj.relation_id(name, 2).stable(), 30);
+                    XCTAssertEqual(obj->relation_size(name), 3);
+                    XCTAssertEqual(obj->relation_id(name, 2).stable(), 30);
                     XCTAssertEqual(inserted_event.indices.size(), 1);
                 } else if (called_count == 2) {
                     XCTAssertEqual(event.type(), db::object_event_type::relation_removed);
@@ -573,9 +573,9 @@ using namespace yas;
                     auto const &removed_event = event.get<db::object_relation_removed_event>();
                     auto const name = removed_event.name;
 
-                    XCTAssertEqual(obj.relation_size(name), 2);
-                    XCTAssertEqual(obj.relation_id(name, 0).stable(), 10);
-                    XCTAssertEqual(obj.relation_id(name, 1).stable(), 30);
+                    XCTAssertEqual(obj->relation_size(name), 2);
+                    XCTAssertEqual(obj->relation_id(name, 0).stable(), 10);
+                    XCTAssertEqual(obj->relation_id(name, 1).stable(), 30);
                     XCTAssertEqual(removed_event.indices.size(), 1);
                 } else if (called_count == 3) {
                     XCTAssertEqual(event.type(), db::object_event_type::relation_removed);
@@ -583,7 +583,7 @@ using namespace yas;
                     auto const &removed_event = event.get<db::object_relation_removed_event>();
                     auto const name = removed_event.name;
 
-                    XCTAssertEqual(obj.relation_size(name), 0);
+                    XCTAssertEqual(obj->relation_size(name), 0);
                     XCTAssertEqual(removed_event.indices.size(), 2);
                 }
 

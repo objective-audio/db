@@ -23,7 +23,7 @@ enum class error_type {
     sqlite,
 };
 
-struct error {
+struct error final {
     error(std::nullptr_t);
     explicit error(db::error_type const type);
     error(db::error_type const type, db::sqlite_result_code const &code);

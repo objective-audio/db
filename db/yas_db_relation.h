@@ -9,8 +9,7 @@
 namespace yas::db {
 class relation_args;
 
-struct relation {
-   public:
+struct relation final {
     std::string const name;
     std::string const source;
     std::string const target;

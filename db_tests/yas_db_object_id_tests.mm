@@ -126,7 +126,7 @@ using namespace yas;
     auto src = db::make_temporary_id();
     auto dst = src.copy();
 
-    XCTAssertFalse(src.base::identifier() == dst.base::identifier());
+    XCTAssertFalse(src.identifier() == dst.identifier());
     XCTAssertTrue(src == dst);
 }
 
@@ -134,7 +134,7 @@ using namespace yas;
     auto src = db::make_stable_id(db::value{567});
     auto dst = src.copy();
 
-    XCTAssertFalse(src.base::identifier() == dst.base::identifier());
+    XCTAssertFalse(src.identifier() == dst.identifier());
     XCTAssertTrue(src == dst);
 }
 

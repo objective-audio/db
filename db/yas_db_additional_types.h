@@ -117,7 +117,7 @@ enum class attribute_type {
     blob,
 };
 
-struct attribute_args {
+struct attribute_args final {
     std::string name;
     attribute_type type;
     db::value default_value = nullptr;
@@ -133,7 +133,7 @@ static std::string const src_pk_id_field = "src_pk_id";
 static std::string const src_obj_id_field = "src_obj_id";
 static std::string const tgt_obj_id_field = "tgt_obj_id";
 
-struct relation_args {
+struct relation_args final {
     std::string name;
     std::string target;
     bool const many = false;
@@ -147,7 +147,7 @@ using relation_map_t = std::unordered_map<std::string, db::relation>;
 using string_set_t = std::unordered_set<std::string>;
 using string_set_map_t = std::unordered_map<std::string, db::string_set_t>;
 
-struct entity_args {
+struct entity_args final {
     std::string name;
     db::attribute_args_vector_t attributes;
     db::relation_args_vector_t relations;
@@ -157,7 +157,7 @@ using entity_args_vector_t = std::vector<entity_args>;
 
 // for index
 
-struct index_args {
+struct index_args final {
     std::string name;
     std::string entity;
     std::vector<std::string> attributes;
@@ -169,7 +169,7 @@ using index_args_vector_t = std::vector<index_args>;
 using entity_map_t = std::unordered_map<std::string, db::entity>;
 using index_map_t = std::unordered_map<std::string, db::index>;
 
-struct model_args {
+struct model_args final {
     yas::version version;
     std::vector<db::entity_args> entities;
     std::vector<db::index_args> indices;

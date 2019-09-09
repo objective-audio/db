@@ -20,7 +20,7 @@ class select_option;
 static std::string const rowid_field = "rowid";
 
 using update_result_t = result<std::nullptr_t, db::error>;
-using query_result_t = result<db::row_set, db::error>;
+using query_result_t = result<db::row_set_ptr, db::error>;
 using row_result_t = result<sqlite3_int64, db::error>;
 using count_result_t = result<int, db::error>;
 using integrity_result_t = result<std::nullptr_t, std::string>;

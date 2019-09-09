@@ -4,9 +4,9 @@
 
 #pragma once
 
-#include <cpp_utils/yas_base.h>
 #include <string>
 #include "yas_db_protocol.h"
+#include "yas_db_ptr.h"
 #include "yas_db_result_code.h"
 #include "yas_db_types.h"
 
@@ -16,28 +16,23 @@ class result;
 }
 
 namespace yas::db {
-class database;
 class statement;
 class value;
 
-struct next_result_code : result_code {
+struct next_result_code final : result_code {
     next_result_code(int const &value);
 
     explicit operator bool() const;
 };
 
-class row_set : public base {
-   public:
-    class impl;
-
+struct row_set final {
     using index_result_t = result<int, std::nullptr_t>;
-
-    row_set(statement const &, database const &);
-    row_set(std::nullptr_t);
 
     ~row_set();
 
-    statement const &statement() const;
+    uintptr_t identifier() const;
+
+    db::statement_ptr const &statement() const;
 
     db::next_result_code next();
     bool has_row();
@@ -56,22 +51,14 @@ class row_set : public base {
     db::closable &closable();
     db_settable &db_settable();
 
+    static row_set_ptr make_shared(db::statement_ptr const &, database_ptr const &, std::vector<db::value> const &);
+
    private:
+    class impl;
+    std::shared_ptr<impl> _impl;
     db::closable _closable = nullptr;
     db::db_settable _db_settable = nullptr;
+
+    row_set(db::statement_ptr const &, database_ptr const &, std::vector<db::value> const &);
 };
 }  // namespace yas::db
-
-template <>
-struct std::hash<yas::db::row_set> {
-    std::size_t operator()(yas::db::row_set const &key) const {
-        return std::hash<uintptr_t>()(key.identifier());
-    }
-};
-
-template <>
-struct std::hash<yas::base::weak<yas::db::row_set>> {
-    std::size_t operator()(yas::base::weak<yas::db::row_set> const &key) const {
-        return std::hash<uintptr_t>()(key.identifier());
-    }
-};
