@@ -23,7 +23,7 @@ using namespace yas;
 - (void)test_closable {
     auto statement = db::statement::make_shared();
 
-    auto closable_statement = statement->closable();
+    auto const closable_statement = db::closable::cast(statement);
     XCTAssertTrue(closable_statement);
 }
 

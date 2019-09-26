@@ -24,7 +24,7 @@ db::next_result_code::operator bool() const {
 
 #pragma mark - impl
 
-struct db::row_set::impl : closable::impl, db_settable::impl {
+struct db::row_set::impl {
     impl(db::statement_ptr const &statement, database_ptr const &database, std::vector<db::value> const &context)
         : _statement(statement), _database(database), _context(context) {
         this->_statement->set_in_use(true);
@@ -38,17 +38,17 @@ struct db::row_set::impl : closable::impl, db_settable::impl {
         return reinterpret_cast<uintptr_t>(this);
     }
 
-    void close() override {
+    void close() {
         this->_statement->reset();
         if (this->_database) {
-            if (db::row_set_observable &observable_db = this->_database->row_set_observable()) {
-                observable_db.row_set_did_close(identifier());
+            if (db::row_set_observable_ptr const observable_db = row_set_observable::cast(this->_database)) {
+                observable_db->row_set_did_close(identifier());
             }
             this->_database = nullptr;
         }
     }
 
-    void _set_database(database_ptr const &database) override {
+    void _set_database(database_ptr const &database) {
         this->_database = database;
     }
 
@@ -194,18 +194,12 @@ db::value_map_t db::row_set::values() const {
     return map;
 }
 
-db::closable &db::row_set::closable() {
-    if (!this->_closable) {
-        this->_closable = db::closable{this->_impl};
-    }
-    return this->_closable;
+void db::row_set::close() {
+    this->_impl->close();
 }
 
-db::db_settable &db::row_set::db_settable() {
-    if (!this->_db_settable) {
-        this->_db_settable = db::db_settable{this->_impl};
-    }
-    return this->_db_settable;
+void db::row_set::set_database(database_ptr const &database) {
+    this->_impl->_set_database(database);
 }
 
 db::row_set_ptr db::row_set::make_shared(db::statement_ptr const &statement, database_ptr const &database,

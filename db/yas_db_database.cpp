@@ -20,7 +20,7 @@ static std::map<uint8_t, database_wptr> _databases;
 
 #pragma mark - impl
 
-struct db::database::impl : row_set_observable::impl {
+struct db::database::impl {
     uint8_t _db_key;
     std::string _database_path;
     sqlite3 *_sqlite_handle = nullptr;
@@ -160,9 +160,9 @@ struct db::database::impl : row_set_observable::impl {
 
     void clear_cached_statements() {
         for (auto &pair : this->_cached_statements) {
-            for (auto &statementpair : pair.second) {
-                if (db::closable &statement = statementpair.second->closable()) {
-                    statement.close();
+            for (auto &statement_pair : pair.second) {
+                if (db::closable_ptr const statement = closable::cast(statement_pair.second)) {
+                    statement->close();
                 }
             }
         }
@@ -172,8 +172,8 @@ struct db::database::impl : row_set_observable::impl {
     void close_open_row_sets() {
         for (auto &pair : this->_open_row_sets) {
             if (db::row_set_ptr const row_set = pair.second.lock()) {
-                row_set->db_settable().set_database(nullptr);
-                row_set->closable().close();
+                db_settable::cast(row_set)->set_database(nullptr);
+                closable::cast(row_set)->close();
             }
         }
         this->_open_row_sets.clear();
@@ -516,7 +516,7 @@ struct db::database::impl : row_set_observable::impl {
         return this->_max_busy_retry_time_interval;
     }
 
-    void _row_set_did_close(uintptr_t const id) override {
+    void _row_set_did_close(uintptr_t const id) {
         this->_open_row_sets.erase(id);
     }
 
@@ -567,8 +567,8 @@ bool db::database::good_connection() const {
 
     if (db::query_result_t query_result = execute_query("select name from sqlite_master where type='table'")) {
         db::row_set_ptr const &row_set = query_result.value();
-        if (db::closable &closable_rs = row_set->closable()) {
-            closable_rs.close();
+        if (db::closable_ptr const closable_rs = closable::cast(row_set)) {
+            closable_rs->close();
         }
         return true;
     }
@@ -691,13 +691,6 @@ std::chrono::time_point<std::chrono::system_clock> db::database::start_busy_retr
     return this->_impl->_start_busy_retry_time;
 }
 
-db::row_set_observable &db::database::row_set_observable() {
-    if (!this->_row_set_observable) {
-        this->_row_set_observable = db::row_set_observable{this->_impl};
-    }
-    return this->_row_set_observable;
-}
-
 void db::database::_prepare(database_ptr const &shared) {
     auto imp = this->_impl;
 
@@ -707,6 +700,10 @@ void db::database::_prepare(database_ptr const &shared) {
         imp->_db_key = *key;
         db::_databases.insert(std::make_pair(*key, to_weak(shared)));
     }
+}
+
+void db::database::row_set_did_close(uintptr_t const id) {
+    this->_impl->_row_set_did_close(id);
 }
 
 db::database_ptr db::database::make_shared(std::string const &path) {

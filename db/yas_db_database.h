@@ -19,7 +19,7 @@ union callback_id {
     };
 };
 
-struct database final {
+struct database final : row_set_observable {
     class impl;
 
     using callback_f = std::function<int(db::value_map_t const &)>;
@@ -69,13 +69,10 @@ struct database final {
     void set_start_busy_retry_time(const std::chrono::time_point<std::chrono::system_clock> &time);
     std::chrono::time_point<std::chrono::system_clock> start_busy_retry_time() const;
 
-    db::row_set_observable &row_set_observable();
-
     static database_ptr make_shared(std::string const &path);
 
    private:
     std::shared_ptr<impl> _impl;
-    db::row_set_observable _row_set_observable = nullptr;
 
     explicit database(std::string const &path);
 
@@ -85,5 +82,7 @@ struct database final {
     database &operator=(database &&) = delete;
 
     void _prepare(database_ptr const &);
+
+    void row_set_did_close(uintptr_t const) override;
 };
 }  // namespace yas::db

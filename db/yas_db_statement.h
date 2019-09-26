@@ -10,7 +10,7 @@
 #include "yas_db_protocol.h"
 
 namespace yas::db {
-struct statement final {
+struct statement final : closable {
     ~statement() = default;
 
     statement(statement const &) = default;
@@ -31,16 +31,15 @@ struct statement final {
 
     void reset();
 
-    db::closable &closable();
-
     static statement_ptr make_shared();
 
    private:
     class impl;
 
     std::shared_ptr<impl> _impl;
-    db::closable _closable = nullptr;
 
     statement();
+
+    void close() override;
 };
 }  // namespace yas::db

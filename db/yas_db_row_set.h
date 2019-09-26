@@ -25,7 +25,7 @@ struct next_result_code final : result_code {
     explicit operator bool() const;
 };
 
-struct row_set final {
+struct row_set final : closable, db_settable {
     using index_result_t = result<int, std::nullptr_t>;
 
     ~row_set();
@@ -48,17 +48,15 @@ struct row_set final {
 
     db::value_map_t values() const;
 
-    db::closable &closable();
-    db_settable &db_settable();
-
     static row_set_ptr make_shared(db::statement_ptr const &, database_ptr const &, std::vector<db::value> const &);
 
    private:
     class impl;
     std::shared_ptr<impl> _impl;
-    db::closable _closable = nullptr;
-    db::db_settable _db_settable = nullptr;
 
     row_set(db::statement_ptr const &, database_ptr const &, std::vector<db::value> const &);
+
+    void close() override;
+    void set_database(database_ptr const &) override;
 };
 }  // namespace yas::db
