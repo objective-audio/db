@@ -8,7 +8,7 @@ using namespace yas;
 
 #pragma mark - statement::impl
 
-struct db::statement::impl : closable::impl {
+struct db::statement::impl {
     ~impl() {
         this->close();
     }
@@ -17,7 +17,7 @@ struct db::statement::impl : closable::impl {
         return reinterpret_cast<uintptr_t>(this);
     }
 
-    void close() override {
+    void close() {
         if (this->_stmt) {
             sqlite3_finalize(this->_stmt);
             this->_stmt = nullptr;
@@ -76,11 +76,8 @@ void db::statement::reset() {
     this->_impl->reset();
 }
 
-db::closable &db::statement::closable() {
-    if (!this->_closable) {
-        this->_closable = db::closable{this->_impl};
-    }
-    return this->_closable;
+void db::statement::close() {
+    this->_impl->close();
 }
 
 db::statement_ptr db::statement::make_shared() {
