@@ -5,7 +5,6 @@
 #pragma once
 
 #include <chaining/yas_chaining_umbrella.h>
-#include <cpp_utils/yas_weakable.h>
 #include <deque>
 #include <set>
 #include <unordered_map>
@@ -143,11 +142,10 @@ struct const_object {
     const_object(std::shared_ptr<impl> &&);
 };
 
-struct object final : const_object, weakable<object> {
+struct object final : const_object {
     class impl;
 
     object(db::entity const &entity);
-    object(std::shared_ptr<weakable_impl> &&);
     object(std::nullptr_t);
 
     [[nodiscard]] chaining::chain_sync_t<object_event> chain() const;
@@ -174,8 +172,6 @@ struct object final : const_object, weakable<object> {
     db::object_data save_data(db::object_id_pool_t &) const;
 
     db::manageable_object &manageable();
-
-    std::shared_ptr<weakable_impl> weakable_impl_ptr() const override;
 
     static object_ptr make_shared(db::entity const &);
 
