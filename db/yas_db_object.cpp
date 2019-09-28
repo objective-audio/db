@@ -416,6 +416,15 @@ db::const_object::operator bool() const {
     return this->_impl != nullptr;
 }
 
+db::const_object_ptr db::const_object::make_shared(db::entity const &entity, db::object_data const &obj_data) {
+    return const_object_ptr(new const_object{entity, obj_data});
+}
+
+db::const_object_ptr const &db::const_object::null_const_object() {
+    static db::const_object_ptr const _null_object = const_object_ptr(new const_object{nullptr});
+    return _null_object;
+}
+
 #pragma mark - db::object::impl
 
 struct db::object::impl : const_object::impl, manageable_object::impl, weakable_impl {
@@ -828,6 +837,15 @@ std::shared_ptr<weakable_impl> db::object::weakable_impl_ptr() const {
 
 std::shared_ptr<db::object::impl> db::object::_mutable_impl() const {
     return std::dynamic_pointer_cast<db::object::impl>(this->_impl);
+}
+
+db::object_ptr db::object::make_shared(db::entity const &entity) {
+    return object_ptr(new object{entity});
+}
+
+db::object_ptr const &db::object::null_object() {
+    static db::object_ptr const _null_object = object_ptr(new db::object{nullptr});
+    return _null_object;
 }
 
 #pragma mark -

@@ -132,6 +132,10 @@ struct const_object {
 
     explicit operator bool() const;
 
+    static const_object_ptr make_shared(db::entity const &entity, db::object_data const &obj_data);
+
+    static db::const_object_ptr const &null_const_object();
+
    protected:
     std::shared_ptr<impl> _impl;
 
@@ -172,6 +176,10 @@ struct object final : const_object, weakable<object> {
     db::manageable_object &manageable();
 
     std::shared_ptr<weakable_impl> weakable_impl_ptr() const override;
+
+    static object_ptr make_shared(db::entity const &);
+
+    static db::object_ptr const &null_object();
 
    private:
     db::manageable_object _manageable = nullptr;
