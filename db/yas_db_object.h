@@ -105,9 +105,6 @@ struct object_event {
 struct const_object {
     class impl;
 
-    const_object(db::entity const &entity, db::object_data const &obj_data);
-    const_object(std::nullptr_t);
-
     db::entity const &entity() const;
     std::string const &entity_name() const;
 
@@ -138,15 +135,15 @@ struct const_object {
    protected:
     std::shared_ptr<impl> _impl;
 
+    const_object(db::entity const &entity, db::object_data const &obj_data);
+    const_object(std::nullptr_t);
+    
     const_object(std::shared_ptr<impl> const &);
     const_object(std::shared_ptr<impl> &&);
 };
 
 struct object final : const_object {
     class impl;
-
-    object(db::entity const &entity);
-    object(std::nullptr_t);
 
     [[nodiscard]] chaining::chain_sync_t<object_event> chain() const;
 
@@ -179,6 +176,9 @@ struct object final : const_object {
 
    private:
     db::manageable_object _manageable = nullptr;
+    
+    object(db::entity const &entity);
+    object(std::nullptr_t);
 
     std::shared_ptr<impl> _mutable_impl() const;
 };
