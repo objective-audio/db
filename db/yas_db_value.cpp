@@ -58,7 +58,7 @@ std::size_t db::blob::size() const {
 
 #pragma mark - value::impl
 
-struct db::value::impl : weakable_impl {
+struct db::value::impl {
     virtual std::type_info const &type() const = 0;
     virtual bool is_equal(std::shared_ptr<impl> const &rhs) const = 0;
 
@@ -145,10 +145,6 @@ db::value::value(const void *const data_ptr, std::size_t const size, db::no_copy
     : value(blob{data_ptr, size, db::no_copy_tag}) {
 }
 
-db::value::value(std::shared_ptr<weakable_impl> &&wimpl) : _impl(std::dynamic_pointer_cast<impl>(wimpl)) {
-    assert(this->_impl);
-}
-
 db::value::~value() = default;
 
 db::value::value(value const &) = default;
@@ -213,10 +209,6 @@ std::string db::value::sql() const {
 std::shared_ptr<db::value::typed_impl<db::null>> const &db::value::null_value_impl_ptr() {
     static auto _impl_ptr = std::make_shared<db::value::typed_impl<db::null>>(nullptr);
     return _impl_ptr;
-}
-
-std::shared_ptr<weakable_impl> db::value::weakable_impl_ptr() const {
-    return this->_impl;
 }
 
 bool db::value::operator==(value const &rhs) const {
