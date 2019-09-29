@@ -30,11 +30,11 @@ struct manager final {
     db::value const &last_save_id() const;
 
     chaining::chain_sync_t<db::info_opt> chain_db_info() const;
-    chaining::chain_unsync_t<db::object> chain_db_object() const;
+    chaining::chain_unsync_t<db::object_ptr> chain_db_object() const;
 
     dispatch_queue_t dispatch_queue() const;
 
-    db::object create_object(std::string const entity_name);
+    db::object_ptr create_object(std::string const entity_name);
 
     void suspend();
     void resume();
@@ -55,16 +55,18 @@ struct manager final {
     void save(db::cancellation_f, db::map_completion_f);
     void revert(db::cancellation_f, db::revert_preparation_f, db::vector_completion_f);
 
-    db::object cached_or_created_object(std::string const &entity_name, db::object_id const &object_id) const;
+    std::optional<db::object_ptr> cached_or_created_object(std::string const &entity_name,
+                                                           db::object_id const &object_id) const;
 
     bool has_created_objects() const;
     bool has_changed_objects() const;
     std::size_t created_object_count(std::string const &entity_name) const;
     std::size_t changed_object_count(std::string const &entity_name) const;
 
-    db::object_vector_t relation_objects(db::object const &, std::string const &rel_name) const;
-    db::object relation_object_at(db::object const &, std::string const &rel_name, std::size_t const idx) const;
-    db::object make_object(std::string const &entity_name);
+    db::object_opt_vector_t relation_objects(db::object_ptr const &, std::string const &rel_name) const;
+    std::optional<db::object_ptr> relation_object_at(db::object_ptr const &, std::string const &rel_name,
+                                                     std::size_t const idx) const;
+    db::object_ptr make_object(std::string const &entity_name);
 
     static manager_ptr make_shared(std::string const &db_path, db::model const &model,
                                    std::size_t const priority_count = 1,

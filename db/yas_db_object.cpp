@@ -19,34 +19,34 @@ using namespace yas;
 #pragma mark - db::object_event
 
 namespace yas::db {
-object_event make_object_fetched_event(db::object const &object) {
+object_event make_object_fetched_event(db::object_ptr const &object) {
     return object_event{object_fetched_event{.object = object}};
 }
 
-object_event make_object_loaded_event(db::object const &object) {
+object_event make_object_loaded_event(db::object_ptr const &object) {
     return object_event{object_loaded_event{.object = object}};
 }
 
-object_event make_object_cleared_event(db::object const &object) {
+object_event make_object_cleared_event(db::object_ptr const &object) {
     return object_event{object_cleared_event{.object = object}};
 }
 
-object_event make_object_attribute_updated_event(db::object const &object, std::string const &name,
+object_event make_object_attribute_updated_event(db::object_ptr const &object, std::string const &name,
                                                  db::value const &value) {
     return object_event{object_attribute_updated_event{.object = object, .name = name, .value = value}};
 }
 
-object_event make_object_relation_inserted_event(db::object const &object, std::string const &name,
+object_event make_object_relation_inserted_event(db::object_ptr const &object, std::string const &name,
                                                  std::vector<std::size_t> &&indices) {
     return object_event{object_relation_inserted_event{.object = object, .name = name, .indices = std::move(indices)}};
 }
 
-object_event make_object_relation_removed_event(db::object const &object, std::string const &name,
+object_event make_object_relation_removed_event(db::object_ptr const &object, std::string const &name,
                                                 std::vector<std::size_t> &&indices) {
     return object_event{object_relation_removed_event{.object = object, .name = name, .indices = std::move(indices)}};
 }
 
-object_event make_object_relation_replaced_event(db::object const &object, std::string const &name) {
+object_event make_object_relation_replaced_event(db::object_ptr const &object, std::string const &name) {
     return object_event{object_relation_replaced_event{.object = object, .name = name}};
 }
 
@@ -137,7 +137,7 @@ bool db::object_event::is_erased() const {
     return this->type() == db::object_event_type::erased;
 }
 
-db::object const &db::object_event::object() const {
+db::object_ptr const &db::object_event::object() const {
     switch (this->type()) {
         case db::object_event_type::fetched:
             return this->get<db::object_fetched_event>().object;
@@ -343,12 +343,6 @@ db::const_object::const_object(db::entity const &entity, db::object_data const &
     : _impl(std::make_unique<impl>(entity, obj_data)) {
 }
 
-db::const_object::const_object(std::nullptr_t) : _impl(nullptr) {
-}
-
-db::const_object::const_object(std::shared_ptr<impl> const &impl) : _impl(impl) {
-}
-
 db::const_object::const_object(std::shared_ptr<impl> &&impl) : _impl(std::move(impl)) {
 }
 
@@ -420,18 +414,13 @@ db::const_object_ptr db::const_object::make_shared(db::entity const &entity, db:
     return const_object_ptr(new const_object{entity, obj_data});
 }
 
-db::const_object_ptr const &db::const_object::null_const_object() {
-    static db::const_object_ptr const _null_object = const_object_ptr(new const_object{nullptr});
-    return _null_object;
-}
-
 #pragma mark - db::object::impl
 
 struct db::object::impl : const_object::impl, manageable_object::impl {
     enum db::object_status _status = db::object_status::invalid;
     chaining::fetcher_ptr<object_event> _fetcher = nullptr;
     std::shared_ptr<chaining::sender_protocol<object_event>> _sender = nullptr;
-    std::weak_ptr<db::object::impl> _weak_impl;
+    db::object_wptr _weak_object;
 
     impl(db::entity const &entity, bool const is_temporary) : const_object::impl(entity, db::make_temporary_id()) {
     }
@@ -440,16 +429,16 @@ struct db::object::impl : const_object::impl, manageable_object::impl {
         this->_sender->broadcast(make_object_erased_event(this->_entity.name, this->_identifier));
     }
 
-    db::object cast() {
-        return db::object{this->_weak_impl.lock()};
+    db::object_ptr cast() {
+        return this->_weak_object.lock();
     }
 
-    void prepare(db::object &object) {
-        this->_weak_impl = object._mutable_impl();
+    void prepare(db::object_ptr const &object) {
+        this->_weak_object = object;
 
-        this->_fetcher = chaining::fetcher<object_event>::make_shared([weak_object = to_weak(object)]() {
+        this->_fetcher = chaining::fetcher<object_event>::make_shared([weak_object = this->_weak_object]() {
             if (auto object = weak_object.lock()) {
-                return std::optional<object_event>{make_object_fetched_event(*object)};
+                return std::optional<object_event>{make_object_fetched_event(object)};
             } else {
                 return std::optional<object_event>{std::nullopt};
             }
@@ -747,10 +736,6 @@ struct db::object::impl : const_object::impl, manageable_object::impl {
 #pragma mark - db::object
 
 db::object::object(db::entity const &entity) : const_object(std::make_unique<impl>(entity, true)) {
-    this->_mutable_impl()->prepare(*this);
-}
-
-db::object::object(std::nullptr_t) : const_object(nullptr) {
 }
 
 chaining::chain_sync_t<db::object_event> db::object::chain() const {
@@ -779,21 +764,22 @@ void db::object::remove_relation_id(std::string const &rel_name, db::object_id c
 
 void db::object::set_relation_objects(std::string const &rel_name, db::object_vector_t const &rel_objects) {
     this->_mutable_impl()->set_relation_ids(
-        rel_name, to_vector<db::object_id>(
-                      rel_objects, [entity_name = entity_name()](db::object const &obj) { return obj.object_id(); }));
+        rel_name, to_vector<db::object_id>(rel_objects, [entity_name = entity_name()](db::object_ptr const &obj) {
+            return obj->object_id();
+        }));
 }
 
-void db::object::add_relation_object(std::string const &rel_name, db::object const &rel_object) {
-    this->_mutable_impl()->add_relation_id(rel_name, rel_object.object_id());
+void db::object::add_relation_object(std::string const &rel_name, db::object_ptr const &rel_object) {
+    this->_mutable_impl()->add_relation_id(rel_name, rel_object->object_id());
 }
 
-void db::object::insert_relation_object(std::string const &rel_name, db::object const &rel_object,
+void db::object::insert_relation_object(std::string const &rel_name, db::object_ptr const &rel_object,
                                         std::size_t const idx) {
-    this->_mutable_impl()->insert_relation_id(rel_name, rel_object.object_id(), idx);
+    this->_mutable_impl()->insert_relation_id(rel_name, rel_object->object_id(), idx);
 }
 
-void db::object::remove_relation_object(std::string const &rel_name, object const &rel_object) {
-    this->_mutable_impl()->remove_relation_id(rel_name, rel_object.object_id());
+void db::object::remove_relation_object(std::string const &rel_name, db::object_ptr const &rel_object) {
+    this->_mutable_impl()->remove_relation_id(rel_name, rel_object->object_id());
 }
 
 void db::object::remove_relation_at(std::string const &rel_name, std::size_t const idx) {
@@ -831,26 +817,17 @@ std::shared_ptr<db::object::impl> db::object::_mutable_impl() const {
     return std::dynamic_pointer_cast<db::object::impl>(this->_impl);
 }
 
-db::object_ptr db::object::make_shared(db::entity const &entity) {
-    return object_ptr(new object{entity});
+void db::object::_prepare(object_ptr const &shared) {
+    this->_mutable_impl()->prepare(shared);
 }
 
-db::object_ptr const &db::object::null_object() {
-    static db::object_ptr const _null_object = object_ptr(new db::object{nullptr});
-    return _null_object;
+db::object_ptr db::object::make_shared(db::entity const &entity) {
+    auto shared = object_ptr(new object{entity});
+    shared->_prepare(shared);
+    return shared;
 }
 
 #pragma mark -
-
-db::const_object const &db::null_const_object() {
-    static db::const_object const _null_object{nullptr};
-    return _null_object;
-}
-
-db::object const &db::null_object() {
-    static db::object const _null_object{nullptr};
-    return _null_object;
-}
 
 db::value const &db::insert_action_value() {
     static db::value _value{db::insert_action};

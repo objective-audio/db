@@ -91,11 +91,11 @@ db::value_vector_map_result_t select_relation_data(db::database_ptr const &db, d
     return db::value_vector_map_result_t{std::move(relations)};
 }
 
-static void get_relation_ids(db::integer_set_map_t &out_ids, db::object const &object) {
-    for (auto const &rel_pair : object.entity().relations) {
+static void get_relation_ids(db::integer_set_map_t &out_ids, db::object_ptr const &object) {
+    for (auto const &rel_pair : object->entity().relations) {
         db::relation const &rel = rel_pair.second;
         std::string const &entity_name = rel.target;
-        auto const &rel_ids = object.relation_ids(rel_pair.first);
+        auto const &rel_ids = object->relation_ids(rel_pair.first);
         if (rel_ids.size() == 0) {
             continue;
         }
@@ -345,7 +345,7 @@ db::const_object_vector_map_t db::to_const_vector_objects(db::model const &model
         entity_objects.reserve(entity_datas.size());
 
         for (db::object_data const &data : entity_datas) {
-            if (db::const_object obj{model.entity(entity_name), data}) {
+            if (auto const obj = db::const_object::make_shared(model.entity(entity_name), data)) {
                 entity_objects.emplace_back(std::move(obj));
             }
         }
@@ -366,8 +366,8 @@ db::const_object_map_map_t db::to_const_map_objects(db::model const &model, db::
         entity_objects.reserve(entity_datas.size());
 
         for (db::object_data const &data : entity_datas) {
-            if (db::const_object obj{model.entity(entity_name), data}) {
-                entity_objects.emplace(obj.object_id().stable(), std::move(obj));
+            if (auto const obj = db::const_object::make_shared(model.entity(entity_name), data)) {
+                entity_objects.emplace(obj->object_id().stable(), std::move(obj));
             }
         }
 
@@ -397,7 +397,7 @@ db::fetch_ids_preparation_f db::to_ids_preparation(db::fetch_objects_preparation
     return [preparation = std::move(preparation)]() {
         db::integer_set_map_t result_ids;
         db::object_vector_t objects = preparation();
-        for (db::object const &object : objects) {
+        for (db::object_ptr const &object : objects) {
             db::get_relation_ids(result_ids, object);
         }
         return result_ids;
@@ -410,7 +410,7 @@ db::fetch_ids_preparation_f db::to_ids_preparation(db::fetch_object_map_preparat
         db::object_map_map_t objects = preparation();
         for (auto const &entity_pair : objects) {
             for (auto const &object_pair : entity_pair.second) {
-                db::object const &object = object_pair.second;
+                db::object_ptr const &object = object_pair.second;
                 db::get_relation_ids(result_ids, object);
             }
         }
@@ -423,7 +423,7 @@ db::fetch_ids_preparation_f db::to_ids_preparation(db::fetch_object_vector_prepa
         db::integer_set_map_t result_ids;
         db::object_vector_map_t objects = preparation();
         for (auto const &entity_pair : objects) {
-            for (db::object const &object : entity_pair.second) {
+            for (db::object_ptr const &object : entity_pair.second) {
                 db::get_relation_ids(result_ids, object);
             }
         }
