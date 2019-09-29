@@ -50,7 +50,7 @@ sample::object_info_row_type_t to_idx(object_info_row const &row) {
 
 @implementation DBSampleObjectViewController {
     std::weak_ptr<yas::sample::db_controller> _db_controller;
-    std::optional<db::object> _db_object;
+    std::optional<db::object_ptr> _db_object;
     std::vector<db::attribute> _attributes;
     std::vector<db::relation> _relations;
 }
@@ -58,7 +58,7 @@ sample::object_info_row_type_t to_idx(object_info_row const &row) {
 - (void)viewDidLoad {
     [super viewDidLoad];
 
-    self.title = (__bridge NSString *)to_cf_object(to_string([self db_object].object_id()));
+    self.title = (__bridge NSString *)to_cf_object(to_string([self db_object]->object_id()));
 }
 
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
@@ -74,21 +74,21 @@ sample::object_info_row_type_t to_idx(object_info_row const &row) {
     }
 }
 
-- (void)set_db_controller:(std::weak_ptr<yas::sample::db_controller>)controller db_object:(yas::db::object)object {
+- (void)set_db_controller:(std::weak_ptr<yas::sample::db_controller>)controller db_object:(yas::db::object_ptr const &)object {
     _db_controller = std::move(controller);
-    *_db_object = object;
+    _db_object = object;
 
     _attributes.clear();
     _relations.clear();
 
     if (object) {
         _attributes =
-            to_vector<db::attribute>(object.entity().custom_attributes, [](auto const &pair) { return pair.second; });
-        _relations = to_vector<db::relation>(object.entity().relations, [](auto const &pair) { return pair.second; });
+            to_vector<db::attribute>(object->entity().custom_attributes, [](auto const &pair) { return pair.second; });
+        _relations = to_vector<db::relation>(object->entity().relations, [](auto const &pair) { return pair.second; });
     }
 }
 
-- (db::object &)db_object {
+- (db::object_ptr const &)db_object {
     return *_db_object;
 }
 
@@ -126,7 +126,7 @@ sample::object_info_row_type_t to_idx(object_info_row const &row) {
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     UITableViewCell *cell = nil;
-    auto unowned = make_objc_ptr([[YASUnownedObject<DBSampleObjectViewController *> alloc] initWithObject:self]);
+    auto unowned = objc_ptr_with_move_object([[YASUnownedObject<DBSampleObjectViewController *> alloc] initWithObject:self]);
 
     switch (object_section(indexPath.section)) {
         case object_section::info: {
@@ -135,7 +135,7 @@ sample::object_info_row_type_t to_idx(object_info_row const &row) {
                     cell = [tableView dequeueReusableCellWithIdentifier:sample::object_normal_cell_id
                                                            forIndexPath:indexPath];
                     if (auto normalCell = objc_cast<DBSampleObjectNormalCell>(cell)) {
-                        auto title = "object_id : " + to_string(self.db_object.object_id());
+                        auto title = "object_id : " + to_string(self.db_object->object_id());
                         [normalCell setupWithTitle:title];
                     }
                     break;
@@ -151,18 +151,18 @@ sample::object_info_row_type_t to_idx(object_info_row const &row) {
                     auto const &attr_name = attribute.name;
                     if (attribute.type == db::integer::name) {
                         [textFieldCell setupWithTitle:attr_name
-                                                 text:to_string(self.db_object.attribute_value(attr_name))
+                                                 text:to_string(self.db_object->attribute_value(attr_name))
                                               handler:[unowned, attr_name](std::string const &text) {
                                                   auto &obj = [unowned.object().object db_object];
-                                                  obj.set_attribute_value(
+                                                  obj->set_attribute_value(
                                                       attr_name, db::value{to_integer<db::integer::type>(text)});
                                               }];
                     } else if (attribute.type == db::text::name) {
                         [textFieldCell setupWithTitle:attr_name
-                                                 text:to_string(self.db_object.attribute_value(attr_name))
+                                                 text:to_string(self.db_object->attribute_value(attr_name))
                                               handler:[unowned, attr_name](std::string const &text) {
                                                   auto &obj = [unowned.object().object db_object];
-                                                  obj.set_attribute_value(attr_name, db::value{text});
+                                                  obj->set_attribute_value(attr_name, db::value{text});
                                               }];
                     }
                 }

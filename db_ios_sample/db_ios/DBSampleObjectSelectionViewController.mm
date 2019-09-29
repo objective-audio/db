@@ -17,7 +17,7 @@ static NSString *const selection_normal_cell_id = @"NormalCell";
 @implementation DBSampleObjectSelectionViewController {
     std::weak_ptr<db_controller> _db_controller;
     db_controller::entity _entity;
-    std::function<void(db::object const &)> _selected_handler;
+    std::function<void(db::object_ptr const &)> _selected_handler;
 }
 
 - (void)viewDidLoad {
@@ -28,7 +28,7 @@ static NSString *const selection_normal_cell_id = @"NormalCell";
 
 - (void)set_db_controller:(std::weak_ptr<yas::sample::db_controller>)controller
                    entity:(db_controller::entity const)entity
-         selected_handler:(std::function<void(db::object const &)>)handler {
+         selected_handler:(std::function<void(db::object_ptr const &)>)handler {
     _db_controller = std::move(controller);
     _entity = entity;
     _selected_handler = std::move(handler);
@@ -54,8 +54,8 @@ static NSString *const selection_normal_cell_id = @"NormalCell";
 
     if (auto normalCell = objc_cast<DBSampleObjectNormalCell>(cell)) {
         auto const &object = _db_controller.lock()->object(_entity, indexPath.row);
-        auto const &name = object.attribute_value("name");
-        [normalCell setupWithTitle:"object_id:" + to_string(object.object_id()) + " name:" + to_string(name)];
+        auto const &name = object->attribute_value("name");
+        [normalCell setupWithTitle:"object_id:" + to_string(object->object_id()) + " name:" + to_string(name)];
         normalCell.selectionStyle = UITableViewCellSelectionStyleDefault;
         normalCell.textLabel.textColor = [UIColor blackColor];
     }

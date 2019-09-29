@@ -7,6 +7,6 @@
 
 @interface DBSampleObjectViewController : UITableViewController
 
-- (void)set_db_controller:(std::weak_ptr<yas::sample::db_controller>)controller db_object:(yas::db::object)object;
+- (void)set_db_controller:(std::weak_ptr<yas::sample::db_controller>)controller db_object:(yas::db::object_ptr const &)object;
 
 @end

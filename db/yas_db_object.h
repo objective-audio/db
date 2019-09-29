@@ -5,7 +5,6 @@
 #pragma once
 
 #include <chaining/yas_chaining_umbrella.h>
-#include <cpp_utils/yas_weakable.h>
 #include <deque>
 #include <set>
 #include <unordered_map>
@@ -27,43 +26,43 @@ enum class object_event_type {
 
 struct object_fetched_event {
     static object_event_type const type = object_event_type::fetched;
-    db::object const &object;
+    db::object_ptr const &object;
 };
 
 struct object_loaded_event {
     static object_event_type const type = object_event_type::loaded;
-    db::object const &object;
+    db::object_ptr const &object;
 };
 
 struct object_cleared_event {
     static object_event_type const type = object_event_type::cleared;
-    db::object const &object;
+    db::object_ptr const &object;
 };
 
 struct object_attribute_updated_event {
     static object_event_type const type = object_event_type::attribute_updated;
-    db::object const &object;
+    db::object_ptr const &object;
     std::string const name;
     db::value const &value;
 };
 
 struct object_relation_inserted_event {
     static object_event_type const type = object_event_type::relation_inserted;
-    db::object const &object;
+    db::object_ptr const &object;
     std::string const name;
     std::vector<std::size_t> const indices;
 };
 
 struct object_relation_removed_event {
     static object_event_type const type = object_event_type::relation_removed;
-    db::object const &object;
+    db::object_ptr const &object;
     std::string const name;
     std::vector<std::size_t> const indices;
 };
 
 struct object_relation_replaced_event {
     static object_event_type const type = object_event_type::relation_replaced;
-    db::object const &object;
+    db::object_ptr const &object;
     std::string const name;
 };
 
@@ -97,7 +96,7 @@ struct object_event {
     bool is_changed() const;
     bool is_erased() const;
 
-    db::object const &object() const;
+    db::object_ptr const &object() const;
 
    private:
     std::shared_ptr<impl_base> _impl;
@@ -105,9 +104,6 @@ struct object_event {
 
 struct const_object {
     class impl;
-
-    const_object(db::entity const &entity, db::object_data const &obj_data);
-    const_object(std::nullptr_t);
 
     db::entity const &entity() const;
     std::string const &entity_name() const;
@@ -132,19 +128,17 @@ struct const_object {
 
     explicit operator bool() const;
 
+    static const_object_ptr make_shared(db::entity const &entity, db::object_data const &obj_data);
+
    protected:
     std::shared_ptr<impl> _impl;
 
-    const_object(std::shared_ptr<impl> const &);
+    const_object(db::entity const &entity, db::object_data const &obj_data);
     const_object(std::shared_ptr<impl> &&);
 };
 
-struct object final : const_object, weakable<object> {
+struct object final : const_object {
     class impl;
-
-    object(db::entity const &entity);
-    object(std::shared_ptr<weakable_impl> &&);
-    object(std::nullptr_t);
 
     [[nodiscard]] chaining::chain_sync_t<object_event> chain() const;
 
@@ -155,9 +149,9 @@ struct object final : const_object, weakable<object> {
     void insert_relation_id(std::string const &rel_name, db::object_id const &relation_id, std::size_t const idx);
     void remove_relation_id(std::string const &rel_name, db::object_id const &relation_id);
     void set_relation_objects(std::string const &rel_name, db::object_vector_t const &rel_objects);
-    void add_relation_object(std::string const &rel_name, db::object const &rel_object);
-    void insert_relation_object(std::string const &rel_name, db::object const &rel_object, std::size_t const idx);
-    void remove_relation_object(std::string const &rel_name, db::object const &rel_object);
+    void add_relation_object(std::string const &rel_name, db::object_ptr const &rel_object);
+    void insert_relation_object(std::string const &rel_name, db::object_ptr const &rel_object, std::size_t const idx);
+    void remove_relation_object(std::string const &rel_name, db::object_ptr const &rel_object);
     void remove_relation_at(std::string const &rel_name, std::size_t const idx);
     void remove_all_relations(std::string const &rel_name);
 
@@ -167,20 +161,21 @@ struct object final : const_object, weakable<object> {
 
     bool is_temporary() const;
 
-    db::object_data save_data(db::object_id_pool_t &) const;
+    db::object_data save_data(db::object_id_pool &) const;
 
     db::manageable_object &manageable();
 
-    std::shared_ptr<weakable_impl> weakable_impl_ptr() const override;
+    static object_ptr make_shared(db::entity const &);
 
    private:
     db::manageable_object _manageable = nullptr;
 
-    std::shared_ptr<impl> _mutable_impl() const;
-};
+    object(db::entity const &entity);
 
-db::const_object const &null_const_object();
-db::object const &null_object();
+    std::shared_ptr<impl> _mutable_impl() const;
+
+    void _prepare(object_ptr const &);
+};
 
 db::value const &insert_action_value();
 db::value const &update_action_value();

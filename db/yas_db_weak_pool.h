@@ -11,13 +11,16 @@
 namespace yas::db {
 template <typename K, typename V>
 struct weak_pool final {
-    using value_map_t = std::unordered_map<K, weak_ref<V>>;
-    using value_create_handler = std::function<V(void)>;
-    using perform_handler = std::function<void(std::string const &, K const &, V &)>;
+    using value_ptr = std::shared_ptr<V>;
+    using value_wptr = std::weak_ptr<V>;
 
-    V get_or_create(std::string const &entity_name, K const &key, value_create_handler handler);
-    std::optional<V> get(std::string const &entity_name, K const &key);
-    void set(std::string const &entity_name, K const &key, V value);
+    using value_map_t = std::unordered_map<K, value_wptr>;
+    using value_create_handler = std::function<value_ptr(void)>;
+    using perform_handler = std::function<void(std::string const &, K const &, value_ptr const &)>;
+
+    value_ptr get_or_create(std::string const &entity_name, K const &key, value_create_handler handler);
+    std::optional<value_ptr> get(std::string const &entity_name, K const &key);
+    void set(std::string const &entity_name, K const &key, value_ptr const &value);
 
     void perform(perform_handler const &handler);
     void perform_entity(std::string const &entity_name, perform_handler const &handler);

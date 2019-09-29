@@ -20,11 +20,11 @@ class db_controller : public std::enable_shared_from_this<db_controller> {
     };
 
     struct change_info {
-        db::object const object;
+        std::optional<db::object_ptr> const object;
         db::value const value;
 
         change_info(std::nullptr_t);
-        change_info(db::object object, db::value value);
+        change_info(db::object_ptr const &object, db::value value);
     };
 
     using chain_pair_t = std::pair<method, change_info>;
@@ -50,10 +50,10 @@ class db_controller : public std::enable_shared_from_this<db_controller> {
     bool can_purge() const;
     bool has_changed() const;
 
-    db::object const &object(entity const &, std::size_t const idx) const;
+    db::object_ptr const &object(entity const &, std::size_t const idx) const;
     std::size_t object_count(entity const &) const;
 
-    db::object relation_object_at(db::object const &, std::string const &rel_name, std::size_t const idx) const;
+    std::optional<db::object_ptr> relation_object_at(db::object_ptr const &, std::string const &rel_name, std::size_t const idx) const;
 
     db::integer::type const &current_save_id() const;
     db::integer::type const &last_save_id() const;
@@ -65,9 +65,9 @@ class db_controller : public std::enable_shared_from_this<db_controller> {
     static entity entity_for_name(std::string const &);
 
    private:
-    db::manager _manager;
+    db::manager_ptr _manager;
     db::object_vector_map_t _objects;
-    chaining::notifier<chain_pair_t> _notifier;
+    chaining::notifier_ptr<chain_pair_t> _notifier;
     chaining::observer_pool _pool;
     bool _processing;
 

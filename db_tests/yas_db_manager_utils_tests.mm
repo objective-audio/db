@@ -358,12 +358,12 @@ using namespace yas;
                                auto &a_objects = objects.at("sample_a");
 
                                auto &object = a_objects.at(0);
-                               object.set_attribute_value("name", db::value{"name_0_1"});
-                               XCTAssertEqual(object.object_id().stable_value(), db::value{1});
+                               object->set_attribute_value("name", db::value{"name_0_1"});
+                               XCTAssertEqual(object->object_id().stable_value(), db::value{1});
 
                                object = a_objects.at(1);
-                               object.set_attribute_value("name", db::value{"name_1_1"});
-                               XCTAssertEqual(object.object_id().stable_value(), db::value{2});
+                               object->set_attribute_value("name", db::value{"name_1_1"});
+                               XCTAssertEqual(object->object_id().stable_value(), db::value{2});
                            });
 
     manager->save(db::no_cancellation, [self, &manager](db::manager_map_result_t result) {
@@ -373,8 +373,8 @@ using namespace yas;
         db::object_map_map_t &objects = result.value();
         db::object_map_t &a_objects = objects.at("sample_a");
 
-        db::object &object = a_objects.at(1);
-        object.set_attribute_value("name", db::value{"name_0_2"});
+        db::object_ptr const &object = a_objects.at(1);
+        object->set_attribute_value("name", db::value{"name_0_2"});
     });
 
     manager->save(db::no_cancellation, [self, &manager](db::manager_map_result_t result) {
@@ -425,45 +425,45 @@ using namespace yas;
                                XCTAssertEqual(manager->current_save_id(), db::value{1});
 
                                objects = std::move(result.value());
-                               db::object &obj_a = objects.at("sample_a").at(0);
-                               db::object &obj_b0 = objects.at("sample_b").at(0);
-                               db::object &obj_b1 = objects.at("sample_b").at(1);
+                               db::object_ptr const &obj_a = objects.at("sample_a").at(0);
+                               db::object_ptr const &obj_b0 = objects.at("sample_b").at(0);
+                               db::object_ptr const &obj_b1 = objects.at("sample_b").at(1);
 
-                               obj_a.set_attribute_value("name", db::value{"test_a_2"});
-                               obj_b0.set_attribute_value("name", db::value{"test_b0_2"});
-                               obj_b1.set_attribute_value("name", db::value{"test_b1_2"});
+                               obj_a->set_attribute_value("name", db::value{"test_a_2"});
+                               obj_b0->set_attribute_value("name", db::value{"test_b0_2"});
+                               obj_b1->set_attribute_value("name", db::value{"test_b1_2"});
 
-                               obj_a.set_relation_objects("child", {obj_b0});
+                               obj_a->set_relation_objects("child", {obj_b0});
                            });
 
     manager->save(db::no_cancellation, [self, &manager, &objects](db::manager_map_result_t result) {
         XCTAssertTrue(result);
         XCTAssertEqual(manager->current_save_id(), db::value{2});
 
-        db::object &obj_a = objects.at("sample_a").at(0);
-        db::object &obj_b0 = objects.at("sample_b").at(0);
-        db::object &obj_b1 = objects.at("sample_b").at(1);
+        db::object_ptr const &obj_a = objects.at("sample_a").at(0);
+        db::object_ptr const &obj_b0 = objects.at("sample_b").at(0);
+        db::object_ptr const &obj_b1 = objects.at("sample_b").at(1);
 
-        obj_a.set_attribute_value("name", db::value{"test_a_3"});
-        obj_b0.set_attribute_value("name", db::value{"test_b0_3"});
-        obj_b1.set_attribute_value("name", db::value{"test_b1_3"});
+        obj_a->set_attribute_value("name", db::value{"test_a_3"});
+        obj_b0->set_attribute_value("name", db::value{"test_b0_3"});
+        obj_b1->set_attribute_value("name", db::value{"test_b1_3"});
 
-        obj_a.set_relation_objects("child", {obj_b1, obj_b0});
+        obj_a->set_relation_objects("child", {obj_b1, obj_b0});
     });
 
     manager->save(db::no_cancellation, [self, &manager, &objects](db::manager_map_result_t result) {
         XCTAssertTrue(result);
         XCTAssertEqual(manager->current_save_id(), db::value{3});
 
-        db::object &obj_a = objects.at("sample_a").at(0);
-        db::object &obj_b0 = objects.at("sample_b").at(0);
-        db::object &obj_b1 = objects.at("sample_b").at(1);
+        db::object_ptr const &obj_a = objects.at("sample_a").at(0);
+        db::object_ptr const &obj_b0 = objects.at("sample_b").at(0);
+        db::object_ptr const &obj_b1 = objects.at("sample_b").at(1);
 
-        obj_a.set_attribute_value("name", db::value{"test_a_4"});
-        obj_b0.set_attribute_value("name", db::value{"test_b0_4"});
-        obj_b1.set_attribute_value("name", db::value{"test_b1_4"});
+        obj_a->set_attribute_value("name", db::value{"test_a_4"});
+        obj_b0->set_attribute_value("name", db::value{"test_b0_4"});
+        obj_b1->set_attribute_value("name", db::value{"test_b1_4"});
 
-        obj_a.set_relation_objects("child", {obj_b1});
+        obj_a->set_relation_objects("child", {obj_b1});
     });
 
     manager->save(db::no_cancellation, [self, &manager, &objects](db::manager_map_result_t result) {
@@ -566,21 +566,21 @@ using namespace yas;
 
     [self waitForExpectations:@[setupExp] timeout:10.0];
 
-    db::object obj_a_1 = manager->create_object("sample_a");
-    db::object obj_a_2 = manager->create_object("sample_a");
-    db::object obj_b_1 = manager->create_object("sample_b");
-    db::object obj_b_2 = manager->create_object("sample_b");
-    db::object obj_b_3 = manager->create_object("sample_b");
-    db::object obj_b_4 = manager->create_object("sample_b");
-    db::object obj_c_1 = manager->create_object("sample_c");
+    db::object_ptr const obj_a_1 = manager->create_object("sample_a");
+    db::object_ptr const obj_a_2 = manager->create_object("sample_a");
+    db::object_ptr const obj_b_1 = manager->create_object("sample_b");
+    db::object_ptr const obj_b_2 = manager->create_object("sample_b");
+    db::object_ptr const obj_b_3 = manager->create_object("sample_b");
+    db::object_ptr const obj_b_4 = manager->create_object("sample_b");
+    db::object_ptr const obj_c_1 = manager->create_object("sample_c");
 
-    obj_a_1.add_relation_object("child", obj_b_1);
-    obj_a_1.add_relation_object("child", obj_b_2);
-    obj_a_1.add_relation_object("child", obj_b_3);
-    obj_a_2.add_relation_object("child", obj_b_3);
-    obj_a_2.add_relation_object("child", obj_b_4);
-    obj_a_1.add_relation_object("friend", obj_c_1);
-    obj_c_1.add_relation_object("friend", obj_a_1);
+    obj_a_1->add_relation_object("child", obj_b_1);
+    obj_a_1->add_relation_object("child", obj_b_2);
+    obj_a_1->add_relation_object("child", obj_b_3);
+    obj_a_2->add_relation_object("child", obj_b_3);
+    obj_a_2->add_relation_object("child", obj_b_4);
+    obj_a_1->add_relation_object("friend", obj_c_1);
+    obj_c_1->add_relation_object("friend", obj_a_1);
 
     XCTestExpectation *saveExp = [self expectationWithDescription:@"save"];
 
@@ -604,20 +604,20 @@ using namespace yas;
 
     db::integer_set_t const &entity_a_ids = ids.at("sample_a");
     XCTAssertEqual(entity_a_ids.size(), 1);
-    XCTAssertEqual(entity_a_ids.count(obj_a_1.object_id().stable()), 1);
+    XCTAssertEqual(entity_a_ids.count(obj_a_1->object_id().stable()), 1);
 
     db::integer_set_t const &entity_b_ids = ids.at("sample_b");
 
     XCTAssertEqual(entity_b_ids.size(), 4);
-    XCTAssertEqual(entity_b_ids.count(obj_b_1.object_id().stable()), 1);
-    XCTAssertEqual(entity_b_ids.count(obj_b_2.object_id().stable()), 1);
-    XCTAssertEqual(entity_b_ids.count(obj_b_3.object_id().stable()), 1);
-    XCTAssertEqual(entity_b_ids.count(obj_b_4.object_id().stable()), 1);
+    XCTAssertEqual(entity_b_ids.count(obj_b_1->object_id().stable()), 1);
+    XCTAssertEqual(entity_b_ids.count(obj_b_2->object_id().stable()), 1);
+    XCTAssertEqual(entity_b_ids.count(obj_b_3->object_id().stable()), 1);
+    XCTAssertEqual(entity_b_ids.count(obj_b_4->object_id().stable()), 1);
 
     db::integer_set_t const &entity_c_ids = ids.at("sample_c");
 
     XCTAssertEqual(entity_c_ids.size(), 1);
-    XCTAssertEqual(entity_b_ids.count(obj_c_1.object_id().stable()), 1);
+    XCTAssertEqual(entity_b_ids.count(obj_c_1->object_id().stable()), 1);
 }
 
 - (void)test_to_preparation_ids_from_object_map {
@@ -630,21 +630,21 @@ using namespace yas;
 
     [self waitForExpectations:@[setupExp] timeout:10.0];
 
-    db::object obj_a_1 = manager->create_object("sample_a");
-    db::object obj_a_2 = manager->create_object("sample_a");
-    db::object obj_b_1 = manager->create_object("sample_b");
-    db::object obj_b_2 = manager->create_object("sample_b");
-    db::object obj_b_3 = manager->create_object("sample_b");
-    db::object obj_b_4 = manager->create_object("sample_b");
-    db::object obj_c_1 = manager->create_object("sample_c");
+    db::object_ptr const obj_a_1 = manager->create_object("sample_a");
+    db::object_ptr const obj_a_2 = manager->create_object("sample_a");
+    db::object_ptr const obj_b_1 = manager->create_object("sample_b");
+    db::object_ptr const obj_b_2 = manager->create_object("sample_b");
+    db::object_ptr const obj_b_3 = manager->create_object("sample_b");
+    db::object_ptr const obj_b_4 = manager->create_object("sample_b");
+    db::object_ptr const obj_c_1 = manager->create_object("sample_c");
 
-    obj_a_1.add_relation_object("child", obj_b_1);
-    obj_a_1.add_relation_object("child", obj_b_2);
-    obj_a_1.add_relation_object("child", obj_b_3);
-    obj_a_2.add_relation_object("child", obj_b_3);
-    obj_a_2.add_relation_object("child", obj_b_4);
-    obj_a_1.add_relation_object("friend", obj_c_1);
-    obj_c_1.add_relation_object("friend", obj_a_1);
+    obj_a_1->add_relation_object("child", obj_b_1);
+    obj_a_1->add_relation_object("child", obj_b_2);
+    obj_a_1->add_relation_object("child", obj_b_3);
+    obj_a_2->add_relation_object("child", obj_b_3);
+    obj_a_2->add_relation_object("child", obj_b_4);
+    obj_a_1->add_relation_object("friend", obj_c_1);
+    obj_c_1->add_relation_object("friend", obj_a_1);
 
     XCTestExpectation *saveExp = [self expectationWithDescription:@"save"];
 
@@ -658,8 +658,8 @@ using namespace yas;
 
     [self waitForExpectations:@[saveExp] timeout:10.0];
 
-    db::object_map_t entity_a_objects{{obj_a_1.object_id().stable(), obj_a_1}, {obj_a_2.object_id().stable(), obj_a_2}};
-    db::object_map_t entity_c_objects{{obj_c_1.object_id().stable(), obj_c_1}};
+    db::object_map_t entity_a_objects{{obj_a_1->object_id().stable(), obj_a_1}, {obj_a_2->object_id().stable(), obj_a_2}};
+    db::object_map_t entity_c_objects{{obj_c_1->object_id().stable(), obj_c_1}};
     db::object_map_map_t objects{{"sample_a", std::move(entity_a_objects)}, {"sample_c", std::move(entity_c_objects)}};
 
     db::fetch_ids_preparation_f ids_preparation = db::to_ids_preparation([objects]() { return objects; });
@@ -670,20 +670,20 @@ using namespace yas;
 
     db::integer_set_t const &entity_a_ids = ids.at("sample_a");
     XCTAssertEqual(entity_a_ids.size(), 1);
-    XCTAssertEqual(entity_a_ids.count(obj_a_1.object_id().stable()), 1);
+    XCTAssertEqual(entity_a_ids.count(obj_a_1->object_id().stable()), 1);
 
     db::integer_set_t const &entity_b_ids = ids.at("sample_b");
 
     XCTAssertEqual(entity_b_ids.size(), 4);
-    XCTAssertEqual(entity_b_ids.count(obj_b_1.object_id().stable()), 1);
-    XCTAssertEqual(entity_b_ids.count(obj_b_2.object_id().stable()), 1);
-    XCTAssertEqual(entity_b_ids.count(obj_b_3.object_id().stable()), 1);
-    XCTAssertEqual(entity_b_ids.count(obj_b_4.object_id().stable()), 1);
+    XCTAssertEqual(entity_b_ids.count(obj_b_1->object_id().stable()), 1);
+    XCTAssertEqual(entity_b_ids.count(obj_b_2->object_id().stable()), 1);
+    XCTAssertEqual(entity_b_ids.count(obj_b_3->object_id().stable()), 1);
+    XCTAssertEqual(entity_b_ids.count(obj_b_4->object_id().stable()), 1);
 
     db::integer_set_t const &entity_c_ids = ids.at("sample_c");
 
     XCTAssertEqual(entity_c_ids.size(), 1);
-    XCTAssertEqual(entity_b_ids.count(obj_c_1.object_id().stable()), 1);
+    XCTAssertEqual(entity_b_ids.count(obj_c_1->object_id().stable()), 1);
 }
 
 - (void)test_to_preparation_ids_from_object_vector {
@@ -696,21 +696,21 @@ using namespace yas;
 
     [self waitForExpectations:@[setupExp] timeout:10.0];
 
-    db::object obj_a_1 = manager->create_object("sample_a");
-    db::object obj_a_2 = manager->create_object("sample_a");
-    db::object obj_b_1 = manager->create_object("sample_b");
-    db::object obj_b_2 = manager->create_object("sample_b");
-    db::object obj_b_3 = manager->create_object("sample_b");
-    db::object obj_b_4 = manager->create_object("sample_b");
-    db::object obj_c_1 = manager->create_object("sample_c");
+    db::object_ptr const obj_a_1 = manager->create_object("sample_a");
+    db::object_ptr const obj_a_2 = manager->create_object("sample_a");
+    db::object_ptr const obj_b_1 = manager->create_object("sample_b");
+    db::object_ptr const obj_b_2 = manager->create_object("sample_b");
+    db::object_ptr const obj_b_3 = manager->create_object("sample_b");
+    db::object_ptr const obj_b_4 = manager->create_object("sample_b");
+    db::object_ptr const obj_c_1 = manager->create_object("sample_c");
 
-    obj_a_1.add_relation_object("child", obj_b_1);
-    obj_a_1.add_relation_object("child", obj_b_2);
-    obj_a_1.add_relation_object("child", obj_b_3);
-    obj_a_2.add_relation_object("child", obj_b_3);
-    obj_a_2.add_relation_object("child", obj_b_4);
-    obj_a_1.add_relation_object("friend", obj_c_1);
-    obj_c_1.add_relation_object("friend", obj_a_1);
+    obj_a_1->add_relation_object("child", obj_b_1);
+    obj_a_1->add_relation_object("child", obj_b_2);
+    obj_a_1->add_relation_object("child", obj_b_3);
+    obj_a_2->add_relation_object("child", obj_b_3);
+    obj_a_2->add_relation_object("child", obj_b_4);
+    obj_a_1->add_relation_object("friend", obj_c_1);
+    obj_c_1->add_relation_object("friend", obj_a_1);
 
     XCTestExpectation *saveExp = [self expectationWithDescription:@"save"];
 
@@ -737,20 +737,20 @@ using namespace yas;
 
     db::integer_set_t const &entity_a_ids = ids.at("sample_a");
     XCTAssertEqual(entity_a_ids.size(), 1);
-    XCTAssertEqual(entity_a_ids.count(obj_a_1.object_id().stable()), 1);
+    XCTAssertEqual(entity_a_ids.count(obj_a_1->object_id().stable()), 1);
 
     db::integer_set_t const &entity_b_ids = ids.at("sample_b");
 
     XCTAssertEqual(entity_b_ids.size(), 4);
-    XCTAssertEqual(entity_b_ids.count(obj_b_1.object_id().stable()), 1);
-    XCTAssertEqual(entity_b_ids.count(obj_b_2.object_id().stable()), 1);
-    XCTAssertEqual(entity_b_ids.count(obj_b_3.object_id().stable()), 1);
-    XCTAssertEqual(entity_b_ids.count(obj_b_4.object_id().stable()), 1);
+    XCTAssertEqual(entity_b_ids.count(obj_b_1->object_id().stable()), 1);
+    XCTAssertEqual(entity_b_ids.count(obj_b_2->object_id().stable()), 1);
+    XCTAssertEqual(entity_b_ids.count(obj_b_3->object_id().stable()), 1);
+    XCTAssertEqual(entity_b_ids.count(obj_b_4->object_id().stable()), 1);
 
     db::integer_set_t const &entity_c_ids = ids.at("sample_c");
 
     XCTAssertEqual(entity_c_ids.size(), 1);
-    XCTAssertEqual(entity_b_ids.count(obj_c_1.object_id().stable()), 1);
+    XCTAssertEqual(entity_b_ids.count(obj_c_1->object_id().stable()), 1);
 }
 
 @end

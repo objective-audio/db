@@ -406,14 +406,14 @@ using namespace yas;
 - (void)test_to_object_map {
     db::model model = [yas_db_test_utils model_0_0_1];
 
-    db::object obj_a0{model.entity("sample_a")};
-    db::object obj_a1{model.entity("sample_a")};
+    auto obj_a0 = db::object::make_shared(model.entity("sample_a"));
+    auto obj_a1 = db::object::make_shared(model.entity("sample_a"));
 
-    obj_a0.manageable().load_data({.object_id = db::make_stable_id(db::value{0})});
-    obj_a1.manageable().load_data({.object_id = db::make_stable_id(db::value{1})});
+    obj_a0->manageable().load_data({.object_id = db::make_stable_id(db::value{0})});
+    obj_a1->manageable().load_data({.object_id = db::make_stable_id(db::value{1})});
 
-    obj_a0.set_attribute_value("name", db::value{"a0"});
-    obj_a1.set_attribute_value("name", db::value{"a1"});
+    obj_a0->set_attribute_value("name", db::value{"a0"});
+    obj_a1->set_attribute_value("name", db::value{"a1"});
 
     db::object_vector_t src_vec;
     src_vec.emplace_back(std::move(obj_a0));
@@ -428,8 +428,8 @@ using namespace yas;
     XCTAssertEqual(dst_map.size(), 2);
     XCTAssertEqual(dst_map.count(0), 1);
     XCTAssertEqual(dst_map.count(1), 1);
-    XCTAssertEqual(dst_map.at(0).attribute_value("name"), db::value{"a0"});
-    XCTAssertEqual(dst_map.at(1).attribute_value("name"), db::value{"a1"});
+    XCTAssertEqual(dst_map.at(0)->attribute_value("name"), db::value{"a0"});
+    XCTAssertEqual(dst_map.at(1)->attribute_value("name"), db::value{"a1"});
 
     XCTAssertEqual(src_vec.size(), 0);
 }
@@ -437,20 +437,20 @@ using namespace yas;
 - (void)test_to_object_map_map {
     db::model model = [yas_db_test_utils model_0_0_1];
 
-    db::object obj_a0{model.entity("sample_a")};
-    db::object obj_a1{model.entity("sample_a")};
-    db::object obj_b0{model.entity("sample_b")};
-    db::object obj_b1{model.entity("sample_b")};
+    auto obj_a0 = db::object::make_shared(model.entity("sample_a"));
+    auto obj_a1 = db::object::make_shared(model.entity("sample_a"));
+    auto obj_b0 = db::object::make_shared(model.entity("sample_b"));
+    auto obj_b1 = db::object::make_shared(model.entity("sample_b"));
 
-    obj_a0.manageable().load_data({.object_id = db::make_stable_id(db::value{0})});
-    obj_a1.manageable().load_data({.object_id = db::make_stable_id(db::value{1})});
-    obj_b0.manageable().load_data({.object_id = db::make_stable_id(db::value{2})});
-    obj_b1.manageable().load_data({.object_id = db::make_stable_id(db::value{3})});
+    obj_a0->manageable().load_data({.object_id = db::make_stable_id(db::value{0})});
+    obj_a1->manageable().load_data({.object_id = db::make_stable_id(db::value{1})});
+    obj_b0->manageable().load_data({.object_id = db::make_stable_id(db::value{2})});
+    obj_b1->manageable().load_data({.object_id = db::make_stable_id(db::value{3})});
 
-    obj_a0.set_attribute_value("name", db::value{"a0"});
-    obj_a1.set_attribute_value("name", db::value{"a1"});
-    obj_b0.set_attribute_value("name", db::value{"b2"});
-    obj_b1.set_attribute_value("name", db::value{"b3"});
+    obj_a0->set_attribute_value("name", db::value{"a0"});
+    obj_a1->set_attribute_value("name", db::value{"a1"});
+    obj_b0->set_attribute_value("name", db::value{"b2"});
+    obj_b1->set_attribute_value("name", db::value{"b3"});
 
     db::object_vector_map_t src_map;
     db::object_vector_t object_as;
@@ -479,10 +479,10 @@ using namespace yas;
     XCTAssertEqual(dst_map.count("sample_b"), 1);
     XCTAssertEqual(dst_map.at("sample_a").size(), 2);
     XCTAssertEqual(dst_map.at("sample_b").size(), 2);
-    XCTAssertEqual(dst_map.at("sample_a").at(0).attribute_value("name"), db::value{"a0"});
-    XCTAssertEqual(dst_map.at("sample_a").at(1).attribute_value("name"), db::value{"a1"});
-    XCTAssertEqual(dst_map.at("sample_b").at(2).attribute_value("name"), db::value{"b2"});
-    XCTAssertEqual(dst_map.at("sample_b").at(3).attribute_value("name"), db::value{"b3"});
+    XCTAssertEqual(dst_map.at("sample_a").at(0)->attribute_value("name"), db::value{"a0"});
+    XCTAssertEqual(dst_map.at("sample_a").at(1)->attribute_value("name"), db::value{"a1"});
+    XCTAssertEqual(dst_map.at("sample_b").at(2)->attribute_value("name"), db::value{"b2"});
+    XCTAssertEqual(dst_map.at("sample_b").at(3)->attribute_value("name"), db::value{"b3"});
 
     XCTAssertEqual(src_map.size(), 0);
     XCTAssertEqual(src_map.count("sample_a"), 0);
