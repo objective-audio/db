@@ -389,7 +389,7 @@ using namespace yas;
     obj->set_relation_ids("child",
                          db::id_vector_t{db::make_stable_id(db::value{33}), db::make_stable_id(db::value{44})});
 
-    db::object_id_pool_t obj_id_pool;
+    db::object_id_pool obj_id_pool;
 
     auto data = obj->save_data(obj_id_pool);
 
@@ -430,7 +430,7 @@ using namespace yas;
 
     obj_a->add_relation_object("child", obj_b);
 
-    db::object_id_pool_t obj_id_pool;
+    db::object_id_pool obj_id_pool;
 
     db::object_data save_data_a = obj_a->save_data(obj_id_pool);
     db::object_data save_data_b = obj_b->save_data(obj_id_pool);
@@ -456,7 +456,7 @@ using namespace yas;
     auto obj_b = db::object::make_shared(model.entity("sample_b"));
     obj_b->manageable().load_data({.object_id = db::make_stable_id(db::value{10})});
 
-    db::object_id_pool_t pool;
+    db::object_id_pool pool;
 
     auto save_data_a1 = obj_a1->save_data(pool);
     auto save_data_a2 = obj_a2->save_data(pool);

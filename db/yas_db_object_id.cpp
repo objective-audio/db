@@ -176,3 +176,24 @@ db::object_id const &db::null_id() {
     static db::object_id _null_id{nullptr};
     return _null_id;
 }
+
+db::object_id db::object_id_pool::get_or_create(std::string const &entity_name, object_id const &key,
+                                                value_create_handler handler) {
+    if (this->_all_values.count(entity_name) == 0) {
+        this->_all_values.emplace(entity_name, value_map_t{});
+    }
+
+    auto &entity_values = this->_all_values.at(entity_name);
+
+    if (entity_values.count(key) > 0) {
+        if (auto const &value = entity_values.at(key)) {
+            return value;
+        } else {
+            entity_values.erase(key);
+        }
+    }
+
+    object_id value = handler();
+    entity_values.emplace(key, value);
+    return value;
+}

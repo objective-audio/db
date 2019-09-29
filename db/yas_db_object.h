@@ -161,7 +161,7 @@ struct object final : const_object {
 
     bool is_temporary() const;
 
-    db::object_data save_data(db::object_id_pool_t &) const;
+    db::object_data save_data(db::object_id_pool &) const;
 
     db::manageable_object &manageable();
 

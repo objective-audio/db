@@ -50,6 +50,16 @@ db::object_id make_stable_id(db::integer::type const);
 db::object_id make_temporary_id();
 
 db::object_id const &null_id();
+
+struct object_id_pool {
+    using value_create_handler = std::function<object_id(void)>;
+
+    object_id get_or_create(std::string const &entity_name, object_id const &key, value_create_handler handler);
+
+   private:
+    using value_map_t = std::unordered_map<object_id, object_id>;
+    std::unordered_map<std::string, value_map_t> _all_values;
+};
 }  // namespace yas::db
 
 namespace yas {

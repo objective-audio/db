@@ -191,7 +191,7 @@ struct db::manager::impl {
     // データベースに保存するために、全てのエンティティで変更のあったオブジェクトのobject_dataを取得する
     db::object_data_vector_map_t changed_datas_for_save() {
         db::object_data_vector_map_t changed_datas;
-        db::object_id_pool_t obj_id_pool;
+        db::object_id_pool obj_id_pool;
 
         for (auto const &entity_pair : this->_model.entities()) {
             // エンティティごとの処理

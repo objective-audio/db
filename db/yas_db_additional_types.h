@@ -59,8 +59,6 @@ struct object_data {
     db::id_vector_map_t relations;
 };
 
-using object_id_pool_t = db::weak_pool<db::object_id, db::object_id>;
-
 // for manager
 static std::string const info_table = "db_info";
 static std::string const version_field = "version";
