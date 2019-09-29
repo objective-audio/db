@@ -4,44 +4,19 @@
 
 #pragma once
 
-#include <cpp_utils/yas_protocol.h>
 #include <cpp_utils/yas_result.h>
 #include "yas_db_additional_types.h"
 
 namespace yas::db {
-struct manageable_object : protocol {
-    struct impl : protocol::impl {
-        virtual void set_status(db::object_status const &) = 0;
-        virtual void load_insertion_data() = 0;
-        virtual void load_data(db::object_data const &obj_data, bool const force) = 0;
-        virtual void load_save_id(db::value const &save_id) = 0;
-        virtual void clear_data() = 0;
-    };
+struct manageable_object {
+    virtual void set_status(db::object_status const &) = 0;
+    virtual void load_insertion_data() = 0;
+    virtual void load_data(db::object_data const &obj_data, bool const force = false) = 0;
+    virtual void load_save_id(db::value const &save_id) = 0;
+    virtual void clear_data() = 0;
 
-    explicit manageable_object(std::shared_ptr<impl> impl) : protocol(std::move(impl)) {
-    }
-
-    manageable_object(std::nullptr_t) : protocol(nullptr) {
-    }
-
-    void set_status(db::object_status const &status) {
-        impl_ptr<impl>()->set_status(status);
-    }
-
-    void load_insertion_data() {
-        impl_ptr<impl>()->load_insertion_data();
-    }
-
-    void load_data(db::object_data const &obj_data, bool const force = false) {
-        impl_ptr<impl>()->load_data(obj_data, force);
-    }
-
-    void load_save_id(db::value const &save_id) {
-        impl_ptr<impl>()->load_save_id(save_id);
-    }
-
-    void clear_data() {
-        impl_ptr<impl>()->clear_data();
+    static manageable_object_ptr cast(manageable_object_ptr const &object) {
+        return object;
     }
 };
 }  // namespace yas::db

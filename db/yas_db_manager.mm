@@ -68,7 +68,7 @@ struct db::manager::impl {
 
         db::object_ptr object = manager->make_object(entity_name);
 
-        object->manageable().load_insertion_data();
+        manageable_object::cast(object)->load_insertion_data();
 
         if (this->_created_objects.count(entity_name) == 0) {
             this->_created_objects.insert(std::make_pair(entity_name, db::tmp_object_map_t{}));
@@ -116,7 +116,7 @@ struct db::manager::impl {
         }
 
         // オブジェクトにデータをロード
-        object->manageable().load_data(data, force);
+        manageable_object::cast(object)->load_data(data, force);
 
         return object;
     }
@@ -167,8 +167,9 @@ struct db::manager::impl {
 
     // キャッシュされている全てのオブジェクトをクリアする
     void clear_cached_objects() {
-        this->_cached_objects.perform(
-            [](std::string const &, db::object_id const &, auto const &object) { object->manageable().clear_data(); });
+        this->_cached_objects.perform([](std::string const &, db::object_id const &, auto const &object) {
+            manageable_object::cast(object)->clear_data();
+        });
         this->_cached_objects.clear();
     }
 
@@ -179,7 +180,7 @@ struct db::manager::impl {
         db::value one_value{db::integer::type{1}};
         this->_cached_objects.perform(
             [one_value = std::move(one_value)](std::string const &, db::object_id const &, auto &object) {
-                object->manageable().load_save_id(one_value);
+                manageable_object::cast(object)->load_save_id(one_value);
             });
     }
 
@@ -241,7 +242,7 @@ struct db::manager::impl {
                     } else {
                         throw "object_data.attributes is empty.";
                     }
-                    object->manageable().set_status(db::object_status::updating);
+                    manageable_object::cast(object)->set_status(db::object_status::updating);
                 }
             }
 

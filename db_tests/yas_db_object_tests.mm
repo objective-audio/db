@@ -48,7 +48,7 @@ using namespace yas;
     db::object_data obj_data{
         .object_id = std::move(obj_id), .attributes = std::move(attributes), .relations = std::move(relations)};
 
-    obj->manageable().load_data(obj_data);
+    db::manageable_object::cast(obj)->load_data(obj_data);
 
     XCTAssertEqual(obj->object_id().stable_value(), db::value{1});
 
@@ -101,7 +101,7 @@ using namespace yas;
                                   .attributes = std::move(prev_attributes),
                                   .relations = std::move(prev_relations)};
 
-    obj->manageable().load_data(prev_obj_data);
+    db::manageable_object::cast(obj)->load_data(prev_obj_data);
 
     db::object_id post_obj_id = db::make_stable_id(db::value{1});
     db::value_map_t post_attributes{std::make_pair("age", db::value{543}), std::make_pair("hoge", db::value{"poke"})};
@@ -111,7 +111,7 @@ using namespace yas;
                                   .attributes = std::move(post_attributes),
                                   .relations = std::move(post_relations)};
 
-    obj->manageable().load_data(post_obj_data);
+    db::manageable_object::cast(obj)->load_data(post_obj_data);
 
     XCTAssertEqual(obj->object_id().stable_value(), db::value{1});
 
@@ -186,9 +186,9 @@ using namespace yas;
     auto obj_b2 = db::object::make_shared(model.entity("sample_b"));
     auto obj_b3 = db::object::make_shared(model.entity("sample_b"));
 
-    obj_b1->manageable().load_data({.object_id = db::make_stable_id(db::value{5})});
-    obj_b2->manageable().load_data({.object_id = db::make_stable_id(db::value{6})});
-    obj_b3->manageable().load_data({.object_id = db::make_stable_id(db::value{7})});
+    db::manageable_object::cast(obj_b1)->load_data({.object_id = db::make_stable_id(db::value{5})});
+    db::manageable_object::cast(obj_b2)->load_data({.object_id = db::make_stable_id(db::value{6})});
+    db::manageable_object::cast(obj_b3)->load_data({.object_id = db::make_stable_id(db::value{7})});
 
     obj->add_relation_object("child", obj_b1);
 
@@ -234,9 +234,9 @@ using namespace yas;
     auto obj_b1 = db::object::make_shared(model.entity("sample_b"));
     auto obj_b2 = db::object::make_shared(model.entity("sample_b"));
     auto obj_b3 = db::object::make_shared(model.entity("sample_b"));
-    obj_b1->manageable().load_data({.object_id = db::make_stable_id(db::value{5})});
-    obj_b2->manageable().load_data({.object_id = db::make_stable_id(db::value{6})});
-    obj_b3->manageable().load_data({.object_id = db::make_stable_id(db::value{7})});
+    db::manageable_object::cast(obj_b1)->load_data({.object_id = db::make_stable_id(db::value{5})});
+    db::manageable_object::cast(obj_b2)->load_data({.object_id = db::make_stable_id(db::value{6})});
+    db::manageable_object::cast(obj_b3)->load_data({.object_id = db::make_stable_id(db::value{7})});
 
     obj->insert_relation_id("child", obj_b1->object_id(), 0);
 
@@ -262,9 +262,9 @@ using namespace yas;
     auto obj_b1 = db::object::make_shared(model.entity("sample_b"));
     auto obj_b2 = db::object::make_shared(model.entity("sample_b"));
     auto obj_b3 = db::object::make_shared(model.entity("sample_b"));
-    obj_b1->manageable().load_data({.object_id = db::make_stable_id(db::value{5})});
-    obj_b2->manageable().load_data({.object_id = db::make_stable_id(db::value{6})});
-    obj_b3->manageable().load_data({.object_id = db::make_stable_id(db::value{7})});
+    db::manageable_object::cast(obj_b1)->load_data({.object_id = db::make_stable_id(db::value{5})});
+    db::manageable_object::cast(obj_b2)->load_data({.object_id = db::make_stable_id(db::value{6})});
+    db::manageable_object::cast(obj_b3)->load_data({.object_id = db::make_stable_id(db::value{7})});
 
     obj->insert_relation_object("child", obj_b1, 0);
 
@@ -302,7 +302,7 @@ using namespace yas;
 
     XCTAssertFalse(obj->is_removed());
 
-    obj->manageable().load_data({.object_id = db::make_stable_id(db::value{45})});
+    db::manageable_object::cast(obj)->load_data({.object_id = db::make_stable_id(db::value{45})});
     obj->set_attribute_value(db::pk_id_field, db::value{11});
     obj->set_attribute_value("name", db::value{"tanaka"});
     obj->set_relation_ids("child", {db::make_stable_id(db::value{111})});
@@ -323,7 +323,7 @@ using namespace yas;
 - (void)test_action {
     db::model model = [yas_db_test_utils model_0_0_1];
     auto obj = db::object::make_shared(model.entity("sample_a"));
-    auto manageable_obj = obj->manageable();
+    auto manageable_obj = db::manageable_object::cast(obj);
 
     XCTAssertEqual(obj->action(), db::null_value());
 
@@ -331,42 +331,42 @@ using namespace yas;
                              .attributes = db::value_map_t{std::make_pair(db::action_field, db::insert_action_value())},
                              .relations = db::id_vector_map_t{std::make_pair(
                                  "child", db::id_vector_t{db::make_stable_id(12), db::make_stable_id(34)})}};
-    obj->manageable().load_data(obj_data);
+    db::manageable_object::cast(obj)->load_data(obj_data);
     XCTAssertEqual(obj->action(), db::insert_action_value());
 
     obj->set_attribute_value("name", db::value{"test_name"});
     XCTAssertEqual(obj->action(), db::update_action_value());
 
-    manageable_obj.set_status(db::object_status::updating);
-    obj->manageable().load_data(obj_data);
+    manageable_obj->set_status(db::object_status::updating);
+    db::manageable_object::cast(obj)->load_data(obj_data);
     XCTAssertEqual(obj->action(), db::insert_action_value());
 
     obj->add_relation_id("child", db::make_stable_id(db::value{2}));
     XCTAssertEqual(obj->action(), db::update_action_value());
 
-    manageable_obj.set_status(db::object_status::updating);
-    obj->manageable().load_data(obj_data);
+    manageable_obj->set_status(db::object_status::updating);
+    db::manageable_object::cast(obj)->load_data(obj_data);
     XCTAssertEqual(obj->action(), db::insert_action_value());
 
     obj->set_relation_ids("child", {db::make_stable_id(db::value{1})});
     XCTAssertEqual(obj->action(), db::update_action_value());
 
-    manageable_obj.set_status(db::object_status::updating);
-    obj->manageable().load_data(obj_data);
+    manageable_obj->set_status(db::object_status::updating);
+    db::manageable_object::cast(obj)->load_data(obj_data);
     XCTAssertEqual(obj->action(), db::insert_action_value());
 
     obj->remove_relation_at("child", 0);
     XCTAssertEqual(obj->action(), db::update_action_value());
 
-    manageable_obj.set_status(db::object_status::updating);
-    obj->manageable().load_data(obj_data);
+    manageable_obj->set_status(db::object_status::updating);
+    db::manageable_object::cast(obj)->load_data(obj_data);
     XCTAssertEqual(obj->action(), db::insert_action_value());
 
     obj->remove_all_relations("child");
     XCTAssertEqual(obj->action(), db::update_action_value());
 
-    manageable_obj.set_status(db::object_status::updating);
-    obj->manageable().load_data(obj_data);
+    manageable_obj->set_status(db::object_status::updating);
+    db::manageable_object::cast(obj)->load_data(obj_data);
     XCTAssertEqual(obj->action(), db::insert_action_value());
 
     obj->remove();
@@ -378,7 +378,7 @@ using namespace yas;
     db::model model = [yas_db_test_utils model_0_0_1];
     auto obj = db::object::make_shared(model.entity("sample_a"));
 
-    obj->manageable().load_data({.object_id = db::make_stable_id(db::value{55})});
+    db::manageable_object::cast(obj)->load_data({.object_id = db::make_stable_id(db::value{55})});
     obj->set_attribute_value(db::pk_id_field, db::value{22});
     obj->set_attribute_value("name", db::value{"suzuki"});
     obj->set_attribute_value("age", db::value{32});
@@ -423,10 +423,10 @@ using namespace yas;
     db::model model = [yas_db_test_utils model_0_0_1];
 
     auto obj_a = db::object::make_shared(model.entity("sample_a"));
-    obj_a->manageable().load_data({.object_id = db::make_stable_id(100)});
+    db::manageable_object::cast(obj_a)->load_data({.object_id = db::make_stable_id(100)});
 
     auto obj_b = db::object::make_shared(model.entity("sample_b"));
-    obj_b->manageable().load_data({.object_id = db::make_stable_id(200)});
+    db::manageable_object::cast(obj_b)->load_data({.object_id = db::make_stable_id(200)});
 
     obj_a->add_relation_object("child", obj_b);
 
@@ -446,15 +446,15 @@ using namespace yas;
     db::model model = [yas_db_test_utils model_0_0_1];
 
     auto obj_a1 = db::object::make_shared(model.entity("sample_a"));
-    obj_a1->manageable().load_data({.object_id = db::make_stable_id(db::value{10})});
+    db::manageable_object::cast(obj_a1)->load_data({.object_id = db::make_stable_id(db::value{10})});
     obj_a1->set_relation_ids("child", db::id_vector_t{db::make_stable_id(db::value{10})});
 
     auto obj_a2 = db::object::make_shared(model.entity("sample_a"));
-    obj_a2->manageable().load_data({.object_id = db::make_stable_id(db::value{20})});
+    db::manageable_object::cast(obj_a2)->load_data({.object_id = db::make_stable_id(db::value{20})});
     obj_a2->set_relation_ids("child", db::id_vector_t{db::make_stable_id(db::value{10})});
 
     auto obj_b = db::object::make_shared(model.entity("sample_b"));
-    obj_b->manageable().load_data({.object_id = db::make_stable_id(db::value{10})});
+    db::manageable_object::cast(obj_b)->load_data({.object_id = db::make_stable_id(db::value{10})});
 
     db::object_id_pool pool;
 
@@ -474,23 +474,23 @@ using namespace yas;
     db::model model = [yas_db_test_utils model_0_0_1];
     auto obj = db::object::make_shared(model.entity("sample_a"));
 
-    auto manageable_obj = obj->manageable();
+    auto manageable_obj = db::manageable_object::cast(obj);
 
     XCTAssertEqual(obj->status(), db::object_status::invalid);
 
-    manageable_obj.set_status(db::object_status::created);
+    manageable_obj->set_status(db::object_status::created);
 
     XCTAssertEqual(obj->status(), db::object_status::created);
 
-    manageable_obj.set_status(db::object_status::saved);
+    manageable_obj->set_status(db::object_status::saved);
 
     XCTAssertEqual(obj->status(), db::object_status::saved);
 
-    manageable_obj.set_status(db::object_status::changed);
+    manageable_obj->set_status(db::object_status::changed);
 
     XCTAssertEqual(obj->status(), db::object_status::changed);
 
-    manageable_obj.set_status(db::object_status::updating);
+    manageable_obj->set_status(db::object_status::updating);
 
     XCTAssertEqual(obj->status(), db::object_status::updating);
 }
@@ -661,7 +661,7 @@ using namespace yas;
     db::object_data obj_data{
         .object_id = std::move(obj_id), .attributes = std::move(attributes), .relations = std::move(relations)};
 
-    obj->manageable().load_data(obj_data);
+    db::manageable_object::cast(obj)->load_data(obj_data);
 
     XCTAssertTrue(called);
 }
@@ -682,7 +682,7 @@ using namespace yas;
     XCTAssertEqual(obj->relation_id("child", 0).stable(), 23);
     XCTAssertEqual(obj->relation_id("child", 1).stable(), 45);
 
-    obj->manageable().clear_data();
+    db::manageable_object::cast(obj)->clear_data();
 
     XCTAssertEqual(obj->status(), db::object_status::invalid);
 
@@ -718,7 +718,7 @@ using namespace yas;
                                           })
                                           .end();
 
-    obj->manageable().clear_data();
+    db::manageable_object::cast(obj)->clear_data();
 
     XCTAssertTrue(called);
 }
