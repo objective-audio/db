@@ -80,7 +80,7 @@ top_info_row_type_t to_idx(sample::top_info_row const &row) {
 
     _db_controller = std::make_shared<db_controller>();
 
-    auto unowned_self = make_objc_ptr([[YASUnownedObject<DBSampleTopViewController *> alloc] initWithObject:self]);
+    auto unowned_self = objc_ptr_with_move_object([[YASUnownedObject<DBSampleTopViewController *> alloc] initWithObject:self]);
 
     self->_pool += self->_db_controller->chain()
                        .guard([](auto const &pair) { return pair.first == db_controller::method::processing_changed; })
@@ -110,7 +110,7 @@ top_info_row_type_t to_idx(sample::top_info_row const &row) {
 }
 
 - (void)setupObserversAfterSetup {
-    auto unowned_self = make_objc_ptr([[YASUnownedObject<DBSampleTopViewController *> alloc] initWithObject:self]);
+    auto unowned_self = objc_ptr_with_move_object([[YASUnownedObject<DBSampleTopViewController *> alloc] initWithObject:self]);
 
     self->_pool +=
         self->_db_controller->chain()
@@ -130,17 +130,17 @@ top_info_row_type_t to_idx(sample::top_info_row const &row) {
                     } break;
 
                     case db_controller::method::object_created: {
-                        auto const &object = info.object;
-                        auto const entity = db_controller::entity_for_name(object.entity_name());
+                        auto const &object = *info.object;
+                        auto const entity = db_controller::entity_for_name(object->entity_name());
                         [controller updateTableForInsertedRow:NSInteger(info.value.get<db::integer>()) entity:entity];
                     } break;
 
                     case db_controller::method::object_changed: {
                         auto const &index = info.value.get<db::integer>();
-                        auto const &object = info.object;
+                        auto const &object = *info.object;
 
                         if (info.value) {
-                            auto const entity = db_controller::entity_for_name(object.entity_name());
+                            auto const entity = db_controller::entity_for_name(object->entity_name());
                             [controller updateTableObjectCellAtIndex:NSInteger(index) entity:entity];
                         } else {
                             [controller updateTableObjects];
@@ -151,9 +151,9 @@ top_info_row_type_t to_idx(sample::top_info_row const &row) {
 
                     case db_controller::method::object_removed: {
                         auto const &index = info.value.get<db::integer>();
-                        auto const &object = info.object;
+                        auto const &object = *info.object;
 
-                        auto const entity = db_controller::entity_for_name(object.entity_name());
+                        auto const entity = db_controller::entity_for_name(object->entity_name());
                         [controller updateTableForDeletedRow:NSInteger(index) entity:entity];
 
                         [controller updateTableActions];
@@ -408,15 +408,15 @@ top_info_row_type_t to_idx(sample::top_info_row const &row) {
     cell.selectionStyle = UITableViewCellSelectionStyleNone;
 }
 
-- (void)updateObjectCell:(UITableViewCell *)cell withObject:(db::object const &)object {
-    auto entity = db_controller::entity_for_name(object.entity_name());
+- (void)updateObjectCell:(UITableViewCell *)cell withObject:(db::object_ptr const &)object {
+    auto entity = db_controller::entity_for_name(object->entity_name());
 
-    CFStringRef cf_id_str = to_cf_object(to_string(object.object_id()));
-    CFStringRef cf_name_str = to_cf_object(to_string(object.attribute_value("name")));
+    CFStringRef cf_id_str = to_cf_object(to_string(object->object_id()));
+    CFStringRef cf_name_str = to_cf_object(to_string(object->attribute_value("name")));
 
     switch (entity) {
         case db_controller::entity::a: {
-            CFStringRef cf_age_str = to_cf_object(to_string(object.attribute_value("age")));
+            CFStringRef cf_age_str = to_cf_object(to_string(object->attribute_value("age")));
             cell.textLabel.text =
                 [NSString stringWithFormat:@"obj_id:%@ age:%@ name:%@", cf_id_str, cf_age_str, cf_name_str];
         } break;
@@ -430,7 +430,7 @@ top_info_row_type_t to_idx(sample::top_info_row const &row) {
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     if (indexPath.section == to_idx(top_section::actions)) {
-        auto unowned_self = make_objc_ptr([[YASUnownedObject<DBSampleTopViewController *> alloc] initWithObject:self]);
+        auto unowned_self = objc_ptr_with_move_object([[YASUnownedObject<DBSampleTopViewController *> alloc] initWithObject:self]);
         db::completion_f completion = [unowned_self](db::manager_result_t result) {
             if (!result) {
                 auto controller = [unowned_self.object() object];
