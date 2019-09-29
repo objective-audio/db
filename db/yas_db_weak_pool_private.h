@@ -142,9 +142,7 @@ void weak_pool2<K, V>::perform(perform_handler const &handler) {
         for (auto &value_pair : entity_pair.second) {
             K const &key = value_pair.first;
             if (auto const value = value_pair.second.lock()) {
-                handler(entity_name, key, std::make_optional(value));
-            } else {
-                handler(entity_name, key, std::nullopt);
+                handler(entity_name, key, value);
             }
         }
     }
@@ -156,9 +154,7 @@ void weak_pool2<K, V>::perform_entity(std::string const &entity_name, perform_ha
         for (auto &value_pair : this->_all_values.at(entity_name)) {
             K const &key = value_pair.first;
             if (auto const value = value_pair.second.lock()) {
-                handler(entity_name, key, std::make_optional(value));
-            } else {
-                handler(entity_name, key, std::nullopt);
+                handler(entity_name, key, value);
             }
         }
     }

@@ -35,7 +35,7 @@ struct weak_pool2 final {
 
     using value_map_t = std::unordered_map<K, value_wptr>;
     using value_create_handler = std::function<value_ptr(void)>;
-    using perform_handler = std::function<void(std::string const &, K const &, std::optional<value_ptr> const &)>;
+    using perform_handler = std::function<void(std::string const &, K const &, value_ptr const &)>;
 
     value_ptr get_or_create(std::string const &entity_name, K const &key, value_create_handler handler);
     std::optional<value_ptr> get(std::string const &entity_name, K const &key);
