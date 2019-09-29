@@ -35,7 +35,7 @@ struct db::manager::impl {
     db::model _model;
     task_queue _task_queue;
     std::size_t _suspend_count = 0;
-    db::weak_pool2<db::object_id, db::object> _cached_objects;
+    db::weak_pool<db::object_id, db::object> _cached_objects;
     db::tmp_object_map_map_t _created_objects;
     db::object_map_map_t _changed_objects;
     chaining::value::holder_ptr<db::info_opt> _db_info =

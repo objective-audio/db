@@ -10,7 +10,7 @@
 
 namespace yas::db {
 template <typename K, typename V>
-struct weak_pool2 final {
+struct weak_pool final {
     using value_ptr = std::shared_ptr<V>;
     using value_wptr = std::weak_ptr<V>;
 

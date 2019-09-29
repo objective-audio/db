@@ -1,5 +1,5 @@
 //
-//  yas_db_weak_pool2_tests.mm
+//  yas_db_weak_pool_tests.mm
 //
 
 #import <XCTest/XCTest.h>
@@ -7,14 +7,14 @@
 
 using namespace yas;
 
-@interface yas_db_weak_pool2_tests : XCTestCase
+@interface yas_db_weak_pool_tests : XCTestCase
 
 @end
 
-@implementation yas_db_weak_pool2_tests
+@implementation yas_db_weak_pool_tests
 
 - (void)test_set_and_get {
-    db::weak_pool2<std::string, int> pool;
+    db::weak_pool<std::string, int> pool;
 
     auto val = std::make_shared<int>(1);
     pool.set("entity_a", "key_a", val);
@@ -24,13 +24,13 @@ using namespace yas;
 }
 
 - (void)test_get_no_value {
-    db::weak_pool2<std::string, int> pool;
+    db::weak_pool<std::string, int> pool;
 
     XCTAssertFalse(pool.get("entity_a", "key_a"));
 }
 
 - (void)test_create {
-    db::weak_pool2<std::string, int> pool;
+    db::weak_pool<std::string, int> pool;
 
     bool called = false;
 
@@ -44,7 +44,7 @@ using namespace yas;
 }
 
 - (void)test_get_exists_value {
-    db::weak_pool2<std::string, int> pool;
+    db::weak_pool<std::string, int> pool;
 
     auto val = std::make_shared<int>(3);
     pool.set("entity_a", "key_a", val);
@@ -62,7 +62,7 @@ using namespace yas;
 }
 
 - (void)test_perform {
-    db::weak_pool2<std::string, int> pool;
+    db::weak_pool<std::string, int> pool;
 
     auto a_val_1 = std::make_shared<int>(1);
     auto a_val_2 = std::make_shared<int>(2);
@@ -104,7 +104,7 @@ using namespace yas;
 }
 
 - (void)test_perform_entity {
-    db::weak_pool2<std::string, int> pool;
+    db::weak_pool<std::string, int> pool;
 
     auto a_val_1 = std::make_shared<int>(1);
     auto a_val_2 = std::make_shared<int>(2);
@@ -143,7 +143,7 @@ using namespace yas;
 }
 
 - (void)test_release_value {
-    db::weak_pool2<std::string, int> pool;
+    db::weak_pool<std::string, int> pool;
 
     {
         auto val = std::make_shared<int>(1);
@@ -154,7 +154,7 @@ using namespace yas;
 }
 
 - (void)test_erase {
-    db::weak_pool2<std::string, int> pool;
+    db::weak_pool<std::string, int> pool;
 
     auto val1 = std::make_shared<int>(1);
     auto val2 = std::make_shared<int>(2);
@@ -169,7 +169,7 @@ using namespace yas;
 }
 
 - (void)test_clear {
-    db::weak_pool2<std::string, int> pool;
+    db::weak_pool<std::string, int> pool;
 
     auto val1 = std::make_shared<int>(1);
     auto val2 = std::make_shared<int>(2);

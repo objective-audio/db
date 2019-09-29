@@ -8,8 +8,8 @@
 
 namespace yas::db {
 template <typename K, typename V>
-std::shared_ptr<V> weak_pool2<K, V>::get_or_create(std::string const &entity_name, K const &key,
-                                                   value_create_handler handler) {
+std::shared_ptr<V> weak_pool<K, V>::get_or_create(std::string const &entity_name, K const &key,
+                                                  value_create_handler handler) {
     if (this->_all_values.count(entity_name) == 0) {
         this->_all_values.emplace(entity_name, value_map_t{});
     }
@@ -30,7 +30,7 @@ std::shared_ptr<V> weak_pool2<K, V>::get_or_create(std::string const &entity_nam
 }
 
 template <typename K, typename V>
-std::optional<std::shared_ptr<V>> weak_pool2<K, V>::get(std::string const &entity_name, K const &key) {
+std::optional<std::shared_ptr<V>> weak_pool<K, V>::get(std::string const &entity_name, K const &key) {
     if (this->_all_values.count(entity_name) > 0) {
         auto const &entity_values = this->_all_values.at(entity_name);
         if (entity_values.count(key) > 0) {
@@ -43,7 +43,7 @@ std::optional<std::shared_ptr<V>> weak_pool2<K, V>::get(std::string const &entit
 }
 
 template <typename K, typename V>
-void weak_pool2<K, V>::set(std::string const &entity_name, K const &key, value_ptr const &value) {
+void weak_pool<K, V>::set(std::string const &entity_name, K const &key, value_ptr const &value) {
     if (this->_all_values.count(entity_name) == 0) {
         this->_all_values.emplace(entity_name, value_map_t{});
     }
@@ -54,7 +54,7 @@ void weak_pool2<K, V>::set(std::string const &entity_name, K const &key, value_p
 }
 
 template <typename K, typename V>
-void weak_pool2<K, V>::perform(perform_handler const &handler) {
+void weak_pool<K, V>::perform(perform_handler const &handler) {
     for (auto &entity_pair : this->_all_values) {
         std::string const &entity_name = entity_pair.first;
         for (auto &value_pair : entity_pair.second) {
@@ -67,7 +67,7 @@ void weak_pool2<K, V>::perform(perform_handler const &handler) {
 }
 
 template <typename K, typename V>
-void weak_pool2<K, V>::perform_entity(std::string const &entity_name, perform_handler const &handler) {
+void weak_pool<K, V>::perform_entity(std::string const &entity_name, perform_handler const &handler) {
     if (this->_all_values.count(entity_name)) {
         for (auto &value_pair : this->_all_values.at(entity_name)) {
             K const &key = value_pair.first;
@@ -79,14 +79,14 @@ void weak_pool2<K, V>::perform_entity(std::string const &entity_name, perform_ha
 }
 
 template <typename K, typename V>
-void weak_pool2<K, V>::erase(std::string const &entity_name, K const &key) {
+void weak_pool<K, V>::erase(std::string const &entity_name, K const &key) {
     if (this->_all_values.count(entity_name) > 0) {
         erase_if_exists(this->_all_values.at(entity_name), key);
     }
 }
 
 template <typename K, typename V>
-void weak_pool2<K, V>::clear() {
+void weak_pool<K, V>::clear() {
     this->_all_values.clear();
 }
 }  // namespace yas::db
