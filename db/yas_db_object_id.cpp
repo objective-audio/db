@@ -21,13 +21,13 @@ static void validate_stable(db::value const &value) {
 }
 }  // namespace yas::db
 
-struct db::object_id::impl : weakable_impl {
+struct db::object_id::impl {
     impl(db::value &&stable, db::value &&temporary) : _stable(std::move(stable)), _temporary(std::move(temporary)) {
-        if (!_stable && !_temporary) {
-            _temporary = db::value{std::to_string(this->identifier())};
+        if (!this->_stable && !this->_temporary) {
+            this->_temporary = db::value{std::to_string(this->identifier())};
         }
-        db::validate_temporary(_temporary);
-        db::validate_stable(_stable);
+        db::validate_temporary(this->_temporary);
+        db::validate_stable(this->_stable);
     }
 
     uintptr_t identifier() {
@@ -35,20 +35,20 @@ struct db::object_id::impl : weakable_impl {
     }
 
     void set_stable(db::value &&value) {
-        _stable = std::move(value);
-        db::validate_stable(_stable);
+        this->_stable = std::move(value);
+        db::validate_stable(this->_stable);
     }
 
     db::value const &stable() {
-        return _stable;
+        return this->_stable;
     }
 
     db::value const &temporary() {
-        return _temporary;
+        return this->_temporary;
     }
 
     bool is_stable() {
-        return !!_stable;
+        return !!this->_stable;
     }
 
     bool is_tmp() {
@@ -66,10 +66,10 @@ struct db::object_id::impl : weakable_impl {
     }
 
     std::size_t hash() {
-        if (_stable) {
-            return std::hash<db::integer::type>()(_stable.get<db::integer>());
+        if (this->_stable) {
+            return std::hash<db::integer::type>()(this->_stable.get<db::integer>());
         } else {
-            return std::hash<db::text::type>()(_temporary.get<db::text>());
+            return std::hash<db::text::type>()(this->_temporary.get<db::text>());
         }
     }
 
@@ -80,10 +80,6 @@ struct db::object_id::impl : weakable_impl {
 
 db::object_id::object_id(db::value stable, db::value temporary)
     : _impl(std::make_shared<impl>(std::move(stable), std::move(temporary))) {
-}
-
-db::object_id::object_id(std::shared_ptr<weakable_impl> &&wimpl) : _impl(std::dynamic_pointer_cast<impl>(wimpl)) {
-    assert(this->_impl);
 }
 
 db::object_id::object_id(std::nullptr_t) : _impl(nullptr) {
@@ -131,10 +127,6 @@ db::object_id db::object_id::copy() const {
 
 std::size_t db::object_id::hash() const {
     return this->_impl->hash();
-}
-
-std::shared_ptr<weakable_impl> db::object_id::weakable_impl_ptr() const {
-    return this->_impl;
 }
 
 bool db::object_id::operator==(object_id const &rhs) const {
