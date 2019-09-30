@@ -21,7 +21,7 @@ static void validate_stable(db::value const &value) {
 }
 }  // namespace yas::db
 
-struct db::object_id::impl : weakable_impl {
+struct db::object_id::impl {
     impl(db::value &&stable, db::value &&temporary) : _stable(std::move(stable)), _temporary(std::move(temporary)) {
         if (!_stable && !_temporary) {
             _temporary = db::value{std::to_string(this->identifier())};
@@ -82,10 +82,6 @@ db::object_id::object_id(db::value stable, db::value temporary)
     : _impl(std::make_shared<impl>(std::move(stable), std::move(temporary))) {
 }
 
-db::object_id::object_id(std::shared_ptr<weakable_impl> &&wimpl) : _impl(std::dynamic_pointer_cast<impl>(wimpl)) {
-    assert(this->_impl);
-}
-
 db::object_id::object_id(std::nullptr_t) : _impl(nullptr) {
 }
 
@@ -131,10 +127,6 @@ db::object_id db::object_id::copy() const {
 
 std::size_t db::object_id::hash() const {
     return this->_impl->hash();
-}
-
-std::shared_ptr<weakable_impl> db::object_id::weakable_impl_ptr() const {
-    return this->_impl;
 }
 
 bool db::object_id::operator==(object_id const &rhs) const {
