@@ -137,7 +137,7 @@ struct const_object {
     const_object(std::shared_ptr<impl> &&);
 };
 
-struct object final : const_object {
+struct object final : const_object, manageable_object {
     class impl;
 
     [[nodiscard]] chaining::chain_sync_t<object_event> chain() const;
@@ -163,18 +163,20 @@ struct object final : const_object {
 
     db::object_data save_data(db::object_id_pool &) const;
 
-    db::manageable_object &manageable();
-
     static object_ptr make_shared(db::entity const &);
 
    private:
-    db::manageable_object _manageable = nullptr;
-
     object(db::entity const &entity);
 
     std::shared_ptr<impl> _mutable_impl() const;
 
     void _prepare(object_ptr const &);
+
+    void set_status(db::object_status const &) override;
+    void load_insertion_data() override;
+    void load_data(db::object_data const &obj_data, bool const force) override;
+    void load_save_id(db::value const &save_id) override;
+    void clear_data() override;
 };
 
 db::value const &insert_action_value();

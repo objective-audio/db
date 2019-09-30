@@ -416,7 +416,7 @@ db::const_object_ptr db::const_object::make_shared(db::entity const &entity, db:
 
 #pragma mark - db::object::impl
 
-struct db::object::impl : const_object::impl, manageable_object::impl {
+struct db::object::impl : const_object::impl {
     enum db::object_status _status = db::object_status::invalid;
     chaining::fetcher_ptr<object_event> _fetcher = nullptr;
     std::shared_ptr<chaining::sender_protocol<object_event>> _sender = nullptr;
@@ -454,7 +454,7 @@ struct db::object::impl : const_object::impl, manageable_object::impl {
     // object_dataのデータを読み込んで上書きする
     // force == falseなら、データベースへの保存処理を始めた後でもオブジェクトに変更があったら上書きしない
     // force == trueなら、必ず上書きする
-    void load_data(db::object_data const &obj_data, bool const force) override {
+    void load_data(db::object_data const &obj_data, bool const force) {
         if (this->_status != db::object_status::changed || force) {
             this->clear();
 
@@ -482,11 +482,11 @@ struct db::object::impl : const_object::impl, manageable_object::impl {
         }
     }
 
-    void load_save_id(db::value const &save_id) override {
+    void load_save_id(db::value const &save_id) {
         this->set_attribute_value(db::save_id_field, save_id, true);
     }
 
-    void load_insertion_data() override {
+    void load_insertion_data() {
         this->_status = db::object_status::created;
         this->set_attribute_value(db::action_field, db::insert_action_value(), true);
 
@@ -498,7 +498,7 @@ struct db::object::impl : const_object::impl, manageable_object::impl {
         }
     }
 
-    void clear_data() override {
+    void clear_data() {
         this->clear();
 
         this->_sender->broadcast(make_object_cleared_event(this->cast()));
@@ -728,7 +728,7 @@ struct db::object::impl : const_object::impl, manageable_object::impl {
         }
     }
 
-    void set_status(db::object_status const &stat) override {
+    void set_status(db::object_status const &stat) {
         this->_status = stat;
     }
 };
@@ -806,19 +806,32 @@ db::object_data db::object::save_data(db::object_id_pool &pool) const {
     return this->_mutable_impl()->save_data(pool);
 }
 
-db::manageable_object &db::object::manageable() {
-    if (!_manageable) {
-        _manageable = manageable_object{this->_mutable_impl()};
-    }
-    return _manageable;
-}
-
 std::shared_ptr<db::object::impl> db::object::_mutable_impl() const {
     return std::dynamic_pointer_cast<db::object::impl>(this->_impl);
 }
 
 void db::object::_prepare(object_ptr const &shared) {
     this->_mutable_impl()->prepare(shared);
+}
+
+void db::object::set_status(db::object_status const &status) {
+    this->_mutable_impl()->set_status(status);
+}
+
+void db::object::load_insertion_data() {
+    this->_mutable_impl()->load_insertion_data();
+}
+
+void db::object::load_data(db::object_data const &obj_data, bool const force) {
+    this->_mutable_impl()->load_data(obj_data, force);
+}
+
+void db::object::load_save_id(db::value const &save_id) {
+    this->_mutable_impl()->load_save_id(save_id);
+}
+
+void db::object::clear_data() {
+    this->_mutable_impl()->clear_data();
 }
 
 db::object_ptr db::object::make_shared(db::entity const &entity) {

@@ -20,6 +20,7 @@ class object;
 class closable;
 class row_set_observable;
 class db_settable;
+class manageable_object;
 
 using database_ptr = std::shared_ptr<database>;
 using database_wptr = std::weak_ptr<database>;
@@ -36,6 +37,7 @@ using object_wptr = std::weak_ptr<object>;
 using closable_ptr = std::shared_ptr<closable>;
 using row_set_observable_ptr = std::shared_ptr<row_set_observable>;
 using db_settable_ptr = std::shared_ptr<db_settable>;
+using manageable_object_ptr = std::shared_ptr<manageable_object>;
 
 using info_opt = std::optional<info>;
 }  // namespace yas::db
