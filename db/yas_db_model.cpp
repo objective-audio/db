@@ -39,62 +39,19 @@ static std::unordered_map<std::string, db::string_set_map_t> make_inverse_relati
 }
 }  // namespace yas::db
 
-struct db::model::impl {
-    struct args {
-        yas::version const version;
-        db::entity_map_t const entities;
-        db::index_map_t const indices;
-    };
-
-    args _args;
-
-    static db::model::impl::args to_args(model_args &&args) {
-        auto entity_inv_rel_names = make_inverse_relation_names(args.entities);
-
-        db::entity_map_t entities;
-        entities.reserve(args.entities.size());
-
-        for (db::entity_args &entity_args : args.entities) {
-            db::string_set_map_t inv_rel_names;
-            if (entity_inv_rel_names.count(entity_args.name)) {
-                inv_rel_names = std::move(entity_inv_rel_names.at(entity_args.name));
-            }
-
-            std::string name = entity_args.name;
-            entities.emplace(std::move(name), db::entity{{.name = std::move(entity_args.name),
-                                                          .attributes = std::move(entity_args.attributes),
-                                                          .relations = std::move(entity_args.relations)},
-                                                         std::move(inv_rel_names)});
-        }
-
-        db::index_map_t indices;
-        indices.reserve(args.indices.size());
-
-        for (db::index_args &index_args : args.indices) {
-            std::string name = index_args.name;
-            indices.emplace(std::move(name), db::index{std::move(index_args)});
-        }
-
-        return {.version = std::move(args.version), .entities = std::move(entities), .indices = std::move(indices)};
-    }
-
-    impl(model_args &&args) : _args(to_args(std::move(args))) {
-    }
-};
-
-db::model::model(model_args args) : _impl(std::make_shared<impl>(std::move(args))) {
+db::model::model(model_args args) : _args(to_args(std::move(args))) {
 }
 
 yas::version const &db::model::version() const {
-    return this->_impl->_args.version;
+    return this->_args.version;
 }
 
 db::entity_map_t const &db::model::entities() const {
-    return this->_impl->_args.entities;
+    return this->_args.entities;
 }
 
 db::index_map_t const &db::model::indices() const {
-    return this->_impl->_args.indices;
+    return this->_args.indices;
 }
 
 db::entity const &db::model::entity(std::string const &entity) const {
@@ -149,4 +106,34 @@ bool db::model::relation_exists(std::string const &entity, std::string const &re
 
 bool db::model::index_exists(std::string const &index_name) const {
     return this->indices().count(index_name) > 0;
+}
+
+db::model::args db::model::to_args(model_args &&args) {
+    auto entity_inv_rel_names = make_inverse_relation_names(args.entities);
+
+    db::entity_map_t entities;
+    entities.reserve(args.entities.size());
+
+    for (db::entity_args &entity_args : args.entities) {
+        db::string_set_map_t inv_rel_names;
+        if (entity_inv_rel_names.count(entity_args.name)) {
+            inv_rel_names = std::move(entity_inv_rel_names.at(entity_args.name));
+        }
+
+        std::string name = entity_args.name;
+        entities.emplace(std::move(name), db::entity{{.name = std::move(entity_args.name),
+                                                      .attributes = std::move(entity_args.attributes),
+                                                      .relations = std::move(entity_args.relations)},
+                                                     std::move(inv_rel_names)});
+    }
+
+    db::index_map_t indices;
+    indices.reserve(args.indices.size());
+
+    for (db::index_args &index_args : args.indices) {
+        std::string name = index_args.name;
+        indices.emplace(std::move(name), db::index{std::move(index_args)});
+    }
+
+    return {.version = std::move(args.version), .entities = std::move(entities), .indices = std::move(indices)};
 }
