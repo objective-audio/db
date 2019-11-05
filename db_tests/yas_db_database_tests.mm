@@ -293,24 +293,24 @@ using namespace yas;
     XCTAssertTrue(db::create_table(db, "test_table", {"test_field"}));
     XCTAssertTrue(db->execute_update("insert into test_table(test_field) values('value1')"));
 
-    XCTAssertFalse(db->has_open_row_sets());
+    XCTAssertFalse(db->has_opened_row_sets());
 
     if (auto query_result = db->execute_query("select * from test_table")) {
-        XCTAssertTrue(db->has_open_row_sets());
+        XCTAssertTrue(db->has_opened_row_sets());
     }
 
-    XCTAssertFalse(db->has_open_row_sets());
+    XCTAssertFalse(db->has_opened_row_sets());
 
     if (auto query_result = db->execute_query("select * from test_table")) {
         auto &row_set = query_result.value();
         XCTAssertTrue(row_set->next());
         XCTAssertTrue(row_set->has_row());
-        XCTAssertTrue(db->has_open_row_sets());
+        XCTAssertTrue(db->has_opened_row_sets());
 
-        db->close_open_row_sets();
+        db->close_opened_row_sets();
 
         XCTAssertFalse(row_set->has_row());
-        XCTAssertFalse(db->has_open_row_sets());
+        XCTAssertFalse(db->has_opened_row_sets());
     }
 }
 
