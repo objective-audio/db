@@ -9,6 +9,7 @@
 #include <set>
 #include <unordered_map>
 #include "yas_db_additional_protocol.h"
+#include "yas_db_entity.h"
 
 namespace yas::db {
 class entity;
@@ -103,8 +104,6 @@ struct object_event {
 };
 
 struct const_object {
-    class impl;
-
     db::entity const &entity() const;
     std::string const &entity_name() const;
 
@@ -123,22 +122,33 @@ struct const_object {
     bool is_updated() const;
     bool is_removed() const;
 
-    bool operator==(const_object const &rhs) const;
-    bool operator!=(const_object const &rhs) const;
-
-    explicit operator bool() const;
-
     static const_object_ptr make_shared(db::entity const &entity, db::object_data const &obj_data);
 
    protected:
-    std::shared_ptr<impl> _impl;
+    db::entity _entity;
+    db::value_map_t _attributes;
+    db::id_vector_map_t _relations;
+    db::object_id _identifier;
 
     const_object(db::entity const &entity, db::object_data const &obj_data);
-    const_object(std::shared_ptr<impl> &&);
+    const_object(db::entity const &entity, db::object_id &&identifier);
+
+    void _clear();
+    bool _is_equal_to_action(std::string const &) const;
+    void _update_identifier(db::object_data const &);
+    void _validate_attribute_name(std::string const &) const;
+    void _validate_relation_name(std::string const &) const;
+    void _validate_relation_id(db::object_id const &) const;
+    void _validate_relation_ids(db::id_vector_t const &) const;
+
+   private:
+    void _load_data(db::object_data const &);
+    void _update_identifier(db::value stable);
+    void _validate_temporary_id(db::object_id const &other_object_id) const;
 };
 
 struct object final : const_object, manageable_object {
-    class impl;
+    ~object();
 
     [[nodiscard]] chaining::chain_sync_t<object_event> chain() const;
 
@@ -168,7 +178,10 @@ struct object final : const_object, manageable_object {
    private:
     object(db::entity const &entity);
 
-    std::shared_ptr<impl> _mutable_impl() const;
+    enum db::object_status _status = db::object_status::invalid;
+    chaining::fetcher_ptr<object_event> _fetcher = nullptr;
+    std::shared_ptr<chaining::sender_protocol<object_event>> _sender = nullptr;
+    db::object_wptr _weak_object;
 
     void _prepare(object_ptr const &);
 
@@ -177,6 +190,12 @@ struct object final : const_object, manageable_object {
     void load_data(db::object_data const &obj_data, bool const force) override;
     void load_save_id(db::value const &save_id) override;
     void clear_data() override;
+
+    void _clear();
+    void _set_attribute_value(std::string const &attr_name, db::value const &value, bool const loading);
+    void _set_relation_ids(std::string const &rel_name, db::id_vector_t const &relation_ids,
+                           bool const loading = false);
+    void _set_update_action();
 };
 
 db::value const &insert_action_value();

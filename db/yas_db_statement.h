@@ -11,7 +11,7 @@
 
 namespace yas::db {
 struct statement final : closable {
-    ~statement() = default;
+    ~statement();
 
     statement(statement const &) = default;
     statement(statement &&) = default;
@@ -34,9 +34,9 @@ struct statement final : closable {
     static statement_ptr make_shared();
 
    private:
-    class impl;
-
-    std::shared_ptr<impl> _impl;
+    std::string _query;
+    sqlite3_stmt *_stmt = nullptr;
+    bool _in_use = false;
 
     statement();
 

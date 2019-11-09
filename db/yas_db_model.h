@@ -34,8 +34,14 @@ struct model final {
     bool index_exists(std::string const &index_name) const;
 
    private:
-    class impl;
+    struct args {
+        yas::version const version;
+        db::entity_map_t const entities;
+        db::index_map_t const indices;
+    };
 
-    std::shared_ptr<impl> _impl;
+    args _args;
+
+    static args to_args(model_args &&args);
 };
 }  // namespace yas::db

@@ -9,6 +9,7 @@
 #include "yas_db_ptr.h"
 #include "yas_db_result_code.h"
 #include "yas_db_types.h"
+#include "yas_db_value.h"
 
 namespace yas {
 template <typename T, typename U>
@@ -51,12 +52,16 @@ struct row_set final : closable, db_settable {
     static row_set_ptr make_shared(db::statement_ptr const &, database_ptr const &, std::vector<db::value> const &);
 
    private:
-    class impl;
-    std::shared_ptr<impl> _impl;
+    db::database_ptr _database;
+    db::statement_ptr const _statement;
+    std::vector<db::value> _context;
+    mutable std::unordered_map<std::string, int> _column_name_to_index_map;
 
     row_set(db::statement_ptr const &, database_ptr const &, std::vector<db::value> const &);
 
     void close() override;
     void set_database(database_ptr const &) override;
+
+    std::unordered_map<std::string, int> const &_get_or_make_column_name_to_index_map() const;
 };
 }  // namespace yas::db

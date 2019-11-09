@@ -23,63 +23,23 @@ static void validate_stable(db::value const &value) {
 
 struct db::object_id::impl {
     impl(db::value &&stable, db::value &&temporary) : _stable(std::move(stable)), _temporary(std::move(temporary)) {
-        if (!this->_stable && !this->_temporary) {
-            this->_temporary = db::value{std::to_string(this->identifier())};
-        }
-        db::validate_temporary(this->_temporary);
-        db::validate_stable(this->_stable);
     }
 
     uintptr_t identifier() {
         return reinterpret_cast<uintptr_t>(this);
     }
 
-    void set_stable(db::value &&value) {
-        this->_stable = std::move(value);
-        db::validate_stable(this->_stable);
-    }
-
-    db::value const &stable() {
-        return this->_stable;
-    }
-
-    db::value const &temporary() {
-        return this->_temporary;
-    }
-
-    bool is_stable() {
-        return !!this->_stable;
-    }
-
-    bool is_tmp() {
-        return !this->_stable && this->_temporary;
-    }
-
-    bool is_equal(std::shared_ptr<impl> const &rhs) const {
-        if (this->_temporary && rhs->_temporary) {
-            return this->_temporary == rhs->_temporary;
-        } else if (this->_stable && rhs->_stable) {
-            return this->_stable == rhs->_stable;
-        }
-
-        return false;
-    }
-
-    std::size_t hash() {
-        if (this->_stable) {
-            return std::hash<db::integer::type>()(this->_stable.get<db::integer>());
-        } else {
-            return std::hash<db::text::type>()(this->_temporary.get<db::text>());
-        }
-    }
-
-   private:
     db::value _stable;
     db::value _temporary;
 };
 
 db::object_id::object_id(db::value stable, db::value temporary)
     : _impl(std::make_shared<impl>(std::move(stable), std::move(temporary))) {
+    if (!this->stable_value() && !this->temporary_value()) {
+        this->_impl->_temporary = db::value{std::to_string(this->identifier())};
+    }
+    db::validate_temporary(this->temporary_value());
+    db::validate_stable(this->stable_value());
 }
 
 db::object_id::object_id(std::nullptr_t) : _impl(nullptr) {
@@ -94,15 +54,16 @@ void db::object_id::set_stable(db::integer::type const value) {
 }
 
 void db::object_id::set_stable(db::value value) {
-    this->_impl->set_stable(std::move(value));
+    this->_impl->_stable = std::move(value);
+    db::validate_stable(this->stable_value());
 }
 
 db::value const &db::object_id::stable_value() const {
-    return this->_impl->stable();
+    return this->_impl->_stable;
 }
 
 db::value const &db::object_id::temporary_value() const {
-    return this->_impl->temporary();
+    return this->_impl->_temporary;
 }
 
 db::integer::type const &db::object_id::stable() const {
@@ -114,23 +75,27 @@ std::string const &db::object_id::temporary() const {
 }
 
 bool db::object_id::is_stable() const {
-    return this->_impl->is_stable();
+    return !!this->stable_value();
 }
 
 bool db::object_id::is_temporary() const {
-    return this->_impl->is_tmp();
+    return !this->stable_value() && this->temporary_value();
 }
 
 db::object_id db::object_id::copy() const {
-    return db::object_id{this->stable_value(), this->_impl->temporary()};
+    return db::object_id{this->stable_value(), this->temporary_value()};
 }
 
 std::size_t db::object_id::hash() const {
-    return this->_impl->hash();
+    if (auto const &stable = this->stable_value()) {
+        return std::hash<db::integer::type>()(stable.get<db::integer>());
+    } else {
+        return std::hash<db::text::type>()(this->temporary_value().get<db::text>());
+    }
 }
 
 bool db::object_id::operator==(object_id const &rhs) const {
-    return this->_impl && rhs._impl && this->_impl->is_equal(rhs._impl);
+    return this->_impl && rhs._impl && this->_is_equal(rhs);
 }
 
 bool db::object_id::operator!=(object_id const &rhs) const {
@@ -139,6 +104,22 @@ bool db::object_id::operator!=(object_id const &rhs) const {
 
 db::object_id::operator bool() const {
     return this->_impl != nullptr;
+}
+
+bool db::object_id::_is_equal(object_id const &rhs) const {
+    auto const &lhs_temporary = this->temporary_value();
+    auto const &rhs_temporary = rhs.temporary_value();
+    if (lhs_temporary && rhs_temporary) {
+        return lhs_temporary == rhs_temporary;
+    } else {
+        auto const &lhs_stable = this->stable_value();
+        auto const &rhs_stable = rhs.stable_value();
+        if (lhs_stable && rhs_stable) {
+            return lhs_stable == rhs_stable;
+        }
+    }
+
+    return false;
 }
 
 db::object_id db::make_stable_id(db::value stable) {

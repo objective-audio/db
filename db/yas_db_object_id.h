@@ -10,8 +10,6 @@ namespace yas::db {
 class value;
 
 struct object_id final {
-    class impl;
-
     object_id(db::value stable, db::value temporary);
     object_id(std::nullptr_t);
 
@@ -38,7 +36,10 @@ struct object_id final {
     explicit operator bool() const;
 
    private:
+    class impl;
     std::shared_ptr<impl> _impl;
+
+    bool _is_equal(object_id const &rhs) const;
 };
 
 db::object_id make_stable_id(db::value);

@@ -3,11 +3,9 @@
 //
 
 #include "yas_db_manager.h"
-#include <chaining/yas_chaining_umbrella.h>
 #include <cpp_utils/yas_each_index.h>
 #include <cpp_utils/yas_result.h>
 #include <cpp_utils/yas_stl_utils.h>
-#include <cpp_utils/yas_task.h>
 #include <cpp_utils/yas_unless.h>
 #include <objc_utils/yas_objc_macros.h>
 #include <optional>
@@ -18,7 +16,6 @@
 #include "yas_db_index.h"
 #include "yas_db_info.h"
 #include "yas_db_manager_utils.h"
-#include "yas_db_model.h"
 #include "yas_db_object_utils.h"
 #include "yas_db_relation.h"
 #include "yas_db_select_option.h"
@@ -27,517 +24,100 @@
 
 using namespace yas;
 
-#pragma mark - impl
-
-struct db::manager::impl {
-    db::manager_wptr _weak_manager;
-    db::database_ptr _database;
-    db::model _model;
-    task_queue _task_queue;
-    std::size_t _suspend_count = 0;
-    db::weak_pool<db::object_id, db::object> _cached_objects;
-    db::tmp_object_map_map_t _created_objects;
-    db::object_map_map_t _changed_objects;
-    chaining::value::holder_ptr<db::info_opt> _db_info =
-        chaining::value::holder<db::info_opt>::make_shared(std::nullopt);
-    chaining::notifier_ptr<db::object_ptr> _db_object_notifier = chaining::notifier<db::object_ptr>::make_shared();
-    dispatch_queue_t _dispatch_queue;
-    chaining::observer_pool _pool;
-
-    impl(std::string const &path, db::model const &model, dispatch_queue_t const dispatch_queue,
-         std::size_t const priority_count)
-        : _database(database::make_shared(path)),
-          _model(model),
-          _dispatch_queue(dispatch_queue),
-          _task_queue(priority_count) {
-        yas_dispatch_queue_retain(dispatch_queue);
-    }
-
-    ~impl() {
-        yas_dispatch_queue_release(_dispatch_queue);
-    }
-
-    void prepare(manager_ptr const &shared) {
-        this->_weak_manager = shared;
-    }
-
-    // データベースに保存せず仮にオブジェクトを生成する
-    // この時点ではobject_idやsave_idは振られていない
-    db::object_ptr create_temporary_object(std::string const entity_name) {
-        auto manager = this->_weak_manager.lock();
-
-        db::object_ptr object = manager->make_object(entity_name);
-
-        manageable_object::cast(object)->load_insertion_data();
-
-        if (this->_created_objects.count(entity_name) == 0) {
-            this->_created_objects.insert(std::make_pair(entity_name, db::tmp_object_map_t{}));
-        }
-
-        // この時点でobject_idはtemporary
-        this->_created_objects.at(entity_name).emplace(object->object_id().temporary(), object);
-
-        return object;
-    }
-
-    db::object_ptr load_and_cache_object(std::string const &entity_name, db::object_data const &data, bool const force,
-                                         bool const is_save) {
-        if (!data.object_id) {
-            throw std::invalid_argument("object_id not found.");
-        }
-
-        db::object_ptr object = nullptr;
-
-        if (is_save && this->_created_objects.count(entity_name) > 0) {
-            // セーブ時で仮に挿入されたオブジェクトがある場合にオブジェクトを取得
-            auto &entity_objects = this->_created_objects.at(entity_name);
-            if (entity_objects.size() > 0) {
-                auto const &temporary_id = data.object_id.temporary();
-                if (entity_objects.count(temporary_id) > 0) {
-                    object = entity_objects.at(temporary_id);
-                    entity_objects.erase(temporary_id);
-
-                    db::object_id obj_id = object->object_id();
-                    obj_id.set_stable(data.object_id.stable_value());
-                    this->_cached_objects.set(entity_name, obj_id, object);
-
-                    if (entity_objects.size() == 0) {
-                        this->_created_objects.erase(entity_name);
-                    }
-                }
-            }
-        }
-
-        if (!object) {
-            // 挿入でなければobjectはnullなので、キャッシュに追加または取得する
-            auto manager = this->_weak_manager.lock();
-            object = this->_cached_objects.get_or_create(
-                entity_name, data.object_id, [&manager, &entity_name]() { return manager->make_object(entity_name); });
-        }
-
-        // オブジェクトにデータをロード
-        manageable_object::cast(object)->load_data(data, force);
-
-        return object;
-    }
-
-    // 複数のエンティティのデータをロードしてキャッシュする
-    // ロードされたオブエジェクトはエンティティごとに順番がある状態で返される
-    db::object_vector_map_t load_and_cache_object_vector(db::object_data_vector_map_t const &datas, bool const force,
-                                                         bool const is_save) {
-        db::object_vector_map_t loaded_objects;
-        for (auto const &entity_pair : datas) {
-            auto const &entity_name = entity_pair.first;
-            auto const &entity_datas = entity_pair.second;
-
-            db::object_vector_t objects;
-            objects.reserve(entity_datas.size());
-
-            for (db::object_data const &data : entity_datas) {
-                auto object = this->load_and_cache_object(entity_name, data, force, is_save);
-                objects.emplace_back(std::move(object));
-            }
-
-            loaded_objects.emplace(entity_name, std::move(objects));
-        }
-        return loaded_objects;
-    }
-
-    // 複数のエンティティのデータをロードしてキャッシュする
-    // ロードされたオブジェクトはエンティティごとにobject_idをキーとしたmapで返される
-    db::object_map_map_t load_and_cache_object_map(db::object_data_vector_map_t const &datas, bool const force,
-                                                   bool const is_save) {
-        db::object_map_map_t loaded_objects;
-        for (auto const &entity_pair : datas) {
-            auto const &entity_name = entity_pair.first;
-            auto const &entity_datas = entity_pair.second;
-
-            db::object_map_t objects;
-            objects.reserve(entity_datas.size());
-
-            for (auto const &data : entity_datas) {
-                auto object = this->load_and_cache_object(entity_name, data, force, is_save);
-                objects.emplace(object->object_id().stable(), std::move(object));
-            }
-
-            loaded_objects.emplace(entity_name, std::move(objects));
-        }
-        return loaded_objects;
-    }
-
-    // キャッシュされている全てのオブジェクトをクリアする
-    void clear_cached_objects() {
-        this->_cached_objects.perform([](std::string const &, db::object_id const &, auto const &object) {
-            manageable_object::cast(object)->clear_data();
-        });
-        this->_cached_objects.clear();
-    }
-
-    // キャッシュされている全てのオブジェクトをパージする（save_idを全て1にする）
-    // データベースのパージが成功した時に呼ばれる
-    void purge_cached_objects() {
-        // キャッシュされたオブジェクトのセーブIDを全て1にする
-        db::value one_value{db::integer::type{1}};
-        this->_cached_objects.perform(
-            [one_value = std::move(one_value)](std::string const &, db::object_id const &, auto &object) {
-                manageable_object::cast(object)->load_save_id(one_value);
-            });
-    }
-
-    // データベース情報を置き換える
-    void set_db_info(db::info_opt &&info) {
-        this->_db_info->set_value(std::move(info));
-    }
-
-    // データベースに保存するために、全てのエンティティで変更のあったオブジェクトのobject_dataを取得する
-    db::object_data_vector_map_t changed_datas_for_save() {
-        db::object_data_vector_map_t changed_datas;
-        db::object_id_pool obj_id_pool;
-
-        for (auto const &entity_pair : this->_model.entities()) {
-            // エンティティごとの処理
-            auto const &entity_name = entity_pair.first;
-
-            // 仮に挿入されたオブジェクトの数
-            std::size_t const inserted_count =
-                this->_created_objects.count(entity_name) ? this->_created_objects.at(entity_name).size() : 0;
-            // 値に変更のあったオブジェクトの数
-            std::size_t const changed_count =
-                this->_changed_objects.count(entity_name) ? this->_changed_objects.at(entity_name).size() : 0;
-            // 挿入か変更のあったオブジェクトの数の合計
-            std::size_t const total_count = inserted_count + changed_count;
-
-            // 挿入も変更もされていなければスキップ
-            if (total_count == 0) {
-                continue;
-            }
-
-            db::object_data_vector_t entity_datas;
-            entity_datas.reserve(total_count);
-
-            if (inserted_count > 0) {
-                // 挿入されたオブジェクトからデータベース用のデータを取得
-                auto const &entity_objects = this->_created_objects.at(entity_name);
-
-                for (auto const &pair : entity_objects) {
-                    auto const &object = pair.second;
-                    auto data = object->save_data(obj_id_pool);
-                    if (data.attributes.size() > 0) {
-                        entity_datas.emplace_back(std::move(data));
-                    } else {
-                        throw "object_data.attributes is empty.";
-                    }
-                }
-            }
-
-            if (changed_count > 0) {
-                // 変更されたオブジェクトからデータベース用のデータを取得
-                auto &entity_objects = this->_changed_objects.at(entity_name);
-
-                for (auto &object_pair : entity_objects) {
-                    auto &object = object_pair.second;
-                    auto data = object->save_data(obj_id_pool);
-                    if (data.attributes.size() > 0) {
-                        entity_datas.emplace_back(std::move(data));
-                    } else {
-                        throw "object_data.attributes is empty.";
-                    }
-                    manageable_object::cast(object)->set_status(db::object_status::updating);
-                }
-            }
-
-            changed_datas.emplace(entity_name, std::move(entity_datas));
-        }
-
-        return changed_datas;
-    }
-
-    // リセットするために、全てのエンティティで変更のあったオブジェクトのobject_idを取得する
-    db::integer_set_map_t changed_object_ids_for_reset() {
-        db::integer_set_map_t changed_obj_ids;
-
-        for (auto const &entity_pair : this->_changed_objects) {
-            auto const &entity_name = entity_pair.first;
-            auto const &entity_objects = entity_pair.second;
-
-            db::integer_set_t entity_ids;
-
-            for (auto const &object_pair : entity_objects) {
-                auto const &object = object_pair.second;
-                entity_ids.insert(object->object_id().stable());
-            }
-
-            if (entity_ids.size() > 0) {
-                changed_obj_ids.emplace(entity_name, std::move(entity_ids));
-            }
-        }
-
-        return changed_obj_ids;
-    }
-
-    // object_datasに含まれるオブジェクトIDと一致するものは_changed_objectsから取り除く
-    // データベースに保存された後などに呼ばれる。
-    void erase_changed_objects(db::object_data_vector_map_t const &object_datas) {
-        for (auto const &entity_pair : object_datas) {
-            auto const &entity_name = entity_pair.first;
-            if (this->_changed_objects.count(entity_name) > 0) {
-                auto const &entity_objects = entity_pair.second;
-                if (entity_objects.size() > 0) {
-                    auto &changed_entity_objects = this->_changed_objects.at(entity_name);
-                    for (auto const &obj_data : entity_objects) {
-                        erase_if_exists(changed_entity_objects, obj_data.object_id.stable());
-                    }
-
-                    if (changed_entity_objects.size() == 0) {
-                        this->_changed_objects.erase(entity_name);
-                    }
-                }
-            }
-        }
-    }
-
-    std::optional<db::object_ptr> _inserted_object(std::string const &entity_name, std::string const &tmp_obj_id) {
-        if (this->_created_objects.count(entity_name) > 0) {
-            auto const &entity_objects = this->_created_objects.at(entity_name);
-            if (entity_objects.count(tmp_obj_id) > 0) {
-                if (auto const &object = entity_objects.at(tmp_obj_id)) {
-                    return object;
-                }
-            }
-        }
-        return std::nullopt;
-    }
-
-    // キャッシュされた単独のオブジェクトをエンティティ名とオブジェクトIDを指定して取得する
-    std::optional<db::object_ptr> cached_or_created_object(std::string const &entity_name,
-                                                           db::object_id const &object_id) {
-        if (object_id.is_temporary()) {
-            return this->_inserted_object(entity_name, object_id.temporary());
-        } else if (auto object = this->_cached_objects.get(entity_name, object_id)) {
-            return object;
-        } else {
-            return std::nullopt;
-        }
-    }
-
-    // オブジェクトに変更があった時の処理
-    void _object_did_change(db::object_ptr const &object) {
-        auto const &entity_name = object->entity_name();
-
-        if (object->status() == db::object_status::created) {
-            // 仮に挿入された状態の場合
-            if (this->_created_objects.count(entity_name) > 0 && object->is_removed()) {
-                // オブジェクトが削除されていたら、_created_objectsからも削除
-                this->_created_objects.at(entity_name).erase(object->object_id().temporary());
-            }
-        } else {
-            // 挿入されたのではない場合
-            if (this->_changed_objects.count(entity_name) == 0) {
-                // _changed_objectsにエンティティのmapがなければ生成する
-                this->_changed_objects.insert(std::make_pair(entity_name, db::object_map_t{}));
-            }
-
-            // _changed_objectsにオブジェクトを追加
-            auto const &obj_id = object->object_id().stable();
-            if (this->_changed_objects.at(entity_name).count(obj_id) == 0) {
-                this->_changed_objects.at(entity_name).emplace(obj_id, object);
-            }
-        }
-
-        if (object->is_removed()) {
-            // オブジェクトが削除されていたら逆関連も削除する
-            for (auto const &entity_pair : this->_model.entity(entity_name).inverse_relation_names) {
-                auto const &inv_entity_name = entity_pair.first;
-                auto const &inv_rel_names = entity_pair.second;
-
-                this->_cached_objects.perform_entity(
-                    inv_entity_name, [&inv_rel_names, &object](std::string const &, db::object_id const &,
-                                                               db::object_ptr const &inv_rel_obj) {
-                        for (auto const &inv_rel_name : inv_rel_names) {
-                            inv_rel_obj->remove_relation_id(inv_rel_name, object->object_id());
-                        }
-                    });
-            }
-        }
-
-        // オブジェクトが変更された通知を送信
-        this->_db_object_notifier->notify(object);
-    }
-
-    // バックグラウンドでデータベースの処理をする
-    void execute(db::cancellation_f &&cancellation, db::execution_f &&execution) {
-        auto op_lambda = [cancellation = std::move(cancellation), execution = std::move(execution),
-                          manager = this->_weak_manager.lock()](task const &task) mutable {
-            if (!task.is_canceled() && !cancellation()) {
-                auto const &db = manager->_impl->_database;
-                db->open();
-                execution(task);
-                db->close();
-            }
-        };
-
-        this->_task_queue.push_back(task::make_shared(std::move(op_lambda)));
-    }
-
-    // バックグラウンドでデータベースからオブジェクトデータを取得する。条件はselect_optionで指定。単独のエンティティのみ
-    void execute_fetch_object_datas(
-        db::cancellation_f &&cancellation, db::fetch_option_preparation_f &&preparation,
-        std::function<void(db::manager_result_t &&state, db::object_data_vector_map_t &&fetched_datas)> &&completion) {
-        auto execution = [preparation = std::move(preparation), completion = std::move(completion),
-                          manager = this->_weak_manager.lock()](task const &) mutable {
-            // データベースからデータを取得する条件をメインスレッドで準備する
-            db::fetch_option fetch_option;
-            auto preparation_on_main = [&fetch_option, &preparation]() { fetch_option = preparation(); };
-            dispatch_sync(manager->dispatch_queue(), std::move(preparation_on_main));
-
-            auto const &db = manager->database();
-            auto const &model = manager->model();
-            db::manager_result_t state{nullptr};
-            db::object_data_vector_map_t fetched_datas;
-
-            if (auto begin_result = db::begin_transaction(db)) {
-                // トランザクション開始
-                if (auto fetch_result = db::fetch(db, model, fetch_option)) {
-                    fetched_datas = std::move(fetch_result.value());
-                } else {
-                    state = db::manager_result_t{std::move(fetch_result.error())};
-                }
-
-                // トランザクション終了
-                if (state) {
-                    db::commit(db);
-                } else {
-                    db::rollback(db);
-                    fetched_datas.clear();
-                }
-            } else {
-                state = db::make_error_result(db::manager_error_type::begin_transaction_failed,
-                                              std::move(begin_result.error()));
-            }
-
-            // 結果を返す
-            completion(std::move(state), std::move(fetched_datas));
-        };
-
-        this->execute(std::move(cancellation), std::move(execution));
-    }
-
-    // バックグラウンドでデータベースからオブジェクトデータを取得する。条件はobject_idで指定。単独のエンティティのみ
-    void execute_fetch_object_datas(
-        db::cancellation_f &&cancellation, fetch_ids_preparation_f &&ids_preparation,
-        std::function<void(db::manager_result_t &&state, db::object_data_vector_map_t &&fetched_datas)> &&completion) {
-        db::fetch_option_preparation_f opt_preparation = [ids_preparation = std::move(ids_preparation)]() {
-            return db::to_fetch_option(ids_preparation());
-        };
-
-        this->execute_fetch_object_datas(std::move(cancellation), std::move(opt_preparation), std::move(completion));
-    }
-
-    // バックグラウンド処理を保留するカウントをあげる
-    void suspend() {
-        if (_suspend_count == 0) {
-            _task_queue.suspend();
-        }
-
-        ++_suspend_count;
-    }
-
-    // バックグラウンド処理を保留するカウントを下げる。カウントが0になれば再開
-    void resume() {
-        if (_suspend_count == 0) {
-            throw std::underflow_error("resume too much.");
-        }
-
-        --_suspend_count;
-
-        if (_suspend_count == 0) {
-            _task_queue.resume();
-        }
-    }
-
-    // managerで管理するobjectを作成する
-    db::object_ptr _make_object(std::string const &entity_name) {
-        auto obj = db::object::make_shared(this->_model.entity(entity_name));
-        auto weak_manager = this->_weak_manager;
-
-        this->_pool += obj->chain()
-                           .guard([weak_manager](db::object_event const &event) {
-                               return event.is_erased() && !weak_manager.expired();
-                           })
-                           .to([](db::object_event const &event) { return event.get<db::object_erased_event>(); })
-                           .perform([weak_manager](db::object_erased_event const &event) {
-                               weak_manager.lock()->_impl->_cached_objects.erase(event.entity_name, event.object_id);
-                           })
-                           .end();
-
-        this->_pool += obj->chain()
-                           .guard([weak_manager](db::object_event const &event) {
-                               return event.is_changed() && !weak_manager.expired();
-                           })
-                           .perform([weak_manager](db::object_event const &event) {
-                               weak_manager.lock()->_impl->_object_did_change(event.object());
-                           })
-                           .end();
-
-        return obj;
-    }
-};
-
 #pragma mark - manager
 
 db::manager::manager(std::string const &db_path, db::model const &model, std::size_t const priority_count,
                      dispatch_queue_t const dispatch_queue)
-    : _impl(std::make_unique<impl>(db_path, model, dispatch_queue, priority_count)) {
+    : _database(database::make_shared(db_path)),
+      _model(model),
+      _dispatch_queue(dispatch_queue),
+      _task_queue(priority_count),
+      _db_info(chaining::value::holder<db::info_opt>::make_shared(std::nullopt)),
+      _db_object_notifier(chaining::notifier<db::object_ptr>::make_shared()) {
+    yas_dispatch_queue_retain(dispatch_queue);
 }
 
+db::manager::~manager() {
+    yas_dispatch_queue_release(this->_dispatch_queue);
+}
+
+// バックグラウンド処理を保留するカウントをあげる
 void db::manager::suspend() {
-    this->_impl->suspend();
+    if (this->_suspend_count == 0) {
+        this->_task_queue.suspend();
+    }
+
+    ++this->_suspend_count;
 }
 
+// バックグラウンド処理を保留するカウントを下げる。カウントが0になれば再開
 void db::manager::resume() {
-    this->_impl->resume();
+    if (this->_suspend_count == 0) {
+        throw std::underflow_error("resume too much.");
+    }
+
+    --this->_suspend_count;
+
+    if (this->_suspend_count == 0) {
+        this->_task_queue.resume();
+    }
 }
 
 bool db::manager::is_suspended() const {
-    return this->_impl->_task_queue.is_suspended();
+    return this->_task_queue.is_suspended();
 }
 
 std::string const &db::manager::database_path() const {
-    return this->_impl->_database->database_path();
+    return this->_database->database_path();
 }
 
 db::database_ptr const &db::manager::database() const {
-    return this->_impl->_database;
+    return this->_database;
 }
 
 db::model const &db::manager::model() const {
-    return this->_impl->_model;
+    return this->_model;
 }
 
 db::value const &db::manager::current_save_id() const {
-    if (auto const &info = this->_impl->_db_info->raw()) {
+    if (auto const &info = this->_db_info->raw()) {
         return info->current_save_id_value();
     }
     return db::null_value();
 }
 
 db::value const &db::manager::last_save_id() const {
-    if (auto const &info = this->_impl->_db_info->raw()) {
+    if (auto const &info = this->_db_info->raw()) {
         return info->last_save_id_value();
     }
     return db::null_value();
 }
 
 dispatch_queue_t db::manager::dispatch_queue() const {
-    return this->_impl->_dispatch_queue;
+    return this->_dispatch_queue;
 }
 
+// データベースに保存せず仮にオブジェクトを生成する
+// この時点ではobject_idやsave_idは振られていない
 db::object_ptr db::manager::create_object(std::string const entity_name) {
-    return this->_impl->create_temporary_object(entity_name);
+    auto manager = this->_weak_manager.lock();
+
+    db::object_ptr object = manager->make_object(entity_name);
+
+    manageable_object::cast(object)->load_insertion_data();
+
+    if (this->_created_objects.count(entity_name) == 0) {
+        this->_created_objects.insert(std::make_pair(entity_name, db::tmp_object_map_t{}));
+    }
+
+    // この時点でobject_idはtemporary
+    this->_created_objects.at(entity_name).emplace(object->object_id().temporary(), object);
+
+    return object;
 }
 
 void db::manager::setup(db::completion_f completion) {
-    auto manager = this->_impl->_weak_manager.lock();
+    auto manager = this->_weak_manager.lock();
 
     auto execution = [completion = std::move(completion), manager](task const &) mutable {
         db::database_ptr const &db = manager->database();
@@ -579,7 +159,7 @@ void db::manager::setup(db::completion_f completion) {
         auto completion_on_main = [manager, state = std::move(state), info = std::move(info),
                                    completion = std::move(completion)]() mutable {
             if (state) {
-                manager->_impl->set_db_info(std::move(info));
+                manager->_set_db_info(std::move(info));
             }
             completion(std::move(state));
         };
@@ -591,7 +171,7 @@ void db::manager::setup(db::completion_f completion) {
 }
 
 void db::manager::clear(db::cancellation_f cancellation, db::completion_f completion) {
-    auto manager = this->_impl->_weak_manager.lock();
+    auto manager = this->_weak_manager.lock();
 
     auto execution = [completion = std::move(completion), manager](task const &) mutable {
         auto &db = manager->database();
@@ -630,8 +210,8 @@ void db::manager::clear(db::cancellation_f cancellation, db::completion_f comple
         auto completion_on_main = [completion = std::move(completion), manager, state = std::move(state),
                                    db_info = std::move(db_info)]() mutable {
             if (state) {
-                manager->_impl->set_db_info(std::move(db_info));
-                manager->_impl->clear_cached_objects();
+                manager->_set_db_info(std::move(db_info));
+                manager->_clear_cached_objects();
             }
             completion(std::move(state));
         };
@@ -643,7 +223,7 @@ void db::manager::clear(db::cancellation_f cancellation, db::completion_f comple
 }
 
 void db::manager::purge(db::cancellation_f cancellation, db::completion_f completion) {
-    auto manager = this->_impl->_weak_manager.lock();
+    auto manager = this->_weak_manager.lock();
 
     auto execution = [completion = std::move(completion), manager](task const &) mutable {
         auto &db = manager->database();
@@ -687,8 +267,8 @@ void db::manager::purge(db::cancellation_f cancellation, db::completion_f comple
         auto completion_on_main = [completion = std::move(completion), manager, state = std::move(state),
                                    db_info = std::move(db_info)]() mutable {
             if (state) {
-                manager->_impl->set_db_info(std::move(db_info));
-                manager->_impl->purge_cached_objects();
+                manager->_set_db_info(std::move(db_info));
+                manager->_purge_cached_objects();
             }
 
             completion(std::move(state));
@@ -701,18 +281,18 @@ void db::manager::purge(db::cancellation_f cancellation, db::completion_f comple
 }
 
 void db::manager::reset(db::cancellation_f cancellation, db::completion_f completion) {
-    auto manager = this->_impl->_weak_manager.lock();
+    auto manager = this->_weak_manager.lock();
 
-    auto preparation = [manager]() { return manager->_impl->changed_object_ids_for_reset(); };
+    auto preparation = [manager]() { return manager->_changed_object_ids_for_reset(); };
 
     auto impl_completion = [completion = std::move(completion), manager](db::manager_result_t &&state,
                                                                          db::object_data_vector_map_t &&fetched_datas) {
         auto completion_on_main = [manager, completion = std::move(completion), state = std::move(state),
                                    fetched_datas = std::move(fetched_datas)]() mutable {
             if (state) {
-                manager->_impl->load_and_cache_object_map(fetched_datas, true, false);
-                manager->_impl->erase_changed_objects(fetched_datas);
-                manager->_impl->_created_objects.clear();
+                manager->_load_and_cache_object_map(fetched_datas, true, false);
+                manager->_erase_changed_objects(fetched_datas);
+                manager->_created_objects.clear();
                 completion(db::manager_result_t{nullptr});
             } else {
                 completion(db::manager_result_t{std::move(state.error())});
@@ -722,12 +302,11 @@ void db::manager::reset(db::cancellation_f cancellation, db::completion_f comple
         dispatch_sync(manager->dispatch_queue(), std::move(completion_on_main));
     };
 
-    this->_impl->execute_fetch_object_datas(std::move(cancellation), std::move(preparation),
-                                            std::move(impl_completion));
+    this->_execute_fetch_object_datas(std::move(cancellation), std::move(preparation), std::move(impl_completion));
 }
 
 void db::manager::execute(db::cancellation_f cancellation, db::execution_f &&execution) {
-    this->_impl->execute(std::move(cancellation), std::move(execution));
+    this->_execute(std::move(cancellation), std::move(execution));
 }
 
 void db::manager::insert_objects(db::cancellation_f cancellation, db::insert_count_preparation_f preparation,
@@ -749,7 +328,7 @@ void db::manager::insert_objects(db::cancellation_f cancellation, db::insert_cou
 
 void db::manager::insert_objects(db::cancellation_f cancellation, db::insert_values_preparation_f preparation,
                                  db::vector_completion_f completion) {
-    auto manager = this->_impl->_weak_manager.lock();
+    auto manager = this->_weak_manager.lock();
 
     auto execution = [preparation = std::move(preparation), completion = std::move(completion),
                       manager](task const &) mutable {
@@ -812,8 +391,8 @@ void db::manager::insert_objects(db::cancellation_f cancellation, db::insert_val
         auto completion_on_main = [state = std::move(state), inserted_datas = std::move(inserted_datas), manager,
                                    completion = std::move(completion), db_info = std::move(ret_db_info)]() mutable {
             if (state) {
-                manager->_impl->set_db_info(std::move(db_info));
-                auto loaded_objects = manager->_impl->load_and_cache_object_vector(inserted_datas, false, false);
+                manager->_set_db_info(std::move(db_info));
+                auto loaded_objects = manager->_load_and_cache_object_vector(inserted_datas, false, false);
                 completion(db::manager_vector_result_t{std::move(loaded_objects)});
             } else {
                 completion(db::manager_vector_result_t{std::move(state.error())});
@@ -828,14 +407,14 @@ void db::manager::insert_objects(db::cancellation_f cancellation, db::insert_val
 
 void db::manager::fetch_objects(db::cancellation_f cancellation, db::fetch_option_preparation_f preparation,
                                 db::vector_completion_f completion) {
-    auto manager = this->_impl->_weak_manager.lock();
+    auto manager = this->_weak_manager.lock();
 
     auto impl_completion = [completion = std::move(completion), manager](db::manager_result_t &&state,
                                                                          db::object_data_vector_map_t &&fetched_datas) {
         auto completion_on_main = [state = std::move(state), completion = std::move(completion),
                                    fetched_datas = std::move(fetched_datas), manager]() mutable {
             if (state) {
-                auto loaded_objects = manager->_impl->load_and_cache_object_vector(fetched_datas, false, false);
+                auto loaded_objects = manager->_load_and_cache_object_vector(fetched_datas, false, false);
                 completion(db::manager_vector_result_t{std::move(loaded_objects)});
             } else {
                 completion(db::manager_vector_result_t{std::move(state.error())});
@@ -845,13 +424,12 @@ void db::manager::fetch_objects(db::cancellation_f cancellation, db::fetch_optio
         dispatch_sync(manager->dispatch_queue(), std::move(completion_on_main));
     };
 
-    this->_impl->execute_fetch_object_datas(std::move(cancellation), std::move(preparation),
-                                            std::move(impl_completion));
+    this->_execute_fetch_object_datas(std::move(cancellation), std::move(preparation), std::move(impl_completion));
 }
 
 void db::manager::fetch_const_objects(db::cancellation_f cancellation, db::fetch_option_preparation_f preparation,
                                       db::const_vector_completion_f completion) {
-    auto manager = this->_impl->_weak_manager.lock();
+    auto manager = this->_weak_manager.lock();
 
     auto impl_completion = [completion = std::move(completion), manager](db::manager_result_t &&state,
                                                                          db::object_data_vector_map_t &&fetched_datas) {
@@ -868,20 +446,19 @@ void db::manager::fetch_const_objects(db::cancellation_f cancellation, db::fetch
         dispatch_sync(manager->dispatch_queue(), std::move(completion_on_main));
     };
 
-    this->_impl->execute_fetch_object_datas(std::move(cancellation), std::move(preparation),
-                                            std::move(impl_completion));
+    this->_execute_fetch_object_datas(std::move(cancellation), std::move(preparation), std::move(impl_completion));
 }
 
 void db::manager::fetch_objects(db::cancellation_f cancellation, db::fetch_ids_preparation_f preparation,
                                 db::map_completion_f completion) {
-    auto manager = this->_impl->_weak_manager.lock();
+    auto manager = this->_weak_manager.lock();
 
     auto impl_completion = [completion = std::move(completion), manager](db::manager_result_t &&state,
                                                                          db::object_data_vector_map_t &&fetched_datas) {
         auto completion_on_main = [manager, completion = std::move(completion), state = std::move(state),
                                    fetched_datas = std::move(fetched_datas)]() mutable {
             if (state) {
-                auto loaded_objects = manager->_impl->load_and_cache_object_map(fetched_datas, false, false);
+                auto loaded_objects = manager->_load_and_cache_object_map(fetched_datas, false, false);
                 completion(db::manager_map_result_t{std::move(loaded_objects)});
             } else {
                 completion(db::manager_map_result_t{std::move(state.error())});
@@ -891,13 +468,12 @@ void db::manager::fetch_objects(db::cancellation_f cancellation, db::fetch_ids_p
         dispatch_sync(manager->dispatch_queue(), std::move(completion_on_main));
     };
 
-    this->_impl->execute_fetch_object_datas(std::move(cancellation), std::move(preparation),
-                                            std::move(impl_completion));
+    this->_execute_fetch_object_datas(std::move(cancellation), std::move(preparation), std::move(impl_completion));
 }
 
 void db::manager::fetch_const_objects(db::cancellation_f cancellation, db::fetch_ids_preparation_f preparation,
                                       db::const_map_completion_f completion) {
-    auto manager = this->_impl->_weak_manager.lock();
+    auto manager = this->_weak_manager.lock();
 
     auto impl_completion = [completion = std::move(completion), manager](db::manager_result_t &&state,
                                                                          db::object_data_vector_map_t &&fetched_datas) {
@@ -913,21 +489,16 @@ void db::manager::fetch_const_objects(db::cancellation_f cancellation, db::fetch
         dispatch_sync(manager->dispatch_queue(), std::move(completion_on_main));
     };
 
-    this->_impl->execute_fetch_object_datas(std::move(cancellation), std::move(preparation),
-                                            std::move(impl_completion));
+    this->_execute_fetch_object_datas(std::move(cancellation), std::move(preparation), std::move(impl_completion));
 }
 
 void db::manager::save(db::cancellation_f cancellation, db::map_completion_f completion) {
-    auto manager = this->_impl->_weak_manager.lock();
+    auto manager = this->_weak_manager.lock();
 
     auto execution = [completion = std::move(completion), manager](task const &) mutable {
         db::object_data_vector_map_t changed_datas;
         // 変更のあったデータをメインスレッドで取得する
-        auto manager_impl = manager->_impl;
-
-        auto get_changed_on_main = [&manager_impl, &changed_datas]() {
-            changed_datas = manager_impl->changed_datas_for_save();
-        };
+        auto get_changed_on_main = [&manager, &changed_datas]() { changed_datas = manager->_changed_datas_for_save(); };
         dispatch_sync(manager->dispatch_queue(), std::move(get_changed_on_main));
 
         auto &db = manager->database();
@@ -985,9 +556,9 @@ void db::manager::save(db::cancellation_f cancellation, db::map_completion_f com
         auto completion_on_main = [manager, state = std::move(state), completion = std::move(completion),
                                    saved_datas = std::move(saved_datas), db_info = std::move(db_info)]() mutable {
             if (state) {
-                manager->_impl->set_db_info(std::move(db_info));
-                auto loaded_objects = manager->_impl->load_and_cache_object_map(saved_datas, false, true);
-                manager->_impl->erase_changed_objects(saved_datas);
+                manager->_set_db_info(std::move(db_info));
+                auto loaded_objects = manager->_load_and_cache_object_map(saved_datas, false, true);
+                manager->_erase_changed_objects(saved_datas);
                 completion(db::manager_map_result_t{std::move(loaded_objects)});
             } else {
                 completion(db::manager_map_result_t{std::move(state.error())});
@@ -1002,7 +573,7 @@ void db::manager::save(db::cancellation_f cancellation, db::map_completion_f com
 
 void db::manager::revert(db::cancellation_f cancellation, db::revert_preparation_f preparation,
                          db::vector_completion_f completion) {
-    auto manager = this->_impl->_weak_manager.lock();
+    auto manager = this->_weak_manager.lock();
 
     auto execution = [preparation = std::move(preparation), completion = std::move(completion),
                       manager](task const &) mutable {
@@ -1101,8 +672,8 @@ void db::manager::revert(db::cancellation_f cancellation, db::revert_preparation
                                    reverted_datas = std::move(reverted_datas),
                                    db_info = std::move(ret_db_info)]() mutable {
             if (state) {
-                manager->_impl->set_db_info(std::move(db_info));
-                auto loaded_objects = manager->_impl->load_and_cache_object_vector(reverted_datas, false, false);
+                manager->_set_db_info(std::move(db_info));
+                auto loaded_objects = manager->_load_and_cache_object_vector(reverted_datas, false, false);
                 completion(db::manager_vector_result_t{std::move(loaded_objects)});
             } else {
                 completion(db::manager_vector_result_t{std::move(state.error())});
@@ -1115,13 +686,20 @@ void db::manager::revert(db::cancellation_f cancellation, db::revert_preparation
     this->execute(std::move(cancellation), std::move(execution));
 }
 
+// キャッシュされた単独のオブジェクトをエンティティ名とオブジェクトIDを指定して取得する
 std::optional<db::object_ptr> db::manager::cached_or_created_object(std::string const &entity_name,
                                                                     db::object_id const &object_id) const {
-    return this->_impl->cached_or_created_object(entity_name, object_id);
+    if (object_id.is_temporary()) {
+        return this->_inserted_object(entity_name, object_id.temporary());
+    } else if (auto object = this->_cached_objects.get(entity_name, object_id)) {
+        return object;
+    } else {
+        return std::nullopt;
+    }
 }
 
 bool db::manager::has_created_objects() const {
-    for (auto const &entity_pair : this->_impl->_created_objects) {
+    for (auto const &entity_pair : this->_created_objects) {
         if (entity_pair.second.size() > 0) {
             return true;
         }
@@ -1131,7 +709,7 @@ bool db::manager::has_created_objects() const {
 }
 
 bool db::manager::has_changed_objects() const {
-    for (auto const &entity_pair : this->_impl->_changed_objects) {
+    for (auto const &entity_pair : this->_changed_objects) {
         if (entity_pair.second.size() > 0) {
             return true;
         }
@@ -1141,25 +719,25 @@ bool db::manager::has_changed_objects() const {
 }
 
 std::size_t db::manager::created_object_count(std::string const &entity_name) const {
-    if (this->_impl->_created_objects.count(entity_name) > 0) {
-        return this->_impl->_created_objects.at(entity_name).size();
+    if (this->_created_objects.count(entity_name) > 0) {
+        return this->_created_objects.at(entity_name).size();
     }
     return 0;
 }
 
 std::size_t db::manager::changed_object_count(std::string const &entity_name) const {
-    if (this->_impl->_changed_objects.count(entity_name) > 0) {
-        return this->_impl->_changed_objects.at(entity_name).size();
+    if (this->_changed_objects.count(entity_name) > 0) {
+        return this->_changed_objects.at(entity_name).size();
     }
     return 0;
 }
 
 chaining::chain_sync_t<db::info_opt> db::manager::chain_db_info() const {
-    return this->_impl->_db_info->chain();
+    return this->_db_info->chain();
 }
 
 chaining::chain_unsync_t<db::object_ptr> db::manager::chain_db_object() const {
-    return this->_impl->_db_object_notifier->chain();
+    return this->_db_object_notifier->chain();
 }
 
 db::object_opt_vector_t db::manager::relation_objects(db::object_ptr const &object, std::string const &rel_name) const {
@@ -1176,12 +754,377 @@ std::optional<db::object_ptr> db::manager::relation_object_at(db::object_ptr con
     return this->cached_or_created_object(tgt_entity_name, object->relation_id(rel_name, idx));
 }
 
+// managerで管理するobjectを作成する
 db::object_ptr db::manager::make_object(std::string const &entity_name) {
-    return this->_impl->_make_object(entity_name);
+    auto obj = db::object::make_shared(this->_model.entity(entity_name));
+    auto weak_manager = this->_weak_manager;
+
+    this->_pool += obj->chain()
+                       .guard([weak_manager](db::object_event const &event) {
+                           return event.is_erased() && !weak_manager.expired();
+                       })
+                       .to([](db::object_event const &event) { return event.get<db::object_erased_event>(); })
+                       .perform([weak_manager](db::object_erased_event const &event) {
+                           weak_manager.lock()->_cached_objects.erase(event.entity_name, event.object_id);
+                       })
+                       .end();
+
+    this->_pool += obj->chain()
+                       .guard([weak_manager](db::object_event const &event) {
+                           return event.is_changed() && !weak_manager.expired();
+                       })
+                       .perform([weak_manager](db::object_event const &event) {
+                           weak_manager.lock()->_object_did_change(event.object());
+                       })
+                       .end();
+
+    return obj;
 }
 
 void db::manager::_prepare(manager_ptr const &shared) {
-    this->_impl->prepare(shared);
+    this->_weak_manager = shared;
+}
+
+db::object_ptr db::manager::_load_and_cache_object(std::string const &entity_name, db::object_data const &data,
+                                                   bool const force, bool const is_save) {
+    if (!data.object_id) {
+        throw std::invalid_argument("object_id not found.");
+    }
+
+    db::object_ptr object = nullptr;
+
+    if (is_save && this->_created_objects.count(entity_name) > 0) {
+        // セーブ時で仮に挿入されたオブジェクトがある場合にオブジェクトを取得
+        auto &entity_objects = this->_created_objects.at(entity_name);
+        if (entity_objects.size() > 0) {
+            auto const &temporary_id = data.object_id.temporary();
+            if (entity_objects.count(temporary_id) > 0) {
+                object = entity_objects.at(temporary_id);
+                entity_objects.erase(temporary_id);
+
+                db::object_id obj_id = object->object_id();
+                obj_id.set_stable(data.object_id.stable_value());
+                this->_cached_objects.set(entity_name, obj_id, object);
+
+                if (entity_objects.size() == 0) {
+                    this->_created_objects.erase(entity_name);
+                }
+            }
+        }
+    }
+
+    if (!object) {
+        // 挿入でなければobjectはnullなので、キャッシュに追加または取得する
+        auto manager = this->_weak_manager.lock();
+        object = this->_cached_objects.get_or_create(
+            entity_name, data.object_id, [&manager, &entity_name]() { return manager->make_object(entity_name); });
+    }
+
+    // オブジェクトにデータをロード
+    manageable_object::cast(object)->load_data(data, force);
+
+    return object;
+}
+
+// 複数のエンティティのデータをロードしてキャッシュする
+// ロードされたオブエジェクトはエンティティごとに順番がある状態で返される
+db::object_vector_map_t db::manager::_load_and_cache_object_vector(db::object_data_vector_map_t const &datas,
+                                                                   bool const force, bool const is_save) {
+    db::object_vector_map_t loaded_objects;
+    for (auto const &entity_pair : datas) {
+        auto const &entity_name = entity_pair.first;
+        auto const &entity_datas = entity_pair.second;
+
+        db::object_vector_t objects;
+        objects.reserve(entity_datas.size());
+
+        for (db::object_data const &data : entity_datas) {
+            auto object = this->_load_and_cache_object(entity_name, data, force, is_save);
+            objects.emplace_back(std::move(object));
+        }
+
+        loaded_objects.emplace(entity_name, std::move(objects));
+    }
+    return loaded_objects;
+}
+
+// 複数のエンティティのデータをロードしてキャッシュする
+// ロードされたオブジェクトはエンティティごとにobject_idをキーとしたmapで返される
+db::object_map_map_t db::manager::_load_and_cache_object_map(db::object_data_vector_map_t const &datas,
+                                                             bool const force, bool const is_save) {
+    db::object_map_map_t loaded_objects;
+    for (auto const &entity_pair : datas) {
+        auto const &entity_name = entity_pair.first;
+        auto const &entity_datas = entity_pair.second;
+
+        db::object_map_t objects;
+        objects.reserve(entity_datas.size());
+
+        for (auto const &data : entity_datas) {
+            auto object = this->_load_and_cache_object(entity_name, data, force, is_save);
+            objects.emplace(object->object_id().stable(), std::move(object));
+        }
+
+        loaded_objects.emplace(entity_name, std::move(objects));
+    }
+    return loaded_objects;
+}
+
+// キャッシュされている全てのオブジェクトをクリアする
+void db::manager::_clear_cached_objects() {
+    this->_cached_objects.perform([](std::string const &, db::object_id const &, auto const &object) {
+        manageable_object::cast(object)->clear_data();
+    });
+    this->_cached_objects.clear();
+}
+
+// キャッシュされている全てのオブジェクトをパージする（save_idを全て1にする）
+// データベースのパージが成功した時に呼ばれる
+void db::manager::_purge_cached_objects() {
+    // キャッシュされたオブジェクトのセーブIDを全て1にする
+    db::value one_value{db::integer::type{1}};
+    this->_cached_objects.perform(
+        [one_value = std::move(one_value)](std::string const &, db::object_id const &, auto &object) {
+            manageable_object::cast(object)->load_save_id(one_value);
+        });
+}
+
+// データベース情報を置き換える
+void db::manager::_set_db_info(db::info_opt &&info) {
+    this->_db_info->set_value(std::move(info));
+}
+
+// データベースに保存するために、全てのエンティティで変更のあったオブジェクトのobject_dataを取得する
+db::object_data_vector_map_t db::manager::_changed_datas_for_save() {
+    db::object_data_vector_map_t changed_datas;
+    db::object_id_pool obj_id_pool;
+
+    for (auto const &entity_pair : this->_model.entities()) {
+        // エンティティごとの処理
+        auto const &entity_name = entity_pair.first;
+
+        // 仮に挿入されたオブジェクトの数
+        std::size_t const inserted_count =
+            this->_created_objects.count(entity_name) ? this->_created_objects.at(entity_name).size() : 0;
+        // 値に変更のあったオブジェクトの数
+        std::size_t const changed_count =
+            this->_changed_objects.count(entity_name) ? this->_changed_objects.at(entity_name).size() : 0;
+        // 挿入か変更のあったオブジェクトの数の合計
+        std::size_t const total_count = inserted_count + changed_count;
+
+        // 挿入も変更もされていなければスキップ
+        if (total_count == 0) {
+            continue;
+        }
+
+        db::object_data_vector_t entity_datas;
+        entity_datas.reserve(total_count);
+
+        if (inserted_count > 0) {
+            // 挿入されたオブジェクトからデータベース用のデータを取得
+            auto const &entity_objects = this->_created_objects.at(entity_name);
+
+            for (auto const &pair : entity_objects) {
+                auto const &object = pair.second;
+                auto data = object->save_data(obj_id_pool);
+                if (data.attributes.size() > 0) {
+                    entity_datas.emplace_back(std::move(data));
+                } else {
+                    throw "object_data.attributes is empty.";
+                }
+            }
+        }
+
+        if (changed_count > 0) {
+            // 変更されたオブジェクトからデータベース用のデータを取得
+            auto &entity_objects = this->_changed_objects.at(entity_name);
+
+            for (auto &object_pair : entity_objects) {
+                auto &object = object_pair.second;
+                auto data = object->save_data(obj_id_pool);
+                if (data.attributes.size() > 0) {
+                    entity_datas.emplace_back(std::move(data));
+                } else {
+                    throw "object_data.attributes is empty.";
+                }
+                manageable_object::cast(object)->set_status(db::object_status::updating);
+            }
+        }
+
+        changed_datas.emplace(entity_name, std::move(entity_datas));
+    }
+
+    return changed_datas;
+}
+
+// リセットするために、全てのエンティティで変更のあったオブジェクトのobject_idを取得する
+db::integer_set_map_t db::manager::_changed_object_ids_for_reset() {
+    db::integer_set_map_t changed_obj_ids;
+
+    for (auto const &entity_pair : this->_changed_objects) {
+        auto const &entity_name = entity_pair.first;
+        auto const &entity_objects = entity_pair.second;
+
+        db::integer_set_t entity_ids;
+
+        for (auto const &object_pair : entity_objects) {
+            auto const &object = object_pair.second;
+            entity_ids.insert(object->object_id().stable());
+        }
+
+        if (entity_ids.size() > 0) {
+            changed_obj_ids.emplace(entity_name, std::move(entity_ids));
+        }
+    }
+
+    return changed_obj_ids;
+}
+
+// object_datasに含まれるオブジェクトIDと一致するものは_changed_objectsから取り除く
+// データベースに保存された後などに呼ばれる。
+void db::manager::_erase_changed_objects(db::object_data_vector_map_t const &object_datas) {
+    for (auto const &entity_pair : object_datas) {
+        auto const &entity_name = entity_pair.first;
+        if (this->_changed_objects.count(entity_name) > 0) {
+            auto const &entity_objects = entity_pair.second;
+            if (entity_objects.size() > 0) {
+                auto &changed_entity_objects = this->_changed_objects.at(entity_name);
+                for (auto const &obj_data : entity_objects) {
+                    erase_if_exists(changed_entity_objects, obj_data.object_id.stable());
+                }
+
+                if (changed_entity_objects.size() == 0) {
+                    this->_changed_objects.erase(entity_name);
+                }
+            }
+        }
+    }
+}
+
+std::optional<db::object_ptr> db::manager::_inserted_object(std::string const &entity_name,
+                                                            std::string const &tmp_obj_id) const {
+    if (this->_created_objects.count(entity_name) > 0) {
+        auto const &entity_objects = this->_created_objects.at(entity_name);
+        if (entity_objects.count(tmp_obj_id) > 0) {
+            if (auto const &object = entity_objects.at(tmp_obj_id)) {
+                return object;
+            }
+        }
+    }
+    return std::nullopt;
+}
+
+// バックグラウンドでデータベースの処理をする
+void db::manager::_execute(db::cancellation_f &&cancellation, db::execution_f &&execution) {
+    auto op_lambda = [cancellation = std::move(cancellation), execution = std::move(execution),
+                      manager = this->_weak_manager.lock()](task const &task) mutable {
+        if (!task.is_canceled() && !cancellation()) {
+            auto const &db = manager->_database;
+            db->open();
+            execution(task);
+            db->close();
+        }
+    };
+
+    this->_task_queue.push_back(task::make_shared(std::move(op_lambda)));
+}
+
+// バックグラウンドでデータベースからオブジェクトデータを取得する。条件はselect_optionで指定。単独のエンティティのみ
+void db::manager::_execute_fetch_object_datas(
+    db::cancellation_f &&cancellation, db::fetch_option_preparation_f &&preparation,
+    std::function<void(db::manager_result_t &&state, db::object_data_vector_map_t &&fetched_datas)> &&completion) {
+    auto execution = [preparation = std::move(preparation), completion = std::move(completion),
+                      manager = this->_weak_manager.lock()](task const &) mutable {
+        // データベースからデータを取得する条件をメインスレッドで準備する
+        db::fetch_option fetch_option;
+        auto preparation_on_main = [&fetch_option, &preparation]() { fetch_option = preparation(); };
+        dispatch_sync(manager->dispatch_queue(), std::move(preparation_on_main));
+
+        auto const &db = manager->database();
+        auto const &model = manager->model();
+        db::manager_result_t state{nullptr};
+        db::object_data_vector_map_t fetched_datas;
+
+        if (auto begin_result = db::begin_transaction(db)) {
+            // トランザクション開始
+            if (auto fetch_result = db::fetch(db, model, fetch_option)) {
+                fetched_datas = std::move(fetch_result.value());
+            } else {
+                state = db::manager_result_t{std::move(fetch_result.error())};
+            }
+
+            // トランザクション終了
+            if (state) {
+                db::commit(db);
+            } else {
+                db::rollback(db);
+                fetched_datas.clear();
+            }
+        } else {
+            state = db::make_error_result(db::manager_error_type::begin_transaction_failed,
+                                          std::move(begin_result.error()));
+        }
+
+        // 結果を返す
+        completion(std::move(state), std::move(fetched_datas));
+    };
+
+    this->_execute(std::move(cancellation), std::move(execution));
+}
+
+// バックグラウンドでデータベースからオブジェクトデータを取得する。条件はobject_idで指定。単独のエンティティのみ
+void db::manager::_execute_fetch_object_datas(
+    db::cancellation_f &&cancellation, fetch_ids_preparation_f &&ids_preparation,
+    std::function<void(db::manager_result_t &&state, db::object_data_vector_map_t &&fetched_datas)> &&completion) {
+    db::fetch_option_preparation_f opt_preparation = [ids_preparation = std::move(ids_preparation)]() {
+        return db::to_fetch_option(ids_preparation());
+    };
+
+    this->_execute_fetch_object_datas(std::move(cancellation), std::move(opt_preparation), std::move(completion));
+}
+
+// オブジェクトに変更があった時の処理
+void db::manager::_object_did_change(db::object_ptr const &object) {
+    auto const &entity_name = object->entity_name();
+
+    if (object->status() == db::object_status::created) {
+        // 仮に挿入された状態の場合
+        if (this->_created_objects.count(entity_name) > 0 && object->is_removed()) {
+            // オブジェクトが削除されていたら、_created_objectsからも削除
+            this->_created_objects.at(entity_name).erase(object->object_id().temporary());
+        }
+    } else {
+        // 挿入されたのではない場合
+        if (this->_changed_objects.count(entity_name) == 0) {
+            // _changed_objectsにエンティティのmapがなければ生成する
+            this->_changed_objects.insert(std::make_pair(entity_name, db::object_map_t{}));
+        }
+
+        // _changed_objectsにオブジェクトを追加
+        auto const &obj_id = object->object_id().stable();
+        if (this->_changed_objects.at(entity_name).count(obj_id) == 0) {
+            this->_changed_objects.at(entity_name).emplace(obj_id, object);
+        }
+    }
+
+    if (object->is_removed()) {
+        // オブジェクトが削除されていたら逆関連も削除する
+        for (auto const &entity_pair : this->_model.entity(entity_name).inverse_relation_names) {
+            auto const &inv_entity_name = entity_pair.first;
+            auto const &inv_rel_names = entity_pair.second;
+
+            this->_cached_objects.perform_entity(
+                inv_entity_name, [&inv_rel_names, &object](std::string const &, db::object_id const &,
+                                                           db::object_ptr const &inv_rel_obj) {
+                    for (auto const &inv_rel_name : inv_rel_names) {
+                        inv_rel_obj->remove_relation_id(inv_rel_name, object->object_id());
+                    }
+                });
+        }
+    }
+
+    // オブジェクトが変更された通知を送信
+    this->_db_object_notifier->notify(object);
 }
 
 db::manager_ptr db::manager::make_shared(std::string const &db_path, db::model const &model,
