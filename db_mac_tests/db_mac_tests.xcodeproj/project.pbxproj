@@ -36,6 +36,7 @@
 		B6DE370A21E9F9D400E49BCB /* cpp_utils.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DE370921E9F9D400E49BCB /* cpp_utils.framework */; };
 		B6DE370C21E9F9D400E49BCB /* db.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DE370B21E9F9D400E49BCB /* db.framework */; };
 		B6DE370E21E9F9DD00E49BCB /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DE370D21E9F9DD00E49BCB /* libsqlite3.tbd */; };
+		B6EE68BD241BA1A70098BEAE /* yas_db_error_tests.mm in Sources */ = {isa = PBXBuildFile; fileRef = B6EE68BC241BA1A70098BEAE /* yas_db_error_tests.mm */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -71,6 +72,7 @@
 		B6DE370921E9F9D400E49BCB /* cpp_utils.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = cpp_utils.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		B6DE370B21E9F9D400E49BCB /* db.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = db.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		B6DE370D21E9F9DD00E49BCB /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
+		B6EE68BC241BA1A70098BEAE /* yas_db_error_tests.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = yas_db_error_tests.mm; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -143,6 +145,7 @@
 				B6DE36EA21E9F99900E49BCB /* yas_db_manager_tests.mm */,
 				B6DE36EB21E9F99900E49BCB /* yas_db_model_tests.mm */,
 				B6DE36EC21E9F99900E49BCB /* yas_db_cf_utils_tests.mm */,
+				B6EE68BC241BA1A70098BEAE /* yas_db_error_tests.mm */,
 			);
 			name = db_tests;
 			path = ../../db_tests;
@@ -248,6 +251,7 @@
 			files = (
 				B6DE370021E9F99A00E49BCB /* yas_db_order_tests.mm in Sources */,
 				B6DE36EF21E9F99A00E49BCB /* yas_db_execute_sql_tests.mm in Sources */,
+				B6EE68BD241BA1A70098BEAE /* yas_db_error_tests.mm in Sources */,
 				B6DE36F121E9F99A00E49BCB /* yas_db_fetch_option_tests.mm in Sources */,
 				B6DE36FF21E9F99A00E49BCB /* yas_db_entity_tests.mm in Sources */,
 				B6DE36F721E9F99A00E49BCB /* yas_db_row_set_tests.mm in Sources */,

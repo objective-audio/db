@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B62F800E241C8A3D00909A9C /* yas_db_error_tests.mm in Sources */ = {isa = PBXBuildFile; fileRef = B62F800D241C8A3D00909A9C /* yas_db_error_tests.mm */; };
 		B6DE368121E9F82500E49BCB /* chaining.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DE368021E9F82500E49BCB /* chaining.framework */; };
 		B6DE368321E9F82500E49BCB /* cpp_utils.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DE368221E9F82500E49BCB /* cpp_utils.framework */; };
 		B6DE368521E9F82500E49BCB /* db.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DE368421E9F82500E49BCB /* db.framework */; };
@@ -54,6 +55,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		B62F800D241C8A3D00909A9C /* yas_db_error_tests.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = yas_db_error_tests.mm; sourceTree = "<group>"; };
 		B6DE367021E9F7BF00E49BCB /* db_ios_tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = db_ios_tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B6DE367521E9F7BF00E49BCB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		B6DE368021E9F82500E49BCB /* chaining.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = chaining.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -166,6 +168,7 @@
 				B6DE36A321E9F84900E49BCB /* yas_db_cf_utils_tests.mm */,
 				B6DE369221E9F84900E49BCB /* yas_db_database_tests.mm */,
 				B6DE369D21E9F84900E49BCB /* yas_db_entity_tests.mm */,
+				B62F800D241C8A3D00909A9C /* yas_db_error_tests.mm */,
 				B6DE368B21E9F84900E49BCB /* yas_db_execute_sql_tests.mm */,
 				B6DE368D21E9F84900E49BCB /* yas_db_fetch_option_tests.mm */,
 				B6DE369921E9F84900E49BCB /* yas_db_index_tests.mm */,
@@ -342,6 +345,7 @@
 				B6DE36B021E9F84A00E49BCB /* yas_db_object_tests.mm in Sources */,
 				B6DE36B521E9F84A00E49BCB /* yas_db_result_code_tests.mm in Sources */,
 				B6DE36B221E9F84A00E49BCB /* yas_db_range_tests.mm in Sources */,
+				B62F800E241C8A3D00909A9C /* yas_db_error_tests.mm in Sources */,
 				B6DE36AA21E9F84A00E49BCB /* yas_db_test_utils.mm in Sources */,
 				B6DE36B121E9F84A00E49BCB /* yas_db_sql_utils_tests.mm in Sources */,
 				B6DE36BD21E9F84A00E49BCB /* yas_db_cf_utils_tests.mm in Sources */,

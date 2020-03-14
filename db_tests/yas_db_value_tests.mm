@@ -372,4 +372,10 @@ using namespace yas;
     XCTAssertFalse(db::null_value());
 }
 
+- (void)test_hash {
+    XCTAssertEqual(std::hash<db::value>()(db::value(1)), std::hash<sqlite3_int64>()(1));
+    XCTAssertEqual(std::hash<db::value>()(db::value("test")), std::hash<std::string>()("test"));
+    XCTAssertEqual(std::hash<db::value>()(db::value(1.0)), std::hash<double>()(1.0));
+}
+
 @end
