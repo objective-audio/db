@@ -64,7 +64,6 @@ std::string yas::to_string(db::error_type const &error_type) {
         case db::error_type::none:
             return "none";
     }
-    return std::string();
 }
 
 std::string yas::to_string(db::error const &error) {
