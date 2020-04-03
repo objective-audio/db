@@ -6,6 +6,7 @@
 
 #include <memory>
 #include <string>
+
 #include "yas_db_additional_protocol.h"
 
 namespace yas {

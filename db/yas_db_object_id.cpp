@@ -3,6 +3,7 @@
 //
 
 #include "yas_db_object_id.h"
+
 #include <cpp_utils/yas_stl_utils.h>
 
 using namespace yas;

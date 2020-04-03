@@ -3,7 +3,9 @@
 //
 
 #include "yas_db_attribute.h"
+
 #include <sstream>
+
 #include "yas_db_additional_protocol.h"
 #include "yas_db_object.h"
 

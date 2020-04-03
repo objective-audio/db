@@ -8,6 +8,7 @@
 #include <cpp_utils/yas_task.h>
 #include <cpp_utils/yas_task_protocol.h>
 #include <dispatch/dispatch.h>
+
 #include "yas_db_additional_protocol.h"
 #include "yas_db_fetch_option.h"
 #include "yas_db_manager_error.h"

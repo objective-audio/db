@@ -3,8 +3,10 @@
 //
 
 #include "yas_db_model.h"
+
 #include <unordered_map>
 #include <vector>
+
 #include "yas_db_attribute.h"
 #include "yas_db_entity.h"
 #include "yas_db_index.h"

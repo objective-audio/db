@@ -5,7 +5,9 @@
 #pragma once
 
 #include <cpp_utils/yas_version.h>
+
 #include <string>
+
 #include "yas_db_additional_protocol.h"
 
 namespace yas::db {

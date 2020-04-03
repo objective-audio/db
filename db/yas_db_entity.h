@@ -6,6 +6,7 @@
 
 #include <string>
 #include <unordered_map>
+
 #include "yas_db_additional_protocol.h"
 
 namespace yas::db {
