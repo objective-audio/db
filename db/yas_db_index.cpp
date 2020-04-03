@@ -3,6 +3,7 @@
 //
 
 #include "yas_db_index.h"
+
 #include "yas_db_sql_utils.h"
 
 using namespace yas;

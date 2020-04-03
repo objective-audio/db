@@ -5,6 +5,7 @@
 #pragma once
 
 #include <sqlite3.h>
+
 #include "yas_db_result_code.h"
 
 namespace yas::db {

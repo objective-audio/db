@@ -5,8 +5,10 @@
 #pragma once
 
 #include <sqlite3.h>
+
 #include <memory>
 #include <string>
+
 #include "yas_db_protocol.h"
 
 namespace yas::db {

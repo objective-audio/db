@@ -5,6 +5,7 @@
 #pragma once
 
 #include <functional>
+
 #include "yas_db_protocol.h"
 #include "yas_db_ptr.h"
 #include "yas_db_value.h"

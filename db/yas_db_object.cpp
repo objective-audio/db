@@ -3,9 +3,11 @@
 //
 
 #include "yas_db_object.h"
+
 #include <chaining/yas_chaining_umbrella.h>
 #include <cpp_utils/yas_fast_each.h>
 #include <cpp_utils/yas_stl_utils.h>
+
 #include "yas_db_attribute.h"
 #include "yas_db_manager_utils.h"
 #include "yas_db_model.h"

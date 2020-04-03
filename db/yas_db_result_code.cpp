@@ -3,6 +3,7 @@
 //
 
 #include "yas_db_result_code.h"
+
 #include <sqlite3.h>
 
 using namespace yas;

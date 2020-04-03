@@ -6,6 +6,7 @@
 
 #include <memory>
 #include <vector>
+
 #include "yas_db_protocol.h"
 #include "yas_db_types.h"
 

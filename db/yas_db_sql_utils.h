@@ -5,6 +5,7 @@
 #pragma once
 
 #include <vector>
+
 #include "yas_db_additional_types.h"
 #include "yas_db_select_option.h"
 
