@@ -2,9 +2,7 @@
 //  yas_db_attribute_tests.mm
 //
 
-#import <XCTest/XCTest.h>
-#import <db/yas_db_additional_types.h>
-#import <db/yas_db_attribute.h>
+#import "yas_db_test_utils.h"
 
 using namespace yas;
 

@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "yas_db_error.h"
+#include <db/yas_db_error.h>
 
 namespace yas::db {
 enum class manager_error_type {

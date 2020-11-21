@@ -5,8 +5,6 @@
 #import <chrono>
 #import "yas_db_test_utils.h"
 
-#include <iostream>
-
 using namespace yas;
 
 @interface yas_db_value_tests : XCTestCase

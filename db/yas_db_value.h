@@ -4,11 +4,11 @@
 
 #pragma once
 
+#include <db/yas_db_protocol.h>
+#include <db/yas_db_types.h>
+
 #include <memory>
 #include <vector>
-
-#include "yas_db_protocol.h"
-#include "yas_db_types.h"
 
 namespace yas::db {
 struct copy_tag_t {};

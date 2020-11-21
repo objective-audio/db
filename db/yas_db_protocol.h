@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "yas_db_ptr.h"
+#include <db/yas_db_ptr.h>
 
 namespace yas::db {
 class database;
