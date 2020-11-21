@@ -5,8 +5,7 @@
 #pragma once
 
 #include <cpp_utils/yas_result.h>
-
-#include "yas_db_additional_types.h"
+#include <db/yas_db_additional_types.h>
 
 namespace yas::db {
 struct manageable_object {

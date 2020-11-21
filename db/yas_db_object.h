@@ -5,13 +5,12 @@
 #pragma once
 
 #include <chaining/yas_chaining_umbrella.h>
+#include <db/yas_db_additional_protocol.h>
+#include <db/yas_db_entity.h>
 
 #include <deque>
 #include <set>
 #include <unordered_map>
-
-#include "yas_db_additional_protocol.h"
-#include "yas_db_entity.h"
 
 namespace yas::db {
 class entity;

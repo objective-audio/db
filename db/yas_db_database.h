@@ -4,11 +4,11 @@
 
 #pragma once
 
-#include <functional>
+#include <db/yas_db_protocol.h>
+#include <db/yas_db_ptr.h>
+#include <db/yas_db_value.h>
 
-#include "yas_db_protocol.h"
-#include "yas_db_ptr.h"
-#include "yas_db_value.h"
+#include <functional>
 
 namespace yas::db {
 class error;

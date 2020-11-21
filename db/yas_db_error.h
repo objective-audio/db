@@ -4,9 +4,8 @@
 
 #pragma once
 
+#include <db/yas_db_result_code.h>
 #include <sqlite3.h>
-
-#include "yas_db_result_code.h"
 
 namespace yas::db {
 struct sqlite_result_code : result_code {

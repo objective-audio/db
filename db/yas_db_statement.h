@@ -4,12 +4,11 @@
 
 #pragma once
 
+#include <db/yas_db_protocol.h>
 #include <sqlite3.h>
 
 #include <memory>
 #include <string>
-
-#include "yas_db_protocol.h"
 
 namespace yas::db {
 struct statement final : closable {

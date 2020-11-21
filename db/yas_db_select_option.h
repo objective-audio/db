@@ -4,9 +4,9 @@
 
 #pragma once
 
-#include <string>
+#include <db/yas_db_value.h>
 
-#include "yas_db_value.h"
+#include <string>
 
 namespace yas::db {
 enum class order {
