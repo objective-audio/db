@@ -2,7 +2,6 @@
 //  yas_db_manager_utils_tests.mm
 //
 
-#import <db/yas_db_manager_utils.h>
 #import "yas_db_test_utils.h"
 
 using namespace yas;

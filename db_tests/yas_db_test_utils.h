@@ -6,7 +6,7 @@
 #import <cpp_utils/yas_cf_utils.h>
 #import <cpp_utils/yas_task.h>
 #import <cpp_utils/yas_version.h>
-#import <db/yas_db_umbrella.h>
+#import <db/db.h>
 
 @interface yas_db_test_utils : NSObject
 
