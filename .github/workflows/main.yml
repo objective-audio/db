@@ -28,4 +28,4 @@ jobs:
     - name: Run tests
       run: |
         brew install clang-format
-        xcodebuild -workspace db_ios.xcworkspace -scheme db_ios_tests -configuration Debug OBJROOT=build -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 8,OS=13.3' clean test
+        xcodebuild -workspace db_ios.xcworkspace -scheme db_ios_tests -configuration Debug OBJROOT=build -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 11' clean test
