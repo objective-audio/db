@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B60ACAF92600FB5400C67595 /* observing.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B60ACAF82600FB5400C67595 /* observing.framework */; };
 		B61136A5232298300057C6AE /* yas_db_ptr.h in Headers */ = {isa = PBXBuildFile; fileRef = B61136A42322982C0057C6AE /* yas_db_ptr.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B6B6E0CA21E226070029A7C1 /* db.h in Headers */ = {isa = PBXBuildFile; fileRef = B6B6E0C821E226070029A7C1 /* db.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B6B6E10621E226A50029A7C1 /* yas_db_cf_utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6B6E0CF21E226A50029A7C1 /* yas_db_cf_utils.cpp */; };
@@ -71,6 +72,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		B60ACAF82600FB5400C67595 /* observing.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = observing.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		B61136A42322982C0057C6AE /* yas_db_ptr.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = yas_db_ptr.h; sourceTree = "<group>"; };
 		B6B6E0C521E226070029A7C1 /* db.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = db.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		B6B6E0C821E226070029A7C1 /* db.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = db.h; sourceTree = "<group>"; };
@@ -142,6 +144,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B6B6E14521E227550029A7C1 /* libsqlite3.tbd in Frameworks */,
+				B60ACAF92600FB5400C67595 /* observing.framework in Frameworks */,
 				B6B6E13F21E227460029A7C1 /* chaining.framework in Frameworks */,
 				B6B6E14121E227460029A7C1 /* cpp_utils.framework in Frameworks */,
 				B6B6E14321E227460029A7C1 /* objc_utils.framework in Frameworks */,
@@ -245,6 +248,7 @@
 		B6B6E13D21E227460029A7C1 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				B60ACAF82600FB5400C67595 /* observing.framework */,
 				B6B6E14421E227550029A7C1 /* libsqlite3.tbd */,
 				B6B6E13E21E227460029A7C1 /* chaining.framework */,
 				B6B6E14021E227460029A7C1 /* cpp_utils.framework */,

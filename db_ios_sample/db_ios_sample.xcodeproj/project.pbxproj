@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B60ACB072600FB8E00C67595 /* observing.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B60ACB062600FB8E00C67595 /* observing.framework */; };
 		B637C08C1EB7735E00481589 /* DBSampleObjectNormalCell.mm in Sources */ = {isa = PBXBuildFile; fileRef = B637C08B1EB7735E00481589 /* DBSampleObjectNormalCell.mm */; };
 		B637C08F1EB7737600481589 /* DBSampleObjectTextFieldCell.mm in Sources */ = {isa = PBXBuildFile; fileRef = B637C08E1EB7737600481589 /* DBSampleObjectTextFieldCell.mm */; };
 		B637C0921EB7743A00481589 /* DBSampleObjectViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = B637C0911EB7743A00481589 /* DBSampleObjectViewController.mm */; };
@@ -27,6 +28,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		B60ACB062600FB8E00C67595 /* observing.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = observing.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		B637C08A1EB7735E00481589 /* DBSampleObjectNormalCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DBSampleObjectNormalCell.h; sourceTree = "<group>"; };
 		B637C08B1EB7735E00481589 /* DBSampleObjectNormalCell.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = DBSampleObjectNormalCell.mm; sourceTree = "<group>"; };
 		B637C08D1EB7737600481589 /* DBSampleObjectTextFieldCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DBSampleObjectTextFieldCell.h; sourceTree = "<group>"; };
@@ -63,6 +65,7 @@
 			files = (
 				B6B6E1DB21E2393C0029A7C1 /* db.framework in Frameworks */,
 				B6B6E1D721E2393C0029A7C1 /* chaining.framework in Frameworks */,
+				B60ACB072600FB8E00C67595 /* observing.framework in Frameworks */,
 				B6B6E1D921E2393C0029A7C1 /* cpp_utils.framework in Frameworks */,
 				B6B6E1DD21E2393C0029A7C1 /* objc_utils.framework in Frameworks */,
 				B68218051C75F90C00689F27 /* libsqlite3.tbd in Frameworks */,
@@ -129,6 +132,7 @@
 		B6B6E1D521E2393C0029A7C1 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				B60ACB062600FB8E00C67595 /* observing.framework */,
 				B6B6E1D621E2393C0029A7C1 /* chaining.framework */,
 				B6B6E1D821E2393C0029A7C1 /* cpp_utils.framework */,
 				B6B6E1DA21E2393C0029A7C1 /* db.framework */,

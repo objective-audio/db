@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B60ACB012600FB7300C67595 /* observing.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B60ACB002600FB7300C67595 /* observing.framework */; };
 		B61136A7232298C30057C6AE /* yas_db_ptr.h in Headers */ = {isa = PBXBuildFile; fileRef = B61136A6232298C30057C6AE /* yas_db_ptr.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B6B6E15921E237EF0029A7C1 /* db.h in Headers */ = {isa = PBXBuildFile; fileRef = B6B6E15721E237EF0029A7C1 /* db.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B6B6E15F21E238000029A7C1 /* chaining.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B6B6E15E21E238000029A7C1 /* chaining.framework */; };
@@ -71,6 +72,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		B60ACB002600FB7300C67595 /* observing.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = observing.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		B61136A6232298C30057C6AE /* yas_db_ptr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_db_ptr.h; sourceTree = "<group>"; };
 		B6B6E15421E237EF0029A7C1 /* db.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = db.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		B6B6E15721E237EF0029A7C1 /* db.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = db.h; sourceTree = "<group>"; };
@@ -142,6 +144,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B6B6E16521E238090029A7C1 /* libsqlite3.tbd in Frameworks */,
+				B60ACB012600FB7300C67595 /* observing.framework in Frameworks */,
 				B6B6E15F21E238000029A7C1 /* chaining.framework in Frameworks */,
 				B6B6E16121E238000029A7C1 /* cpp_utils.framework in Frameworks */,
 				B6B6E16321E238000029A7C1 /* objc_utils.framework in Frameworks */,
@@ -181,6 +184,7 @@
 		B6B6E15D21E238000029A7C1 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				B60ACB002600FB7300C67595 /* observing.framework */,
 				B6B6E16421E238090029A7C1 /* libsqlite3.tbd */,
 				B6B6E15E21E238000029A7C1 /* chaining.framework */,
 				B6B6E16021E238000029A7C1 /* cpp_utils.framework */,
