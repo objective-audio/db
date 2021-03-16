@@ -19,4 +19,7 @@
    <FileRef
       location = "group:submodules/objc_utils/objc_utils_ios/objc_utils_ios.xcodeproj">
    </FileRef>
+   <FileRef
+      location = "group:submodules/observing/observing_ios/observing_ios.xcodeproj">
+   </FileRef>
 </Workspace>
