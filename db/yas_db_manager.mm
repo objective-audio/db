@@ -32,8 +32,8 @@ db::manager::manager(std::string const &db_path, db::model const &model, std::si
       _model(model),
       _dispatch_queue(dispatch_queue),
       _task_queue(priority_count),
-      _db_info(chaining::value::holder<db::info_opt>::make_shared(std::nullopt)),
-      _db_object_notifier(chaining::notifier<db::object_ptr>::make_shared()) {
+      _db_info(observing::value::holder<db::info_opt>::make_shared(std::nullopt)),
+      _db_object_notifier(observing::notifier<db::object_ptr>::make_shared()) {
     yas_dispatch_queue_retain(dispatch_queue);
 }
 
@@ -80,14 +80,14 @@ db::model const &db::manager::model() const {
 }
 
 db::value const &db::manager::current_save_id() const {
-    if (auto const &info = this->_db_info->raw()) {
+    if (auto const &info = this->_db_info->value()) {
         return info->current_save_id_value();
     }
     return db::null_value();
 }
 
 db::value const &db::manager::last_save_id() const {
-    if (auto const &info = this->_db_info->raw()) {
+    if (auto const &info = this->_db_info->value()) {
         return info->last_save_id_value();
     }
     return db::null_value();
@@ -732,12 +732,12 @@ std::size_t db::manager::changed_object_count(std::string const &entity_name) co
     return 0;
 }
 
-chaining::chain_sync_t<db::info_opt> db::manager::chain_db_info() const {
-    return this->_db_info->chain();
+observing::canceller_ptr db::manager::observe_db_info(db_info_observing_handler_f &&handler, bool const sync) {
+    return this->_db_info->observe(std::move(handler), sync);
 }
 
-chaining::chain_unsync_t<db::object_ptr> db::manager::chain_db_object() const {
-    return this->_db_object_notifier->chain();
+observing::canceller_ptr db::manager::observe_db_object(db_object_observing_handler_f &&handler) {
+    return this->_db_object_notifier->observe(std::move(handler));
 }
 
 db::object_opt_vector_t db::manager::relation_objects(db::object_ptr const &object, std::string const &rel_name) const {
@@ -759,24 +759,17 @@ db::object_ptr db::manager::make_object(std::string const &entity_name) {
     auto obj = db::object::make_shared(this->_model.entity(entity_name));
     auto weak_manager = this->_weak_manager;
 
-    this->_pool += obj->chain()
-                       .guard([weak_manager](db::object_event const &event) {
-                           return event.is_erased() && !weak_manager.expired();
-                       })
-                       .to([](db::object_event const &event) { return event.get<db::object_erased_event>(); })
-                       .perform([weak_manager](db::object_erased_event const &event) {
-                           weak_manager.lock()->_cached_objects.erase(event.entity_name, event.object_id);
-                       })
-                       .end();
-
-    this->_pool += obj->chain()
-                       .guard([weak_manager](db::object_event const &event) {
-                           return event.is_changed() && !weak_manager.expired();
-                       })
-                       .perform([weak_manager](db::object_event const &event) {
-                           weak_manager.lock()->_object_did_change(event.object());
-                       })
-                       .end();
+    obj->observe([weak_manager](db::object_event const &event){
+        if (auto const manager = weak_manager.lock()) {
+            if (event.is_erased()) {
+                object_erased_event const erased_event = event.get<db::object_erased_event>();
+                manager->_cached_objects.erase(erased_event.entity_name, erased_event.object_id);
+            }
+            if (event.is_changed()) {
+                manager->_object_did_change(event.object());
+            }
+        }
+    }, false)->add_to(this->_pool);
 
     return obj;
 }

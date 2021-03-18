@@ -4,7 +4,6 @@
 
 #include "yas_db_object.h"
 
-#include <chaining/yas_chaining_umbrella.h>
 #include <cpp_utils/yas_fast_each.h>
 #include <cpp_utils/yas_stl_utils.h>
 
@@ -369,11 +368,11 @@ db::object::object(db::entity const &entity) : const_object(entity, db::make_tem
 }
 
 db::object::~object() {
-    this->_sender->broadcast(make_object_erased_event(this->_entity.name, this->_identifier));
+    this->_fetcher->push(make_object_erased_event(this->_entity.name, this->_identifier));
 }
 
-chaining::chain_sync_t<db::object_event> db::object::chain() const {
-    return this->_fetcher->chain();
+observing::canceller_ptr db::object::observe(observing_handler_f &&handler, bool const sync) {
+    return this->_fetcher->observe(std::move(handler), sync);
 }
 
 void db::object::set_attribute_value(std::string const &attr_name, db::value const &value) {
@@ -410,7 +409,7 @@ void db::object::insert_relation_id(std::string const &rel_name, db::object_id c
         this->_status = db::object_status::changed;
     }
 
-    this->_sender->broadcast(make_object_relation_inserted_event(this->_weak_object.lock(), rel_name, {idx}));
+    this->_fetcher->push(make_object_relation_inserted_event(this->_weak_object.lock(), rel_name, {idx}));
 }
 
 void db::object::remove_relation_id(std::string const &rel_name, db::object_id const &relation_id) {
@@ -436,7 +435,7 @@ void db::object::remove_relation_id(std::string const &rel_name, db::object_id c
             this->_status = db::object_status::changed;
         }
 
-        this->_sender->broadcast(
+        this->_fetcher->push(
             make_object_relation_removed_event(this->_weak_object.lock(), rel_name, std::move(indices)));
     }
 }
@@ -476,7 +475,7 @@ void db::object::remove_relation_at(std::string const &rel_name, std::size_t con
             this->_status = db::object_status::changed;
         }
 
-        this->_sender->broadcast(make_object_relation_removed_event(this->_weak_object.lock(), rel_name, {idx}));
+        this->_fetcher->push(make_object_relation_removed_event(this->_weak_object.lock(), rel_name, {idx}));
     }
 }
 
@@ -505,7 +504,7 @@ void db::object::remove_all_relations(std::string const &rel_name) {
             indices.push_back(yas_each_index(each));
         }
 
-        this->_sender->broadcast(
+        this->_fetcher->push(
             make_object_relation_removed_event(this->_weak_object.lock(), rel_name, std::move(indices)));
     }
 }
@@ -586,14 +585,13 @@ db::object_data db::object::save_data(db::object_id_pool &pool) const {
 void db::object::_prepare(object_ptr const &shared) {
     this->_weak_object = shared;
 
-    this->_fetcher = chaining::fetcher<object_event>::make_shared([weak_object = this->_weak_object]() {
+    this->_fetcher = observing::fetcher<object_event>::make_shared([weak_object = this->_weak_object]() {
         if (auto object = weak_object.lock()) {
             return std::optional<object_event>{make_object_fetched_event(object)};
         } else {
             return std::optional<object_event>{std::nullopt};
         }
     });
-    this->_sender = this->_fetcher;
 }
 
 void db::object::set_status(db::object_status const &status) {
@@ -639,7 +637,7 @@ void db::object::load_data(db::object_data const &obj_data, bool const force) {
             this->_status = db::object_status::saved;
         }
 
-        this->_sender->broadcast(make_object_loaded_event(this->_weak_object.lock()));
+        this->_fetcher->push(make_object_loaded_event(this->_weak_object.lock()));
     }
 }
 
@@ -650,7 +648,7 @@ void db::object::load_save_id(db::value const &save_id) {
 void db::object::clear_data() {
     this->_clear();
 
-    this->_sender->broadcast(make_object_cleared_event(this->_weak_object.lock()));
+    this->_fetcher->push(make_object_cleared_event(this->_weak_object.lock()));
 }
 
 void db::object::_clear() {
@@ -680,7 +678,7 @@ void db::object::_set_attribute_value(std::string const &attr_name, db::value co
             this->_status = db::object_status::changed;
         }
 
-        this->_sender->broadcast(make_object_attribute_updated_event(this->_weak_object.lock(), attr_name, value));
+        this->_fetcher->push(make_object_attribute_updated_event(this->_weak_object.lock(), attr_name, value));
     }
 }
 
@@ -702,7 +700,7 @@ void db::object::_set_relation_ids(std::string const &rel_name, db::id_vector_t 
             this->_status = db::object_status::changed;
         }
 
-        this->_sender->broadcast(make_object_relation_replaced_event(this->_weak_object.lock(), rel_name));
+        this->_fetcher->push(make_object_relation_replaced_event(this->_weak_object.lock(), rel_name));
     }
 }
 

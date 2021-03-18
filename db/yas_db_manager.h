@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include <chaining/yas_chaining_umbrella.h>
 #include <cpp_utils/yas_task.h>
 #include <cpp_utils/yas_task_protocol.h>
 #include <db/yas_db_additional_protocol.h>
@@ -34,8 +33,10 @@ struct manager final {
     db::value const &current_save_id() const;
     db::value const &last_save_id() const;
 
-    chaining::chain_sync_t<db::info_opt> chain_db_info() const;
-    chaining::chain_unsync_t<db::object_ptr> chain_db_object() const;
+    using db_info_observing_handler_f = std::function<void(info_opt const &)>;
+    observing::canceller_ptr observe_db_info(db_info_observing_handler_f &&, bool const sync);
+    using db_object_observing_handler_f = std::function<void(object_ptr const &)>;
+    observing::canceller_ptr observe_db_object(db_object_observing_handler_f &&);
 
     dispatch_queue_t dispatch_queue() const;
 
@@ -86,10 +87,10 @@ struct manager final {
     mutable db::weak_pool<db::object_id, db::object> _cached_objects;
     db::tmp_object_map_map_t _created_objects;
     db::object_map_map_t _changed_objects;
-    chaining::value::holder_ptr<db::info_opt> _db_info;
-    chaining::notifier_ptr<db::object_ptr> _db_object_notifier;
+    observing::value::holder_ptr<db::info_opt> _db_info;
+    observing::notifier_ptr<db::object_ptr> _db_object_notifier;
     dispatch_queue_t _dispatch_queue;
-    chaining::observer_pool _pool;
+    observing::canceller_pool _pool;
 
     manager(std::string const &db_path, db::model const &model, std::size_t const priority_count,
             dispatch_queue_t const dispatch_queue);
