@@ -4,9 +4,9 @@
 
 #pragma once
 
-#include <chaining/yas_chaining_umbrella.h>
 #include <db/yas_db_additional_protocol.h>
 #include <db/yas_db_entity.h>
+#include <observing/yas_observing_umbrella.h>
 
 #include <deque>
 #include <set>
@@ -151,7 +151,8 @@ struct const_object {
 struct object final : const_object, manageable_object {
     ~object();
 
-    [[nodiscard]] chaining::chain_sync_t<object_event> chain() const;
+    using observing_handler_f = std::function<void(object_event const &)>;
+    [[nodiscard]] observing::canceller_ptr observe(observing_handler_f &&, bool const sync);
 
     void set_attribute_value(std::string const &attr_name, db::value const &value);
 
@@ -180,8 +181,7 @@ struct object final : const_object, manageable_object {
     object(db::entity const &entity);
 
     enum db::object_status _status = db::object_status::invalid;
-    chaining::fetcher_ptr<object_event> _fetcher = nullptr;
-    std::shared_ptr<chaining::sender_protocol<object_event>> _sender = nullptr;
+    observing::fetcher_ptr<object_event> _fetcher = nullptr;
     db::object_wptr _weak_object;
 
     void _prepare(object_ptr const &);

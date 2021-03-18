@@ -13,6 +13,7 @@
 #include "yas_db_relation.h"
 
 using namespace yas;
+using namespace yas::db;
 
 namespace yas::db {
 static std::unordered_map<std::string, db::string_set_map_t> make_inverse_relation_names(
@@ -41,54 +42,54 @@ static std::unordered_map<std::string, db::string_set_map_t> make_inverse_relati
 }
 }  // namespace yas::db
 
-db::model::model(model_args args) : _args(to_args(std::move(args))) {
+model::model(model_args args) : _args(to_args(std::move(args))) {
 }
 
-yas::version const &db::model::version() const {
+yas::version const &model::version() const {
     return this->_args.version;
 }
 
-db::entity_map_t const &db::model::entities() const {
+db::entity_map_t const &model::entities() const {
     return this->_args.entities;
 }
 
-db::index_map_t const &db::model::indices() const {
+db::index_map_t const &model::indices() const {
     return this->_args.indices;
 }
 
-db::entity const &db::model::entity(std::string const &entity) const {
+db::entity const &model::entity(std::string const &entity) const {
     return this->entities().at(entity);
 }
 
-db::attribute_map_t const &db::model::attributes(std::string const &entity) const {
+db::attribute_map_t const &model::attributes(std::string const &entity) const {
     return this->entities().at(entity).all_attributes;
 }
 
-db::attribute_map_t const &db::model::custom_attributes(std::string const &entity) const {
+db::attribute_map_t const &model::custom_attributes(std::string const &entity) const {
     return this->entities().at(entity).custom_attributes;
 }
 
-db::relation_map_t const &db::model::relations(std::string const &entity) const {
+db::relation_map_t const &model::relations(std::string const &entity) const {
     return this->entities().at(entity).relations;
 }
 
-db::attribute const &db::model::attribute(std::string const &entity, std::string const &attr_name) const {
+db::attribute const &model::attribute(std::string const &entity, std::string const &attr_name) const {
     return this->entities().at(entity).all_attributes.at(attr_name);
 }
 
-db::relation const &db::model::relation(std::string const &entity, std::string const &rel_name) const {
+db::relation const &model::relation(std::string const &entity, std::string const &rel_name) const {
     return this->entities().at(entity).relations.at(rel_name);
 }
 
-db::index const &db::model::index(std::string const &index_name) const {
+db::index const &model::index(std::string const &index_name) const {
     return this->indices().at(index_name);
 }
 
-bool db::model::entity_exists(std::string const &entity) const {
+bool model::entity_exists(std::string const &entity) const {
     return this->entities().count(entity) > 0;
 }
 
-bool db::model::attribute_exists(std::string const &entity, std::string const &attr_name) const {
+bool model::attribute_exists(std::string const &entity, std::string const &attr_name) const {
     if (this->entity_exists(entity)) {
         if (this->entities().at(entity).all_attributes.count(attr_name) > 0) {
             return true;
@@ -97,7 +98,7 @@ bool db::model::attribute_exists(std::string const &entity, std::string const &a
     return false;
 }
 
-bool db::model::relation_exists(std::string const &entity, std::string const &rel_name) const {
+bool model::relation_exists(std::string const &entity, std::string const &rel_name) const {
     if (this->entity_exists(entity)) {
         if (this->entities().at(entity).relations.count(rel_name) > 0) {
             return true;
@@ -106,11 +107,11 @@ bool db::model::relation_exists(std::string const &entity, std::string const &re
     return false;
 }
 
-bool db::model::index_exists(std::string const &index_name) const {
+bool model::index_exists(std::string const &index_name) const {
     return this->indices().count(index_name) > 0;
 }
 
-db::model::args db::model::to_args(model_args &&args) {
+model::args model::to_args(model_args &&args) {
     auto entity_inv_rel_names = make_inverse_relation_names(args.entities);
 
     db::entity_map_t entities;

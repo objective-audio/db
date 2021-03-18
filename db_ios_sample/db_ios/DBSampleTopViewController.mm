@@ -70,7 +70,7 @@ top_info_row_type_t to_idx(sample::top_info_row const &row) {
 
 @implementation DBSampleTopViewController {
     std::shared_ptr<db_controller> _db_controller;
-    chaining::observer_pool _pool;
+    observing::canceller_pool _pool;
 }
 
 - (void)viewDidLoad {
@@ -82,19 +82,18 @@ top_info_row_type_t to_idx(sample::top_info_row const &row) {
 
     auto unowned_self = objc_ptr_with_move_object([[YASUnownedObject<DBSampleTopViewController *> alloc] initWithObject:self]);
 
-    self->_pool += self->_db_controller->chain()
-                       .guard([](auto const &pair) { return pair.first == db_controller::method::processing_changed; })
-                       .perform([unowned_self](auto const &pair) {
-                           db_controller::change_info const &info = pair.second;
+    self->_db_controller->observe([unowned_self](auto const &pair){
+        if (pair.first == db_controller::method::processing_changed) {
+            db_controller::change_info const &info = pair.second;
 
-                           auto controller = [unowned_self.object() object];
-                           if (info.value.get<db::integer>()) {
-                               controller.title = @"Processing...";
-                           } else {
-                               controller.title = nil;
-                           }
-                       })
-                       .end();
+            auto controller = [unowned_self.object() object];
+            if (info.value.get<db::integer>()) {
+                controller.title = @"Processing...";
+            } else {
+                controller.title = nil;
+            }
+        }
+    })->add_to(self->_pool);
 
     _db_controller->setup([unowned_self](auto result) {
         auto controller = [unowned_self.object() object];
@@ -112,9 +111,7 @@ top_info_row_type_t to_idx(sample::top_info_row const &row) {
 - (void)setupObserversAfterSetup {
     auto unowned_self = objc_ptr_with_move_object([[YASUnownedObject<DBSampleTopViewController *> alloc] initWithObject:self]);
 
-    self->_pool +=
-        self->_db_controller->chain()
-            .perform([unowned_self](auto const &pair) {
+        self->_db_controller->observe([unowned_self](auto const &pair) {
                 auto const &key = pair.first;
                 db_controller::change_info const &info = pair.second;
 
@@ -162,8 +159,7 @@ top_info_row_type_t to_idx(sample::top_info_row const &row) {
                     default:
                         break;
                 }
-            })
-            .end();
+        })->add_to(self->_pool);
 }
 
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {

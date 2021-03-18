@@ -27,7 +27,7 @@ db_controller::change_info::change_info(db::object_ptr const & object, db::value
 
 #pragma mark - db_controller
 
-db_controller::db_controller() : _manager(nullptr), _objects(), _notifier(chaining::notifier<chain_pair_t>::make_shared()) {
+db_controller::db_controller() : _manager(nullptr), _objects(), _notifier(observing::notifier<chain_pair_t>::make_shared()) {
 }
 
 void db_controller::setup(db::completion_f completion) {
@@ -61,9 +61,8 @@ void db_controller::setup(db::completion_f completion) {
 
     auto weak_manager = to_weak(_manager);
 
-    this->_pool +=
-        this->_manager->chain_db_object()
-            .perform([&controller = *this](db::object_ptr const &object) {
+        this->_manager->observe_db_object
+            ([&controller = *this](db::object_ptr const &object) {
                 auto const &entity_name = object->entity_name();
                 auto &objects = controller._objects.at(entity_name);
                 if (auto idx_opt = index(objects, object)) {
@@ -79,13 +78,11 @@ void db_controller::setup(db::completion_f completion) {
                 } else {
                     controller._notifier->notify(std::make_pair(method::object_changed, change_info{nullptr}));
                 }
-            })
-            .end();
+            })->add_to(this->_pool);
 
-    this->_pool += this->_manager->chain_db_info()
-                       .to_value(std::make_pair(method::db_info_changed, change_info{nullptr}))
-                       .send_to(this->_notifier)
-                       .end();
+    this->_manager->observe_db_info([this](auto const &){
+        this->_notifier->notify(std::make_pair(method::db_info_changed, change_info{nullptr}));
+    }, false)->add_to(this->_pool);
 
     auto continuous_result = std::make_shared<db::manager_result_t>(nullptr);
 
@@ -471,8 +468,8 @@ db::integer::type const &db_controller::last_save_id() const {
     return this->_manager->last_save_id().get<db::integer>();
 }
 
-chaining::chain_unsync_t<db_controller::chain_pair_t> db_controller::chain() {
-    return this->_notifier->chain();
+observing::canceller_ptr db_controller::observe(std::function<void(chain_pair_t const &)> &&handler) {
+    return this->_notifier->observe(std::move(handler));
 }
 
 bool db_controller::is_processing() const {

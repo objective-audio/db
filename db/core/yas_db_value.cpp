@@ -8,24 +8,23 @@
 #include <cpp_utils/yas_stl_utils.h>
 
 using namespace yas;
+using namespace yas::db;
 
 #pragma mark - value::data
 
-db::blob::blob() : _vector(), _data(nullptr), _size(0) {
+blob::blob() : _vector(), _data(nullptr), _size(0) {
 }
 
 template <>
-db::blob::blob(const void *const data, std::size_t const size, copy_tag_t const)
-    : _vector(size), _data(data), _size(size) {
+blob::blob(const void *const data, std::size_t const size, copy_tag_t const) : _vector(size), _data(data), _size(size) {
     memcpy(this->_vector.data(), data, size);
 }
 
 template <>
-db::blob::blob(const void *const data, std::size_t const size, no_copy_tag_t const)
-    : _vector(), _data(data), _size(size) {
+blob::blob(const void *const data, std::size_t const size, no_copy_tag_t const) : _vector(), _data(data), _size(size) {
 }
 
-bool db::blob::operator==(blob const &rhs) const {
+bool blob::operator==(blob const &rhs) const {
     uint8_t const *lhs_data = static_cast<uint8_t const *>(data());
     uint8_t const *rhs_data = static_cast<uint8_t const *>(rhs.data());
 
@@ -45,15 +44,15 @@ bool db::blob::operator==(blob const &rhs) const {
     return false;
 }
 
-bool db::blob::operator!=(blob const &rhs) const {
+bool blob::operator!=(blob const &rhs) const {
     return !(*this == rhs);
 }
 
-const void *db::blob::data() const {
+const void *blob::data() const {
     return this->_data;
 }
 
-std::size_t db::blob::size() const {
+std::size_t blob::size() const {
     return this->_size;
 }
 
@@ -187,7 +186,7 @@ typename T::type const &db::value::get() const {
 template db::integer::type const &db::value::get<db::integer>() const;
 template db::real::type const &db::value::get<db::real>() const;
 template db::text::type const &db::value::get<db::text>() const;
-template db::blob::type const &db::value::get<db::blob>() const;
+template blob::type const &db::value::get<blob>() const;
 template db::null::type const &db::value::get<db::null>() const;
 
 std::string db::value::sql() const {
@@ -198,7 +197,7 @@ std::string db::value::sql() const {
         return std::to_string(get<db::real>());
     } else if (type_info == typeid(db::text)) {
         return "'" + get<db::text>() + "'";
-    } else if (type_info == typeid(db::blob)) {
+    } else if (type_info == typeid(blob)) {
         throw std::runtime_error("don't get sql from blob value");
     } else {
         return "null";
@@ -236,8 +235,8 @@ std::string yas::to_string(const db::value &value) {
         return std::to_string(value.get<db::real>());
     } else if (type == typeid(db::text)) {
         return "'" + value.get<db::text>() + "'";
-    } else if (type == typeid(db::blob)) {
-        //        return "data' size='" + std::to_string(value.get<db::blob>().size());
+    } else if (type == typeid(blob)) {
+        //        return "data' size='" + std::to_string(value.get<blob>().size());
     } else if (type == typeid(db::null)) {
         return "null";
     }

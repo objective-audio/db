@@ -16,6 +16,7 @@
 #include "yas_db_value.h"
 
 using namespace yas;
+using namespace yas::db;
 
 namespace yas::db {
 static std::map<uint8_t, database_wptr> _databases;
@@ -42,34 +43,34 @@ static void bind(db::value const &value, int column_idx, sqlite3_stmt *stmt) {
 }
 }  // namespace yas::db
 
-#pragma mark - db::database
+#pragma mark - database
 
-std::string db::database::sqlite_lib_version() {
+std::string database::sqlite_lib_version() {
     return sqlite3_libversion();
 }
 
-bool db::database::sqlite_thread_safe() {
+bool database::sqlite_thread_safe() {
     return sqlite3_threadsafe() != 0;
 }
 
-db::database::database(std::string const &path) : _database_path(path) {
+database::database(std::string const &path) : _database_path(path) {
 }
 
-db::database::~database() {
+database::~database() {
     this->close();
 
     db::_databases.erase(this->_db_key);
 }
 
-std::string const &db::database::database_path() const {
+std::string const &database::database_path() const {
     return this->_database_path;
 }
 
-sqlite3 *db::database::sqlite_handle() const {
+sqlite3 *database::sqlite_handle() const {
     return this->_sqlite_handle;
 }
 
-bool db::database::open() {
+bool database::open() {
     if (this->_sqlite_handle) {
         return true;
     }
@@ -89,7 +90,7 @@ bool db::database::open() {
 }
 
 #if SQLITE_VERSION_NUMBER >= 3005000
-bool db::database::open(int flags) {
+bool database::open(int flags) {
     if (this->_sqlite_handle) {
         return true;
     }
@@ -107,7 +108,7 @@ bool db::database::open(int flags) {
 }
 #endif
 
-void db::database::close() {
+void database::close() {
     this->clear_cached_statements();
     this->close_opened_row_sets();
 
@@ -140,7 +141,7 @@ void db::database::close() {
     return;
 }
 
-bool db::database::good_connection() const {
+bool database::good_connection() const {
     if (!this->_sqlite_handle) {
         return false;
     }
@@ -156,7 +157,7 @@ bool db::database::good_connection() const {
     return false;
 }
 
-db::integrity_result_t db::database::integrity_check() const {
+db::integrity_result_t database::integrity_check() const {
     auto query_result = this->execute_query("pragma integrity_check;");
     if (query_result) {
         auto const &row_set = query_result.value();
@@ -174,44 +175,44 @@ db::integrity_result_t db::database::integrity_check() const {
     }
 }
 
-db::update_result_t db::database::execute_update(std::string const &sql) {
+db::update_result_t database::execute_update(std::string const &sql) {
     return this->_execute_update(sql, {}, {});
 }
 
-db::update_result_t db::database::execute_update(std::string const &sql, std::vector<db::value> const &arguments) {
+db::update_result_t database::execute_update(std::string const &sql, std::vector<db::value> const &arguments) {
     return this->_execute_update(sql, arguments, {});
 }
 
-db::update_result_t db::database::execute_update(std::string const &sql,
-                                                 std::unordered_map<std::string, db::value> const &arguments) {
+db::update_result_t database::execute_update(std::string const &sql,
+                                             std::unordered_map<std::string, db::value> const &arguments) {
     return this->_execute_update(sql, {}, arguments);
 }
 
-db::update_result_t db::database::execute_statements(std::string const &sql) {
+db::update_result_t database::execute_statements(std::string const &sql) {
     return this->_execute_statements(sql, nullptr);
 }
 
-db::update_result_t db::database::execute_statements(std::string const &sql, callback_f const &callback) {
+db::update_result_t database::execute_statements(std::string const &sql, callback_f const &callback) {
     return this->_execute_statements(sql, callback);
 }
 
-db::database::callback_f const &db::database::callback_for_execute_statements() const {
+database::callback_f const &database::callback_for_execute_statements() const {
     return this->_callback_for_execute_statements;
 }
 
-db::query_result_t db::database::execute_query(std::string const &sql) const {
+db::query_result_t database::execute_query(std::string const &sql) const {
     return this->_execute_query(sql, {}, {});
 }
 
-db::query_result_t db::database::execute_query(std::string const &sql, value_vector_t const &arguments) const {
+db::query_result_t database::execute_query(std::string const &sql, value_vector_t const &arguments) const {
     return this->_execute_query(sql, arguments, {});
 }
 
-db::query_result_t db::database::execute_query(std::string const &sql, value_map_t const &arguments) const {
+db::query_result_t database::execute_query(std::string const &sql, value_map_t const &arguments) const {
     return this->_execute_query(sql, {}, arguments);
 }
 
-db::row_result_t db::database::last_insert_rowid() const {
+db::row_result_t database::last_insert_rowid() const {
     if (this->_is_executing_statement) {
         return db::row_result_t{db::error{db::error_type::in_use}};
     }
@@ -225,7 +226,7 @@ db::row_result_t db::database::last_insert_rowid() const {
     return db::row_result_t{rowid};
 }
 
-db::count_result_t db::database::changes() const {
+db::count_result_t database::changes() const {
     if (this->_is_executing_statement) {
         return db::count_result_t{db::error{db::error_type::in_use}};
     }
@@ -239,7 +240,7 @@ db::count_result_t db::database::changes() const {
     return db::count_result_t{changes};
 }
 
-void db::database::clear_cached_statements() {
+void database::clear_cached_statements() {
     for (auto &pair : this->_cached_statements) {
         for (auto &statement_pair : pair.second) {
             if (db::closable_ptr const statement = closable::cast(statement_pair.second)) {
@@ -250,7 +251,7 @@ void db::database::clear_cached_statements() {
     this->_cached_statements.clear();
 }
 
-void db::database::close_opened_row_sets() {
+void database::close_opened_row_sets() {
     for (auto &pair : this->_opened_row_sets) {
         if (db::row_set_ptr const row_set = pair.second.lock()) {
             db_settable::cast(row_set)->set_database(nullptr);
@@ -260,15 +261,15 @@ void db::database::close_opened_row_sets() {
     this->_opened_row_sets.clear();
 }
 
-bool db::database::has_opened_row_sets() const {
+bool database::has_opened_row_sets() const {
     return this->_opened_row_sets.size() > 0;
 }
 
-bool db::database::should_cache_statements() const {
+bool database::should_cache_statements() const {
     return this->_should_cache_statements;
 }
 
-void db::database::set_should_cache_statements(bool flag) {
+void database::set_should_cache_statements(bool flag) {
     this->_should_cache_statements = flag;
 
     if (!flag) {
@@ -276,20 +277,20 @@ void db::database::set_should_cache_statements(bool flag) {
     }
 }
 
-std::string db::database::last_error_message() const {
+std::string database::last_error_message() const {
     return sqlite3_errmsg(this->_sqlite_handle);
 }
 
-int db::database::last_error_code() const {
+int database::last_error_code() const {
     return sqlite3_errcode(this->_sqlite_handle);
 }
 
-bool db::database::had_error() const {
+bool database::had_error() const {
     int code = this->last_error_code();
     return (code > SQLITE_OK && code < SQLITE_ROW);
 }
 
-void db::database::set_max_busy_retry_time_interval(double const timeout) {
+void database::set_max_busy_retry_time_interval(double const timeout) {
     this->_max_busy_retry_time_interval = timeout;
 
     if (!this->_sqlite_handle) {
@@ -325,19 +326,19 @@ void db::database::set_max_busy_retry_time_interval(double const timeout) {
     }
 }
 
-double db::database::max_busy_retry_time_interval() const {
+double database::max_busy_retry_time_interval() const {
     return this->_max_busy_retry_time_interval;
 }
 
-void db::database::set_start_busy_retry_time(std::chrono::time_point<std::chrono::system_clock> const &time) {
+void database::set_start_busy_retry_time(std::chrono::time_point<std::chrono::system_clock> const &time) {
     this->_start_busy_retry_time = time;
 }
 
-std::chrono::time_point<std::chrono::system_clock> db::database::start_busy_retry_time() const {
+std::chrono::time_point<std::chrono::system_clock> database::start_busy_retry_time() const {
     return this->_start_busy_retry_time;
 }
 
-void db::database::_prepare(database_ptr const &shared) {
+void database::_prepare(database_ptr const &shared) {
     this->_weak_database = shared;
 
     if (auto key = min_empty_key(db::_databases)) {
@@ -346,8 +347,8 @@ void db::database::_prepare(database_ptr const &shared) {
     }
 }
 
-db::update_result_t db::database::_execute_update(std::string const &sql, std::vector<db::value> const &vec,
-                                                  std::unordered_map<std::string, db::value> const &map) {
+db::update_result_t database::_execute_update(std::string const &sql, std::vector<db::value> const &vec,
+                                              std::unordered_map<std::string, db::value> const &map) {
     if (!this->_database_exists()) {
         return db::update_result_t{db::error{db::error_type::closed}};
     }
@@ -451,14 +452,14 @@ db::update_result_t db::database::_execute_update(std::string const &sql, std::v
     }
 }
 
-db::update_result_t db::database::_execute_statements(std::string const &sql, callback_f const &function) {
+db::update_result_t database::_execute_statements(std::string const &sql, callback_f const &function) {
     db::callback_id callback_id{.database = this->_db_key};
     this->_callback_for_execute_statements = function;
 
     static auto execute_bulk_sql_callback = [](void *id, int columns, char **values, char **names) {
         auto database_id = (db::callback_id){id}.database;
         if (db::_databases.count(database_id) > 0) {
-            if (db::database_ptr database = db::_databases.at(database_id).lock()) {
+            if (database_ptr database = db::_databases.at(database_id).lock()) {
                 std::unordered_map<std::string, db::value> map;
                 auto each = make_fast_each(columns);
                 while (yas_each_next(each)) {
@@ -503,8 +504,8 @@ db::update_result_t db::database::_execute_statements(std::string const &sql, ca
     }
 }
 
-db::query_result_t db::database::_execute_query(std::string const &sql, value_vector_t const &vec,
-                                                value_map_t const &map) const {
+db::query_result_t database::_execute_query(std::string const &sql, value_vector_t const &vec,
+                                            value_map_t const &map) const {
     if (!this->_database_exists()) {
         return db::query_result_t{db::error{db::error_type::closed}};
     }
@@ -591,11 +592,11 @@ db::query_result_t db::database::_execute_query(std::string const &sql, value_ve
     return db::query_result_t{std::move(row_set)};
 }
 
-bool db::database::_database_exists() const {
+bool database::_database_exists() const {
     return this->_sqlite_handle;
 }
 
-db::statement_ptr db::database::_cached_statement(std::string const &query) const {
+db::statement_ptr database::_cached_statement(std::string const &query) const {
     if (this->_cached_statements.count(query) > 0) {
         auto &statements = this->_cached_statements.at(query);
         for (auto &pair : statements) {
@@ -607,7 +608,7 @@ db::statement_ptr db::database::_cached_statement(std::string const &query) cons
     return nullptr;
 }
 
-void db::database::_set_cached_statement(db::statement_ptr const &statement, std::string const &query) const {
+void database::_set_cached_statement(db::statement_ptr const &statement, std::string const &query) const {
     statement->set_query(query);
 
     if (this->_cached_statements.count(query) == 0) {
@@ -617,11 +618,11 @@ void db::database::_set_cached_statement(db::statement_ptr const &statement, std
     this->_cached_statements.at(query).insert(std::make_pair(statement->identifier(), statement));
 }
 
-void db::database::row_set_did_close(uintptr_t const id) {
+void database::row_set_did_close(uintptr_t const id) {
     this->_opened_row_sets.erase(id);
 }
 
-db::database_ptr db::database::make_shared(std::string const &path) {
+database_ptr database::make_shared(std::string const &path) {
     auto shared = std::shared_ptr<database>(new database{path});
     shared->_prepare(shared);
     return shared;

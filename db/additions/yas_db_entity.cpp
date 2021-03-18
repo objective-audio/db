@@ -12,6 +12,7 @@
 #include "yas_db_sql_utils.h"
 
 using namespace yas;
+using namespace yas::db;
 
 namespace yas {
 static db::attribute_map_t make_attributes(std::vector<db::attribute_args> const &args_vec) {
@@ -57,7 +58,7 @@ static db::relation_map_t make_relations(std::vector<db::relation_args> &&args_v
 }
 }  // namespace yas
 
-db::entity::entity(entity_args args, db::string_set_map_t inv_rel_names)
+entity::entity(entity_args args, db::string_set_map_t inv_rel_names)
     : name(std::move(args.name)),
       all_attributes(make_all_attributes(args.attributes)),
       custom_attributes(make_attributes(args.attributes)),
@@ -65,18 +66,18 @@ db::entity::entity(entity_args args, db::string_set_map_t inv_rel_names)
       inverse_relation_names(std::move(inv_rel_names)) {
 }
 
-std::string db::entity::sql_for_create() const {
+std::string entity::sql_for_create() const {
     auto mapped_attrs =
         to_vector<std::string>(this->all_attributes, [](auto const &pair) { return pair.second.sql(); });
     return db::create_table_sql(this->name, mapped_attrs);
 }
 
-std::string db::entity::sql_for_update() const {
+std::string entity::sql_for_update() const {
     auto mapped_fields = to_vector<std::string>(this->all_attributes, [](auto const &pair) { return pair.first; });
     return db::update_sql(this->name, mapped_fields, db::equal_field_expr(db::pk_id_field));
 }
 
-std::string db::entity::sql_for_insert() const {
+std::string entity::sql_for_insert() const {
     std::vector<std::string> mapped_fields;
     for (auto const &pair : this->all_attributes) {
         std::string const &field_name = pair.first;

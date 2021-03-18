@@ -58,7 +58,7 @@ class db_controller : public std::enable_shared_from_this<db_controller> {
     db::integer::type const &current_save_id() const;
     db::integer::type const &last_save_id() const;
 
-    chaining::chain_unsync_t<chain_pair_t> chain();
+    observing::canceller_ptr observe(std::function<void(chain_pair_t const &)> &&);
 
     bool is_processing() const;
 
@@ -67,8 +67,8 @@ class db_controller : public std::enable_shared_from_this<db_controller> {
    private:
     db::manager_ptr _manager;
     db::object_vector_map_t _objects;
-    chaining::notifier_ptr<chain_pair_t> _notifier;
-    chaining::observer_pool _pool;
+    observing::notifier_ptr<chain_pair_t> _notifier;
+    observing::canceller_pool _pool;
     bool _processing;
 
     db::object_vector_t &_objects_at(entity const &);
