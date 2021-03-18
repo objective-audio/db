@@ -15,8 +15,9 @@
 #include "yas_db_value.h"
 
 using namespace yas;
+using namespace yas::db;
 
-#pragma mark - db::object_event
+#pragma mark - object_event
 
 namespace yas::db {
 object_event make_object_fetched_event(db::object_ptr const &object) {
@@ -55,14 +56,14 @@ object_event make_object_erased_event(std::string const &entity_name, db::object
 }
 }  // namespace yas::db
 
-struct db::object_event::impl_base {
+struct object_event::impl_base {
     virtual object_event_type type() {
         throw std::runtime_error("type() must be overridden");
     }
 };
 
 template <typename Event>
-struct db::object_event::impl : db::object_event::impl_base {
+struct object_event::impl : object_event::impl_base {
     Event const event;
 
     impl(Event &&event) : event(std::move(event)) {
@@ -73,47 +74,47 @@ struct db::object_event::impl : db::object_event::impl_base {
     }
 };
 
-db::object_event::object_event(object_fetched_event &&event)
+object_event::object_event(object_fetched_event &&event)
     : _impl(std::make_shared<impl<object_fetched_event>>(std::move(event))) {
 }
 
-db::object_event::object_event(object_loaded_event &&event)
+object_event::object_event(object_loaded_event &&event)
     : _impl(std::make_shared<impl<object_loaded_event>>(std::move(event))) {
 }
 
-db::object_event::object_event(object_cleared_event &&event)
+object_event::object_event(object_cleared_event &&event)
     : _impl(std::make_shared<impl<object_cleared_event>>(std::move(event))) {
 }
 
-db::object_event::object_event(object_attribute_updated_event &&event)
+object_event::object_event(object_attribute_updated_event &&event)
     : _impl(std::make_shared<impl<object_attribute_updated_event>>(std::move(event))) {
 }
 
-db::object_event::object_event(object_relation_inserted_event &&event)
+object_event::object_event(object_relation_inserted_event &&event)
     : _impl(std::make_shared<impl<object_relation_inserted_event>>(std::move(event))) {
 }
 
-db::object_event::object_event(object_relation_removed_event &&event)
+object_event::object_event(object_relation_removed_event &&event)
     : _impl(std::make_shared<impl<object_relation_removed_event>>(std::move(event))) {
 }
 
-db::object_event::object_event(object_relation_replaced_event &&event)
+object_event::object_event(object_relation_replaced_event &&event)
     : _impl(std::make_shared<impl<object_relation_replaced_event>>(std::move(event))) {
 }
 
-db::object_event::object_event(object_erased_event &&event)
+object_event::object_event(object_erased_event &&event)
     : _impl(std::make_shared<impl<object_erased_event>>(std::move(event))) {
 }
 
-db::object_event::object_event(std::nullptr_t) : _impl(nullptr) {
+object_event::object_event(std::nullptr_t) : _impl(nullptr) {
 }
 
-db::object_event_type db::object_event::type() const {
+object_event_type object_event::type() const {
     return this->_impl->type();
 }
 
 template <typename Event>
-Event const &db::object_event::get() const {
+Event const &object_event::get() const {
     if (auto ip = std::dynamic_pointer_cast<impl<Event>>(this->_impl)) {
         return ip->event;
     }
@@ -121,72 +122,72 @@ Event const &db::object_event::get() const {
     throw std::runtime_error("get event failed.");
 }
 
-bool db::object_event::is_changed() const {
+bool object_event::is_changed() const {
     switch (this->type()) {
-        case db::object_event_type::attribute_updated:
-        case db::object_event_type::relation_inserted:
-        case db::object_event_type::relation_removed:
-        case db::object_event_type::relation_replaced:
+        case object_event_type::attribute_updated:
+        case object_event_type::relation_inserted:
+        case object_event_type::relation_removed:
+        case object_event_type::relation_replaced:
             return true;
         default:
             return false;
     }
 }
 
-bool db::object_event::is_erased() const {
-    return this->type() == db::object_event_type::erased;
+bool object_event::is_erased() const {
+    return this->type() == object_event_type::erased;
 }
 
-db::object_ptr const &db::object_event::object() const {
+db::object_ptr const &object_event::object() const {
     switch (this->type()) {
-        case db::object_event_type::fetched:
+        case object_event_type::fetched:
             return this->get<db::object_fetched_event>().object;
-        case db::object_event_type::loaded:
+        case object_event_type::loaded:
             return this->get<db::object_loaded_event>().object;
-        case db::object_event_type::cleared:
+        case object_event_type::cleared:
             return this->get<db::object_cleared_event>().object;
-        case db::object_event_type::attribute_updated:
+        case object_event_type::attribute_updated:
             return this->get<db::object_attribute_updated_event>().object;
-        case db::object_event_type::relation_inserted:
+        case object_event_type::relation_inserted:
             return this->get<db::object_relation_inserted_event>().object;
-        case db::object_event_type::relation_removed:
+        case object_event_type::relation_removed:
             return this->get<db::object_relation_removed_event>().object;
-        case db::object_event_type::relation_replaced:
+        case object_event_type::relation_replaced:
             return this->get<db::object_relation_replaced_event>().object;
         default:
             throw std::runtime_error("object not found.");
     }
 }
 
-template db::object_fetched_event const &db::object_event::get<db::object_fetched_event>() const;
-template db::object_loaded_event const &db::object_event::get<db::object_loaded_event>() const;
-template db::object_cleared_event const &db::object_event::get<db::object_cleared_event>() const;
-template db::object_attribute_updated_event const &db::object_event::get<db::object_attribute_updated_event>() const;
-template db::object_relation_inserted_event const &db::object_event::get<db::object_relation_inserted_event>() const;
-template db::object_relation_removed_event const &db::object_event::get<db::object_relation_removed_event>() const;
-template db::object_relation_replaced_event const &db::object_event::get<db::object_relation_replaced_event>() const;
-template db::object_erased_event const &db::object_event::get<db::object_erased_event>() const;
+template db::object_fetched_event const &object_event::get<db::object_fetched_event>() const;
+template db::object_loaded_event const &object_event::get<db::object_loaded_event>() const;
+template db::object_cleared_event const &object_event::get<db::object_cleared_event>() const;
+template db::object_attribute_updated_event const &object_event::get<db::object_attribute_updated_event>() const;
+template db::object_relation_inserted_event const &object_event::get<db::object_relation_inserted_event>() const;
+template db::object_relation_removed_event const &object_event::get<db::object_relation_removed_event>() const;
+template db::object_relation_replaced_event const &object_event::get<db::object_relation_replaced_event>() const;
+template db::object_erased_event const &object_event::get<db::object_erased_event>() const;
 
-#pragma mark - db::const_object
+#pragma mark - const_object
 
-db::const_object::const_object(db::entity const &entity, db::object_data const &obj_data)
+const_object::const_object(db::entity const &entity, db::object_data const &obj_data)
     : _entity(entity), _identifier(nullptr) {
     this->_load_data(obj_data);
 }
 
-db::const_object::const_object(db::entity const &entity, db::object_id &&identifier)
+const_object::const_object(db::entity const &entity, db::object_id &&identifier)
     : _entity(entity), _identifier(std::move(identifier)) {
 }
 
-db::entity const &db::const_object::entity() const {
+db::entity const &const_object::entity() const {
     return this->_entity;
 }
 
-std::string const &db::const_object::entity_name() const {
+std::string const &const_object::entity_name() const {
     return this->_entity.name;
 }
 
-db::value const &db::const_object::attribute_value(std::string const &attr_name) const {
+db::value const &const_object::attribute_value(std::string const &attr_name) const {
     this->_validate_attribute_name(attr_name);
 
     if (attr_name == db::object_id_field) {
@@ -200,11 +201,11 @@ db::value const &db::const_object::attribute_value(std::string const &attr_name)
     return db::null_value();
 }
 
-db::id_vector_map_t const &db::const_object::all_relation_ids() const {
+db::id_vector_map_t const &const_object::all_relation_ids() const {
     return this->_relations;
 }
 
-db::id_vector_t db::const_object::relation_ids(std::string const &rel_name) const {
+db::id_vector_t const_object::relation_ids(std::string const &rel_name) const {
     this->_validate_relation_name(rel_name);
 
     if (this->_relations.count(rel_name) > 0) {
@@ -213,7 +214,7 @@ db::id_vector_t db::const_object::relation_ids(std::string const &rel_name) cons
     return {};
 }
 
-db::object_id const &db::const_object::relation_id(std::string const &rel_name, std::size_t const idx) const {
+db::object_id const &const_object::relation_id(std::string const &rel_name, std::size_t const idx) const {
     this->_validate_relation_name(rel_name);
 
     if (this->_relations.count(rel_name) > 0) {
@@ -225,7 +226,7 @@ db::object_id const &db::const_object::relation_id(std::string const &rel_name, 
     return db::null_id();
 }
 
-std::size_t db::const_object::relation_size(std::string const &rel_name) const {
+std::size_t const_object::relation_size(std::string const &rel_name) const {
     this->_validate_relation_name(rel_name);
 
     if (this->_relations.count(rel_name) > 0) {
@@ -234,31 +235,31 @@ std::size_t db::const_object::relation_size(std::string const &rel_name) const {
     return 0;
 }
 
-db::object_id const &db::const_object::object_id() const {
+db::object_id const &const_object::object_id() const {
     return this->_identifier;
 }
 
-db::value const &db::const_object::save_id() const {
+db::value const &const_object::save_id() const {
     return this->attribute_value(save_id_field);
 }
 
-db::value const &db::const_object::action() const {
+db::value const &const_object::action() const {
     return this->attribute_value(action_field);
 }
 
-bool db::const_object::is_inserted() const {
+bool const_object::is_inserted() const {
     return this->_is_equal_to_action(db::insert_action);
 }
 
-bool db::const_object::is_updated() const {
+bool const_object::is_updated() const {
     return this->_is_equal_to_action(db::update_action);
 }
 
-bool db::const_object::is_removed() const {
+bool const_object::is_removed() const {
     return this->_is_equal_to_action(db::remove_action);
 }
 
-void db::const_object::_load_data(db::object_data const &obj_data) {
+void const_object::_load_data(db::object_data const &obj_data) {
     this->_clear();
 
     this->_update_identifier(obj_data);
@@ -282,12 +283,12 @@ void db::const_object::_load_data(db::object_data const &obj_data) {
     }
 }
 
-void db::const_object::_clear() {
+void const_object::_clear() {
     this->_attributes.clear();
     this->_relations.clear();
 }
 
-bool db::const_object::_is_equal_to_action(std::string const &action) const {
+bool const_object::_is_equal_to_action(std::string const &action) const {
     if (this->_attributes.count(action_field) > 0) {
         return this->_attributes.at(action_field).get<db::text>() == action;
     }
@@ -295,7 +296,7 @@ bool db::const_object::_is_equal_to_action(std::string const &action) const {
     return false;
 }
 
-void db::const_object::_update_identifier(db::value stable) {
+void const_object::_update_identifier(db::value stable) {
     if (this->_identifier) {
         this->_identifier.set_stable(std::move(stable));
     } else {
@@ -303,7 +304,7 @@ void db::const_object::_update_identifier(db::value stable) {
     }
 }
 
-void db::const_object::_update_identifier(db::object_data const &obj_data) {
+void const_object::_update_identifier(db::object_data const &obj_data) {
     if (obj_data.object_id) {
         this->_validate_temporary_id(obj_data.object_id);
         this->_update_identifier(obj_data.object_id.stable_value());
@@ -312,19 +313,19 @@ void db::const_object::_update_identifier(db::object_data const &obj_data) {
     }
 }
 
-void db::const_object::_validate_attribute_name(std::string const &attr_name) const {
+void const_object::_validate_attribute_name(std::string const &attr_name) const {
     if (!this->_entity.all_attributes.count(attr_name)) {
         throw std::runtime_error("attribute name (" + attr_name + ") not found in " + this->_entity.name + ".");
     }
 }
 
-void db::const_object::_validate_relation_name(std::string const &rel_name) const {
+void const_object::_validate_relation_name(std::string const &rel_name) const {
     if (!this->_entity.relations.count(rel_name)) {
         throw std::runtime_error("relation name (" + rel_name + ") not found in " + this->_entity.name + ".");
     }
 }
 
-void db::const_object::_validate_relation_id(db::object_id const &rel_id) const {
+void const_object::_validate_relation_id(db::object_id const &rel_id) const {
     if (!rel_id) {
         throw std::runtime_error("object_id not found for relation.");
     }
@@ -334,13 +335,13 @@ void db::const_object::_validate_relation_id(db::object_id const &rel_id) const 
     }
 }
 
-void db::const_object::_validate_relation_ids(db::id_vector_t const &rel_ids) const {
+void const_object::_validate_relation_ids(db::id_vector_t const &rel_ids) const {
     for (db::object_id const &rel_id : rel_ids) {
         this->_validate_relation_id(rel_id);
     }
 }
 
-void db::const_object::_validate_temporary_id(db::object_id const &other_object_id) const {
+void const_object::_validate_temporary_id(db::object_id const &other_object_id) const {
     if (!other_object_id) {
         return;
     }
@@ -358,32 +359,32 @@ void db::const_object::_validate_temporary_id(db::object_id const &other_object_
     }
 }
 
-db::const_object_ptr db::const_object::make_shared(db::entity const &entity, db::object_data const &obj_data) {
+const_object_ptr const_object::make_shared(db::entity const &entity, db::object_data const &obj_data) {
     return const_object_ptr(new const_object{entity, obj_data});
 }
 
 #pragma mark - db::object
 
-db::object::object(db::entity const &entity) : const_object(entity, db::make_temporary_id()) {
+object::object(db::entity const &entity) : const_object(entity, db::make_temporary_id()) {
 }
 
-db::object::~object() {
+object::~object() {
     this->_fetcher->push(make_object_erased_event(this->_entity.name, this->_identifier));
 }
 
-observing::canceller_ptr db::object::observe(observing_handler_f &&handler, bool const sync) {
+observing::canceller_ptr object::observe(observing_handler_f &&handler, bool const sync) {
     return this->_fetcher->observe(std::move(handler), sync);
 }
 
-void db::object::set_attribute_value(std::string const &attr_name, db::value const &value) {
+void object::set_attribute_value(std::string const &attr_name, db::value const &value) {
     this->_set_attribute_value(attr_name, value, false);
 }
 
-void db::object::set_relation_ids(std::string const &rel_name, db::id_vector_t const &relation_ids) {
+void object::set_relation_ids(std::string const &rel_name, db::id_vector_t const &relation_ids) {
     this->_set_relation_ids(rel_name, relation_ids);
 }
 
-void db::object::add_relation_id(std::string const &rel_name, db::object_id const &rel_id) {
+void object::add_relation_id(std::string const &rel_name, db::object_id const &rel_id) {
     if (this->_relations.count(rel_name) > 0) {
         this->insert_relation_id(rel_name, rel_id, this->_relations.at(rel_name).size());
     } else {
@@ -391,8 +392,7 @@ void db::object::add_relation_id(std::string const &rel_name, db::object_id cons
     }
 }
 
-void db::object::insert_relation_id(std::string const &rel_name, db::object_id const &relation_id,
-                                    std::size_t const idx) {
+void object::insert_relation_id(std::string const &rel_name, db::object_id const &relation_id, std::size_t const idx) {
     this->_validate_relation_name(rel_name);
     this->_validate_relation_id(relation_id);
 
@@ -412,7 +412,7 @@ void db::object::insert_relation_id(std::string const &rel_name, db::object_id c
     this->_fetcher->push(make_object_relation_inserted_event(this->_weak_object.lock(), rel_name, {idx}));
 }
 
-void db::object::remove_relation_id(std::string const &rel_name, db::object_id const &relation_id) {
+void object::remove_relation_id(std::string const &rel_name, db::object_id const &relation_id) {
     this->_validate_relation_name(rel_name);
     this->_validate_relation_id(relation_id);
 
@@ -440,27 +440,27 @@ void db::object::remove_relation_id(std::string const &rel_name, db::object_id c
     }
 }
 
-void db::object::set_relation_objects(std::string const &rel_name, db::object_vector_t const &rel_objects) {
+void object::set_relation_objects(std::string const &rel_name, db::object_vector_t const &rel_objects) {
     this->set_relation_ids(
         rel_name, to_vector<db::object_id>(rel_objects, [entity_name = entity_name()](db::object_ptr const &obj) {
             return obj->object_id();
         }));
 }
 
-void db::object::add_relation_object(std::string const &rel_name, db::object_ptr const &rel_object) {
+void object::add_relation_object(std::string const &rel_name, db::object_ptr const &rel_object) {
     this->add_relation_id(rel_name, rel_object->object_id());
 }
 
-void db::object::insert_relation_object(std::string const &rel_name, db::object_ptr const &rel_object,
-                                        std::size_t const idx) {
+void object::insert_relation_object(std::string const &rel_name, db::object_ptr const &rel_object,
+                                    std::size_t const idx) {
     this->insert_relation_id(rel_name, rel_object->object_id(), idx);
 }
 
-void db::object::remove_relation_object(std::string const &rel_name, db::object_ptr const &rel_object) {
+void object::remove_relation_object(std::string const &rel_name, db::object_ptr const &rel_object) {
     this->remove_relation_id(rel_name, rel_object->object_id());
 }
 
-void db::object::remove_relation_at(std::string const &rel_name, std::size_t const idx) {
+void object::remove_relation_at(std::string const &rel_name, std::size_t const idx) {
     this->_validate_relation_name(rel_name);
 
     if (this->_relations.count(rel_name) > 0) {
@@ -479,7 +479,7 @@ void db::object::remove_relation_at(std::string const &rel_name, std::size_t con
     }
 }
 
-void db::object::remove_all_relations(std::string const &rel_name) {
+void object::remove_all_relations(std::string const &rel_name) {
     this->_validate_relation_name(rel_name);
 
     if (this->_entity.relations.count(rel_name) == 0) {
@@ -509,11 +509,11 @@ void db::object::remove_all_relations(std::string const &rel_name) {
     }
 }
 
-enum db::object_status db::object::status() const {
+enum db::object_status object::status() const {
     return this->_status;
 }
 
-void db::object::remove() {
+void object::remove() {
     if (this->_is_equal_to_action(db::remove_action)) {
         return;
     }
@@ -531,11 +531,11 @@ void db::object::remove() {
     this->_set_attribute_value(db::action_field, db::remove_action_value(), false);
 }
 
-bool db::object::is_temporary() const {
+bool object::is_temporary() const {
     return this->save_id().get<db::integer>() <= 0;
 }
 
-db::object_data db::object::save_data(db::object_id_pool &pool) const {
+db::object_data object::save_data(db::object_id_pool &pool) const {
     db::value_map_t attributes;
     db::id_vector_map_t relations;
 
@@ -582,7 +582,7 @@ db::object_data db::object::save_data(db::object_id_pool &pool) const {
         .object_id = std::move(object_id), .attributes = std::move(attributes), .relations = std::move(relations)};
 }
 
-void db::object::_prepare(object_ptr const &shared) {
+void object::_prepare(object_ptr const &shared) {
     this->_weak_object = shared;
 
     this->_fetcher = observing::fetcher<object_event>::make_shared([weak_object = this->_weak_object]() {
@@ -594,11 +594,11 @@ void db::object::_prepare(object_ptr const &shared) {
     });
 }
 
-void db::object::set_status(db::object_status const &status) {
+void object::set_status(db::object_status const &status) {
     this->_status = status;
 }
 
-void db::object::load_insertion_data() {
+void object::load_insertion_data() {
     this->_status = db::object_status::created;
     this->_set_attribute_value(db::action_field, db::insert_action_value(), true);
 
@@ -613,7 +613,7 @@ void db::object::load_insertion_data() {
 // object_dataのデータを読み込んで上書きする
 // force == falseなら、データベースへの保存処理を始めた後でもオブジェクトに変更があったら上書きしない
 // force == trueなら、必ず上書きする
-void db::object::load_data(db::object_data const &obj_data, bool const force) {
+void object::load_data(db::object_data const &obj_data, bool const force) {
     if (this->_status != db::object_status::changed || force) {
         this->_clear();
 
@@ -641,22 +641,22 @@ void db::object::load_data(db::object_data const &obj_data, bool const force) {
     }
 }
 
-void db::object::load_save_id(db::value const &save_id) {
+void object::load_save_id(db::value const &save_id) {
     this->_set_attribute_value(db::save_id_field, save_id, true);
 }
 
-void db::object::clear_data() {
+void object::clear_data() {
     this->_clear();
 
     this->_fetcher->push(make_object_cleared_event(this->_weak_object.lock()));
 }
 
-void db::object::_clear() {
+void object::_clear() {
     this->const_object::_clear();
     this->_status = db::object_status::invalid;
 }
 
-void db::object::_set_attribute_value(std::string const &attr_name, db::value const &value, bool const loading) {
+void object::_set_attribute_value(std::string const &attr_name, db::value const &value, bool const loading) {
     if (attr_name == db::object_id_field) {
         return;
     }
@@ -682,8 +682,7 @@ void db::object::_set_attribute_value(std::string const &attr_name, db::value co
     }
 }
 
-void db::object::_set_relation_ids(std::string const &rel_name, db::id_vector_t const &relation_ids,
-                                   bool const loading) {
+void object::_set_relation_ids(std::string const &rel_name, db::id_vector_t const &relation_ids, bool const loading) {
     if (this->_relations.count(rel_name) && this->_relations.at(rel_name) == relation_ids) {
         return;
     }
@@ -704,14 +703,14 @@ void db::object::_set_relation_ids(std::string const &rel_name, db::id_vector_t 
     }
 }
 
-void db::object::_set_update_action() {
+void object::_set_update_action() {
     if (this->_status != db::object_status::created && !this->_is_equal_to_action(db::remove_action) &&
         !this->_is_equal_to_action(db::update_action)) {
         this->_set_attribute_value(db::action_field, db::update_action_value(), true);
     }
 }
 
-db::object_ptr db::object::make_shared(db::entity const &entity) {
+db::object_ptr object::make_shared(db::entity const &entity) {
     auto shared = object_ptr(new object{entity});
     shared->_prepare(shared);
     return shared;

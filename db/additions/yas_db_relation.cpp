@@ -8,8 +8,9 @@
 #include "yas_db_sql_utils.h"
 
 using namespace yas;
+using namespace yas::db;
 
-db::relation::relation(relation_args args, std::string source)
+relation::relation(relation_args args, std::string source)
     : name(std::move(args.name)),
       source(std::move(source)),
       target(std::move(args.target)),
@@ -20,7 +21,7 @@ db::relation::relation(relation_args args, std::string source)
     }
 }
 
-std::string db::relation::sql_for_create() const {
+std::string relation::sql_for_create() const {
     std::string id_sql = db::attribute::id_attribute().sql();
     std::string src_pk_id_sql = db::attribute{{db::src_pk_id_field, db::attribute_type::integer}}.sql();
     std::string src_obj_id_sql = db::attribute{{db::src_obj_id_field, db::attribute_type::integer}}.sql();
@@ -31,7 +32,7 @@ std::string db::relation::sql_for_create() const {
                                               std::move(tgt_obj_id_sql), std::move(save_id_sql)});
 }
 
-std::string db::relation::sql_for_insert() const {
+std::string relation::sql_for_insert() const {
     return db::insert_sql(this->table,
                           {db::src_pk_id_field, db::src_obj_id_field, db::tgt_obj_id_field, db::save_id_field});
 }

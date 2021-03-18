@@ -7,6 +7,7 @@
 #include <cpp_utils/yas_stl_utils.h>
 
 using namespace yas;
+using namespace yas::db;
 
 namespace yas::db {
 static void validate_temporary(db::value const &value) {
@@ -22,7 +23,7 @@ static void validate_stable(db::value const &value) {
 }
 }  // namespace yas::db
 
-struct db::object_id::impl {
+struct object_id::impl {
     impl(db::value &&stable, db::value &&temporary) : _stable(std::move(stable)), _temporary(std::move(temporary)) {
     }
 
@@ -34,7 +35,7 @@ struct db::object_id::impl {
     db::value _temporary;
 };
 
-db::object_id::object_id(db::value stable, db::value temporary)
+object_id::object_id(db::value stable, db::value temporary)
     : _impl(std::make_shared<impl>(std::move(stable), std::move(temporary))) {
     if (!this->stable_value() && !this->temporary_value()) {
         this->_impl->_temporary = db::value{std::to_string(this->identifier())};
@@ -43,51 +44,51 @@ db::object_id::object_id(db::value stable, db::value temporary)
     db::validate_stable(this->stable_value());
 }
 
-db::object_id::object_id(std::nullptr_t) : _impl(nullptr) {
+object_id::object_id(std::nullptr_t) : _impl(nullptr) {
 }
 
-uintptr_t db::object_id::identifier() const {
+uintptr_t object_id::identifier() const {
     return this->_impl->identifier();
 }
 
-void db::object_id::set_stable(db::integer::type const value) {
+void object_id::set_stable(db::integer::type const value) {
     this->set_stable(db::value{value});
 }
 
-void db::object_id::set_stable(db::value value) {
+void object_id::set_stable(db::value value) {
     this->_impl->_stable = std::move(value);
     db::validate_stable(this->stable_value());
 }
 
-db::value const &db::object_id::stable_value() const {
+db::value const &object_id::stable_value() const {
     return this->_impl->_stable;
 }
 
-db::value const &db::object_id::temporary_value() const {
+db::value const &object_id::temporary_value() const {
     return this->_impl->_temporary;
 }
 
-db::integer::type const &db::object_id::stable() const {
+db::integer::type const &object_id::stable() const {
     return this->stable_value().get<db::integer>();
 }
 
-std::string const &db::object_id::temporary() const {
+std::string const &object_id::temporary() const {
     return this->temporary_value().get<db::text>();
 }
 
-bool db::object_id::is_stable() const {
+bool object_id::is_stable() const {
     return !!this->stable_value();
 }
 
-bool db::object_id::is_temporary() const {
+bool object_id::is_temporary() const {
     return !this->stable_value() && this->temporary_value();
 }
 
-db::object_id db::object_id::copy() const {
-    return db::object_id{this->stable_value(), this->temporary_value()};
+object_id object_id::copy() const {
+    return object_id{this->stable_value(), this->temporary_value()};
 }
 
-std::size_t db::object_id::hash() const {
+std::size_t object_id::hash() const {
     if (auto const &stable = this->stable_value()) {
         return std::hash<db::integer::type>()(stable.get<db::integer>());
     } else {
@@ -95,19 +96,19 @@ std::size_t db::object_id::hash() const {
     }
 }
 
-bool db::object_id::operator==(object_id const &rhs) const {
+bool object_id::operator==(object_id const &rhs) const {
     return this->_impl && rhs._impl && this->_is_equal(rhs);
 }
 
-bool db::object_id::operator!=(object_id const &rhs) const {
+bool object_id::operator!=(object_id const &rhs) const {
     return !(*this == rhs);
 }
 
-db::object_id::operator bool() const {
+object_id::operator bool() const {
     return this->_impl != nullptr;
 }
 
-bool db::object_id::_is_equal(object_id const &rhs) const {
+bool object_id::_is_equal(object_id const &rhs) const {
     auto const &lhs_temporary = this->temporary_value();
     auto const &rhs_temporary = rhs.temporary_value();
     if (lhs_temporary && rhs_temporary) {
@@ -123,19 +124,19 @@ bool db::object_id::_is_equal(object_id const &rhs) const {
     return false;
 }
 
-db::object_id db::make_stable_id(db::value stable) {
-    return db::object_id{std::move(stable), db::null_value()};
+object_id db::make_stable_id(db::value stable) {
+    return object_id{std::move(stable), db::null_value()};
 }
 
-db::object_id db::make_stable_id(db::integer::type const stable) {
-    return db::object_id{db::value{stable}, db::null_value()};
+object_id db::make_stable_id(db::integer::type const stable) {
+    return object_id{db::value{stable}, db::null_value()};
 }
 
-db::object_id db::make_temporary_id() {
-    return db::object_id{db::null_value(), db::null_value()};
+object_id db::make_temporary_id() {
+    return object_id{db::null_value(), db::null_value()};
 }
 
-std::string yas::to_string(db::object_id const &obj_id) {
+std::string yas::to_string(object_id const &obj_id) {
     if (!obj_id) {
         return "null";
     }
@@ -146,13 +147,13 @@ std::string yas::to_string(db::object_id const &obj_id) {
            "}";
 }
 
-db::object_id const &db::null_id() {
-    static db::object_id _null_id{nullptr};
+object_id const &db::null_id() {
+    static object_id _null_id{nullptr};
     return _null_id;
 }
 
-db::object_id db::object_id_pool::get_or_create(std::string const &entity_name, object_id const &key,
-                                                value_create_handler handler) {
+object_id object_id_pool::get_or_create(std::string const &entity_name, object_id const &key,
+                                        value_create_handler handler) {
     if (this->_all_values.count(entity_name) == 0) {
         this->_all_values.emplace(entity_name, value_map_t{});
     }

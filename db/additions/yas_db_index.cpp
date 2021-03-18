@@ -7,8 +7,9 @@
 #include "yas_db_sql_utils.h"
 
 using namespace yas;
+using namespace yas::db;
 
-db::index::index(index_args args)
+index::index(index_args args)
     : name(std::move(args.name)), entity(std::move(args.entity)), attributes(std::move(args.attributes)) {
     if (this->name.size() == 0) {
         throw std::invalid_argument("invalid name.");
@@ -29,6 +30,6 @@ db::index::index(index_args args)
     }
 }
 
-std::string db::index::sql_for_create() const {
+std::string index::sql_for_create() const {
     return create_index_sql(this->name, this->entity, this->attributes);
 }

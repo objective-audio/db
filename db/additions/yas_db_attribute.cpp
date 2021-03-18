@@ -10,23 +10,24 @@
 #include "yas_db_object.h"
 
 using namespace yas;
+using namespace yas::db;
 
 namespace yas {
-static std::string to_string(db::attribute_type const &type) {
+static std::string to_string(attribute_type const &type) {
     switch (type) {
-        case db::attribute_type::integer:
+        case attribute_type::integer:
             return db::integer::name;
-        case db::attribute_type::real:
+        case attribute_type::real:
             return db::real::name;
-        case db::attribute_type::text:
+        case attribute_type::text:
             return db::text::name;
-        case db::attribute_type::blob:
+        case attribute_type::blob:
             return db::blob::name;
     }
 }
 }  // namespace yas
 
-db::attribute::attribute(attribute_args args)
+attribute::attribute(attribute_args args)
     : name(std::move(args.name)),
       type(to_string(args.type)),
       default_value(std::move(args.default_value)),
@@ -53,7 +54,7 @@ db::attribute::attribute(attribute_args args)
     }
 }
 
-std::string db::attribute::sql() const {
+std::string attribute::sql() const {
     std::ostringstream stream;
     stream << this->name << " " << this->type;
     if (this->primary) {
@@ -71,24 +72,22 @@ std::string db::attribute::sql() const {
     return stream.str();
 }
 
-db::attribute const &db::attribute::id_attribute() {
-    static db::attribute const attr{{db::pk_id_field, db::attribute_type::integer, nullptr, false, true}};
+attribute const &attribute::id_attribute() {
+    static attribute const attr{{db::pk_id_field, attribute_type::integer, nullptr, false, true}};
     return attr;
 }
 
-db::attribute const &db::attribute::object_id_attribute() {
-    static db::attribute const attr{
-        {db::object_id_field, db::attribute_type::integer, db::value{db::integer::type{0}}, true}};
+attribute const &attribute::object_id_attribute() {
+    static attribute const attr{{db::object_id_field, attribute_type::integer, db::value{db::integer::type{0}}, true}};
     return attr;
 }
 
-db::attribute const &db::attribute::save_id_attribute() {
-    static db::attribute const attr{
-        {db::save_id_field, db::attribute_type::integer, db::value{db::integer::type{0}}, true}};
+attribute const &attribute::save_id_attribute() {
+    static attribute const attr{{db::save_id_field, attribute_type::integer, db::value{db::integer::type{0}}, true}};
     return attr;
 }
 
-db::attribute const &db::attribute::action_attribute() {
-    static db::attribute const attr{{db::action_field, db::attribute_type::text, db::insert_action_value(), true}};
+attribute const &attribute::action_attribute() {
+    static attribute const attr{{db::action_field, attribute_type::text, db::insert_action_value(), true}};
     return attr;
 }
