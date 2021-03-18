@@ -154,6 +154,74 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		B67A7095260388EB00C71256 /* core */ = {
+			isa = PBXGroup;
+			children = (
+				B6B6E0D621E226A50029A7C1 /* yas_db_core.h */,
+				B6B6E0F421E226A50029A7C1 /* yas_db_database.cpp */,
+				B6B6E0FC21E226A50029A7C1 /* yas_db_database.h */,
+				B6B6E0EF21E226A50029A7C1 /* yas_db_error.cpp */,
+				B6B6E0E121E226A50029A7C1 /* yas_db_error.h */,
+				B6B6E0E621E226A50029A7C1 /* yas_db_protocol.h */,
+				B6B6E0DE21E226A50029A7C1 /* yas_db_result_code.cpp */,
+				B6B6E10021E226A50029A7C1 /* yas_db_result_code.h */,
+				B6B6E0E521E226A50029A7C1 /* yas_db_row_set.cpp */,
+				B6B6E0F521E226A50029A7C1 /* yas_db_row_set.h */,
+				B6B6E0D121E226A50029A7C1 /* yas_db_select_option.cpp */,
+				B6B6E0E721E226A50029A7C1 /* yas_db_select_option.h */,
+				B6B6E10421E226A50029A7C1 /* yas_db_statement.cpp */,
+				B6B6E0EA21E226A50029A7C1 /* yas_db_statement.h */,
+				B6B6E0E021E226A50029A7C1 /* yas_db_types.h */,
+				B6B6E0DF21E226A50029A7C1 /* yas_db_value.cpp */,
+				B6B6E0D421E226A50029A7C1 /* yas_db_value.h */,
+			);
+			path = core;
+			sourceTree = "<group>";
+		};
+		B67A7096260388EF00C71256 /* additions */ = {
+			isa = PBXGroup;
+			children = (
+				B6B6E0ED21E226A50029A7C1 /* yas_db_additional_protocol.h */,
+				B6B6E0D521E226A50029A7C1 /* yas_db_additional_types.h */,
+				B6B6E0FE21E226A50029A7C1 /* yas_db_additions.h */,
+				B6B6E0D221E226A50029A7C1 /* yas_db_attribute.cpp */,
+				B6B6E0D921E226A50029A7C1 /* yas_db_attribute.h */,
+				B6B6E0CF21E226A50029A7C1 /* yas_db_cf_utils.cpp */,
+				B6B6E0FA21E226A50029A7C1 /* yas_db_cf_utils.h */,
+				B6B6E0DB21E226A50029A7C1 /* yas_db_entity.cpp */,
+				B6B6E0F321E226A50029A7C1 /* yas_db_entity.h */,
+				B6B6E10521E226A50029A7C1 /* yas_db_fetch_option.cpp */,
+				B6B6E0D721E226A50029A7C1 /* yas_db_fetch_option.h */,
+				B6B6E0D021E226A50029A7C1 /* yas_db_index.cpp */,
+				B6B6E0E421E226A50029A7C1 /* yas_db_index.h */,
+				B6B6E0F021E226A50029A7C1 /* yas_db_info.cpp */,
+				B6B6E0FD21E226A50029A7C1 /* yas_db_info.h */,
+				B6B6E10221E226A50029A7C1 /* yas_db_manager_error.cpp */,
+				B6B6E0E921E226A50029A7C1 /* yas_db_manager_error.h */,
+				B6B6E0F221E226A50029A7C1 /* yas_db_manager_utils.cpp */,
+				B6B6E0EC21E226A50029A7C1 /* yas_db_manager_utils.h */,
+				B6B6E0F121E226A50029A7C1 /* yas_db_manager.h */,
+				B6B6E0DA21E226A50029A7C1 /* yas_db_manager.mm */,
+				B6B6E0DD21E226A50029A7C1 /* yas_db_model.cpp */,
+				B6B6E0F621E226A50029A7C1 /* yas_db_model.h */,
+				B6B6E0DC21E226A50029A7C1 /* yas_db_object_id.cpp */,
+				B6B6E0FF21E226A50029A7C1 /* yas_db_object_id.h */,
+				B6B6E0F821E226A50029A7C1 /* yas_db_object_utils.cpp */,
+				B6B6E0E821E226A50029A7C1 /* yas_db_object_utils.h */,
+				B6B6E0D821E226A50029A7C1 /* yas_db_object.cpp */,
+				B6B6E0FB21E226A50029A7C1 /* yas_db_object.h */,
+				B6B6E0EB21E226A50029A7C1 /* yas_db_relation.cpp */,
+				B6B6E0E221E226A50029A7C1 /* yas_db_relation.h */,
+				B6B6E10121E226A50029A7C1 /* yas_db_sql_utils.cpp */,
+				B6B6E0F721E226A50029A7C1 /* yas_db_sql_utils.h */,
+				B6B6E10321E226A50029A7C1 /* yas_db_utils.cpp */,
+				B6B6E0E321E226A50029A7C1 /* yas_db_utils.h */,
+				B6B6E0F921E226A50029A7C1 /* yas_db_weak_pool_private.h */,
+				B6B6E0D321E226A50029A7C1 /* yas_db_weak_pool.h */,
+			);
+			path = additions;
+			sourceTree = "<group>";
+		};
 		B6B6E0B921E225580029A7C1 = {
 			isa = PBXGroup;
 			children = (
@@ -184,62 +252,10 @@
 		B6B6E0CE21E226A50029A7C1 /* db */ = {
 			isa = PBXGroup;
 			children = (
-				B6B6E0ED21E226A50029A7C1 /* yas_db_additional_protocol.h */,
-				B6B6E0D521E226A50029A7C1 /* yas_db_additional_types.h */,
-				B6B6E0FE21E226A50029A7C1 /* yas_db_additions.h */,
-				B6B6E0D221E226A50029A7C1 /* yas_db_attribute.cpp */,
-				B6B6E0D921E226A50029A7C1 /* yas_db_attribute.h */,
-				B6B6E0CF21E226A50029A7C1 /* yas_db_cf_utils.cpp */,
-				B6B6E0FA21E226A50029A7C1 /* yas_db_cf_utils.h */,
-				B6B6E0D621E226A50029A7C1 /* yas_db_core.h */,
-				B6B6E0F421E226A50029A7C1 /* yas_db_database.cpp */,
-				B6B6E0FC21E226A50029A7C1 /* yas_db_database.h */,
-				B6B6E0DB21E226A50029A7C1 /* yas_db_entity.cpp */,
-				B6B6E0F321E226A50029A7C1 /* yas_db_entity.h */,
-				B6B6E0EF21E226A50029A7C1 /* yas_db_error.cpp */,
-				B6B6E0E121E226A50029A7C1 /* yas_db_error.h */,
-				B6B6E10521E226A50029A7C1 /* yas_db_fetch_option.cpp */,
-				B6B6E0D721E226A50029A7C1 /* yas_db_fetch_option.h */,
-				B6B6E0D021E226A50029A7C1 /* yas_db_index.cpp */,
-				B6B6E0E421E226A50029A7C1 /* yas_db_index.h */,
-				B6B6E0F021E226A50029A7C1 /* yas_db_info.cpp */,
-				B6B6E0FD21E226A50029A7C1 /* yas_db_info.h */,
-				B6B6E10221E226A50029A7C1 /* yas_db_manager_error.cpp */,
-				B6B6E0E921E226A50029A7C1 /* yas_db_manager_error.h */,
-				B6B6E0F221E226A50029A7C1 /* yas_db_manager_utils.cpp */,
-				B6B6E0EC21E226A50029A7C1 /* yas_db_manager_utils.h */,
-				B6B6E0F121E226A50029A7C1 /* yas_db_manager.h */,
-				B6B6E0DA21E226A50029A7C1 /* yas_db_manager.mm */,
-				B6B6E0DD21E226A50029A7C1 /* yas_db_model.cpp */,
-				B6B6E0F621E226A50029A7C1 /* yas_db_model.h */,
-				B6B6E0DC21E226A50029A7C1 /* yas_db_object_id.cpp */,
-				B6B6E0FF21E226A50029A7C1 /* yas_db_object_id.h */,
-				B6B6E0F821E226A50029A7C1 /* yas_db_object_utils.cpp */,
-				B6B6E0E821E226A50029A7C1 /* yas_db_object_utils.h */,
-				B6B6E0D821E226A50029A7C1 /* yas_db_object.cpp */,
-				B6B6E0FB21E226A50029A7C1 /* yas_db_object.h */,
-				B6B6E0E621E226A50029A7C1 /* yas_db_protocol.h */,
-				B6B6E0EB21E226A50029A7C1 /* yas_db_relation.cpp */,
-				B6B6E0E221E226A50029A7C1 /* yas_db_relation.h */,
-				B6B6E0DE21E226A50029A7C1 /* yas_db_result_code.cpp */,
-				B6B6E10021E226A50029A7C1 /* yas_db_result_code.h */,
-				B6B6E0E521E226A50029A7C1 /* yas_db_row_set.cpp */,
-				B6B6E0F521E226A50029A7C1 /* yas_db_row_set.h */,
-				B6B6E0D121E226A50029A7C1 /* yas_db_select_option.cpp */,
-				B6B6E0E721E226A50029A7C1 /* yas_db_select_option.h */,
-				B6B6E10121E226A50029A7C1 /* yas_db_sql_utils.cpp */,
-				B6B6E0F721E226A50029A7C1 /* yas_db_sql_utils.h */,
-				B6B6E10421E226A50029A7C1 /* yas_db_statement.cpp */,
-				B6B6E0EA21E226A50029A7C1 /* yas_db_statement.h */,
-				B6B6E0E021E226A50029A7C1 /* yas_db_types.h */,
-				B6B6E0EE21E226A50029A7C1 /* yas_db_umbrella.h */,
-				B6B6E10321E226A50029A7C1 /* yas_db_utils.cpp */,
-				B6B6E0E321E226A50029A7C1 /* yas_db_utils.h */,
-				B6B6E0DF21E226A50029A7C1 /* yas_db_value.cpp */,
-				B6B6E0D421E226A50029A7C1 /* yas_db_value.h */,
-				B6B6E0F921E226A50029A7C1 /* yas_db_weak_pool_private.h */,
-				B6B6E0D321E226A50029A7C1 /* yas_db_weak_pool.h */,
+				B67A7096260388EF00C71256 /* additions */,
+				B67A7095260388EB00C71256 /* core */,
 				B61136A42322982C0057C6AE /* yas_db_ptr.h */,
+				B6B6E0EE21E226A50029A7C1 /* yas_db_umbrella.h */,
 			);
 			name = db;
 			path = ../../db;
