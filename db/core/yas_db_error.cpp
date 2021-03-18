@@ -5,6 +5,7 @@
 #include "yas_db_error.h"
 
 using namespace yas;
+using namespace yas::db;
 
 #pragma mark - sqlite_result_code
 
@@ -18,55 +19,55 @@ db::sqlite_result_code::operator bool() const {
 
 #pragma mark - error
 
-db::error::error(db::error_type const type) : db::error(type, SQLITE_OK) {
+error::error(error_type const type) : error(type, SQLITE_OK) {
 }
 
-db::error::error(db::error_type const type, db::sqlite_result_code const &code) : db::error(type, code, "") {
+error::error(error_type const type, db::sqlite_result_code const &code) : error(type, code, "") {
 }
 
-db::error::error(std::nullptr_t) : _type(db::error_type::none), _code(SQLITE_OK), _message() {
+error::error(std::nullptr_t) : _type(error_type::none), _code(SQLITE_OK), _message() {
 }
 
-db::error::error(db::error_type const type, db::sqlite_result_code const &code, std::string message)
+error::error(error_type const type, db::sqlite_result_code const &code, std::string message)
     : _type(type), _code(code), _message(std::move(message)) {
 }
 
-db::error::operator bool() const {
-    return this->_type != db::error_type::none;
+error::operator bool() const {
+    return this->_type != error_type::none;
 }
 
-db::error_type const &db::error::type() const {
+error_type const &error::type() const {
     return this->_type;
 }
 
-db::sqlite_result_code const &db::error::code() const {
+db::sqlite_result_code const &error::code() const {
     return this->_code;
 }
 
-std::string const &db::error::message() const {
+std::string const &error::message() const {
     return this->_message;
 }
 
 #pragma mark -
 
-std::string yas::to_string(db::error_type const &error_type) {
+std::string yas::to_string(error_type const &error_type) {
     switch (error_type) {
-        case db::error_type::closed:
+        case error_type::closed:
             return "closed";
-        case db::error_type::in_use:
+        case error_type::in_use:
             return "in_use";
-        case db::error_type::invalid_query_count:
+        case error_type::invalid_query_count:
             return "invalid_query_count";
-        case db::error_type::invalid_argument:
+        case error_type::invalid_argument:
             return "invalid_argument";
-        case db::error_type::sqlite:
+        case error_type::sqlite:
             return "sqlite";
-        case db::error_type::none:
+        case error_type::none:
             return "none";
     }
 }
 
-std::string yas::to_string(db::error const &error) {
+std::string yas::to_string(error const &error) {
     if (error) {
         return "{type:" + to_string(error.type()) + ", code:" + to_string(error.code()) +
                ", message:" + error.message() + "}";

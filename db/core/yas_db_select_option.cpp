@@ -5,24 +5,25 @@
 #include "yas_db_select_option.h"
 
 using namespace yas;
+using namespace yas::db;
 
 #pragma mark - db::field_order
 
-std::string db::field_order::sql() const {
+std::string field_order::sql() const {
     return this->field + (this->order == db::order::ascending ? " ASC" : " DESC");
 }
 
-#pragma mark - db::range
+#pragma mark - range
 
-bool db::range::is_empty() const {
+bool range::is_empty() const {
     return this->length == 0;
 }
 
-std::string db::range::sql() const {
+std::string range::sql() const {
     return std::to_string(this->location) + ", " + std::to_string(this->length);
 }
 
-db::range const &db::empty_range() {
-    static db::range const _empty_range = db::range{0, 0};
+range const &db::empty_range() {
+    static range const _empty_range = range{0, 0};
     return _empty_range;
 }
