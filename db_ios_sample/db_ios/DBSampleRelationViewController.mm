@@ -57,7 +57,7 @@ objc_ptr<NSArray<NSIndexPath *> *> to_index_paths(std::vector<std::size_t> const
     std::optional<db::object_ptr> _db_object;
     std::string _rel_name;
 
-    chaining::observer_pool _pool;
+    observing::canceller_pool _pool;
 }
 
 - (void)viewDidLoad {
@@ -92,9 +92,7 @@ objc_ptr<NSArray<NSIndexPath *> *> to_index_paths(std::vector<std::size_t> const
 
     auto unowned_self = objc_ptr_with_move_object([[YASUnownedObject<typeof(self)> alloc] initWithObject:self]);
 
-    self->_pool +=
-        object->chain()
-            .perform([unowned_self, rel_name = self->_rel_name](db::object_event const &event) {
+        object->observe([unowned_self, rel_name = self->_rel_name](db::object_event const &event) {
                 auto self = unowned_self.object().object;
                 if (!self) {
                     return;
@@ -130,8 +128,7 @@ objc_ptr<NSArray<NSIndexPath *> *> to_index_paths(std::vector<std::size_t> const
                     default:
                         break;
                 }
-            })
-            .end();
+        }, false)->add_to(self->_pool);
 }
 
 - (db::object_ptr &)db_object {
