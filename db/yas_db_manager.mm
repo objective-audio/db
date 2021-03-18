@@ -759,17 +759,20 @@ db::object_ptr db::manager::make_object(std::string const &entity_name) {
     auto obj = db::object::make_shared(this->_model.entity(entity_name));
     auto weak_manager = this->_weak_manager;
 
-    obj->observe([weak_manager](db::object_event const &event){
-        if (auto const manager = weak_manager.lock()) {
-            if (event.is_erased()) {
-                object_erased_event const erased_event = event.get<db::object_erased_event>();
-                manager->_cached_objects.erase(erased_event.entity_name, erased_event.object_id);
-            }
-            if (event.is_changed()) {
-                manager->_object_did_change(event.object());
-            }
-        }
-    }, false)->add_to(this->_pool);
+    obj->observe(
+           [weak_manager](db::object_event const &event) {
+               if (auto const manager = weak_manager.lock()) {
+                   if (event.is_erased()) {
+                       object_erased_event const erased_event = event.get<db::object_erased_event>();
+                       manager->_cached_objects.erase(erased_event.entity_name, erased_event.object_id);
+                   }
+                   if (event.is_changed()) {
+                       manager->_object_did_change(event.object());
+                   }
+               }
+           },
+           false)
+        ->add_to(this->_pool);
 
     return obj;
 }
