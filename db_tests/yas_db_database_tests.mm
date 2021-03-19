@@ -172,14 +172,14 @@ using namespace yas;
 
     XCTAssertTrue(db->execute_statements(joined_insert_sql));
 
-    XCTAssertTrue(db->execute_statements({"select * from test_table_a;"}, [self](db::value_map_t const &value_map) {
+    XCTAssertTrue(db->execute_statements({"select * from test_table_a;"}, [](db::value_map_t const &value_map) {
         XCTAssertEqual(value_map.size(), 2);
         XCTAssertEqual(value_map.at("field_a").get<db::text>(), "value_1");
         XCTAssertEqual(value_map.at("field_b").get<db::text>(), "1");
         return 0;
     }));
 
-    XCTAssertTrue(db->execute_statements({"select * from test_table_b;"}, [self](db::value_map_t const &value_map) {
+    XCTAssertTrue(db->execute_statements({"select * from test_table_b;"}, [](db::value_map_t const &value_map) {
         XCTAssertEqual(value_map.size(), 2);
         XCTAssertEqual(value_map.at("field_a").get<db::text>(), "value_2");
         XCTAssertTrue(value_map.at("field_b").type() == typeid(db::null));

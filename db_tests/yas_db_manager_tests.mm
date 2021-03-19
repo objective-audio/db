@@ -683,7 +683,7 @@ using namespace yas;
                            []() {
                                return db::entity_count_map_t{{"sample_a", 3}, {"sample_b", 5}};
                            },
-                           [self](auto result) {
+                           [](auto result) {
                                db::object_vector_map_t const &objects = result.value();
                                XCTAssertEqual(objects.size(), 2);
 
@@ -959,11 +959,11 @@ using namespace yas;
                                XCTAssertEqual(object_b->object_id().stable_value(), db::value{1});
                            });
 
-    manager->save(db::no_cancellation, [self](db::manager_map_result_t result) { XCTAssertTrue(result); });
+    manager->save(db::no_cancellation, [](db::manager_map_result_t result) { XCTAssertTrue(result); });
 
     manager->fetch_const_objects(db::no_cancellation,
                                 []() { return db::to_fetch_option(db::select_option{.table = "sample_a"}); },
-                                [self](db::manager_const_vector_result_t fetch_result) mutable {
+                                [](db::manager_const_vector_result_t fetch_result) mutable {
                                     XCTAssertTrue(fetch_result);
 
                                     auto const &objects = fetch_result.value();
@@ -1144,13 +1144,13 @@ using namespace yas;
                                XCTAssertEqual(objects.at("sample_a").at(2)->object_id().stable_value(), db::value{3});
                            });
 
-    manager->save(db::no_cancellation, [self](db::manager_map_result_t result) { XCTAssertTrue(result); });
+    manager->save(db::no_cancellation, [](db::manager_map_result_t result) { XCTAssertTrue(result); });
 
     manager->fetch_const_objects(db::no_cancellation,
                                 []() {
                                     return db::integer_set_map_t{{"sample_a", {2}}};
                                 },
-                                [self](auto fetch_result) mutable {
+                                [](auto fetch_result) mutable {
                                     XCTAssertTrue(fetch_result);
 
                                     auto const &objects = fetch_result.value();
@@ -1454,7 +1454,7 @@ using namespace yas;
     XCTAssertEqual(manager->current_save_id(), db::value{3});
     XCTAssertEqual(manager->last_save_id(), db::value{3});
 
-    manager->save(db::no_cancellation, [self](db::manager_map_result_t result) {
+    manager->save(db::no_cancellation, [](db::manager_map_result_t result) {
         XCTAssertTrue(result);
 
         auto const &objects = result.value();
@@ -1604,7 +1604,7 @@ using namespace yas;
                        a_object->set_attribute_value("name", db::value{"value_b"});
                    });
 
-    manager->save(db::no_cancellation, [self](db::manager_map_result_t result) mutable { XCTAssertTrue(result); });
+    manager->save(db::no_cancellation, [](db::manager_map_result_t result) mutable { XCTAssertTrue(result); });
 
     manager->execute(db::no_cancellation, [self, &manager](task const &) mutable {
         auto &db = manager->database();
@@ -2778,21 +2778,21 @@ using namespace yas;
 
     XCTAssertEqualObjects(manager->dispatch_queue(), queue);
 
-    manager->setup([self](auto result) { XCTAssertFalse([NSThread isMainThread]); });
+    manager->setup([](auto result) { XCTAssertFalse([NSThread isMainThread]); });
 
     manager->insert_objects(db::no_cancellation,
-                           [self]() {
+                           []() {
                                XCTAssertFalse([NSThread isMainThread]);
                                return db::entity_count_map_t{{"sample_a", 1}};
                            },
-                           [self](auto result) {
+                           [](auto result) {
                                XCTAssertFalse([NSThread isMainThread]);
                                auto &object = result.value().at("sample_a").at(0);
                                object->set_attribute_value("name", db::value{"x"});
                            });
 
     manager->save(db::no_cancellation,
-                 [self](db::manager_map_result_t result) { XCTAssertFalse([NSThread isMainThread]); });
+                 [](db::manager_map_result_t result) { XCTAssertFalse([NSThread isMainThread]); });
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
     manager->execute(db::no_cancellation, [exp](auto const &) { [exp fulfill]; });
