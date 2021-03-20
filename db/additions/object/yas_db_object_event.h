@@ -18,15 +18,6 @@ enum class object_event_type {
     erased,
 };
 
-class object_fetched_event;
-class object_loaded_event;
-class object_cleared_event;
-class object_attribute_updated_event;
-class object_relation_inserted_event;
-class object_relation_removed_event;
-class object_relation_replaced_event;
-class object_erased_event;
-
 struct object_event {
     object_event_type type() const;
 
@@ -63,6 +54,5 @@ struct object_event {
 
     object_event(object_event_type const, object_ptr const &, db::object_id const &, std::string const &name,
                  std::string const &entity_name, std::vector<std::size_t> const &indices, db::value const &);
-    object_event(object_erased_event &&);
 };
 }  // namespace yas::db

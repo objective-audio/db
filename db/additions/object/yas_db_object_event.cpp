@@ -124,7 +124,8 @@ object_event db::object_event::make_relation_replaced(db::object_ptr const &obje
 }
 
 object_event db::object_event::make_erased(std::string const &entity_name, db::object_id const &object_id) {
-    return object_event{object_erased_event{.entity_name = entity_name, .object_id = object_id}};
+    return object_event{
+        object_event_type::erased, _empty_object, object_id, _empty_string, entity_name, _empty_indices, _empty_value};
 }
 
 db::object_event::object_event(object_event_type const type, object_ptr const &object, db::object_id const &object_id,
@@ -137,16 +138,6 @@ db::object_event::object_event(object_event_type const type, object_ptr const &o
       _entity_name(entity_name),
       _indices(indices),
       _value(value) {
-}
-
-object_event::object_event(object_erased_event &&event)
-    : _type(object_event_type::erased),
-      _object(_empty_object),
-      _object_id(event.object_id),
-      _name(_empty_string),
-      _entity_name(event.entity_name),
-      _indices(_empty_indices),
-      _value(_empty_value) {
 }
 
 object_event_type object_event::type() const {
