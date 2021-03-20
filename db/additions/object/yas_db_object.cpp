@@ -258,7 +258,7 @@ void object::insert_relation_id(std::string const &rel_name, db::object_id const
         this->_status = db::object_status::changed;
     }
 
-    this->_fetcher->push(make_object_relation_inserted_event(this->_weak_object.lock(), rel_name, {idx}));
+    this->_fetcher->push(object_event::make_relation_inserted(this->_weak_object.lock(), rel_name, {idx}));
 }
 
 void object::remove_relation_id(std::string const &rel_name, db::object_id const &relation_id) {

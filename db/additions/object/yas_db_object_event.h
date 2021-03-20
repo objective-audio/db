@@ -102,13 +102,13 @@ struct object_event {
     static object_event make_cleared(db::object_ptr const &object);
     static object_event make_attribute_updated(db::object_ptr const &object, std::string const &name,
                                                db::value const &value);
+    static object_event make_relation_inserted(db::object_ptr const &object, std::string const &name,
+                                               std::vector<std::size_t> &&indices);
 
    private:
     std::shared_ptr<impl_base> _impl;
 };
 
-object_event make_object_relation_inserted_event(db::object_ptr const &object, std::string const &name,
-                                                 std::vector<std::size_t> &&indices);
 object_event make_object_relation_removed_event(db::object_ptr const &object, std::string const &name,
                                                 std::vector<std::size_t> &&indices);
 object_event make_object_relation_replaced_event(db::object_ptr const &object, std::string const &name);
