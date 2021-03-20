@@ -94,9 +94,6 @@ object_event::object_event(object_erased_event &&event)
     : _impl(std::make_shared<impl<object_erased_event>>(std::move(event))) {
 }
 
-object_event::object_event(std::nullptr_t) : _impl(nullptr) {
-}
-
 object_event_type object_event::type() const {
     return this->_impl->type();
 }

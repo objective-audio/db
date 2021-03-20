@@ -72,8 +72,6 @@ struct object_event {
     template <typename Event>
     class impl;
 
-    object_event(std::nullptr_t);
-
     object_event_type type() const;
 
     template <typename Event>
