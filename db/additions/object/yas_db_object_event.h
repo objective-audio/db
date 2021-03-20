@@ -61,8 +61,16 @@ struct object_event {
     static object_event make_erased(std::string const &entity_name, db::object_id const &object_id);
 
    private:
+    db::object_ptr const &_object;
+    db::object_id const &_object_id;
+    std::string const &_name;
+    std::string const &_entity_name;
+    std::vector<std::size_t> const &_indices;
+    db::value const &_value;
+
     std::shared_ptr<impl_base> _impl;
 
+    object_event(std::shared_ptr<impl_base> &&);
     object_event(object_fetched_event &&);
     object_event(object_loaded_event &&);
     object_event(object_cleared_event &&);

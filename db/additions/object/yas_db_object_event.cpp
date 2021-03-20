@@ -10,6 +10,12 @@ using namespace yas;
 using namespace yas::db;
 
 namespace yas::db {
+static db::object_ptr const _empty_object = nullptr;
+static db::object_id const _empty_object_id = nullptr;
+static std::string const _empty_string;
+static std::vector<std::size_t> const _empty_indices;
+static db::value const _empty_value = nullptr;
+
 struct object_fetched_event {
     static object_event_type const type = object_event_type::fetched;
     db::object_ptr const &object;
@@ -112,36 +118,46 @@ struct object_event::impl : object_event::impl_base {
     }
 };
 
+object_event::object_event(std::shared_ptr<impl_base> &&impl)
+    : _impl(std::move(impl)),
+      _object(_empty_object),
+      _object_id(_empty_object_id),
+      _name(_empty_string),
+      _entity_name(_empty_string),
+      _indices(_empty_indices),
+      _value(_empty_value) {
+}
+
 object_event::object_event(object_fetched_event &&event)
-    : _impl(std::make_shared<impl<object_fetched_event>>(std::move(event))) {
+    : object_event(std::make_shared<impl<object_fetched_event>>(std::move(event))) {
 }
 
 object_event::object_event(object_loaded_event &&event)
-    : _impl(std::make_shared<impl<object_loaded_event>>(std::move(event))) {
+    : object_event(std::make_shared<impl<object_loaded_event>>(std::move(event))) {
 }
 
 object_event::object_event(object_cleared_event &&event)
-    : _impl(std::make_shared<impl<object_cleared_event>>(std::move(event))) {
+    : object_event(std::make_shared<impl<object_cleared_event>>(std::move(event))) {
 }
 
 object_event::object_event(object_attribute_updated_event &&event)
-    : _impl(std::make_shared<impl<object_attribute_updated_event>>(std::move(event))) {
+    : object_event(std::make_shared<impl<object_attribute_updated_event>>(std::move(event))) {
 }
 
 object_event::object_event(object_relation_inserted_event &&event)
-    : _impl(std::make_shared<impl<object_relation_inserted_event>>(std::move(event))) {
+    : object_event(std::make_shared<impl<object_relation_inserted_event>>(std::move(event))) {
 }
 
 object_event::object_event(object_relation_removed_event &&event)
-    : _impl(std::make_shared<impl<object_relation_removed_event>>(std::move(event))) {
+    : object_event(std::make_shared<impl<object_relation_removed_event>>(std::move(event))) {
 }
 
 object_event::object_event(object_relation_replaced_event &&event)
-    : _impl(std::make_shared<impl<object_relation_replaced_event>>(std::move(event))) {
+    : object_event(std::make_shared<impl<object_relation_replaced_event>>(std::move(event))) {
 }
 
 object_event::object_event(object_erased_event &&event)
-    : _impl(std::make_shared<impl<object_erased_event>>(std::move(event))) {
+    : object_event(std::make_shared<impl<object_erased_event>>(std::move(event))) {
 }
 
 object_event_type object_event::type() const {
