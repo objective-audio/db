@@ -200,7 +200,13 @@ object_event::object_event(object_relation_replaced_event &&event)
 }
 
 object_event::object_event(object_erased_event &&event)
-    : object_event(std::make_shared<impl<object_erased_event>>(std::move(event))) {
+    : _type(object_event_type::erased),
+      _object(_empty_object),
+      _object_id(event.object_id),
+      _name(_empty_string),
+      _entity_name(event.entity_name),
+      _indices(_empty_indices),
+      _value(_empty_value) {
 }
 
 object_event_type object_event::type() const {
