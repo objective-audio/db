@@ -103,7 +103,8 @@ object_event db::object_event::make_attribute_updated(db::object_ptr const &obje
 
 object_event db::object_event::make_relation_inserted(db::object_ptr const &object, std::string const &name,
                                                       std::vector<std::size_t> &&indices) {
-    return object_event{object_relation_inserted_event{.object = object, .name = name, .indices = std::move(indices)}};
+    return object_event{
+        object_event_type::relation_inserted, object, _empty_object_id, name, _empty_string, indices, _empty_value};
 }
 
 object_event db::object_event::make_relation_removed(db::object_ptr const &object, std::string const &name,
@@ -129,16 +130,6 @@ db::object_event::object_event(object_event_type const type, object_ptr const &o
       _entity_name(entity_name),
       _indices(indices),
       _value(value) {
-}
-
-object_event::object_event(object_relation_inserted_event &&event)
-    : _type(object_event_type::relation_inserted),
-      _object(event.object),
-      _object_id(_empty_object_id),
-      _name(event.name),
-      _entity_name(_empty_string),
-      _indices(event.indices),
-      _value(_empty_value) {
 }
 
 object_event::object_event(object_relation_removed_event &&event)
