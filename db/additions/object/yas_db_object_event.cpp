@@ -97,7 +97,8 @@ object_event db::object_event::make_cleared(db::object_ptr const &object) {
 
 object_event db::object_event::make_attribute_updated(db::object_ptr const &object, std::string const &name,
                                                       db::value const &value) {
-    return object_event{object_attribute_updated_event{.object = object, .name = name, .value = value}};
+    return object_event{
+        object_event_type::attribute_updated, object, _empty_object_id, name, _empty_string, _empty_indices, value};
 }
 
 object_event db::object_event::make_relation_inserted(db::object_ptr const &object, std::string const &name,
@@ -128,16 +129,6 @@ db::object_event::object_event(object_event_type const type, object_ptr const &o
       _entity_name(entity_name),
       _indices(indices),
       _value(value) {
-}
-
-object_event::object_event(object_attribute_updated_event &&event)
-    : _type(object_event_type::attribute_updated),
-      _object(event.object),
-      _object_id(_empty_object_id),
-      _name(event.name),
-      _entity_name(_empty_string),
-      _indices(_empty_indices),
-      _value(event.value) {
 }
 
 object_event::object_event(object_relation_inserted_event &&event)
