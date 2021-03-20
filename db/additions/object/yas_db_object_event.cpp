@@ -4,6 +4,8 @@
 
 #include "yas_db_object_event.h"
 
+#include "yas_db_object.h"
+
 using namespace yas;
 using namespace yas::db;
 
@@ -142,6 +144,21 @@ db::object_ptr const &object_event::object() const {
             return this->get<db::object_relation_replaced_event>().object;
         case object_event_type::erased:
             throw std::runtime_error("object not found.");
+    }
+}
+
+db::object_id const &object_event::object_id() const {
+    switch (this->type()) {
+        case object_event_type::erased:
+            return this->get<db::object_erased_event>().object_id;
+        case object_event_type::attribute_updated:
+        case object_event_type::relation_inserted:
+        case object_event_type::relation_removed:
+        case object_event_type::fetched:
+        case object_event_type::loaded:
+        case object_event_type::cleared:
+        case object_event_type::relation_replaced:
+            return this->object()->object_id();
     }
 }
 

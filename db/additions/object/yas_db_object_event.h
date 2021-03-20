@@ -91,6 +91,7 @@ struct object_event {
     bool is_erased() const;
 
     db::object_ptr const &object() const;
+    db::object_id const &object_id() const;
     std::string const &name() const;
     std::string const &entity_name() const;
     std::vector<std::size_t> const &indices() const;
