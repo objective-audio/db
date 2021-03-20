@@ -76,11 +76,23 @@ object_event db::object_event::make_fetched(db::object_ptr const &object) {
 }
 
 object_event db::object_event::make_loaded(db::object_ptr const &object) {
-    return object_event{object_loaded_event{.object = object}};
+    return object_event{object_event_type::loaded,
+                        object,
+                        _empty_object_id,
+                        _empty_string,
+                        _empty_string,
+                        _empty_indices,
+                        _empty_value};
 }
 
 object_event db::object_event::make_cleared(db::object_ptr const &object) {
-    return object_event{object_cleared_event{.object = object}};
+    return object_event{object_event_type::cleared,
+                        object,
+                        _empty_object_id,
+                        _empty_string,
+                        _empty_string,
+                        _empty_indices,
+                        _empty_value};
 }
 
 object_event db::object_event::make_attribute_updated(db::object_ptr const &object, std::string const &name,
