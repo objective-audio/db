@@ -66,7 +66,13 @@ struct object_erased_event {
 }  // namespace yas::db
 
 object_event db::object_event::make_fetched(db::object_ptr const &object) {
-    return object_event{object_fetched_event{.object = object}};
+    return object_event{object_event_type::fetched,
+                        object,
+                        _empty_object_id,
+                        _empty_string,
+                        _empty_string,
+                        _empty_indices,
+                        _empty_value};
 }
 
 object_event db::object_event::make_loaded(db::object_ptr const &object) {
@@ -110,16 +116,6 @@ db::object_event::object_event(object_event_type const type, object_ptr const &o
       _entity_name(entity_name),
       _indices(indices),
       _value(value) {
-}
-
-object_event::object_event(object_fetched_event &&event)
-    : _type(object_event_type::fetched),
-      _object(event.object),
-      _object_id(_empty_object_id),
-      _name(_empty_string),
-      _entity_name(_empty_string),
-      _indices(_empty_indices),
-      _value(_empty_value) {
 }
 
 object_event::object_event(object_loaded_event &&event)
