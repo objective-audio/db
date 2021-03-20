@@ -72,14 +72,6 @@ struct object_event {
     template <typename Event>
     class impl;
 
-    object_event(object_fetched_event &&);
-    object_event(object_loaded_event &&);
-    object_event(object_cleared_event &&);
-    object_event(object_attribute_updated_event &&);
-    object_event(object_relation_inserted_event &&);
-    object_event(object_relation_removed_event &&);
-    object_event(object_relation_replaced_event &&);
-    object_event(object_erased_event &&);
     object_event(std::nullptr_t);
 
     object_event_type type() const;
@@ -111,5 +103,14 @@ struct object_event {
 
    private:
     std::shared_ptr<impl_base> _impl;
+
+    object_event(object_fetched_event &&);
+    object_event(object_loaded_event &&);
+    object_event(object_cleared_event &&);
+    object_event(object_attribute_updated_event &&);
+    object_event(object_relation_inserted_event &&);
+    object_event(object_relation_removed_event &&);
+    object_event(object_relation_replaced_event &&);
+    object_event(object_erased_event &&);
 };
 }  // namespace yas::db
