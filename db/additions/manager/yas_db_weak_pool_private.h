@@ -1,5 +1,5 @@
 //
-//  yas_db_pool_private.h
+//  yas_db_weak_pool_private.h
 //
 
 #pragma once
