@@ -21,8 +21,8 @@ object_event db::object_event::make_cleared(db::object_ptr const &object) {
     return object_event{object_cleared_event{.object = object}};
 }
 
-object_event db::make_object_attribute_updated_event(db::object_ptr const &object, std::string const &name,
-                                                     db::value const &value) {
+object_event db::object_event::make_attribute_updated(db::object_ptr const &object, std::string const &name,
+                                                      db::value const &value) {
     return object_event{object_attribute_updated_event{.object = object, .name = name, .value = value}};
 }
 

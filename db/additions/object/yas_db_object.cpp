@@ -527,7 +527,7 @@ void object::_set_attribute_value(std::string const &attr_name, db::value const 
             this->_status = db::object_status::changed;
         }
 
-        this->_fetcher->push(make_object_attribute_updated_event(this->_weak_object.lock(), attr_name, value));
+        this->_fetcher->push(object_event::make_attribute_updated(this->_weak_object.lock(), attr_name, value));
     }
 }
 
