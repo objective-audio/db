@@ -486,7 +486,7 @@ void object::load_data(db::object_data const &obj_data, bool const force) {
             this->_status = db::object_status::saved;
         }
 
-        this->_fetcher->push(make_object_loaded_event(this->_weak_object.lock()));
+        this->_fetcher->push(object_event::make_loaded(this->_weak_object.lock()));
     }
 }
 

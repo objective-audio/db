@@ -13,7 +13,7 @@ object_event db::object_event::make_fetched(db::object_ptr const &object) {
     return object_event{object_fetched_event{.object = object}};
 }
 
-object_event db::make_object_loaded_event(db::object_ptr const &object) {
+object_event db::object_event::make_loaded(db::object_ptr const &object) {
     return object_event{object_loaded_event{.object = object}};
 }
 
