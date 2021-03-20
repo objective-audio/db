@@ -548,7 +548,7 @@ void object::_set_relation_ids(std::string const &rel_name, db::id_vector_t cons
             this->_status = db::object_status::changed;
         }
 
-        this->_fetcher->push(make_object_relation_replaced_event(this->_weak_object.lock(), rel_name));
+        this->_fetcher->push(object_event::make_relation_replaced(this->_weak_object.lock(), rel_name));
     }
 }
 

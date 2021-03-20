@@ -36,7 +36,7 @@ object_event db::object_event::make_relation_removed(db::object_ptr const &objec
     return object_event{object_relation_removed_event{.object = object, .name = name, .indices = std::move(indices)}};
 }
 
-object_event db::make_object_relation_replaced_event(db::object_ptr const &object, std::string const &name) {
+object_event db::object_event::make_relation_replaced(db::object_ptr const &object, std::string const &name) {
     return object_event{object_relation_replaced_event{.object = object, .name = name}};
 }
 

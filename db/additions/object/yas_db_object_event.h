@@ -106,11 +106,11 @@ struct object_event {
                                                std::vector<std::size_t> &&indices);
     static object_event make_relation_removed(db::object_ptr const &object, std::string const &name,
                                               std::vector<std::size_t> &&indices);
+    static object_event make_relation_replaced(db::object_ptr const &object, std::string const &name);
 
    private:
     std::shared_ptr<impl_base> _impl;
 };
 
-object_event make_object_relation_replaced_event(db::object_ptr const &object, std::string const &name);
 object_event make_object_erased_event(std::string const &entity_name, db::object_id const &object_id);
 }  // namespace yas::db
