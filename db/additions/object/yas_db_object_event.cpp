@@ -140,8 +140,72 @@ db::object_ptr const &object_event::object() const {
             return this->get<db::object_relation_removed_event>().object;
         case object_event_type::relation_replaced:
             return this->get<db::object_relation_replaced_event>().object;
-        default:
+        case object_event_type::erased:
             throw std::runtime_error("object not found.");
+    }
+}
+
+std::string const &object_event::name() const {
+    switch (this->type()) {
+        case object_event_type::attribute_updated:
+            return this->get<db::object_attribute_updated_event>().name;
+        case object_event_type::relation_inserted:
+            return this->get<db::object_relation_inserted_event>().name;
+        case object_event_type::relation_removed:
+            return this->get<db::object_relation_removed_event>().name;
+        case object_event_type::relation_replaced:
+            return this->get<db::object_relation_replaced_event>().name;
+        case object_event_type::fetched:
+        case object_event_type::loaded:
+        case object_event_type::cleared:
+        case object_event_type::erased:
+            throw std::runtime_error("name not found.");
+    }
+}
+
+std::string const &object_event::entity_name() const {
+    switch (this->type()) {
+        case object_event_type::erased:
+            return this->get<db::object_erased_event>().entity_name;
+        case object_event_type::fetched:
+        case object_event_type::loaded:
+        case object_event_type::cleared:
+        case object_event_type::attribute_updated:
+        case object_event_type::relation_inserted:
+        case object_event_type::relation_removed:
+        case object_event_type::relation_replaced:
+            throw std::runtime_error("entity name not found.");
+    }
+}
+
+std::vector<std::size_t> const &object_event::indices() const {
+    switch (this->type()) {
+        case object_event_type::relation_inserted:
+            return this->get<db::object_relation_inserted_event>().indices;
+        case object_event_type::relation_removed:
+            return this->get<db::object_relation_removed_event>().indices;
+        case object_event_type::fetched:
+        case object_event_type::loaded:
+        case object_event_type::cleared:
+        case object_event_type::attribute_updated:
+        case object_event_type::relation_replaced:
+        case object_event_type::erased:
+            throw std::runtime_error("indices not found.");
+    }
+}
+
+db::value const &object_event::value() const {
+    switch (this->type()) {
+        case object_event_type::attribute_updated:
+            return this->get<db::object_attribute_updated_event>().value;
+        case object_event_type::relation_inserted:
+        case object_event_type::relation_removed:
+        case object_event_type::fetched:
+        case object_event_type::loaded:
+        case object_event_type::cleared:
+        case object_event_type::relation_replaced:
+        case object_event_type::erased:
+            throw std::runtime_error("indices not found.");
     }
 }
 

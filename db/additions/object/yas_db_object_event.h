@@ -91,6 +91,10 @@ struct object_event {
     bool is_erased() const;
 
     db::object_ptr const &object() const;
+    std::string const &name() const;
+    std::string const &entity_name() const;
+    std::vector<std::size_t> const &indices() const;
+    db::value const &value() const;
 
    private:
     std::shared_ptr<impl_base> _impl;
