@@ -120,6 +120,7 @@ struct object_event::impl : object_event::impl_base {
 
 object_event::object_event(std::shared_ptr<impl_base> &&impl)
     : _impl(std::move(impl)),
+      _type(object_event_type::fetched),
       _object(_empty_object),
       _object_id(_empty_object_id),
       _name(_empty_string),
