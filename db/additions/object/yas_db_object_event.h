@@ -28,11 +28,6 @@ class object_relation_replaced_event;
 class object_erased_event;
 
 struct object_event {
-    class impl_base;
-
-    template <typename Event>
-    class impl;
-
     object_event_type type() const;
 
     bool is_changed() const;
@@ -66,9 +61,6 @@ struct object_event {
     std::vector<std::size_t> const &_indices;
     db::value const &_value;
 
-    std::shared_ptr<impl_base> _impl;
-
-    object_event(std::shared_ptr<impl_base> &&);
     object_event(object_fetched_event &&);
     object_event(object_loaded_event &&);
     object_event(object_cleared_event &&);

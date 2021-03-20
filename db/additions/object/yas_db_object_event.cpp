@@ -100,35 +100,6 @@ object_event db::object_event::make_erased(std::string const &entity_name, db::o
     return object_event{object_erased_event{.entity_name = entity_name, .object_id = object_id}};
 }
 
-struct object_event::impl_base {
-    virtual object_event_type type() {
-        throw std::runtime_error("type() must be overridden");
-    }
-};
-
-template <typename Event>
-struct object_event::impl : object_event::impl_base {
-    Event const event;
-
-    impl(Event &&event) : event(std::move(event)) {
-    }
-
-    object_event_type type() override {
-        return Event::type;
-    }
-};
-
-object_event::object_event(std::shared_ptr<impl_base> &&impl)
-    : _impl(std::move(impl)),
-      _type(object_event_type::fetched),
-      _object(_empty_object),
-      _object_id(_empty_object_id),
-      _name(_empty_string),
-      _entity_name(_empty_string),
-      _indices(_empty_indices),
-      _value(_empty_value) {
-}
-
 object_event::object_event(object_fetched_event &&event)
     : _type(object_event_type::fetched),
       _object(event.object),
