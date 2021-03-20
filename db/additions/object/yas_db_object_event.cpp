@@ -11,68 +11,47 @@ using namespace yas::db;
 
 namespace yas::db {
 static db::object_ptr const _empty_object = nullptr;
-static db::object_id const _empty_object_id = nullptr;
 static std::string const _empty_string;
 static std::vector<std::size_t> const _empty_indices;
 static db::value const _empty_value = nullptr;
 }  // namespace yas::db
 
 object_event db::object_event::make_fetched(db::object_ptr const &object) {
-    return object_event{object_event_type::fetched,
-                        object,
-                        _empty_object_id,
-                        _empty_string,
-                        _empty_string,
-                        _empty_indices,
-                        _empty_value};
+    return object_event{
+        object_event_type::fetched, object, db::null_id(), _empty_string, _empty_string, _empty_indices, _empty_value};
 }
 
 object_event db::object_event::make_loaded(db::object_ptr const &object) {
-    return object_event{object_event_type::loaded,
-                        object,
-                        _empty_object_id,
-                        _empty_string,
-                        _empty_string,
-                        _empty_indices,
-                        _empty_value};
+    return object_event{
+        object_event_type::loaded, object, db::null_id(), _empty_string, _empty_string, _empty_indices, _empty_value};
 }
 
 object_event db::object_event::make_cleared(db::object_ptr const &object) {
-    return object_event{object_event_type::cleared,
-                        object,
-                        _empty_object_id,
-                        _empty_string,
-                        _empty_string,
-                        _empty_indices,
-                        _empty_value};
+    return object_event{
+        object_event_type::cleared, object, db::null_id(), _empty_string, _empty_string, _empty_indices, _empty_value};
 }
 
 object_event db::object_event::make_attribute_updated(db::object_ptr const &object, std::string const &name,
                                                       db::value const &value) {
     return object_event{
-        object_event_type::attribute_updated, object, _empty_object_id, name, _empty_string, _empty_indices, value};
+        object_event_type::attribute_updated, object, db::null_id(), name, _empty_string, _empty_indices, value};
 }
 
 object_event db::object_event::make_relation_inserted(db::object_ptr const &object, std::string const &name,
                                                       std::vector<std::size_t> &&indices) {
     return object_event{
-        object_event_type::relation_inserted, object, _empty_object_id, name, _empty_string, indices, _empty_value};
+        object_event_type::relation_inserted, object, db::null_id(), name, _empty_string, indices, _empty_value};
 }
 
 object_event db::object_event::make_relation_removed(db::object_ptr const &object, std::string const &name,
                                                      std::vector<std::size_t> &&indices) {
     return object_event{
-        object_event_type::relation_removed, object, _empty_object_id, name, _empty_string, indices, _empty_value};
+        object_event_type::relation_removed, object, db::null_id(), name, _empty_string, indices, _empty_value};
 }
 
 object_event db::object_event::make_relation_replaced(db::object_ptr const &object, std::string const &name) {
-    return object_event{object_event_type::relation_replaced,
-                        object,
-                        _empty_object_id,
-                        name,
-                        _empty_string,
-                        _empty_indices,
-                        _empty_value};
+    return object_event{
+        object_event_type::relation_replaced, object, db::null_id(), name, _empty_string, _empty_indices, _empty_value};
 }
 
 object_event db::object_event::make_erased(std::string const &entity_name, db::object_id const &object_id) {
