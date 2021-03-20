@@ -218,7 +218,7 @@ object::object(db::entity const &entity) : const_object(entity, db::make_tempora
 }
 
 object::~object() {
-    this->_fetcher->push(make_object_erased_event(this->_entity.name, this->_identifier));
+    this->_fetcher->push(object_event::make_erased(this->_entity.name, this->_identifier));
 }
 
 observing::canceller_ptr object::observe(observing_handler_f &&handler, bool const sync) {

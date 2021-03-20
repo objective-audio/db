@@ -40,7 +40,7 @@ object_event db::object_event::make_relation_replaced(db::object_ptr const &obje
     return object_event{object_relation_replaced_event{.object = object, .name = name}};
 }
 
-object_event db::make_object_erased_event(std::string const &entity_name, db::object_id const &object_id) {
+object_event db::object_event::make_erased(std::string const &entity_name, db::object_id const &object_id) {
     return object_event{object_erased_event{.entity_name = entity_name, .object_id = object_id}};
 }
 
