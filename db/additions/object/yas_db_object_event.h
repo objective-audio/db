@@ -35,9 +35,6 @@ struct object_event {
 
     object_event_type type() const;
 
-    template <typename Event>
-    Event const &get() const;
-
     bool is_changed() const;
     bool is_erased() const;
 

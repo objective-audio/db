@@ -213,15 +213,6 @@ object_event_type object_event::type() const {
     return this->_type;
 }
 
-template <typename Event>
-Event const &object_event::get() const {
-    if (auto ip = std::dynamic_pointer_cast<impl<Event>>(this->_impl)) {
-        return ip->event;
-    }
-
-    throw std::runtime_error("get event failed.");
-}
-
 bool object_event::is_changed() const {
     switch (this->type()) {
         case object_event_type::attribute_updated:
@@ -261,12 +252,3 @@ std::vector<std::size_t> const &object_event::indices() const {
 db::value const &object_event::value() const {
     return this->_value;
 }
-
-template db::object_fetched_event const &object_event::get<db::object_fetched_event>() const;
-template db::object_loaded_event const &object_event::get<db::object_loaded_event>() const;
-template db::object_cleared_event const &object_event::get<db::object_cleared_event>() const;
-template db::object_attribute_updated_event const &object_event::get<db::object_attribute_updated_event>() const;
-template db::object_relation_inserted_event const &object_event::get<db::object_relation_inserted_event>() const;
-template db::object_relation_removed_event const &object_event::get<db::object_relation_removed_event>() const;
-template db::object_relation_replaced_event const &object_event::get<db::object_relation_replaced_event>() const;
-template db::object_erased_event const &object_event::get<db::object_erased_event>() const;
