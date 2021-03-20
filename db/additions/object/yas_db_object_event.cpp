@@ -100,6 +100,18 @@ object_event db::object_event::make_erased(std::string const &entity_name, db::o
     return object_event{object_erased_event{.entity_name = entity_name, .object_id = object_id}};
 }
 
+db::object_event::object_event(object_event_type const type, object_ptr const &object, db::object_id const &object_id,
+                               std::string const &name, std::string const &entity_name,
+                               std::vector<std::size_t> const &indices, db::value const &value)
+    : _type(type),
+      _object(object),
+      _object_id(object_id),
+      _name(name),
+      _entity_name(entity_name),
+      _indices(indices),
+      _value(value) {
+}
+
 object_event::object_event(object_fetched_event &&event)
     : _type(object_event_type::fetched),
       _object(event.object),

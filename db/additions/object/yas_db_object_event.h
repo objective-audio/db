@@ -61,6 +61,8 @@ struct object_event {
     std::vector<std::size_t> const &_indices;
     db::value const &_value;
 
+    object_event(object_event_type const, object_ptr const &, db::object_id const &, std::string const &name,
+                 std::string const &entity_name, std::vector<std::size_t> const &indices, db::value const &);
     object_event(object_fetched_event &&);
     object_event(object_loaded_event &&);
     object_event(object_cleared_event &&);
