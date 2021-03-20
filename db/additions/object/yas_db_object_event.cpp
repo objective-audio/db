@@ -31,8 +31,8 @@ object_event db::object_event::make_relation_inserted(db::object_ptr const &obje
     return object_event{object_relation_inserted_event{.object = object, .name = name, .indices = std::move(indices)}};
 }
 
-object_event db::make_object_relation_removed_event(db::object_ptr const &object, std::string const &name,
-                                                    std::vector<std::size_t> &&indices) {
+object_event db::object_event::make_relation_removed(db::object_ptr const &object, std::string const &name,
+                                                     std::vector<std::size_t> &&indices) {
     return object_event{object_relation_removed_event{.object = object, .name = name, .indices = std::move(indices)}};
 }
 

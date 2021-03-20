@@ -285,7 +285,7 @@ void object::remove_relation_id(std::string const &rel_name, db::object_id const
         }
 
         this->_fetcher->push(
-            make_object_relation_removed_event(this->_weak_object.lock(), rel_name, std::move(indices)));
+            object_event::make_relation_removed(this->_weak_object.lock(), rel_name, std::move(indices)));
     }
 }
 
@@ -324,7 +324,7 @@ void object::remove_relation_at(std::string const &rel_name, std::size_t const i
             this->_status = db::object_status::changed;
         }
 
-        this->_fetcher->push(make_object_relation_removed_event(this->_weak_object.lock(), rel_name, {idx}));
+        this->_fetcher->push(object_event::make_relation_removed(this->_weak_object.lock(), rel_name, {idx}));
     }
 }
 
@@ -354,7 +354,7 @@ void object::remove_all_relations(std::string const &rel_name) {
         }
 
         this->_fetcher->push(
-            make_object_relation_removed_event(this->_weak_object.lock(), rel_name, std::move(indices)));
+            object_event::make_relation_removed(this->_weak_object.lock(), rel_name, std::move(indices)));
     }
 }
 
