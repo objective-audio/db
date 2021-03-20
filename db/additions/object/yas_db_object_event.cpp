@@ -180,7 +180,13 @@ object_event::object_event(object_relation_inserted_event &&event)
 }
 
 object_event::object_event(object_relation_removed_event &&event)
-    : object_event(std::make_shared<impl<object_relation_removed_event>>(std::move(event))) {
+    : _type(object_event_type::relation_removed),
+      _object(event.object),
+      _object_id(_empty_object_id),
+      _name(event.name),
+      _entity_name(_empty_string),
+      _indices(event.indices),
+      _value(_empty_value) {
 }
 
 object_event::object_event(object_relation_replaced_event &&event)
