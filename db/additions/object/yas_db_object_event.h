@@ -99,12 +99,12 @@ struct object_event {
 
     static object_event make_fetched(db::object_ptr const &object);
     static object_event make_loaded(db::object_ptr const &object);
+    static object_event make_cleared(db::object_ptr const &object);
 
    private:
     std::shared_ptr<impl_base> _impl;
 };
 
-object_event make_object_cleared_event(db::object_ptr const &object);
 object_event make_object_attribute_updated_event(db::object_ptr const &object, std::string const &name,
                                                  db::value const &value);
 object_event make_object_relation_inserted_event(db::object_ptr const &object, std::string const &name,

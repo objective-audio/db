@@ -17,7 +17,7 @@ object_event db::object_event::make_loaded(db::object_ptr const &object) {
     return object_event{object_loaded_event{.object = object}};
 }
 
-object_event db::make_object_cleared_event(db::object_ptr const &object) {
+object_event db::object_event::make_cleared(db::object_ptr const &object) {
     return object_event{object_cleared_event{.object = object}};
 }
 

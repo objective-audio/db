@@ -497,7 +497,7 @@ void object::load_save_id(db::value const &save_id) {
 void object::clear_data() {
     this->_clear();
 
-    this->_fetcher->push(make_object_cleared_event(this->_weak_object.lock()));
+    this->_fetcher->push(object_event::make_cleared(this->_weak_object.lock()));
 }
 
 void object::_clear() {
