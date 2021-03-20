@@ -97,11 +97,12 @@ struct object_event {
     std::vector<std::size_t> const &indices() const;
     db::value const &value() const;
 
+    static object_event make_fetched(db::object_ptr const &object);
+
    private:
     std::shared_ptr<impl_base> _impl;
 };
 
-object_event make_object_fetched_event(db::object_ptr const &object);
 object_event make_object_loaded_event(db::object_ptr const &object);
 object_event make_object_cleared_event(db::object_ptr const &object);
 object_event make_object_attribute_updated_event(db::object_ptr const &object, std::string const &name,

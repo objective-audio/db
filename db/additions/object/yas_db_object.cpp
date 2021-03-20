@@ -436,7 +436,7 @@ void object::_prepare(object_ptr const &shared) {
 
     this->_fetcher = observing::fetcher<object_event>::make_shared([weak_object = this->_weak_object]() {
         if (auto object = weak_object.lock()) {
-            return std::optional<object_event>{make_object_fetched_event(object)};
+            return std::optional<object_event>{object_event::make_fetched(object)};
         } else {
             return std::optional<object_event>{std::nullopt};
         }

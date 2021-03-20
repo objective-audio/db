@@ -9,7 +9,7 @@
 using namespace yas;
 using namespace yas::db;
 
-object_event db::make_object_fetched_event(db::object_ptr const &object) {
+object_event db::object_event::make_fetched(db::object_ptr const &object) {
     return object_event{object_fetched_event{.object = object}};
 }
 
