@@ -150,7 +150,13 @@ object_event::object_event(object_loaded_event &&event)
 }
 
 object_event::object_event(object_cleared_event &&event)
-    : object_event(std::make_shared<impl<object_cleared_event>>(std::move(event))) {
+    : _type(object_event_type::cleared),
+      _object(event.object),
+      _object_id(_empty_object_id),
+      _name(_empty_string),
+      _entity_name(_empty_string),
+      _indices(_empty_indices),
+      _value(_empty_value) {
 }
 
 object_event::object_event(object_attribute_updated_event &&event)
