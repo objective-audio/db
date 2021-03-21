@@ -16,6 +16,34 @@ static std::vector<std::size_t> const _empty_indices;
 static db::value const _empty_value = nullptr;
 }  // namespace yas::db
 
+db::object_event::object_event(object_event_type const type, object_ptr const &object, db::object_id const &object_id,
+                               std::string const &name, std::string const &entity_name,
+                               std::vector<std::size_t> const &indices, db::value const &value)
+    : type(type),
+      object(object),
+      object_id(object_id),
+      name(name),
+      entity_name(entity_name),
+      indices(indices),
+      value(value) {
+}
+
+bool object_event::is_changed() const {
+    switch (this->type) {
+        case object_event_type::attribute_updated:
+        case object_event_type::relation_inserted:
+        case object_event_type::relation_removed:
+        case object_event_type::relation_replaced:
+            return true;
+        default:
+            return false;
+    }
+}
+
+bool object_event::is_erased() const {
+    return this->type == object_event_type::erased;
+}
+
 object_event db::object_event::make_fetched(db::object_ptr const &object) {
     return object_event{
         object_event_type::fetched, object, db::null_id(), _empty_string, _empty_string, _empty_indices, _empty_value};
@@ -57,32 +85,4 @@ object_event db::object_event::make_relation_replaced(db::object_ptr const &obje
 object_event db::object_event::make_erased(std::string const &entity_name, db::object_id const &object_id) {
     return object_event{
         object_event_type::erased, _empty_object, object_id, _empty_string, entity_name, _empty_indices, _empty_value};
-}
-
-db::object_event::object_event(object_event_type const type, object_ptr const &object, db::object_id const &object_id,
-                               std::string const &name, std::string const &entity_name,
-                               std::vector<std::size_t> const &indices, db::value const &value)
-    : type(type),
-      object(object),
-      object_id(object_id),
-      name(name),
-      entity_name(entity_name),
-      indices(indices),
-      value(value) {
-}
-
-bool object_event::is_changed() const {
-    switch (this->type) {
-        case object_event_type::attribute_updated:
-        case object_event_type::relation_inserted:
-        case object_event_type::relation_removed:
-        case object_event_type::relation_replaced:
-            return true;
-        default:
-            return false;
-    }
-}
-
-bool object_event::is_erased() const {
-    return this->type == object_event_type::erased;
 }
