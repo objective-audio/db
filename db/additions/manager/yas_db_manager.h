@@ -12,7 +12,6 @@
 #include <db/yas_db_model.h>
 #include <db/yas_db_object.h>
 #include <db/yas_db_ptr.h>
-#include <dispatch/dispatch.h>
 
 namespace yas {
 class task;
@@ -25,8 +24,6 @@ class error;
 class database;
 
 struct manager final {
-    ~manager();
-
     std::string const &database_path() const;
     db::database_ptr const &database() const;
     db::model const &model() const;
@@ -37,8 +34,6 @@ struct manager final {
     observing::canceller_ptr observe_db_info(db_info_observing_handler_f &&, bool const sync);
     using db_object_observing_handler_f = std::function<void(object_ptr const &)>;
     observing::canceller_ptr observe_db_object(db_object_observing_handler_f &&);
-
-    dispatch_queue_t dispatch_queue() const;
 
     db::object_ptr create_object(std::string const entity_name);
 
@@ -75,8 +70,7 @@ struct manager final {
     db::object_ptr make_object(std::string const &entity_name);
 
     static manager_ptr make_shared(std::string const &db_path, db::model const &model,
-                                   std::size_t const priority_count = 1,
-                                   dispatch_queue_t const dispatch_queue = dispatch_get_main_queue());
+                                   std::size_t const priority_count = 1);
 
    private:
     db::manager_wptr _weak_manager;
@@ -89,11 +83,9 @@ struct manager final {
     db::object_map_map_t _changed_objects;
     observing::value::holder_ptr<db::info_opt> _db_info;
     observing::notifier_ptr<db::object_ptr> _db_object_notifier;
-    dispatch_queue_t _dispatch_queue;
     observing::canceller_pool _pool;
 
-    manager(std::string const &db_path, db::model const &model, std::size_t const priority_count,
-            dispatch_queue_t const dispatch_queue);
+    manager(std::string const &db_path, db::model const &model, std::size_t const priority_count);
 
     void _prepare(manager_ptr const &);
 

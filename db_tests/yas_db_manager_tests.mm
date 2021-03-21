@@ -2770,35 +2770,6 @@ using namespace yas;
     [self waitForExpectationsWithTimeout:10.0 handler:nil];
 }
 
-- (void)test_dispatch_queue {
-    dispatch_queue_t queue = dispatch_queue_create("test", DISPATCH_QUEUE_SERIAL);
-
-    db::model model_0_0_1 = [yas_db_test_utils model_0_0_1];
-    auto const manager = [yas_db_test_utils create_test_manager:std::move(model_0_0_1) priority_count:1 dispatch_queue:queue];
-
-    XCTAssertEqualObjects(manager->dispatch_queue(), queue);
-
-    manager->setup([](auto result) { XCTAssertFalse([NSThread isMainThread]); });
-
-    manager->insert_objects(db::no_cancellation,
-                           []() {
-                               XCTAssertFalse([NSThread isMainThread]);
-                               return db::entity_count_map_t{{"sample_a", 1}};
-                           },
-                           [](auto result) {
-                               XCTAssertFalse([NSThread isMainThread]);
-                               auto &object = result.value().at("sample_a").at(0);
-                               object->set_attribute_value("name", db::value{"x"});
-                           });
-
-    manager->save(db::no_cancellation,
-                 [](db::manager_map_result_t result) { XCTAssertFalse([NSThread isMainThread]); });
-
-    XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
-    manager->execute(db::no_cancellation, [exp](auto const &) { [exp fulfill]; });
-    [self waitForExpectationsWithTimeout:10.0 handler:nil];
-}
-
 - (void)test_make_error {
     auto error = db::manager_error{db::manager_error_type::version_not_found};
     XCTAssertTrue(error);
