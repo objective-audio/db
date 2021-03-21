@@ -198,10 +198,10 @@
 		B6BCD4E92606FE78007E9278 /* db */ = {
 			isa = PBXGroup;
 			children = (
-				B6BCD4EA2606FE78007E9278 /* core */,
 				B6BCD4FC2606FE78007E9278 /* additions */,
-				B6BCD52B2606FE78007E9278 /* yas_db_umbrella.h */,
+				B6BCD4EA2606FE78007E9278 /* core */,
 				B6BCD52C2606FE78007E9278 /* yas_db_ptr.h */,
+				B6BCD52B2606FE78007E9278 /* yas_db_umbrella.h */,
 			);
 			name = db;
 			path = ../../db;
@@ -234,43 +234,26 @@
 		B6BCD4FC2606FE78007E9278 /* additions */ = {
 			isa = PBXGroup;
 			children = (
-				B6BCD4FD2606FE78007E9278 /* yas_db_additional_types.h */,
-				B6BCD4FE2606FE78007E9278 /* relation */,
-				B6BCD4FF2606FE78007E9278 /* entity */,
-				B6BCD5002606FE78007E9278 /* utils */,
 				B6BCD5072606FE78007E9278 /* manager */,
-				B6BCD5142606FE78007E9278 /* object */,
 				B6BCD51D2606FE78007E9278 /* model */,
+				B6BCD5142606FE78007E9278 /* object */,
+				B6BCD5002606FE78007E9278 /* utils */,
 				B6BCD5282606FE78007E9278 /* yas_db_additional_protocol.h */,
-				B6BCD5292606FE78007E9278 /* index */,
+				B6BCD4FD2606FE78007E9278 /* yas_db_additional_types.h */,
 				B6BCD52A2606FE78007E9278 /* yas_db_additions.h */,
 			);
 			path = additions;
-			sourceTree = "<group>";
-		};
-		B6BCD4FE2606FE78007E9278 /* relation */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = relation;
-			sourceTree = "<group>";
-		};
-		B6BCD4FF2606FE78007E9278 /* entity */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = entity;
 			sourceTree = "<group>";
 		};
 		B6BCD5002606FE78007E9278 /* utils */ = {
 			isa = PBXGroup;
 			children = (
 				B6BCD5012606FE78007E9278 /* yas_db_cf_utils.cpp */,
-				B6BCD5022606FE78007E9278 /* yas_db_utils.h */,
-				B6BCD5032606FE78007E9278 /* yas_db_sql_utils.h */,
 				B6BCD5042606FE78007E9278 /* yas_db_cf_utils.h */,
 				B6BCD5052606FE78007E9278 /* yas_db_sql_utils.cpp */,
+				B6BCD5032606FE78007E9278 /* yas_db_sql_utils.h */,
 				B6BCD5062606FE78007E9278 /* yas_db_utils.cpp */,
+				B6BCD5022606FE78007E9278 /* yas_db_utils.h */,
 			);
 			path = utils;
 			sourceTree = "<group>";
@@ -278,18 +261,18 @@
 		B6BCD5072606FE78007E9278 /* manager */ = {
 			isa = PBXGroup;
 			children = (
-				B6BCD5082606FE78007E9278 /* yas_db_weak_pool.h */,
+				B6BCD5132606FE78007E9278 /* yas_db_fetch_option.cpp */,
 				B6BCD5092606FE78007E9278 /* yas_db_fetch_option.h */,
-				B6BCD50A2606FE78007E9278 /* yas_db_manager.mm */,
-				B6BCD50B2606FE78007E9278 /* yas_db_manager_error.h */,
-				B6BCD50C2606FE78007E9278 /* yas_db_manager_utils.h */,
 				B6BCD50D2606FE78007E9278 /* yas_db_info.cpp */,
-				B6BCD50E2606FE78007E9278 /* yas_db_manager.h */,
-				B6BCD50F2606FE78007E9278 /* yas_db_manager_utils.cpp */,
-				B6BCD5102606FE78007E9278 /* yas_db_weak_pool_private.h */,
 				B6BCD5112606FE78007E9278 /* yas_db_info.h */,
 				B6BCD5122606FE78007E9278 /* yas_db_manager_error.cpp */,
-				B6BCD5132606FE78007E9278 /* yas_db_fetch_option.cpp */,
+				B6BCD50B2606FE78007E9278 /* yas_db_manager_error.h */,
+				B6BCD50F2606FE78007E9278 /* yas_db_manager_utils.cpp */,
+				B6BCD50C2606FE78007E9278 /* yas_db_manager_utils.h */,
+				B6BCD50E2606FE78007E9278 /* yas_db_manager.h */,
+				B6BCD50A2606FE78007E9278 /* yas_db_manager.mm */,
+				B6BCD5102606FE78007E9278 /* yas_db_weak_pool_private.h */,
+				B6BCD5082606FE78007E9278 /* yas_db_weak_pool.h */,
 			);
 			path = manager;
 			sourceTree = "<group>";
@@ -298,13 +281,13 @@
 			isa = PBXGroup;
 			children = (
 				B6BCD5152606FE78007E9278 /* yas_db_object_event.cpp */,
-				B6BCD5162606FE78007E9278 /* yas_db_object.cpp */,
-				B6BCD5172606FE78007E9278 /* yas_db_object_id.cpp */,
-				B6BCD5182606FE78007E9278 /* yas_db_object_utils.h */,
 				B6BCD5192606FE78007E9278 /* yas_db_object_event.h */,
-				B6BCD51A2606FE78007E9278 /* yas_db_object_utils.cpp */,
-				B6BCD51B2606FE78007E9278 /* yas_db_object.h */,
+				B6BCD5172606FE78007E9278 /* yas_db_object_id.cpp */,
 				B6BCD51C2606FE78007E9278 /* yas_db_object_id.h */,
+				B6BCD51A2606FE78007E9278 /* yas_db_object_utils.cpp */,
+				B6BCD5182606FE78007E9278 /* yas_db_object_utils.h */,
+				B6BCD5162606FE78007E9278 /* yas_db_object.cpp */,
+				B6BCD51B2606FE78007E9278 /* yas_db_object.h */,
 			);
 			path = object;
 			sourceTree = "<group>";
@@ -324,13 +307,6 @@
 				B6BCD5272606FE78007E9278 /* yas_db_model.h */,
 			);
 			path = model;
-			sourceTree = "<group>";
-		};
-		B6BCD5292606FE78007E9278 /* index */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = index;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
