@@ -65,7 +65,6 @@
 		B6B6E13A21E226A50029A7C1 /* yas_db_utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6B6E10321E226A50029A7C1 /* yas_db_utils.cpp */; };
 		B6B6E13B21E226A50029A7C1 /* yas_db_statement.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6B6E10421E226A50029A7C1 /* yas_db_statement.cpp */; };
 		B6B6E13C21E226A50029A7C1 /* yas_db_fetch_option.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6B6E10521E226A50029A7C1 /* yas_db_fetch_option.cpp */; };
-		B6B6E13F21E227460029A7C1 /* chaining.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B6B6E13E21E227460029A7C1 /* chaining.framework */; };
 		B6B6E14121E227460029A7C1 /* cpp_utils.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B6B6E14021E227460029A7C1 /* cpp_utils.framework */; };
 		B6B6E14321E227460029A7C1 /* objc_utils.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B6B6E14221E227460029A7C1 /* objc_utils.framework */; };
 		B6B6E14521E227550029A7C1 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = B6B6E14421E227550029A7C1 /* libsqlite3.tbd */; };
@@ -149,7 +148,6 @@
 			files = (
 				B6B6E14521E227550029A7C1 /* libsqlite3.tbd in Frameworks */,
 				B60ACAF92600FB5400C67595 /* observing.framework in Frameworks */,
-				B6B6E13F21E227460029A7C1 /* chaining.framework in Frameworks */,
 				B6B6E14121E227460029A7C1 /* cpp_utils.framework in Frameworks */,
 				B6B6E14321E227460029A7C1 /* objc_utils.framework in Frameworks */,
 			);

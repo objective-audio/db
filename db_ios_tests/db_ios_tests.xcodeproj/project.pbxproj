@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		B60ACB052600FB7D00C67595 /* observing.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B60ACB042600FB7D00C67595 /* observing.framework */; };
 		B62F800E241C8A3D00909A9C /* yas_db_error_tests.mm in Sources */ = {isa = PBXBuildFile; fileRef = B62F800D241C8A3D00909A9C /* yas_db_error_tests.mm */; };
-		B6DE368121E9F82500E49BCB /* chaining.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DE368021E9F82500E49BCB /* chaining.framework */; };
 		B6DE368321E9F82500E49BCB /* cpp_utils.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DE368221E9F82500E49BCB /* cpp_utils.framework */; };
 		B6DE368521E9F82500E49BCB /* db.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DE368421E9F82500E49BCB /* db.framework */; };
 		B6DE368721E9F83A00E49BCB /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DE368621E9F83A00E49BCB /* libsqlite3.tbd */; };
@@ -109,7 +108,6 @@
 			files = (
 				B6DE368721E9F83A00E49BCB /* libsqlite3.tbd in Frameworks */,
 				B60ACB052600FB7D00C67595 /* observing.framework in Frameworks */,
-				B6DE368121E9F82500E49BCB /* chaining.framework in Frameworks */,
 				B6DE368321E9F82500E49BCB /* cpp_utils.framework in Frameworks */,
 				B6DE368521E9F82500E49BCB /* db.framework in Frameworks */,
 			);

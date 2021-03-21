@@ -11,9 +11,6 @@
       location = "group:db_ios/db_ios.xcodeproj">
    </FileRef>
    <FileRef
-      location = "group:submodules/chaining/chaining_ios/chaining_ios.xcodeproj">
-   </FileRef>
-   <FileRef
       location = "group:submodules/cpp_utils/cpp_utils_ios/cpp_utils_ios.xcodeproj">
    </FileRef>
    <FileRef

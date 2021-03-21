@@ -8,9 +8,6 @@
       location = "group:db_mac/db_mac.xcodeproj">
    </FileRef>
    <FileRef
-      location = "group:submodules/chaining/chaining_mac/chaining_mac.xcodeproj">
-   </FileRef>
-   <FileRef
       location = "group:submodules/cpp_utils/cpp_utils_mac/cpp_utils_mac.xcodeproj">
    </FileRef>
    <FileRef
