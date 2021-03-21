@@ -7,6 +7,7 @@
 #include <cpp_utils/yas_cf_ref.h>
 #include <cpp_utils/yas_cf_utils.h>
 #include <cpp_utils/yas_objc_ptr.h>
+#include <cpp_utils/yas_thread.h>
 
 using namespace yas;
 using namespace yas::sample;
@@ -502,8 +503,7 @@ void db_controller::_update_objects(std::shared_ptr<db::manager_result_t> contin
     this->_manager->execute(
         db::no_cancellation, [continuous_result, completion = std::move(completion)](task const &) {
             auto lambda = [continuous_result, completion = std::move(completion)]() { completion(*continuous_result); };
-
-            dispatch_sync(dispatch_get_main_queue(), lambda);
+            thread::perform_sync_on_main(std::move(lambda));
         });
 
     this->_manager->resume();
