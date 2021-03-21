@@ -28,19 +28,12 @@ using namespace yas::db;
 
 #pragma mark - manager
 
-manager::manager(std::string const &db_path, db::model const &model, std::size_t const priority_count,
-                 dispatch_queue_t const dispatch_queue)
+manager::manager(std::string const &db_path, db::model const &model, std::size_t const priority_count)
     : _database(database::make_shared(db_path)),
       _model(model),
-      _dispatch_queue(dispatch_queue),
       _task_queue(priority_count),
       _db_info(observing::value::holder<db::info_opt>::make_shared(std::nullopt)),
       _db_object_notifier(observing::notifier<db::object_ptr>::make_shared()) {
-    yas_dispatch_queue_retain(dispatch_queue);
-}
-
-manager::~manager() {
-    yas_dispatch_queue_release(this->_dispatch_queue);
 }
 
 // バックグラウンド処理を保留するカウントをあげる
@@ -93,10 +86,6 @@ db::value const &manager::last_save_id() const {
         return info->last_save_id_value();
     }
     return db::null_value();
-}
-
-dispatch_queue_t manager::dispatch_queue() const {
-    return this->_dispatch_queue;
 }
 
 // データベースに保存せず仮にオブジェクトを生成する
@@ -1123,9 +1112,8 @@ void manager::_object_did_change(db::object_ptr const &object) {
     this->_db_object_notifier->notify(object);
 }
 
-manager_ptr manager::make_shared(std::string const &db_path, db::model const &model, std::size_t const priority_count,
-                                 dispatch_queue_t const dispatch_queue) {
-    auto shared = manager_ptr(new manager{db_path, model, priority_count, dispatch_queue});
+manager_ptr manager::make_shared(std::string const &db_path, db::model const &model, std::size_t const priority_count) {
+    auto shared = manager_ptr(new manager{db_path, model, priority_count});
     shared->_prepare(shared);
     return shared;
 }
