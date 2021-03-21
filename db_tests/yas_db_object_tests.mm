@@ -504,10 +504,8 @@ using namespace yas;
     auto canceller = obj->observe([&called, self](db::object_event const &event) {
                                               XCTAssertEqual(event.type(), db::object_event_type::attribute_updated);
 
-                                              auto const &attr_event = event.get<db::object_attribute_updated_event>();
-
-                                              XCTAssertEqual(attr_event.name, "name");
-                                              XCTAssertEqual(attr_event.value, db::value{"test_value"});
+                                              XCTAssertEqual(event.name(), "name");
+                                              XCTAssertEqual(event.value(), db::value{"test_value"});
 
                                               called = true;
     }, false);
@@ -547,8 +545,7 @@ using namespace yas;
                 if (called_count == 0) {
                     XCTAssertEqual(event.type(), db::object_event_type::relation_replaced);
 
-                    auto const &replaced_event = event.get<db::object_relation_replaced_event>();
-                    auto const name = replaced_event.name;
+                    auto const name = event.name();
 
                     XCTAssertEqual(name, "child");
                     XCTAssertEqual(obj->relation_size(name), 2);
@@ -557,30 +554,27 @@ using namespace yas;
                 } else if (called_count == 1) {
                     XCTAssertEqual(event.type(), db::object_event_type::relation_inserted);
 
-                    auto const &inserted_event = event.get<db::object_relation_inserted_event>();
-                    auto const name = inserted_event.name;
+                    auto const name = event.name();
 
                     XCTAssertEqual(obj->relation_size(name), 3);
                     XCTAssertEqual(obj->relation_id(name, 2).stable(), 30);
-                    XCTAssertEqual(inserted_event.indices.size(), 1);
+                    XCTAssertEqual(event.indices().size(), 1);
                 } else if (called_count == 2) {
                     XCTAssertEqual(event.type(), db::object_event_type::relation_removed);
 
-                    auto const &removed_event = event.get<db::object_relation_removed_event>();
-                    auto const name = removed_event.name;
+                    auto const name = event.name();
 
                     XCTAssertEqual(obj->relation_size(name), 2);
                     XCTAssertEqual(obj->relation_id(name, 0).stable(), 10);
                     XCTAssertEqual(obj->relation_id(name, 1).stable(), 30);
-                    XCTAssertEqual(removed_event.indices.size(), 1);
+                    XCTAssertEqual(event.indices().size(), 1);
                 } else if (called_count == 3) {
                     XCTAssertEqual(event.type(), db::object_event_type::relation_removed);
 
-                    auto const &removed_event = event.get<db::object_relation_removed_event>();
-                    auto const name = removed_event.name;
+                    auto const name = event.name();
 
                     XCTAssertEqual(obj->relation_size(name), 0);
-                    XCTAssertEqual(removed_event.indices.size(), 2);
+                    XCTAssertEqual(event.indices().size(), 2);
                 }
 
                 ++called_count;
@@ -630,8 +624,7 @@ using namespace yas;
     auto observer = obj->observe([&called, self](db::object_event const &event) {
                                               XCTAssertEqual(event.type(), db::object_event_type::loaded);
 
-                                              auto const loaded_event = event.get<db::object_loaded_event>();
-                                              auto const &obj = loaded_event.object;
+                                              auto const &obj = event.object();
 
                                               XCTAssertEqual(obj->object_id().stable_value(), db::value{1});
 
@@ -699,8 +692,7 @@ using namespace yas;
     auto observer = obj->observe([&called, self](db::object_event const &event) {
                                               XCTAssertEqual(event.type(), db::object_event_type::cleared);
 
-                                              auto const cleared_event = event.get<db::object_cleared_event>();
-                                              auto const &obj = cleared_event.object;
+                                              auto const &obj = event.object();
 
                                               XCTAssertEqual(obj->status(), db::object_status::invalid);
                                               XCTAssertFalse(obj->attribute_value("name"));
