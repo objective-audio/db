@@ -502,7 +502,7 @@ using namespace yas;
     bool called = false;
 
     auto canceller = obj->observe([&called, self](db::object_event const &event) {
-                                              XCTAssertEqual(event.type(), db::object_event_type::attribute_updated);
+                                              XCTAssertEqual(event.type, db::object_event_type::attribute_updated);
 
                                               XCTAssertEqual(event.name(), "name");
                                               XCTAssertEqual(event.value(), db::value{"test_value"});
@@ -543,7 +543,7 @@ using namespace yas;
                 auto const obj = weak_obj.lock();
 
                 if (called_count == 0) {
-                    XCTAssertEqual(event.type(), db::object_event_type::relation_replaced);
+                    XCTAssertEqual(event.type, db::object_event_type::relation_replaced);
 
                     auto const name = event.name();
 
@@ -552,7 +552,7 @@ using namespace yas;
                     XCTAssertEqual(obj->relation_id(name, 0).stable(), 10);
                     XCTAssertEqual(obj->relation_id(name, 1).stable(), 20);
                 } else if (called_count == 1) {
-                    XCTAssertEqual(event.type(), db::object_event_type::relation_inserted);
+                    XCTAssertEqual(event.type, db::object_event_type::relation_inserted);
 
                     auto const name = event.name();
 
@@ -560,7 +560,7 @@ using namespace yas;
                     XCTAssertEqual(obj->relation_id(name, 2).stable(), 30);
                     XCTAssertEqual(event.indices().size(), 1);
                 } else if (called_count == 2) {
-                    XCTAssertEqual(event.type(), db::object_event_type::relation_removed);
+                    XCTAssertEqual(event.type, db::object_event_type::relation_removed);
 
                     auto const name = event.name();
 
@@ -569,7 +569,7 @@ using namespace yas;
                     XCTAssertEqual(obj->relation_id(name, 1).stable(), 30);
                     XCTAssertEqual(event.indices().size(), 1);
                 } else if (called_count == 3) {
-                    XCTAssertEqual(event.type(), db::object_event_type::relation_removed);
+                    XCTAssertEqual(event.type, db::object_event_type::relation_removed);
 
                     auto const name = event.name();
 
@@ -622,7 +622,7 @@ using namespace yas;
     bool called = false;
 
     auto observer = obj->observe([&called, self](db::object_event const &event) {
-                                              XCTAssertEqual(event.type(), db::object_event_type::loaded);
+                                              XCTAssertEqual(event.type, db::object_event_type::loaded);
 
                                               auto const &obj = event.object();
 
@@ -690,7 +690,7 @@ using namespace yas;
     bool called = false;
 
     auto observer = obj->observe([&called, self](db::object_event const &event) {
-                                              XCTAssertEqual(event.type(), db::object_event_type::cleared);
+                                              XCTAssertEqual(event.type, db::object_event_type::cleared);
 
                                               auto const &obj = event.object();
 
@@ -820,7 +820,7 @@ using namespace yas;
     bool called = false;
 
     auto chain = obj->observe([&called](db::object_event const &event) {
-                         if (event.type() == db::object_event_type::fetched) {
+                         if (event.type == db::object_event_type::fetched) {
                              called = true;
                          }
     }, true);
