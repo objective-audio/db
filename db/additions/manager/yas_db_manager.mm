@@ -166,7 +166,7 @@ void manager::setup(db::completion_f completion) {
             completion(std::move(state));
         };
 
-        dispatch_sync(manager->dispatch_queue(), std::move(completion_on_main));
+        thread::perform_sync_on_main(std::move(completion_on_main));
     };
 
     this->execute(db::no_cancellation, std::move(execution));
@@ -218,7 +218,7 @@ void manager::clear(db::cancellation_f cancellation, db::completion_f completion
             completion(std::move(state));
         };
 
-        dispatch_sync(manager->dispatch_queue(), std::move(completion_on_main));
+        thread::perform_sync_on_main(std::move(completion_on_main));
     };
 
     this->execute(std::move(cancellation), std::move(execution));
@@ -276,7 +276,7 @@ void manager::purge(db::cancellation_f cancellation, db::completion_f completion
             completion(std::move(state));
         };
 
-        dispatch_sync(manager->dispatch_queue(), std::move(completion_on_main));
+        thread::perform_sync_on_main(std::move(completion_on_main));
     };
 
     this->execute(std::move(cancellation), std::move(execution));
@@ -301,7 +301,7 @@ void manager::reset(db::cancellation_f cancellation, db::completion_f completion
             }
         };
 
-        dispatch_sync(manager->dispatch_queue(), std::move(completion_on_main));
+        thread::perform_sync_on_main(std::move(completion_on_main));
     };
 
     this->_execute_fetch_object_datas(std::move(cancellation), std::move(preparation), std::move(impl_completion));
@@ -337,8 +337,8 @@ void manager::insert_objects(db::cancellation_f cancellation, db::insert_values_
         // 挿入するオブジェクトのデータをメインスレッドで準備する
         db::value_map_vector_map_t values;
 
-        auto preparation_on_main = [&values, &preparation]() { values = preparation(); };
-        dispatch_sync(manager->dispatch_queue(), std::move(preparation_on_main));
+        auto preparation_on_main = [&values, &preparation] { values = preparation(); };
+        thread::perform_sync_on_main(std::move(preparation_on_main));
 
         auto &db = manager->database();
         auto const &model = manager->model();
@@ -401,7 +401,7 @@ void manager::insert_objects(db::cancellation_f cancellation, db::insert_values_
             }
         };
 
-        dispatch_sync(manager->dispatch_queue(), std::move(completion_on_main));
+        thread::perform_sync_on_main(std::move(completion_on_main));
     };
 
     this->execute(std::move(cancellation), std::move(execution));
@@ -423,7 +423,7 @@ void manager::fetch_objects(db::cancellation_f cancellation, db::fetch_option_pr
             }
         };
 
-        dispatch_sync(manager->dispatch_queue(), std::move(completion_on_main));
+        thread::perform_sync_on_main(std::move(completion_on_main));
     };
 
     this->_execute_fetch_object_datas(std::move(cancellation), std::move(preparation), std::move(impl_completion));
@@ -444,7 +444,7 @@ void manager::fetch_const_objects(db::cancellation_f cancellation, db::fetch_opt
             }
         };
 
-        dispatch_sync(manager->dispatch_queue(), std::move(completion_on_main));
+        thread::perform_sync_on_main(std::move(completion_on_main));
     };
 
     this->_execute_fetch_object_datas(std::move(cancellation), std::move(preparation), std::move(impl_completion));
@@ -466,7 +466,7 @@ void manager::fetch_objects(db::cancellation_f cancellation, db::fetch_ids_prepa
             }
         };
 
-        dispatch_sync(manager->dispatch_queue(), std::move(completion_on_main));
+        thread::perform_sync_on_main(std::move(completion_on_main));
     };
 
     this->_execute_fetch_object_datas(std::move(cancellation), std::move(preparation), std::move(impl_completion));
@@ -487,7 +487,7 @@ void manager::fetch_const_objects(db::cancellation_f cancellation, db::fetch_ids
             }
         };
 
-        dispatch_sync(manager->dispatch_queue(), std::move(completion_on_main));
+        thread::perform_sync_on_main(std::move(completion_on_main));
     };
 
     this->_execute_fetch_object_datas(std::move(cancellation), std::move(preparation), std::move(impl_completion));
@@ -500,7 +500,7 @@ void manager::save(db::cancellation_f cancellation, db::map_completion_f complet
         db::object_data_vector_map_t changed_datas;
         // 変更のあったデータをメインスレッドで取得する
         auto get_changed_on_main = [&manager, &changed_datas]() { changed_datas = manager->_changed_datas_for_save(); };
-        dispatch_sync(manager->dispatch_queue(), std::move(get_changed_on_main));
+        thread::perform_sync_on_main(std::move(get_changed_on_main));
 
         auto &db = manager->database();
         auto const &model = manager->model();
@@ -566,7 +566,7 @@ void manager::save(db::cancellation_f cancellation, db::map_completion_f complet
             }
         };
 
-        dispatch_sync(manager->dispatch_queue(), std::move(completion_on_main));
+        thread::perform_sync_on_main(std::move(completion_on_main));
     };
 
     this->execute(std::move(cancellation), std::move(execution));
@@ -581,7 +581,7 @@ void manager::revert(db::cancellation_f cancellation, db::revert_preparation_f p
         // リバートする先のセーブIDをメインスレッドで準備する
         db::integer::type rev_save_id;
         auto preparation_on_main = [&rev_save_id, &preparation]() { rev_save_id = preparation(); };
-        dispatch_sync(manager->dispatch_queue(), std::move(preparation_on_main));
+        thread::perform_sync_on_main(std::move(preparation_on_main));
 
         auto &db = manager->database();
 
@@ -681,7 +681,7 @@ void manager::revert(db::cancellation_f cancellation, db::revert_preparation_f p
             }
         };
 
-        dispatch_sync(manager->dispatch_queue(), std::move(completion_on_main));
+        thread::perform_sync_on_main(std::move(completion_on_main));
     };
 
     this->execute(std::move(cancellation), std::move(execution));
@@ -1034,7 +1034,7 @@ void manager::_execute_fetch_object_datas(
         // データベースからデータを取得する条件をメインスレッドで準備する
         db::fetch_option fetch_option;
         auto preparation_on_main = [&fetch_option, &preparation]() { fetch_option = preparation(); };
-        dispatch_sync(manager->dispatch_queue(), std::move(preparation_on_main));
+        thread::perform_sync_on_main(std::move(preparation_on_main));
 
         auto const &db = manager->database();
         auto const &model = manager->model();
