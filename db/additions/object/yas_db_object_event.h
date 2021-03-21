@@ -18,7 +18,7 @@ enum class object_event_type {
     erased,
 };
 
-struct object_event {
+struct object_event final {
     object_event_type type;
     db::object_ptr const &object;
     db::object_id const &object_id;
