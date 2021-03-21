@@ -64,7 +64,7 @@ db::object_event::object_event(object_event_type const type, object_ptr const &o
                                std::vector<std::size_t> const &indices, db::value const &value)
     : type(type),
       object(object),
-      _object_id(object_id),
+      object_id(object_id),
       _name(name),
       _entity_name(entity_name),
       _indices(indices),
@@ -85,10 +85,6 @@ bool object_event::is_changed() const {
 
 bool object_event::is_erased() const {
     return this->type == object_event_type::erased;
-}
-
-db::object_id const &object_event::object_id() const {
-    return this->_object_id;
 }
 
 std::string const &object_event::name() const {

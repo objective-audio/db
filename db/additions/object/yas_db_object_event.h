@@ -21,11 +21,11 @@ enum class object_event_type {
 struct object_event {
     object_event_type type;
     db::object_ptr const &object;
+    db::object_id const &object_id;
 
     bool is_changed() const;
     bool is_erased() const;
 
-    db::object_id const &object_id() const;
     std::string const &name() const;
     std::string const &entity_name() const;
     std::vector<std::size_t> const &indices() const;
@@ -44,7 +44,6 @@ struct object_event {
     static object_event make_erased(std::string const &entity_name, db::object_id const &object_id);
 
    private:
-    db::object_id const &_object_id;
     std::string const &_name;
     std::string const &_entity_name;
     std::vector<std::size_t> const &_indices;
