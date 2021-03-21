@@ -558,7 +558,7 @@ using namespace yas;
 
                     XCTAssertEqual(obj->relation_size(name), 3);
                     XCTAssertEqual(obj->relation_id(name, 2).stable(), 30);
-                    XCTAssertEqual(event.indices().size(), 1);
+                    XCTAssertEqual(event.indices.size(), 1);
                 } else if (called_count == 2) {
                     XCTAssertEqual(event.type, db::object_event_type::relation_removed);
 
@@ -567,14 +567,14 @@ using namespace yas;
                     XCTAssertEqual(obj->relation_size(name), 2);
                     XCTAssertEqual(obj->relation_id(name, 0).stable(), 10);
                     XCTAssertEqual(obj->relation_id(name, 1).stable(), 30);
-                    XCTAssertEqual(event.indices().size(), 1);
+                    XCTAssertEqual(event.indices.size(), 1);
                 } else if (called_count == 3) {
                     XCTAssertEqual(event.type, db::object_event_type::relation_removed);
 
                     auto const name = event.name;
 
                     XCTAssertEqual(obj->relation_size(name), 0);
-                    XCTAssertEqual(event.indices().size(), 2);
+                    XCTAssertEqual(event.indices.size(), 2);
                 }
 
                 ++called_count;
