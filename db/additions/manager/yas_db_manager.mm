@@ -766,7 +766,7 @@ db::object_ptr manager::make_object(std::string const &entity_name) {
                        manager->_cached_objects.erase(event.entity_name(), event.object_id());
                    }
                    if (event.is_changed()) {
-                       manager->_object_did_change(event.object());
+                       manager->_object_did_change(event.object);
                    }
                }
            },

@@ -624,7 +624,7 @@ using namespace yas;
     auto observer = obj->observe([&called, self](db::object_event const &event) {
                                               XCTAssertEqual(event.type, db::object_event_type::loaded);
 
-                                              auto const &obj = event.object();
+                                              auto const &obj = event.object;
 
                                               XCTAssertEqual(obj->object_id().stable_value(), db::value{1});
 
@@ -692,7 +692,7 @@ using namespace yas;
     auto observer = obj->observe([&called, self](db::object_event const &event) {
                                               XCTAssertEqual(event.type, db::object_event_type::cleared);
 
-                                              auto const &obj = event.object();
+                                              auto const &obj = event.object;
 
                                               XCTAssertEqual(obj->status(), db::object_status::invalid);
                                               XCTAssertFalse(obj->attribute_value("name"));
