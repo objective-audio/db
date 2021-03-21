@@ -6,6 +6,7 @@
 #include <cpp_utils/yas_each_index.h>
 #include <cpp_utils/yas_result.h>
 #include <cpp_utils/yas_stl_utils.h>
+#include <cpp_utils/yas_thread.h>
 #include <cpp_utils/yas_unless.h>
 #include <objc_utils/yas_objc_macros.h>
 #include <optional>
