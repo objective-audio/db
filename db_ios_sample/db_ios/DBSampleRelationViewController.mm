@@ -100,26 +100,23 @@ objc_ptr<NSArray<NSIndexPath *> *> to_index_paths(std::vector<std::size_t> const
 
                 switch (event.type()) {
                     case db::object_event_type::relation_inserted: {
-                        auto const &inserted_event = event.get<db::object_relation_inserted_event>();
-                        if (inserted_event.name != rel_name) {
+                        if (event.name() != rel_name) {
                             return;
                         }
-                        [self.tableView insertRowsAtIndexPaths:to_index_paths(inserted_event.indices).object()
+                        [self.tableView insertRowsAtIndexPaths:to_index_paths(event.indices()).object()
                                               withRowAnimation:UITableViewRowAnimationAutomatic];
                     } break;
 
                     case db::object_event_type::relation_removed: {
-                        auto const &removed_event = event.get<db::object_relation_removed_event>();
-                        if (removed_event.name != rel_name) {
+                        if (event.name() != rel_name) {
                             return;
                         }
-                        [self.tableView deleteRowsAtIndexPaths:to_index_paths(removed_event.indices).object()
+                        [self.tableView deleteRowsAtIndexPaths:to_index_paths(event.indices()).object()
                                               withRowAnimation:UITableViewRowAnimationAutomatic];
                     } break;
 
                     case db::object_event_type::relation_replaced: {
-                        auto const &replaced_event = event.get<db::object_relation_replaced_event>();
-                        if (replaced_event.name != rel_name) {
+                        if (event.name() != rel_name) {
                             return;
                         }
                         [self.tableView reloadData];
