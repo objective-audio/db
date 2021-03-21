@@ -504,7 +504,7 @@ using namespace yas;
     auto canceller = obj->observe([&called, self](db::object_event const &event) {
                                               XCTAssertEqual(event.type, db::object_event_type::attribute_updated);
 
-                                              XCTAssertEqual(event.name(), "name");
+                                              XCTAssertEqual(event.name, "name");
                                               XCTAssertEqual(event.value(), db::value{"test_value"});
 
                                               called = true;
@@ -545,7 +545,7 @@ using namespace yas;
                 if (called_count == 0) {
                     XCTAssertEqual(event.type, db::object_event_type::relation_replaced);
 
-                    auto const name = event.name();
+                    auto const name = event.name;
 
                     XCTAssertEqual(name, "child");
                     XCTAssertEqual(obj->relation_size(name), 2);
@@ -554,7 +554,7 @@ using namespace yas;
                 } else if (called_count == 1) {
                     XCTAssertEqual(event.type, db::object_event_type::relation_inserted);
 
-                    auto const name = event.name();
+                    auto const name = event.name;
 
                     XCTAssertEqual(obj->relation_size(name), 3);
                     XCTAssertEqual(obj->relation_id(name, 2).stable(), 30);
@@ -562,7 +562,7 @@ using namespace yas;
                 } else if (called_count == 2) {
                     XCTAssertEqual(event.type, db::object_event_type::relation_removed);
 
-                    auto const name = event.name();
+                    auto const name = event.name;
 
                     XCTAssertEqual(obj->relation_size(name), 2);
                     XCTAssertEqual(obj->relation_id(name, 0).stable(), 10);
@@ -571,7 +571,7 @@ using namespace yas;
                 } else if (called_count == 3) {
                     XCTAssertEqual(event.type, db::object_event_type::relation_removed);
 
-                    auto const name = event.name();
+                    auto const name = event.name;
 
                     XCTAssertEqual(obj->relation_size(name), 0);
                     XCTAssertEqual(event.indices().size(), 2);
