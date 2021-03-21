@@ -23,11 +23,11 @@ struct object_event {
     db::object_ptr const &object;
     db::object_id const &object_id;
     std::string const &name;
+    std::string const &entity_name;
 
     bool is_changed() const;
     bool is_erased() const;
 
-    std::string const &entity_name() const;
     std::vector<std::size_t> const &indices() const;
     db::value const &value() const;
 
@@ -44,7 +44,6 @@ struct object_event {
     static object_event make_erased(std::string const &entity_name, db::object_id const &object_id);
 
    private:
-    std::string const &_entity_name;
     std::vector<std::size_t> const &_indices;
     db::value const &_value;
 
