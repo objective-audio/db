@@ -98,25 +98,25 @@ objc_ptr<NSArray<NSIndexPath *> *> to_index_paths(std::vector<std::size_t> const
                     return;
                 }
 
-                switch (event.type()) {
+                switch (event.type) {
                     case db::object_event_type::relation_inserted: {
-                        if (event.name() != rel_name) {
+                        if (event.name != rel_name) {
                             return;
                         }
-                        [self.tableView insertRowsAtIndexPaths:to_index_paths(event.indices()).object()
+                        [self.tableView insertRowsAtIndexPaths:to_index_paths(event.indices).object()
                                               withRowAnimation:UITableViewRowAnimationAutomatic];
                     } break;
 
                     case db::object_event_type::relation_removed: {
-                        if (event.name() != rel_name) {
+                        if (event.name != rel_name) {
                             return;
                         }
-                        [self.tableView deleteRowsAtIndexPaths:to_index_paths(event.indices()).object()
+                        [self.tableView deleteRowsAtIndexPaths:to_index_paths(event.indices).object()
                                               withRowAnimation:UITableViewRowAnimationAutomatic];
                     } break;
 
                     case db::object_event_type::relation_replaced: {
-                        if (event.name() != rel_name) {
+                        if (event.name != rel_name) {
                             return;
                         }
                         [self.tableView reloadData];
