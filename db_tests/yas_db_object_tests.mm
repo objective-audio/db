@@ -505,7 +505,7 @@ using namespace yas;
                                               XCTAssertEqual(event.type, db::object_event_type::attribute_updated);
 
                                               XCTAssertEqual(event.name, "name");
-                                              XCTAssertEqual(event.value(), db::value{"test_value"});
+                                              XCTAssertEqual(event.value, db::value{"test_value"});
 
                                               called = true;
     }, false);

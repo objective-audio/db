@@ -68,7 +68,7 @@ db::object_event::object_event(object_event_type const type, object_ptr const &o
       name(name),
       entity_name(entity_name),
       indices(indices),
-      _value(value) {
+      value(value) {
 }
 
 bool object_event::is_changed() const {
@@ -85,8 +85,4 @@ bool object_event::is_changed() const {
 
 bool object_event::is_erased() const {
     return this->type == object_event_type::erased;
-}
-
-db::value const &object_event::value() const {
-    return this->_value;
 }
