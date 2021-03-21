@@ -20,7 +20,6 @@
 		B68218051C75F90C00689F27 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = B68218041C75F90C00689F27 /* libsqlite3.tbd */; };
 		B68218101C76015A00689F27 /* DBSampleTopViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = B682180F1C76015A00689F27 /* DBSampleTopViewController.mm */; };
 		B6B4EEF71EBAC8D4002CD9BE /* DBSampleRelationViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = B6B4EEF61EBAC8D4002CD9BE /* DBSampleRelationViewController.mm */; };
-		B6B6E1D721E2393C0029A7C1 /* chaining.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B6B6E1D621E2393C0029A7C1 /* chaining.framework */; };
 		B6B6E1D921E2393C0029A7C1 /* cpp_utils.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B6B6E1D821E2393C0029A7C1 /* cpp_utils.framework */; };
 		B6B6E1DB21E2393C0029A7C1 /* db.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B6B6E1DA21E2393C0029A7C1 /* db.framework */; };
 		B6B6E1DD21E2393C0029A7C1 /* objc_utils.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B6B6E1DC21E2393C0029A7C1 /* objc_utils.framework */; };
@@ -64,7 +63,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				B6B6E1DB21E2393C0029A7C1 /* db.framework in Frameworks */,
-				B6B6E1D721E2393C0029A7C1 /* chaining.framework in Frameworks */,
 				B60ACB072600FB8E00C67595 /* observing.framework in Frameworks */,
 				B6B6E1D921E2393C0029A7C1 /* cpp_utils.framework in Frameworks */,
 				B6B6E1DD21E2393C0029A7C1 /* objc_utils.framework in Frameworks */,

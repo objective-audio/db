@@ -33,7 +33,6 @@
 		B6DE370321E9F99A00E49BCB /* yas_db_manager_tests.mm in Sources */ = {isa = PBXBuildFile; fileRef = B6DE36EA21E9F99900E49BCB /* yas_db_manager_tests.mm */; };
 		B6DE370421E9F99A00E49BCB /* yas_db_model_tests.mm in Sources */ = {isa = PBXBuildFile; fileRef = B6DE36EB21E9F99900E49BCB /* yas_db_model_tests.mm */; };
 		B6DE370521E9F99A00E49BCB /* yas_db_cf_utils_tests.mm in Sources */ = {isa = PBXBuildFile; fileRef = B6DE36EC21E9F99900E49BCB /* yas_db_cf_utils_tests.mm */; };
-		B6DE370821E9F9D400E49BCB /* chaining.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DE370721E9F9D400E49BCB /* chaining.framework */; };
 		B6DE370A21E9F9D400E49BCB /* cpp_utils.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DE370921E9F9D400E49BCB /* cpp_utils.framework */; };
 		B6DE370C21E9F9D400E49BCB /* db.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DE370B21E9F9D400E49BCB /* db.framework */; };
 		B6DE370E21E9F9DD00E49BCB /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = B6DE370D21E9F9DD00E49BCB /* libsqlite3.tbd */; };
@@ -84,7 +83,6 @@
 			files = (
 				B60ACAFE2600FB6700C67595 /* observing.framework in Frameworks */,
 				B6DE370E21E9F9DD00E49BCB /* libsqlite3.tbd in Frameworks */,
-				B6DE370821E9F9D400E49BCB /* chaining.framework in Frameworks */,
 				B6DE370A21E9F9D400E49BCB /* cpp_utils.framework in Frameworks */,
 				B6DE370C21E9F9D400E49BCB /* db.framework in Frameworks */,
 			);

@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		B60ACB012600FB7300C67595 /* observing.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B60ACB002600FB7300C67595 /* observing.framework */; };
 		B6B6E15921E237EF0029A7C1 /* db.h in Headers */ = {isa = PBXBuildFile; fileRef = B6B6E15721E237EF0029A7C1 /* db.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		B6B6E15F21E238000029A7C1 /* chaining.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B6B6E15E21E238000029A7C1 /* chaining.framework */; };
 		B6B6E16121E238000029A7C1 /* cpp_utils.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B6B6E16021E238000029A7C1 /* cpp_utils.framework */; };
 		B6B6E16321E238000029A7C1 /* objc_utils.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B6B6E16221E238000029A7C1 /* objc_utils.framework */; };
 		B6B6E16521E238090029A7C1 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = B6B6E16421E238090029A7C1 /* libsqlite3.tbd */; };
@@ -149,7 +148,6 @@
 			files = (
 				B6B6E16521E238090029A7C1 /* libsqlite3.tbd in Frameworks */,
 				B60ACB012600FB7300C67595 /* observing.framework in Frameworks */,
-				B6B6E15F21E238000029A7C1 /* chaining.framework in Frameworks */,
 				B6B6E16121E238000029A7C1 /* cpp_utils.framework in Frameworks */,
 				B6B6E16321E238000029A7C1 /* objc_utils.framework in Frameworks */,
 			);
