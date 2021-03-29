@@ -713,11 +713,11 @@ std::size_t manager::changed_object_count(std::string const &entity_name) const 
     return 0;
 }
 
-observing::canceller_ptr manager::observe_db_info(db_info_observing_handler_f &&handler, bool const sync) {
-    return this->_db_info->observe(std::move(handler), sync);
+observing::syncable manager::observe_db_info(db_info_observing_handler_f &&handler) {
+    return this->_db_info->observe(std::move(handler));
 }
 
-observing::canceller_ptr manager::observe_db_object(db_object_observing_handler_f &&handler) {
+observing::endable manager::observe_db_object(db_object_observing_handler_f &&handler) {
     return this->_db_object_notifier->observe(std::move(handler));
 }
 
@@ -740,18 +740,17 @@ db::object_ptr manager::make_object(std::string const &entity_name) {
     auto obj = db::object::make_shared(this->_model.entity(entity_name));
     auto weak_manager = this->_weak_manager;
 
-    obj->observe(
-           [weak_manager](db::object_event const &event) {
-               if (auto const manager = weak_manager.lock()) {
-                   if (event.is_erased()) {
-                       manager->_cached_objects.erase(event.entity_name, event.object_id);
-                   }
-                   if (event.is_changed()) {
-                       manager->_object_did_change(event.object);
-                   }
+    obj->observe([weak_manager](db::object_event const &event) {
+           if (auto const manager = weak_manager.lock()) {
+               if (event.is_erased()) {
+                   manager->_cached_objects.erase(event.entity_name, event.object_id);
                }
-           },
-           false)
+               if (event.is_changed()) {
+                   manager->_object_did_change(event.object);
+               }
+           }
+       })
+        .end()
         ->add_to(this->_pool);
 
     return obj;

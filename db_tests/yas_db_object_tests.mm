@@ -508,7 +508,7 @@ using namespace yas;
                                               XCTAssertEqual(event.value, db::value{"test_value"});
 
                                               called = true;
-    }, false);
+    }).end();
 
     obj->set_attribute_value("name", db::value{"test_value"});
 
@@ -524,7 +524,7 @@ using namespace yas;
 
     obj->set_attribute_value("name", db::value{"test_value"});
 
-    auto observer = obj->observe([&called, self](auto const &) { called = true; }, false);
+    auto canceller = obj->observe([&called, self](auto const &) { called = true; }).end();
 
     obj->set_attribute_value("name", db::value{"test_value"});
 
@@ -538,7 +538,7 @@ using namespace yas;
 
     size_t called_count = 0;
 
-    auto observer =
+    auto canceller =
         obj->observe([&called_count, self, weak_obj = to_weak(obj)](db::object_event const &event) {
                 auto const obj = weak_obj.lock();
 
@@ -578,7 +578,7 @@ using namespace yas;
                 }
 
                 ++called_count;
-        }, false);
+        }).end();
 
     obj->set_relation_ids("child",
                          db::id_vector_t{db::make_stable_id(db::value{10}), db::make_stable_id(db::value{20})});
@@ -607,7 +607,7 @@ using namespace yas;
 
     bool called = false;
 
-    auto observer = obj->observe([&called, self](auto const &) { called = true; }, false);
+    auto canceller = obj->observe([&called, self](auto const &) { called = true; }).end();
 
     obj->set_relation_ids("child", {db::make_stable_id(db::value{55})});
 
@@ -621,7 +621,7 @@ using namespace yas;
 
     bool called = false;
 
-    auto observer = obj->observe([&called, self](db::object_event const &event) {
+    auto canceller = obj->observe([&called, self](db::object_event const &event) {
                                               XCTAssertEqual(event.type, db::object_event_type::loaded);
 
                                               auto const &obj = event.object;
@@ -637,7 +637,7 @@ using namespace yas;
                                               XCTAssertEqual(obj->relation_id("child", 1).stable(), 66);
 
                                               called = true;
-    }, false);
+    }).end();
 
     db::object_id obj_id = db::make_stable_id(db::value{1});
     db::value_map_t attributes{std::make_pair("age", db::value{10}), std::make_pair("name", db::value{"name_val"}),
@@ -689,7 +689,7 @@ using namespace yas;
 
     bool called = false;
 
-    auto observer = obj->observe([&called, self](db::object_event const &event) {
+    auto canceller = obj->observe([&called, self](db::object_event const &event) {
                                               XCTAssertEqual(event.type, db::object_event_type::cleared);
 
                                               auto const &obj = event.object;
@@ -699,7 +699,7 @@ using namespace yas;
                                               XCTAssertEqual(obj->relation_size("child"), 0);
 
                                               called = true;
-    }, false);
+    }).end();
 
     db::manageable_object::cast(obj)->clear_data();
 
@@ -819,13 +819,13 @@ using namespace yas;
 
     bool called = false;
 
-    auto chain = obj->observe([&called](db::object_event const &event) {
+    auto canceller = obj->observe([&called](db::object_event const &event) {
                          if (event.type == db::object_event_type::fetched) {
                              called = true;
                          }
-    }, true);
+    }).sync();
 
-    XCTAssertTrue(called);
+    XCTAssertTrue(canceller);
 }
 
 @end
