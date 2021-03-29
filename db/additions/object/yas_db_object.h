@@ -62,7 +62,7 @@ struct object final : const_object, manageable_object {
     ~object();
 
     using observing_handler_f = std::function<void(object_event const &)>;
-    [[nodiscard]] observing::canceller_ptr observe(observing_handler_f &&, bool const sync);
+    [[nodiscard]] observing::syncable observe(observing_handler_f &&);
 
     void set_attribute_value(std::string const &attr_name, db::value const &value);
 

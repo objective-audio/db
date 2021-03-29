@@ -221,8 +221,8 @@ object::~object() {
     this->_fetcher->push(object_event::make_erased(this->_entity.name, this->_identifier));
 }
 
-observing::canceller_ptr object::observe(observing_handler_f &&handler, bool const sync) {
-    return this->_fetcher->observe(std::move(handler), sync);
+observing::syncable object::observe(observing_handler_f &&handler) {
+    return this->_fetcher->observe(std::move(handler));
 }
 
 void object::set_attribute_value(std::string const &attr_name, db::value const &value) {

@@ -31,9 +31,9 @@ struct manager final {
     db::value const &last_save_id() const;
 
     using db_info_observing_handler_f = std::function<void(info_opt const &)>;
-    observing::canceller_ptr observe_db_info(db_info_observing_handler_f &&, bool const sync);
+    observing::syncable observe_db_info(db_info_observing_handler_f &&);
     using db_object_observing_handler_f = std::function<void(object_ptr const &)>;
-    observing::canceller_ptr observe_db_object(db_object_observing_handler_f &&);
+    observing::endable observe_db_object(db_object_observing_handler_f &&);
 
     db::object_ptr create_object(std::string const entity_name);
 
