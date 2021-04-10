@@ -46,8 +46,8 @@ struct blob {
     bool operator==(blob const &) const;
     bool operator!=(blob const &) const;
 
-    const void *data() const;
-    std::size_t size() const;
+    [[nodiscard]] const void *data() const;
+    [[nodiscard]] std::size_t size() const;
 
    private:
     std::vector<uint8_t> _vector;
@@ -94,16 +94,16 @@ struct value final {
 
     ~value();
 
-    uintptr_t identifier() const;
+    [[nodiscard]] uintptr_t identifier() const;
 
     explicit operator bool() const;
 
-    std::type_info const &type() const;
+    [[nodiscard]] std::type_info const &type() const;
 
     template <typename T>
-    typename T::type const &get() const;
+    [[nodiscard]] typename T::type const &get() const;
 
-    std::string sql() const;
+    [[nodiscard]] std::string sql() const;
 
     bool operator==(value const &rhs) const;
     bool operator!=(value const &rhs) const;
