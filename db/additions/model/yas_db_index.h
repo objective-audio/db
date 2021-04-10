@@ -18,6 +18,6 @@ class index final {
 
     explicit index(index_args);
 
-    std::string sql_for_create() const;
+    [[nodiscard]] std::string sql_for_create() const;
 };
 }  // namespace yas::db
