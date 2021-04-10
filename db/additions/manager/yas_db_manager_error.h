@@ -52,8 +52,8 @@ struct manager_error final {
 
     explicit operator bool() const;
 
-    db::manager_error_type const &type() const;
-    db::error const &database_error() const;
+    [[nodiscard]] db::manager_error_type const &type() const;
+    [[nodiscard]] db::error const &database_error() const;
 
    private:
     db::manager_error_type _type;

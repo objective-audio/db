@@ -18,16 +18,16 @@ struct field_order final {
     std::string field = "";
     db::order order = db::order::ascending;
 
-    std::string sql() const;
+    [[nodiscard]] std::string sql() const;
 };
 
 struct range final {
     uint64_t location = 0;
     uint64_t length = 0;
 
-    bool is_empty() const;
+    [[nodiscard]] bool is_empty() const;
 
-    std::string sql() const;
+    [[nodiscard]] std::string sql() const;
 };
 
 db::range const &empty_range();

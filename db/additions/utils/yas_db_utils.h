@@ -36,16 +36,16 @@ db::update_result_t rollback_save_point(db::database_ptr const &db, std::string 
 db::update_result_t in_save_point(db::database_ptr const &db, std::function<void(bool &rollback)> const function);
 #endif
 
-bool table_exists(db::database_ptr const &db, std::string const &table_name);
-bool index_exists(db::database_ptr const &db, std::string const &index_name);
-db::row_set_ptr get_schema(db::database_ptr const &db);
-db::row_set_ptr get_table_schema(db::database_ptr const &db, std::string const &table_name);
-db::row_set_ptr get_index_schema(db::database_ptr const &db, std::string const &index_name);
-bool column_exists(db::database_ptr const &db, std::string column_name, std::string table_name);
+[[nodiscard]] bool table_exists(db::database_ptr const &db, std::string const &table_name);
+[[nodiscard]] bool index_exists(db::database_ptr const &db, std::string const &index_name);
+[[nodiscard]] db::row_set_ptr get_schema(db::database_ptr const &db);
+[[nodiscard]] db::row_set_ptr get_table_schema(db::database_ptr const &db, std::string const &table_name);
+[[nodiscard]] db::row_set_ptr get_index_schema(db::database_ptr const &db, std::string const &index_name);
+[[nodiscard]] bool column_exists(db::database_ptr const &db, std::string column_name, std::string table_name);
 
-db::select_result_t select(db::database_ptr const &db, db::select_option const &option);
+[[nodiscard]] db::select_result_t select(db::database_ptr const &db, db::select_option const &option);
 
-db::select_single_result_t select_single(db::database_ptr const &db, db::select_option option);
+[[nodiscard]] db::select_single_result_t select_single(db::database_ptr const &db, db::select_option option);
 
-db::value max(db::database_ptr const &db, std::string const &table_name, std::string const &field);
+[[nodiscard]] db::value max(db::database_ptr const &db, std::string const &table_name, std::string const &field);
 }  // namespace yas::db

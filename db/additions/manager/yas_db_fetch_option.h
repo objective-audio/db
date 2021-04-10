@@ -16,7 +16,7 @@ struct fetch_option final {
     explicit fetch_option(std::size_t const reserve);
 
     void add_select_option(db::select_option);
-    select_option_map_t const &select_options() const;
+    [[nodiscard]] select_option_map_t const &select_options() const;
 
    private:
     select_option_map_t _sel_options;

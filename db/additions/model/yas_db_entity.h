@@ -19,8 +19,8 @@ struct entity final {
 
     entity(entity_args, db::string_set_map_t inv_rel_names);
 
-    std::string sql_for_create() const;
-    std::string sql_for_update() const;
-    std::string sql_for_insert() const;
+    [[nodiscard]] std::string sql_for_create() const;
+    [[nodiscard]] std::string sql_for_update() const;
+    [[nodiscard]] std::string sql_for_insert() const;
 };
 }  // namespace yas::db

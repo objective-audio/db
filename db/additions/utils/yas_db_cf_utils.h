@@ -13,8 +13,8 @@ class value;
 }
 
 namespace yas {
-db::value to_value(CFTypeRef const &cf_obj);
+[[nodiscard]] db::value to_value(CFTypeRef const &cf_obj);
 
 template <typename T>
-T get(CFDictionaryRef const dict, std::string const &key);
+[[nodiscard]] T get(CFDictionaryRef const dict, std::string const &key);
 }  // namespace yas

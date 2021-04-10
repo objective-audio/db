@@ -15,25 +15,25 @@
 
 namespace yas::db {
 struct const_object {
-    db::entity const &entity() const;
-    std::string const &entity_name() const;
+    [[nodiscard]] db::entity const &entity() const;
+    [[nodiscard]] std::string const &entity_name() const;
 
-    db::value const &attribute_value(std::string const &attr_name) const;
+    [[nodiscard]] db::value const &attribute_value(std::string const &attr_name) const;
 
-    db::id_vector_map_t const &all_relation_ids() const;
-    db::id_vector_t relation_ids(std::string const &rel_name) const;
-    db::object_id const &relation_id(std::string const &rel_name, std::size_t const idx) const;
-    std::size_t relation_size(std::string const &rel_name) const;
+    [[nodiscard]] db::id_vector_map_t const &all_relation_ids() const;
+    [[nodiscard]] db::id_vector_t relation_ids(std::string const &rel_name) const;
+    [[nodiscard]] db::object_id const &relation_id(std::string const &rel_name, std::size_t const idx) const;
+    [[nodiscard]] std::size_t relation_size(std::string const &rel_name) const;
 
-    db::object_id const &object_id() const;
-    db::value const &save_id() const;
-    db::value const &action() const;
+    [[nodiscard]] db::object_id const &object_id() const;
+    [[nodiscard]] db::value const &save_id() const;
+    [[nodiscard]] db::value const &action() const;
 
-    bool is_inserted() const;
-    bool is_updated() const;
-    bool is_removed() const;
+    [[nodiscard]] bool is_inserted() const;
+    [[nodiscard]] bool is_updated() const;
+    [[nodiscard]] bool is_removed() const;
 
-    static const_object_ptr make_shared(db::entity const &entity, db::object_data const &obj_data);
+    [[nodiscard]] static const_object_ptr make_shared(db::entity const &entity, db::object_data const &obj_data);
 
    protected:
     db::entity _entity;
