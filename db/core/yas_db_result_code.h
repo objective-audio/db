@@ -10,7 +10,7 @@ namespace yas::db {
 struct result_code {
     explicit result_code(int const &);
 
-    int raw_value() const;
+    [[nodiscard]] int raw_value() const;
 
    private:
     int _raw_value;
@@ -18,5 +18,5 @@ struct result_code {
 }  // namespace yas::db
 
 namespace yas {
-std::string to_string(db::result_code const &);
+[[nodiscard]] std::string to_string(db::result_code const &);
 }
