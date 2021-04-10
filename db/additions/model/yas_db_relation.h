@@ -19,7 +19,7 @@ struct relation final {
 
     explicit relation(relation_args, std::string source);
 
-    std::string sql_for_create() const;
-    std::string sql_for_insert() const;
+    [[nodiscard]] std::string sql_for_create() const;
+    [[nodiscard]] std::string sql_for_insert() const;
 };
 }  // namespace yas::db
