@@ -13,22 +13,22 @@ struct object_id final {
     object_id(db::value stable, db::value temporary);
     object_id(std::nullptr_t);
 
-    uintptr_t identifier() const;
+    [[nodiscard]] uintptr_t identifier() const;
 
     void set_stable(db::integer::type const);
     void set_stable(db::value);
 
-    db::value const &stable_value() const;
-    db::value const &temporary_value() const;
-    db::integer::type const &stable() const;
-    std::string const &temporary() const;
+    [[nodiscard]] db::value const &stable_value() const;
+    [[nodiscard]] db::value const &temporary_value() const;
+    [[nodiscard]] db::integer::type const &stable() const;
+    [[nodiscard]] std::string const &temporary() const;
 
-    bool is_stable() const;
-    bool is_temporary() const;
+    [[nodiscard]] bool is_stable() const;
+    [[nodiscard]] bool is_temporary() const;
 
-    db::object_id copy() const;
+    [[nodiscard]] db::object_id copy() const;
 
-    std::size_t hash() const;
+    [[nodiscard]] std::size_t hash() const;
 
     bool operator==(object_id const &rhs) const;
     bool operator!=(object_id const &rhs) const;
