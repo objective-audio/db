@@ -19,20 +19,20 @@ struct statement final : closable {
     statement &operator=(statement const &) = default;
     statement &operator=(statement &&) = default;
 
-    uintptr_t identifier() const;
+    [[nodiscard]] uintptr_t identifier() const;
 
     void set_stmt(sqlite3_stmt *const);
-    sqlite3_stmt *stmt() const;
+    [[nodiscard]] sqlite3_stmt *stmt() const;
 
     void set_query(std::string);
-    std::string const &query() const;
+    [[nodiscard]] std::string const &query() const;
 
     void set_in_use(bool const);
-    bool in_use() const;
+    [[nodiscard]] bool in_use() const;
 
     void reset();
 
-    static statement_ptr make_shared();
+    [[nodiscard]] static statement_ptr make_shared();
 
    private:
     std::string _query;
