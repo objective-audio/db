@@ -31,9 +31,9 @@ struct error final {
 
     explicit operator bool() const;
 
-    db::error_type const &type() const;
-    db::sqlite_result_code const &code() const;
-    std::string const &message() const;
+    [[nodiscard]] db::error_type const &type() const;
+    [[nodiscard]] db::sqlite_result_code const &code() const;
+    [[nodiscard]] std::string const &message() const;
 
    private:
     db::error_type _type;
