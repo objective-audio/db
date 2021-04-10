@@ -32,25 +32,26 @@ struct row_set final : closable, db_settable {
 
     ~row_set();
 
-    uintptr_t identifier() const;
+    [[nodiscard]] uintptr_t identifier() const;
 
-    db::statement_ptr const &statement() const;
+    [[nodiscard]] db::statement_ptr const &statement() const;
 
-    db::next_result_code next();
-    bool has_row();
+    [[nodiscard]] db::next_result_code next();
+    [[nodiscard]] bool has_row();
 
-    int column_count() const;
-    index_result_t column_index(std::string column_name) const;
-    std::string column_name(int const column_idx) const;
-    bool column_is_null(int const column_idx);
-    bool column_is_null(std::string column_name);
+    [[nodiscard]] int column_count() const;
+    [[nodiscard]] index_result_t column_index(std::string column_name) const;
+    [[nodiscard]] std::string column_name(int const column_idx) const;
+    [[nodiscard]] bool column_is_null(int const column_idx);
+    [[nodiscard]] bool column_is_null(std::string column_name);
 
-    db::value column_value(int const column_idx) const;
-    db::value column_value(std::string column_name) const;
+    [[nodiscard]] db::value column_value(int const column_idx) const;
+    [[nodiscard]] db::value column_value(std::string column_name) const;
 
-    db::value_map_t values() const;
+    [[nodiscard]] db::value_map_t values() const;
 
-    static row_set_ptr make_shared(db::statement_ptr const &, database_ptr const &, std::vector<db::value> const &);
+    [[nodiscard]] static row_set_ptr make_shared(db::statement_ptr const &, database_ptr const &,
+                                                 std::vector<db::value> const &);
 
    private:
     db::database_ptr _database;
