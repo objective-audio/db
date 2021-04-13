@@ -25,6 +25,10 @@ jobs:
         submodules: true
 
     # Runs a set of commands using the runners shell
-    - name: Run tests
+    - name: Run iOS tests
       run:
         xcodebuild -workspace db_ios.xcworkspace -scheme db_ios_tests -configuration Debug OBJROOT=build -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 11' clean test
+
+    - name: Run macOS tests
+      run:
+        xcodebuild -workspace db_mac.xcworkspace -scheme db_mac_tests -configuration Debug OBJROOT=build -sdk macosx clean test
