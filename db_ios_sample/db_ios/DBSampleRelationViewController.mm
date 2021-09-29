@@ -125,7 +125,7 @@ objc_ptr<NSArray<NSIndexPath *> *> to_index_paths(std::vector<std::size_t> const
                     default:
                         break;
                 }
-        }, false)->add_to(self->_pool);
+        }).end()->add_to(self->_pool);
 }
 
 - (db::object_ptr &)db_object {

@@ -79,11 +79,11 @@ void db_controller::setup(db::completion_f completion) {
                 } else {
                     controller._notifier->notify(std::make_pair(method::object_changed, change_info{nullptr}));
                 }
-            })->add_to(this->_pool);
+            }).end()->add_to(this->_pool);
 
     this->_manager->observe_db_info([this](auto const &){
         this->_notifier->notify(std::make_pair(method::db_info_changed, change_info{nullptr}));
-    }, false)->add_to(this->_pool);
+    }).end()->add_to(this->_pool);
 
     auto continuous_result = std::make_shared<db::manager_result_t>(nullptr);
 
@@ -469,7 +469,7 @@ db::integer::type const &db_controller::last_save_id() const {
     return this->_manager->last_save_id().get<db::integer>();
 }
 
-observing::canceller_ptr db_controller::observe(std::function<void(chain_pair_t const &)> &&handler) {
+observing::endable db_controller::observe(std::function<void(chain_pair_t const &)> &&handler) {
     return this->_notifier->observe(std::move(handler));
 }
 
@@ -501,7 +501,7 @@ void db_controller::_update_objects(std::shared_ptr<db::manager_result_t> contin
     }
 
     this->_manager->execute(
-        db::no_cancellation, [continuous_result, completion = std::move(completion)](task const &) {
+        db::no_cancellation, [continuous_result, completion = std::move(completion)](auto const &) {
             auto lambda = [continuous_result, completion = std::move(completion)]() { completion(*continuous_result); };
             thread::perform_sync_on_main(std::move(lambda));
         });
