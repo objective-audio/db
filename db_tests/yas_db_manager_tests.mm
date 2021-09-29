@@ -48,7 +48,7 @@ using namespace yas;
 - (void)test_execute_update_and_query_in_bg {
     auto const manager = [yas_db_test_utils create_test_manager];
 
-    manager->execute(db::no_cancellation, [self, &manager](task const &) {
+    manager->execute(db::no_cancellation, [self, &manager](auto const &) {
         auto &db = manager->database();
 
         XCTAssertTrue(db->execute_update(db::create_table_sql("test_table", {"field_a", "field_b"})));
@@ -772,7 +772,7 @@ using namespace yas;
                                XCTAssertEqual(object->save_id(), db::value{3});
                            });
 
-    manager->execute(db::no_cancellation, [self, &manager](task const &) {
+    manager->execute(db::no_cancellation, [self, &manager](auto const &) {
         auto &db = manager->database();
         auto result = db::select(db, {.table = "sample_a"});
 
@@ -1381,7 +1381,7 @@ using namespace yas;
         XCTAssertEqual(obj->relation_id("child", 1).stable(), 200);
     });
 
-    manager->execute(db::no_cancellation, [self, exp3, &manager](task const &) {
+    manager->execute(db::no_cancellation, [self, exp3, &manager](auto const &) {
         auto &db = manager->database();
 
         auto value_result = db::select(db, db::select_option{.table = "sample_a"});
@@ -1529,7 +1529,7 @@ using namespace yas;
         XCTAssertEqual(a_objects.at(1)->save_id(), db::value{3});
     });
 
-    manager->execute(db::no_cancellation, [self, &manager](task const &) {
+    manager->execute(db::no_cancellation, [self, &manager](auto const &) {
         auto &db = manager->database();
         auto result = db::select(db, {.table = "sample_a"});
 
@@ -1606,7 +1606,7 @@ using namespace yas;
 
     manager->save(db::no_cancellation, [](db::manager_map_result_t result) mutable { XCTAssertTrue(result); });
 
-    manager->execute(db::no_cancellation, [self, &manager](task const &) mutable {
+    manager->execute(db::no_cancellation, [self, &manager](auto const &) mutable {
         auto &db = manager->database();
 
         auto select_result = db::select(

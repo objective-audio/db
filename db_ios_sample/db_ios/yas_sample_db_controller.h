@@ -58,7 +58,7 @@ class db_controller : public std::enable_shared_from_this<db_controller> {
     db::integer::type const &current_save_id() const;
     db::integer::type const &last_save_id() const;
 
-    observing::canceller_ptr observe(std::function<void(chain_pair_t const &)> &&);
+    observing::endable observe(std::function<void(chain_pair_t const &)> &&);
 
     bool is_processing() const;
 

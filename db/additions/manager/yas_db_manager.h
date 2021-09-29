@@ -4,18 +4,13 @@
 
 #pragma once
 
-#include <cpp_utils/yas_task.h>
-#include <cpp_utils/yas_task_protocol.h>
+#include <cpp_utils/yas_task_queue.h>
 #include <db/yas_db_additional_protocol.h>
 #include <db/yas_db_fetch_option.h>
 #include <db/yas_db_manager_error.h>
 #include <db/yas_db_model.h>
 #include <db/yas_db_object.h>
 #include <db/yas_db_ptr.h>
-
-namespace yas {
-class task;
-}  // namespace yas
 
 namespace yas::db {
 class select_option;
@@ -76,7 +71,7 @@ struct manager final {
     db::manager_wptr _weak_manager;
     db::database_ptr _database;
     db::model _model;
-    task_queue _task_queue;
+    std::shared_ptr<task_queue<std::nullptr_t>> _task_queue;
     std::size_t _suspend_count = 0;
     mutable db::weak_pool<db::object_id, db::object> _cached_objects;
     db::tmp_object_map_map_t _created_objects;

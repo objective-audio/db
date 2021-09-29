@@ -4,7 +4,6 @@
 
 #import <XCTest/XCTest.h>
 #import <cpp_utils/yas_cf_utils.h>
-#import <cpp_utils/yas_task.h>
 #import <cpp_utils/yas_version.h>
 #import <db/db.h>
 

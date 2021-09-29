@@ -93,7 +93,7 @@ top_info_row_type_t to_idx(sample::top_info_row const &row) {
                 controller.title = nil;
             }
         }
-    })->add_to(self->_pool);
+    }).end()->add_to(self->_pool);
 
     _db_controller->setup([unowned_self](auto result) {
         auto controller = [unowned_self.object() object];
@@ -159,7 +159,7 @@ top_info_row_type_t to_idx(sample::top_info_row const &row) {
                     default:
                         break;
                 }
-        })->add_to(self->_pool);
+        }).end()->add_to(self->_pool);
 }
 
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {

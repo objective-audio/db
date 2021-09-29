@@ -269,7 +269,7 @@ void object::remove_relation_id(std::string const &rel_name, db::object_id const
         std::size_t idx = 0;
         std::vector<std::size_t> indices;
 
-        erase_if(this->_relations.at(rel_name), [relation_id, &idx, &indices](db::object_id const &object_id) {
+        std::erase_if(this->_relations.at(rel_name), [relation_id, &idx, &indices](db::object_id const &object_id) {
             bool const result = object_id == relation_id;
             if (result) {
                 indices.push_back(idx);
@@ -367,7 +367,7 @@ void object::remove() {
         return;
     }
 
-    erase_if(this->_attributes, [](auto const &pair) {
+    std::erase_if(this->_attributes, [](auto const &pair) {
         std::string const &column_name = pair.first;
         if (column_name == db::pk_id_field || column_name == db::object_id_field || column_name == db::action_field) {
             return false;
