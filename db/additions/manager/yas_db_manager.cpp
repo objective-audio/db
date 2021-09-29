@@ -22,7 +22,7 @@ using namespace yas::db;
 manager::manager(std::string const &db_path, db::model const &model, std::size_t const priority_count)
     : _database(database::make_shared(db_path)),
       _model(model),
-      _task_queue(priority_count),
+      _task_queue(task_queue<std::nullptr_t>::make_shared(priority_count)),
       _db_info(observing::value::holder<db::info_opt>::make_shared(std::nullopt)),
       _db_object_notifier(observing::notifier<db::object_ptr>::make_shared()) {
 }
@@ -30,7 +30,7 @@ manager::manager(std::string const &db_path, db::model const &model, std::size_t
 // バックグラウンド処理を保留するカウントをあげる
 void manager::suspend() {
     if (this->_suspend_count == 0) {
-        this->_task_queue.suspend();
+        this->_task_queue->suspend();
     }
 
     ++this->_suspend_count;
@@ -45,12 +45,12 @@ void manager::resume() {
     --this->_suspend_count;
 
     if (this->_suspend_count == 0) {
-        this->_task_queue.resume();
+        this->_task_queue->resume();
     }
 }
 
 bool manager::is_suspended() const {
-    return this->_task_queue.is_suspended();
+    return this->_task_queue->is_suspended();
 }
 
 std::string const &manager::database_path() const {
@@ -101,7 +101,7 @@ db::object_ptr manager::create_object(std::string const entity_name) {
 void manager::setup(db::completion_f completion) {
     auto manager = this->_weak_manager.lock();
 
-    auto execution = [completion = std::move(completion), manager](task const &) mutable {
+    auto execution = [completion = std::move(completion), manager](auto const &) mutable {
         db::database_ptr const &db = manager->database();
         db::model const &model = manager->model();
 
@@ -155,7 +155,7 @@ void manager::setup(db::completion_f completion) {
 void manager::clear(db::cancellation_f cancellation, db::completion_f completion) {
     auto manager = this->_weak_manager.lock();
 
-    auto execution = [completion = std::move(completion), manager](task const &) mutable {
+    auto execution = [completion = std::move(completion), manager](auto const &) mutable {
         auto &db = manager->database();
         auto const &model = manager->model();
 
@@ -207,7 +207,7 @@ void manager::clear(db::cancellation_f cancellation, db::completion_f completion
 void manager::purge(db::cancellation_f cancellation, db::completion_f completion) {
     auto manager = this->_weak_manager.lock();
 
-    auto execution = [completion = std::move(completion), manager](task const &) mutable {
+    auto execution = [completion = std::move(completion), manager](auto const &) mutable {
         auto &db = manager->database();
         auto const &model = manager->model();
 
@@ -313,7 +313,7 @@ void manager::insert_objects(db::cancellation_f cancellation, db::insert_values_
     auto manager = this->_weak_manager.lock();
 
     auto execution = [preparation = std::move(preparation), completion = std::move(completion),
-                      manager](task const &) mutable {
+                      manager](auto const &) mutable {
         // 挿入するオブジェクトのデータをメインスレッドで準備する
         db::value_map_vector_map_t values;
 
@@ -476,7 +476,7 @@ void manager::fetch_const_objects(db::cancellation_f cancellation, db::fetch_ids
 void manager::save(db::cancellation_f cancellation, db::map_completion_f completion) {
     auto manager = this->_weak_manager.lock();
 
-    auto execution = [completion = std::move(completion), manager](task const &) mutable {
+    auto execution = [completion = std::move(completion), manager](auto const &) mutable {
         db::object_data_vector_map_t changed_datas;
         // 変更のあったデータをメインスレッドで取得する
         auto get_changed_on_main = [&manager, &changed_datas]() { changed_datas = manager->_changed_datas_for_save(); };
@@ -557,7 +557,7 @@ void manager::revert(db::cancellation_f cancellation, db::revert_preparation_f p
     auto manager = this->_weak_manager.lock();
 
     auto execution = [preparation = std::move(preparation), completion = std::move(completion),
-                      manager](task const &) mutable {
+                      manager](auto const &) mutable {
         // リバートする先のセーブIDをメインスレッドで準備する
         db::integer::type rev_save_id;
         auto preparation_on_main = [&rev_save_id, &preparation]() { rev_save_id = preparation(); };
@@ -992,7 +992,7 @@ std::optional<db::object_ptr> manager::_inserted_object(std::string const &entit
 // バックグラウンドでデータベースの処理をする
 void manager::_execute(db::cancellation_f &&cancellation, db::execution_f &&execution) {
     auto op_lambda = [cancellation = std::move(cancellation), execution = std::move(execution),
-                      manager = this->_weak_manager.lock()](task const &task) mutable {
+                      manager = this->_weak_manager.lock()](auto const &task) mutable {
         if (!task.is_canceled() && !cancellation()) {
             auto const &db = manager->_database;
             db->open();
@@ -1001,7 +1001,7 @@ void manager::_execute(db::cancellation_f &&cancellation, db::execution_f &&exec
         }
     };
 
-    this->_task_queue.push_back(task::make_shared(std::move(op_lambda)));
+    this->_task_queue->push_back(task<std::nullptr_t>::make_shared(std::move(op_lambda)));
 }
 
 // バックグラウンドでデータベースからオブジェクトデータを取得する。条件はselect_optionで指定。単独のエンティティのみ
@@ -1009,7 +1009,7 @@ void manager::_execute_fetch_object_datas(
     db::cancellation_f &&cancellation, db::fetch_option_preparation_f &&preparation,
     std::function<void(manager_result_t &&state, db::object_data_vector_map_t &&fetched_datas)> &&completion) {
     auto execution = [preparation = std::move(preparation), completion = std::move(completion),
-                      manager = this->_weak_manager.lock()](task const &) mutable {
+                      manager = this->_weak_manager.lock()](auto const &) mutable {
         // データベースからデータを取得する条件をメインスレッドで準備する
         db::fetch_option fetch_option;
         auto preparation_on_main = [&fetch_option, &preparation]() { fetch_option = preparation(); };
