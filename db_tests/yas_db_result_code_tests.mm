@@ -62,4 +62,14 @@ using namespace yas;
     XCTAssertEqual(yas::to_string(db::result_code{10000}), "unknown");
 }
 
+- (void)test_ostream {
+    auto const values = {db::result_code{SQLITE_ROW}};
+
+    for (auto const &value : values) {
+        std::ostringstream stream;
+        stream << value;
+        XCTAssertEqual(stream.str(), to_string(value));
+    }
+}
+
 @end

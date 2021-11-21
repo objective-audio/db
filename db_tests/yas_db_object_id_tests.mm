@@ -143,4 +143,15 @@ using namespace yas;
     XCTAssertEqual(to_string(db::object_id{db::value{1}, nullptr}), "{stable:1, temporary:null}");
 }
 
+- (void)test_ostream {
+    auto const values = {db::object_id{db::value{1}, db::value{"2"}}, db::object_id{nullptr, db::value{"2"}},
+                         db::object_id{db::value{1}, nullptr}};
+
+    for (auto const &value : values) {
+        std::ostringstream stream;
+        stream << value;
+        XCTAssertEqual(stream.str(), to_string(value));
+    }
+}
+
 @end

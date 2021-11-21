@@ -60,4 +60,14 @@ using namespace yas;
     to_string(error);
 }
 
+- (void)test_error_ostream {
+    auto const values = {db::error_type::closed};
+
+    for (auto const &value : values) {
+        std::ostringstream stream;
+        stream << value;
+        XCTAssertEqual(stream.str(), to_string(value));
+    }
+}
+
 @end

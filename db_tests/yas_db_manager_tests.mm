@@ -2846,4 +2846,39 @@ using namespace yas;
     XCTAssertEqual(to_string(db::manager_error_type::none), "none");
 }
 
+- (void)test_error_ostream {
+    auto const values = {db::manager_error_type::begin_transaction_failed,
+                         db::manager_error_type::vacuum_failed,
+                         db::manager_error_type::select_info_failed,
+                         db::manager_error_type::update_info_failed,
+                         db::manager_error_type::version_not_found,
+                         db::manager_error_type::invalid_version_text,
+                         db::manager_error_type::alter_entity_table_failed,
+                         db::manager_error_type::create_info_table_failed,
+                         db::manager_error_type::insert_info_failed,
+                         db::manager_error_type::create_entity_table_failed,
+                         db::manager_error_type::create_relation_table_failed,
+                         db::manager_error_type::create_index_failed,
+                         db::manager_error_type::insert_attributes_failed,
+                         db::manager_error_type::insert_relation_failed,
+                         db::manager_error_type::save_id_not_found,
+                         db::manager_error_type::delete_failed,
+                         db::manager_error_type::purge_failed,
+                         db::manager_error_type::purge_relation_failed,
+                         db::manager_error_type::select_last_failed,
+                         db::manager_error_type::select_revert_failed,
+                         db::manager_error_type::select_relation_removed_failed,
+                         db::manager_error_type::make_object_datas_failed,
+                         db::manager_error_type::out_of_range_save_id,
+                         db::manager_error_type::select_failed,
+                         db::manager_error_type::last_insert_rowid_failed,
+                         db::manager_error_type::none};
+
+    for (auto const &value : values) {
+        std::ostringstream stream;
+        stream << value;
+        XCTAssertEqual(stream.str(), to_string(value));
+    }
+}
+
 @end
