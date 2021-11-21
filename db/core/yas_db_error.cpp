@@ -75,3 +75,13 @@ std::string yas::to_string(error const &error) {
         return "null";
     }
 }
+
+std::ostream &operator<<(std::ostream &os, yas::db::error_type const &value) {
+    os << to_string(value);
+    return os;
+}
+
+std::ostream &operator<<(std::ostream &os, yas::db::error const &value) {
+    os << to_string(value);
+    return os;
+}

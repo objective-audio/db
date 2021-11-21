@@ -98,3 +98,13 @@ std::string yas::to_string(manager_error const &error) {
         return "null";
     }
 }
+
+std::ostream &operator<<(std::ostream &os, yas::db::manager_error_type const &value) {
+    os << to_string(value);
+    return os;
+}
+
+std::ostream &operator<<(std::ostream &os, yas::db::manager_error const &value) {
+    os << to_string(value);
+    return os;
+}

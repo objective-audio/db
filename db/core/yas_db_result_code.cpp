@@ -85,3 +85,8 @@ std::string yas::to_string(db::result_code const &code) {
 
     return "unknown";
 }
+
+std::ostream &operator<<(std::ostream &os, yas::db::result_code const &value) {
+    os << to_string(value);
+    return os;
+}

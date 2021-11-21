@@ -147,6 +147,11 @@ std::string yas::to_string(object_id const &obj_id) {
            "}";
 }
 
+std::ostream &operator<<(std::ostream &os, yas::db::object_id const &value) {
+    os << to_string(value);
+    return os;
+}
+
 object_id const &db::null_id() {
     static object_id _null_id{nullptr};
     return _null_id;
