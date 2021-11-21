@@ -48,9 +48,8 @@ using namespace yas;
 
 + (yas::db::model)model_0_0_0 {
     yas::version version{"0.0.0"};
-    
-    return db::model{
-    db::model_args{.version = std::move(version), .entities = {}, .indices = {}}};
+
+    return db::model{db::model_args{.version = std::move(version), .entities = {}, .indices = {}}};
 }
 
 + (db::model)model_0_0_1 {
