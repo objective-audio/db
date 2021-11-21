@@ -139,7 +139,7 @@ using namespace yas;
 }
 
 - (void)test_get_value_from_dictionary {
-    NSDictionary *dict = @{ @"a": @5 };
+    NSDictionary *dict = @{@"a": @5};
     auto value_a = yas::get<db::value>((__bridge CFDictionaryRef)dict, "a");
 
     XCTAssertTrue(value_a.type() == typeid(db::integer));
@@ -151,7 +151,7 @@ using namespace yas;
 }
 
 - (void)test_get_bool_from_dictionary {
-    NSDictionary *dict = @{ @"a": @YES };
+    NSDictionary *dict = @{@"a": @YES};
     auto bool_a = yas::get<bool>((__bridge CFDictionaryRef)dict, "a");
 
     XCTAssertEqual(bool_a, true);
@@ -162,7 +162,7 @@ using namespace yas;
 }
 
 - (void)test_get_dictionary_from_dictionary {
-    NSDictionary *dict = @{ @"a": @{@"b": @"c"} };
+    NSDictionary *dict = @{@"a": @{@"b": @"c"}};
     auto cf_dict_a = yas::get<CFDictionaryRef>((__bridge CFDictionaryRef)dict, "a");
 
     XCTAssertTrue(cf_dict_a);
@@ -176,7 +176,7 @@ using namespace yas;
 }
 
 - (void)test_get_array_from_dictionary {
-    NSDictionary *dict = @{ @"d": @[@"e", @"f"] };
+    NSDictionary *dict = @{@"d": @[@"e", @"f"]};
     auto cf_array_d = yas::get<CFArrayRef>((__bridge CFDictionaryRef)dict, "d");
 
     XCTAssertTrue(cf_array_d);

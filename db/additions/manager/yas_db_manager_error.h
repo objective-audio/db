@@ -65,3 +65,6 @@ namespace yas {
 std::string to_string(db::manager_error_type const &);
 std::string to_string(db::manager_error const &);
 }  // namespace yas
+
+std::ostream &operator<<(std::ostream &, yas::db::manager_error_type const &);
+std::ostream &operator<<(std::ostream &, yas::db::manager_error const &);

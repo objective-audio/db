@@ -63,6 +63,8 @@ namespace yas {
 std::string to_string(db::object_id const &);
 }
 
+std::ostream &operator<<(std::ostream &, yas::db::object_id const &);
+
 template <>
 struct std::hash<yas::db::object_id> {
     std::size_t operator()(yas::db::object_id const &obj_id) const {

@@ -345,25 +345,26 @@ using namespace yas;
 
     manager->setup([self, &manager](auto result) mutable { XCTAssertTrue(result); });
 
-    manager->insert_objects(db::no_cancellation,
-                           []() {
-                               return db::entity_count_map_t{{"sample_a", 2}};
-                           },
-                           [self, &manager](auto result) {
-                               XCTAssertTrue(result);
-                               XCTAssertEqual(manager->current_save_id(), db::value{1});
+    manager->insert_objects(
+        db::no_cancellation,
+        []() {
+            return db::entity_count_map_t{{"sample_a", 2}};
+        },
+        [self, &manager](auto result) {
+            XCTAssertTrue(result);
+            XCTAssertEqual(manager->current_save_id(), db::value{1});
 
-                               auto &objects = result.value();
-                               auto &a_objects = objects.at("sample_a");
+            auto &objects = result.value();
+            auto &a_objects = objects.at("sample_a");
 
-                               auto &object = a_objects.at(0);
-                               object->set_attribute_value("name", db::value{"name_0_1"});
-                               XCTAssertEqual(object->object_id().stable_value(), db::value{1});
+            auto &object = a_objects.at(0);
+            object->set_attribute_value("name", db::value{"name_0_1"});
+            XCTAssertEqual(object->object_id().stable_value(), db::value{1});
 
-                               object = a_objects.at(1);
-                               object->set_attribute_value("name", db::value{"name_1_1"});
-                               XCTAssertEqual(object->object_id().stable_value(), db::value{2});
-                           });
+            object = a_objects.at(1);
+            object->set_attribute_value("name", db::value{"name_1_1"});
+            XCTAssertEqual(object->object_id().stable_value(), db::value{2});
+        });
 
     manager->save(db::no_cancellation, [self, &manager](db::manager_map_result_t result) {
         XCTAssertTrue(result);
@@ -415,25 +416,26 @@ using namespace yas;
 
     db::object_vector_map_t objects;
 
-    manager->insert_objects(db::no_cancellation,
-                           []() {
-                               return db::entity_count_map_t{{"sample_a", 1}, {"sample_b", 2}};
-                           },
-                           [self, &manager, &objects](auto result) {
-                               XCTAssertTrue(result);
-                               XCTAssertEqual(manager->current_save_id(), db::value{1});
+    manager->insert_objects(
+        db::no_cancellation,
+        []() {
+            return db::entity_count_map_t{{"sample_a", 1}, {"sample_b", 2}};
+        },
+        [self, &manager, &objects](auto result) {
+            XCTAssertTrue(result);
+            XCTAssertEqual(manager->current_save_id(), db::value{1});
 
-                               objects = std::move(result.value());
-                               db::object_ptr const &obj_a = objects.at("sample_a").at(0);
-                               db::object_ptr const &obj_b0 = objects.at("sample_b").at(0);
-                               db::object_ptr const &obj_b1 = objects.at("sample_b").at(1);
+            objects = std::move(result.value());
+            db::object_ptr const &obj_a = objects.at("sample_a").at(0);
+            db::object_ptr const &obj_b0 = objects.at("sample_b").at(0);
+            db::object_ptr const &obj_b1 = objects.at("sample_b").at(1);
 
-                               obj_a->set_attribute_value("name", db::value{"test_a_2"});
-                               obj_b0->set_attribute_value("name", db::value{"test_b0_2"});
-                               obj_b1->set_attribute_value("name", db::value{"test_b1_2"});
+            obj_a->set_attribute_value("name", db::value{"test_a_2"});
+            obj_b0->set_attribute_value("name", db::value{"test_b0_2"});
+            obj_b1->set_attribute_value("name", db::value{"test_b1_2"});
 
-                               obj_a->set_relation_objects("child", {obj_b0});
-                           });
+            obj_a->set_relation_objects("child", {obj_b0});
+        });
 
     manager->save(db::no_cancellation, [self, &manager, &objects](db::manager_map_result_t result) {
         XCTAssertTrue(result);
@@ -657,7 +659,8 @@ using namespace yas;
 
     [self waitForExpectations:@[saveExp] timeout:10.0];
 
-    db::object_map_t entity_a_objects{{obj_a_1->object_id().stable(), obj_a_1}, {obj_a_2->object_id().stable(), obj_a_2}};
+    db::object_map_t entity_a_objects{{obj_a_1->object_id().stable(), obj_a_1},
+                                      {obj_a_2->object_id().stable(), obj_a_2}};
     db::object_map_t entity_c_objects{{obj_c_1->object_id().stable(), obj_c_1}};
     db::object_map_map_t objects{{"sample_a", std::move(entity_a_objects)}, {"sample_c", std::move(entity_c_objects)}};
 

@@ -74,7 +74,7 @@ using namespace yas;
     pool.set("entity_b", "key_4", b_val_4);
 
     std::size_t called_count = 0;
-    
+
     using value_opt = std::optional<std::shared_ptr<int>>;
 
     std::unordered_map<std::string, std::unordered_map<std::string, value_opt>> called_values;
@@ -116,7 +116,7 @@ using namespace yas;
     pool.set("entity_b", "key_4", b_val_4);
 
     std::size_t called_count = 0;
-    
+
     using value_opt = std::optional<std::shared_ptr<int>>;
 
     std::unordered_map<std::string, std::unordered_map<std::string, value_opt>> called_values;

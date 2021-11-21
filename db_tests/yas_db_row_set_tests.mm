@@ -104,8 +104,8 @@ using namespace yas;
 
     XCTAssertTrue(
         db->execute_update("insert into test_table(int_field, float_field, string_field, data_field, null_field) "
-                          "values(:int_field, :float_field, :string_field, :data_field, :null_field)",
-                          args));
+                           "values(:int_field, :float_field, :string_field, :data_field, :null_field)",
+                           args));
 
     auto query_result = db->execute_query("select * from test_table");
     XCTAssertTrue(query_result);
@@ -158,8 +158,8 @@ using namespace yas;
                          std::make_pair("null_field", db::null_value())};
     XCTAssertTrue(
         db->execute_update("insert into test_table(int_field, float_field, string_field, data_field, null_field) "
-                          "values(:int_field, :float_field, :string_field, :data_field, :null_field)",
-                          args));
+                           "values(:int_field, :float_field, :string_field, :data_field, :null_field)",
+                           args));
 
     auto query_result = db->execute_query("select * from test_table");
     XCTAssertTrue(query_result);

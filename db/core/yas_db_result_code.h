@@ -20,3 +20,5 @@ struct result_code {
 namespace yas {
 [[nodiscard]] std::string to_string(db::result_code const &);
 }
+
+std::ostream &operator<<(std::ostream &, yas::db::result_code const &);
