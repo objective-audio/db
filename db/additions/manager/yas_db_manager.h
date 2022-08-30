@@ -12,6 +12,8 @@
 #include <db/yas_db_object.h>
 #include <db/yas_db_ptr.h>
 
+#include <filesystem>
+
 namespace yas::db {
 class select_option;
 class model;
@@ -19,7 +21,7 @@ class error;
 class database;
 
 struct manager final {
-    [[nodiscard]] std::string const &database_path() const;
+    [[nodiscard]] std::filesystem::path const &database_path() const;
     [[nodiscard]] db::database_ptr const &database() const;
     [[nodiscard]] db::model const &model() const;
     [[nodiscard]] db::value const &current_save_id() const;
@@ -64,7 +66,7 @@ struct manager final {
                                                                    std::size_t const idx) const;
     [[nodiscard]] db::object_ptr make_object(std::string const &entity_name);
 
-    [[nodiscard]] static manager_ptr make_shared(std::string const &db_path, db::model const &model,
+    [[nodiscard]] static manager_ptr make_shared(std::filesystem::path const &db_path, db::model const &model,
                                                  std::size_t const priority_count = 1);
 
    private:
@@ -80,7 +82,7 @@ struct manager final {
     observing::notifier_ptr<db::object_ptr> const _db_object_notifier;
     observing::canceller_pool _pool;
 
-    manager(std::string const &db_path, db::model const &model, std::size_t const priority_count);
+    manager(std::filesystem::path const &db_path, db::model const &model, std::size_t const priority_count);
 
     void _prepare(manager_ptr const &);
 

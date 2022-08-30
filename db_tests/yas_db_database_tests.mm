@@ -2,6 +2,7 @@
 //  yas_db_database_tests.mm
 //
 
+#include <cpp_utils/yas_file_manager.h>
 #import "yas_db_test_utils.h"
 
 using namespace yas;
@@ -36,20 +37,18 @@ using namespace yas;
 }
 
 - (void)test_create {
-    NSString *databasePath = [yas_db_test_utils databasePath];
-    std::string db_path = yas::to_string((__bridge CFStringRef)databasePath);
-    XCTAssertGreaterThan(db_path.size(), 0);
+    auto const db_path = [yas_db_test_utils database_path];
 
     db::database_ptr const db = db::database::make_shared(db_path);
 
     XCTAssertEqual(db->database_path(), db_path);
     XCTAssertTrue(db->sqlite_handle() == nullptr);
-    XCTAssertFalse([[NSFileManager defaultManager] fileExistsAtPath:databasePath]);
+    XCTAssertFalse(file_manager::content_exists(db_path));
 }
 
 - (void)test_open_and_close {
     db::database_ptr const db = [yas_db_test_utils create_test_database];
-    NSString *databasePath = [yas_db_test_utils databasePath];
+    auto const db_path = [yas_db_test_utils database_path];
 
     XCTAssertFalse(db->good_connection());
 
@@ -57,13 +56,13 @@ using namespace yas;
 
     XCTAssertTrue(db->sqlite_handle() != nullptr);
     XCTAssertTrue(db->good_connection());
-    XCTAssertTrue([[NSFileManager defaultManager] fileExistsAtPath:databasePath]);
+    XCTAssertTrue(file_manager::content_exists(db_path));
 
     db->close();
 
     XCTAssertTrue(db->sqlite_handle() == nullptr);
     XCTAssertFalse(db->good_connection());
-    XCTAssertTrue([[NSFileManager defaultManager] fileExistsAtPath:databasePath]);
+    XCTAssertTrue(file_manager::content_exists(db_path));
 }
 
 - (void)test_create_table {

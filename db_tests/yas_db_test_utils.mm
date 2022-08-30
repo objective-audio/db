@@ -3,15 +3,15 @@
 //
 
 #import "yas_db_test_utils.h"
+#include <cpp_utils/yas_file_manager.h>
+#include <cpp_utils/yas_system_path_utils.h>
 
 using namespace yas;
 
 @implementation yas_db_test_utils
 
 + (db::database_ptr)create_test_database {
-    NSString *databasePath = [[self class] databasePath];
-    std::string db_path = yas::to_string((__bridge CFStringRef)databasePath);
-    return db::database::make_shared(db_path);
+    return db::database::make_shared([self database_path]);
 }
 
 + (db::manager_ptr)create_test_manager {
@@ -23,27 +23,16 @@ using namespace yas;
 }
 
 + (yas::db::manager_ptr)create_test_manager:(yas::db::model const &)model priority_count:(size_t)count {
-    NSString *databasePath = [[self class] databasePath];
-    std::string db_path = yas::to_string((__bridge CFStringRef)databasePath);
-    return db::manager::make_shared(db_path, model, count);
+    return db::manager::make_shared([self database_path], model, count);
 }
 
-+ (std::string)database_path {
-    return yas::to_string((__bridge CFStringRef)[self databasePath]);
-}
-
-+ (NSString *)databasePath {
-    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-    NSString *dir = [paths objectAtIndex:0];
-    return [dir stringByAppendingPathComponent:@"db_test.db"];
++ (std::filesystem::path)database_path {
+    auto path = system_path_utils::directory_path(system_path_utils::dir::document);
+    return path.append("db_test.db");
 }
 
 + (void)deleteDatabase {
-    NSString *path = [self databasePath];
-    NSFileManager *fileManager = [NSFileManager defaultManager];
-    if ([fileManager fileExistsAtPath:path]) {
-        [fileManager removeItemAtPath:path error:nil];
-    }
+    file_manager::remove_content([self database_path]);
 }
 
 + (yas::db::model)model_0_0_0 {

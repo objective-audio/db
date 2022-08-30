@@ -25,7 +25,7 @@ using namespace yas;
 }
 
 - (void)test_create {
-    auto db_path = [yas_db_test_utils database_path];
+    auto const db_path = [yas_db_test_utils database_path];
     auto const manager = db::manager::make_shared(db_path, [yas_db_test_utils model_0_0_0]);
 
     XCTAssertTrue(manager);
@@ -1995,7 +1995,7 @@ using namespace yas;
         XCTAssertEqual(b_objects.size(), 2);
 
         auto b_object_map = to_map<db::integer::type>(
-            b_objects, [](db::value_map_t &obj) { return obj.at(db::object_id_field).get<db::integer>(); });
+            b_objects, [](db::value_map_t const &obj) { return obj.at(db::object_id_field).get<db::integer>(); });
 
         XCTAssertEqual(b_object_map.at(1).at("name"), db::value{"obj_b0_3"});
         XCTAssertEqual(b_object_map.at(1).at(db::save_id_field), db::value{1});

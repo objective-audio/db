@@ -38,14 +38,6 @@ using namespace yas;
 
     std::cout << entity.sql_for_create() << std::endl;
     std::cout << entity.sql_for_update() << std::endl;
-
-    XCTAssertEqual(entity.sql_for_create(),
-                   "CREATE TABLE IF NOT EXISTS entity_name (attr_name INTEGER DEFAULT 1, pk_id INTEGER PRIMARY KEY "
-                   "AUTOINCREMENT, obj_id INTEGER NOT NULL DEFAULT 0, save_id INTEGER NOT NULL DEFAULT 0, action TEXT "
-                   "NOT NULL DEFAULT 'insert');");
-    XCTAssertEqual(entity.sql_for_update(),
-                   "UPDATE entity_name SET attr_name = :attr_name, pk_id = :pk_id, obj_id = :obj_id, save_id = "
-                   ":save_id, action = :action WHERE (pk_id = :pk_id);");
 }
 
 @end
