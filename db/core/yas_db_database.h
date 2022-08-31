@@ -8,6 +8,7 @@
 #include <db/yas_db_ptr.h>
 #include <db/yas_db_value.h>
 
+#include <filesystem>
 #include <functional>
 
 namespace yas::db {
@@ -30,7 +31,7 @@ struct database final : row_set_observable {
 
     ~database();
 
-    [[nodiscard]] std::string const &database_path() const;
+    [[nodiscard]] std::filesystem::path const &database_path() const;
     [[nodiscard]] sqlite3 *sqlite_handle() const;
 
     bool open();
@@ -70,11 +71,11 @@ struct database final : row_set_observable {
     void set_start_busy_retry_time(const std::chrono::time_point<std::chrono::system_clock> &time);
     [[nodiscard]] std::chrono::time_point<std::chrono::system_clock> start_busy_retry_time() const;
 
-    [[nodiscard]] static database_ptr make_shared(std::string const &path);
+    [[nodiscard]] static database_ptr make_shared(std::filesystem::path const &path);
 
    private:
     uint8_t _db_key;
-    std::string _database_path;
+    std::filesystem::path const _database_path;
     sqlite3 *_sqlite_handle = nullptr;
 
     bool _should_cache_statements = false;

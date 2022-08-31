@@ -62,7 +62,7 @@ database::~database() {
     db::_databases.erase(this->_db_key);
 }
 
-std::string const &database::database_path() const {
+std::filesystem::path const &database::database_path() const {
     return this->_database_path;
 }
 
@@ -622,7 +622,7 @@ void database::row_set_did_close(uintptr_t const id) {
     this->_opened_row_sets.erase(id);
 }
 
-database_ptr database::make_shared(std::string const &path) {
+database_ptr database::make_shared(std::filesystem::path const &path) {
     auto shared = std::shared_ptr<database>(new database{path});
     shared->_prepare(shared);
     return shared;

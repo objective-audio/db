@@ -19,7 +19,7 @@
 using namespace yas;
 using namespace yas::db;
 
-manager::manager(std::string const &db_path, db::model const &model, std::size_t const priority_count)
+manager::manager(std::filesystem::path const &db_path, db::model const &model, std::size_t const priority_count)
     : _database(database::make_shared(db_path)),
       _model(model),
       _task_queue(task_queue<std::nullptr_t>::make_shared(priority_count)),
@@ -53,7 +53,7 @@ bool manager::is_suspended() const {
     return this->_task_queue->is_suspended();
 }
 
-std::string const &manager::database_path() const {
+std::filesystem::path const &manager::database_path() const {
     return this->_database->database_path();
 }
 
@@ -1102,7 +1102,8 @@ void manager::_object_did_change(db::object_ptr const &object) {
     this->_db_object_notifier->notify(object);
 }
 
-manager_ptr manager::make_shared(std::string const &db_path, db::model const &model, std::size_t const priority_count) {
+manager_ptr manager::make_shared(std::filesystem::path const &db_path, db::model const &model,
+                                 std::size_t const priority_count) {
     auto shared = manager_ptr(new manager{db_path, model, priority_count});
     shared->_prepare(shared);
     return shared;
