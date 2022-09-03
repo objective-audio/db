@@ -21,16 +21,17 @@ class error;
 class database;
 
 struct manager final {
+    using db_info_observing_handler_f = std::function<void(info_opt const &)>;
+    using db_object_observing_handler_f = std::function<void(object_ptr const &)>;
+
     [[nodiscard]] std::filesystem::path const &database_path() const;
     [[nodiscard]] db::database_ptr const &database() const;
     [[nodiscard]] db::model const &model() const;
     [[nodiscard]] db::value const &current_save_id() const;
     [[nodiscard]] db::value const &last_save_id() const;
 
-    using db_info_observing_handler_f = std::function<void(info_opt const &)>;
-    observing::syncable observe_db_info(db_info_observing_handler_f &&);
-    using db_object_observing_handler_f = std::function<void(object_ptr const &)>;
-    observing::endable observe_db_object(db_object_observing_handler_f &&);
+    [[nodiscard]] observing::syncable observe_db_info(db_info_observing_handler_f &&);
+    [[nodiscard]] observing::endable observe_db_object(db_object_observing_handler_f &&);
 
     db::object_ptr create_object(std::string const entity_name);
 

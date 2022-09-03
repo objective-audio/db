@@ -21,8 +21,8 @@ class fetch_option;
 
 namespace yas::db {
 // 指定したsave_id以前で最後のデータをDBから取得する
-db::select_result_t select_last(db::database_ptr const &db, db::select_option option, value const &save_id = nullptr,
-                                bool const include_removed = false);
+[[nodiscard]] db::select_result_t select_last(db::database_ptr const &db, db::select_option option,
+                                              value const &save_id = nullptr, bool const include_removed = false);
 // アンドゥするためにキャッシュを上書きするデータをDBから取得する
 db::select_result_t select_for_undo(db::database_ptr const &db, std::string const &table_name,
                                     db::integer::type const revert_save_id, db::integer::type const current_save_id);
