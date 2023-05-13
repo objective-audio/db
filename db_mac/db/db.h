@@ -9,5 +9,3 @@ FOUNDATION_EXPORT double dbVersionNumber;
 
 //! Project version string for db.
 FOUNDATION_EXPORT const unsigned char dbVersionString[];
-
-#import <db/yas_db_umbrella.h>

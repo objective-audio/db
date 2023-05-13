@@ -7,9 +7,9 @@
 #include <db/yas_db_additional_protocol.h>
 #include <db/yas_db_entity.h>
 #include <db/yas_db_object_event.h>
-#include <observing/yas_observing_umbrella.h>
 
 #include <deque>
+#include <observing/yas_observing_umbrella.hpp>
 #include <set>
 #include <unordered_map>
 

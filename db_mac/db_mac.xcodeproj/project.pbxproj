@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 50;
+	objectVersion = 53;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -41,7 +41,7 @@
 		B6B6E12221E226A50029A7C1 /* yas_db_relation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6B6E0EB21E226A50029A7C1 /* yas_db_relation.cpp */; };
 		B6B6E12321E226A50029A7C1 /* yas_db_manager_utils.h in Headers */ = {isa = PBXBuildFile; fileRef = B6B6E0EC21E226A50029A7C1 /* yas_db_manager_utils.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B6B6E12421E226A50029A7C1 /* yas_db_additional_protocol.h in Headers */ = {isa = PBXBuildFile; fileRef = B6B6E0ED21E226A50029A7C1 /* yas_db_additional_protocol.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		B6B6E12521E226A50029A7C1 /* yas_db_umbrella.h in Headers */ = {isa = PBXBuildFile; fileRef = B6B6E0EE21E226A50029A7C1 /* yas_db_umbrella.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		B6B6E12521E226A50029A7C1 /* yas_db_umbrella.hpp in Headers */ = {isa = PBXBuildFile; fileRef = B6B6E0EE21E226A50029A7C1 /* yas_db_umbrella.hpp */; settings = {ATTRIBUTES = (Public, ); }; };
 		B6B6E12621E226A50029A7C1 /* yas_db_error.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6B6E0EF21E226A50029A7C1 /* yas_db_error.cpp */; };
 		B6B6E12721E226A50029A7C1 /* yas_db_info.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B6B6E0F021E226A50029A7C1 /* yas_db_info.cpp */; };
 		B6B6E12821E226A50029A7C1 /* yas_db_manager.h in Headers */ = {isa = PBXBuildFile; fileRef = B6B6E0F121E226A50029A7C1 /* yas_db_manager.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -110,7 +110,7 @@
 		B6B6E0EB21E226A50029A7C1 /* yas_db_relation.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = yas_db_relation.cpp; sourceTree = "<group>"; };
 		B6B6E0EC21E226A50029A7C1 /* yas_db_manager_utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_db_manager_utils.h; sourceTree = "<group>"; };
 		B6B6E0ED21E226A50029A7C1 /* yas_db_additional_protocol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_db_additional_protocol.h; sourceTree = "<group>"; };
-		B6B6E0EE21E226A50029A7C1 /* yas_db_umbrella.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_db_umbrella.h; sourceTree = "<group>"; };
+		B6B6E0EE21E226A50029A7C1 /* yas_db_umbrella.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = yas_db_umbrella.hpp; sourceTree = "<group>"; };
 		B6B6E0EF21E226A50029A7C1 /* yas_db_error.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = yas_db_error.cpp; sourceTree = "<group>"; };
 		B6B6E0F021E226A50029A7C1 /* yas_db_info.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = yas_db_info.cpp; sourceTree = "<group>"; };
 		B6B6E0F121E226A50029A7C1 /* yas_db_manager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yas_db_manager.h; sourceTree = "<group>"; };
@@ -228,7 +228,7 @@
 				B67A7096260388EF00C71256 /* additions */,
 				B67A7095260388EB00C71256 /* core */,
 				B61136A42322982C0057C6AE /* yas_db_ptr.h */,
-				B6B6E0EE21E226A50029A7C1 /* yas_db_umbrella.h */,
+				B6B6E0EE21E226A50029A7C1 /* yas_db_umbrella.hpp */,
 			);
 			name = db;
 			path = ../../db;
@@ -327,7 +327,7 @@
 				B6B6E13121E226A50029A7C1 /* yas_db_cf_utils.h in Headers */,
 				B6B6E11D21E226A50029A7C1 /* yas_db_protocol.h in Headers */,
 				B6B6E12A21E226A50029A7C1 /* yas_db_entity.h in Headers */,
-				B6B6E12521E226A50029A7C1 /* yas_db_umbrella.h in Headers */,
+				B6B6E12521E226A50029A7C1 /* yas_db_umbrella.hpp in Headers */,
 				B6B6E13021E226A50029A7C1 /* yas_db_weak_pool_private.h in Headers */,
 				B6B6E11B21E226A50029A7C1 /* yas_db_index.h in Headers */,
 				B6C0A4C026059C3900C240F6 /* yas_db_object_event.h in Headers */,
@@ -383,7 +383,8 @@
 		B6B6E0BA21E225580029A7C1 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1220;
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					B6B6E0C421E226070029A7C1 = {
 						CreatedOnToolsVersion = 10.1;
@@ -474,6 +475,7 @@
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				DEAD_CODE_STRIPPING = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -508,6 +510,7 @@
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				DEAD_CODE_STRIPPING = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -555,6 +558,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = "";
@@ -585,6 +589,8 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/Frameworks",
 				);
+				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu11 gnu++20";
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -634,6 +640,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = "";
@@ -658,6 +665,8 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/Frameworks",
 				);
+				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu11 gnu++20";
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = "objective-audio.db";
