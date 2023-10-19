@@ -30,7 +30,7 @@ jobs:
         sudo xcode-select -s '/Applications/Xcode_15.0.app/Contents/Developer'
     - name: Run iOS tests
       run:
-        xcodebuild -workspace db_ios.xcworkspace -scheme db_ios_tests -configuration Debug OBJROOT=build -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' clean test
+        xcodebuild -workspace db_ios.xcworkspace -scheme db_ios_tests -configuration Debug OBJROOT=build -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 15' clean test
 
     - name: Run mac tests
       run:
