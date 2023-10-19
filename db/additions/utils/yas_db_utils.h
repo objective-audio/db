@@ -7,6 +7,8 @@
 #include <db/yas_db_ptr.h>
 #include <db/yas_db_types.h>
 
+#include <functional>
+
 namespace yas::db {
 class database;
 class select_option;

@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include <db/yas_db_umbrella.h>
+#include <db/yas_db_umbrella.hpp>
 
 namespace yas::sample {
 class db_controller : public std::enable_shared_from_this<db_controller> {

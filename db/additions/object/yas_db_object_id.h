@@ -6,6 +6,8 @@
 
 #include <db/yas_db_value.h>
 
+#include <functional>
+
 namespace yas::db {
 class value;
 

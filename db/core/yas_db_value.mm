@@ -202,8 +202,6 @@ std::string db::value::sql() const {
     } else {
         return "null";
     }
-
-    return nullptr;
 }
 
 std::shared_ptr<db::value::typed_impl<db::null>> const &db::value::null_value_impl_ptr() {
