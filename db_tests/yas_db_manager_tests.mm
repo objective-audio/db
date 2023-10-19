@@ -2758,12 +2758,15 @@ using namespace yas;
             bool observer_called = false;
 
             auto canceller =
-                manager->observe_db_object([&observer_called](db::object_ptr const &) { observer_called = true; });
+                manager->observe_db_object([&observer_called](db::object_ptr const &) { observer_called = true; })
+                    .end();
 
             auto &object = result.value().at("sample_a").at(0);
             object->set_attribute_value("name", db::value{"test_name"});
 
             XCTAssertTrue(observer_called);
+
+            canceller->cancel();
         });
 
     XCTestExpectation *exp = [self expectationWithDescription:@"exp"];
