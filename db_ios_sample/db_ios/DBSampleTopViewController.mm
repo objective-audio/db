@@ -5,7 +5,7 @@
 #import "DBSampleTopViewController.h"
 #import "DBSampleObjectViewController.h"
 #import <cpp_utils/yas_cf_utils.h>
-#import <db/yas_db_umbrella.h>
+#import <db/yas_db_umbrella.hpp>
 #import <cpp_utils/yas_objc_ptr.h>
 #import <objc_utils/yas_objc_unowned.h>
 #import "yas_sample_db_controller.h"
