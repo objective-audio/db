@@ -35,7 +35,7 @@ using namespace yas;
     XCTAssertEqual(relation.table, "rel_test_entity_test_name");
 }
 
-- (void)test_sql {
+- (void)test_sql_for_create {
     db::relation relation{{.name = "b", .target = "c", .many = true}, "a"};
 
     XCTAssertEqual(relation.sql_for_create(),
@@ -43,6 +43,13 @@ using namespace yas;
                    "src_obj_id INTEGER, "
                    "tgt_obj_id INTEGER, "
                    "save_id INTEGER);");
+}
+
+- (void)test_sql_for_insert {
+    db::relation relation{{.name = "b", .target = "c", .many = true}, "a"};
+
+    XCTAssertEqual(relation.sql_for_insert(), "INSERT INTO rel_a_b(src_pk_id, src_obj_id, tgt_obj_id, save_id) "
+                                              "VALUES(:src_pk_id, :src_obj_id, :tgt_obj_id, :save_id);");
 }
 
 @end

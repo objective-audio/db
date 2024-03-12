@@ -41,7 +41,8 @@ using namespace yas;
 
     db::object_id obj_id = db::make_stable_id(db::value{1});
     db::value_map_t attributes{std::make_pair("age", db::value{10}), std::make_pair("name", db::value{"name_val"}),
-                               std::make_pair("weight", db::value{53.4}), std::make_pair("hoge", db::value{"hage"})};
+                               std::make_pair("weight", db::value{53.4}),
+                               std::make_pair("hoge", db::value{"hoge_val"})};
     db::id_vector_map_t relations{
         std::make_pair("child", db::id_vector_t{db::make_stable_id(12), db::make_stable_id(34)})};
     db::object_data obj_data{
@@ -66,7 +67,8 @@ using namespace yas;
 
     db::object_id obj_id = db::make_stable_id(db::value{1});
     db::value_map_t attributes{std::make_pair("age", db::value{10}), std::make_pair("name", db::value{"name_val"}),
-                               std::make_pair("weight", db::value{53.4}), std::make_pair("hoge", db::value{"hage"})};
+                               std::make_pair("weight", db::value{53.4}),
+                               std::make_pair("hoge", db::value{"hoge_val"})};
     db::id_vector_map_t relations{
         std::make_pair("child", db::id_vector_t{db::make_stable_id(12), db::make_stable_id(34)})};
     db::object_data obj_data{
@@ -93,7 +95,7 @@ using namespace yas;
     db::object_id obj_id = db::make_stable_id(db::value{1});
     db::value_map_t prev_attributes{std::make_pair("age", db::value{10}), std::make_pair("name", db::value{"name_val"}),
                                     std::make_pair("weight", db::value{53.4}),
-                                    std::make_pair("hoge", db::value{"hage"})};
+                                    std::make_pair("hoge", db::value{"hoge_val"})};
     db::id_vector_map_t prev_relations{
         std::make_pair("child", db::id_vector_t{db::make_stable_id(12), db::make_stable_id(34)})};
     db::object_data prev_obj_data{.object_id = std::move(obj_id),

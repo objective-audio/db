@@ -221,7 +221,7 @@ using namespace yas;
     XCTAssertTrue(db::column_exists(db, "field_b", "test_table"));
 
     XCTAssertFalse(db::column_exists(db, "field_a", "hoge"));
-    XCTAssertFalse(db::column_exists(db, "hage", "test_table"));
+    XCTAssertFalse(db::column_exists(db, "hoge", "test_table"));
 }
 
 - (void)test_get_schema {
@@ -255,7 +255,7 @@ using namespace yas;
     XCTAssertGreaterThan(map.count("rootpage"), 0);
     auto &rootpage_column_value = map.at("rootpage");
     XCTAssertTrue(rootpage_column_value.type() == typeid(db::integer));
-    XCTAssertEqual(sql_column_value.get<db::integer>(), 0);
+    XCTAssertEqual(rootpage_column_value.get<db::integer>(), 2);
 
     XCTAssertGreaterThan(map.count("type"), 0);
     auto &type_column_value = map.at("type");
